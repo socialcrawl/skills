@@ -6,7 +6,8 @@
 
 [![Platforms](https://img.shields.io/badge/Platforms-21-blue?style=flat-square)](https://socialcrawl.dev)
 [![Endpoints](https://img.shields.io/badge/Endpoints-105-green?style=flat-square)](https://socialcrawl.dev/docs)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-blueviolet?style=flat-square)](https://claude.ai/claude-code)
+[![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
+[![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
 
 [Overview](#overview) | [Installation](#installation) | [Setup](#setup) | [Usage](#usage) | [Platforms](#supported-platforms) | [Credits](#credit-system)
 
@@ -16,7 +17,7 @@
 
 ## Overview
 
-`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, etc.) that lets your agent fetch live social media data — profiles, posts, comments, search results, and analytics — from 21 platforms using the [SocialCrawl API](https://socialcrawl.com).
+`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social media data — profiles, posts, comments, search results, and analytics — from 21 platforms using the [SocialCrawl API](https://socialcrawl.dev).
 
 One API key. One consistent response format. Every platform.
 
@@ -28,29 +29,40 @@ One API key. One consistent response format. Every platform.
 
 ## Installation
 
-### Claude Code (recommended)
+### Via skills.sh (recommended)
+
+Works with Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and 40+ other agents:
 
 ```bash
-claude skill install socialcrawl
+npx skills add socialcrawl/skill
 ```
 
-### Manual installation
-
-Clone this repository into your Claude Code skills directory:
+Install globally (available in all projects):
 
 ```bash
-# User-wide (available in all projects)
-git clone https://github.com/RidioCompany/socialcrawl-skill ~/.claude/skills/socialcrawl
+npx skills add socialcrawl/skill -g
+```
 
+### Via ClawHub
+
+```bash
+npx clawhub@latest install socialcrawl
+```
+
+### Via npm
+
+```bash
+npx socialcrawl-skill
+```
+
+### Via Git (manual)
+
+```bash
 # Project-scoped (shared via version control)
-git clone https://github.com/RidioCompany/socialcrawl-skill .claude/skills/socialcrawl
-```
+git clone https://github.com/socialcrawl/skill .claude/skills/socialcrawl
 
-Or download the `socialcrawl.skill` file and extract it:
-
-```bash
-mkdir -p ~/.claude/skills/socialcrawl
-unzip socialcrawl.skill -d ~/.claude/skills/socialcrawl
+# User-wide (available in all projects)
+git clone https://github.com/socialcrawl/skill ~/.claude/skills/socialcrawl
 ```
 
 ### Verify installation
