@@ -34,13 +34,13 @@ One API key. One consistent response format. Every platform.
 Works with Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and 40+ other agents:
 
 ```bash
-npx skills add socialcrawl/skill
+npx skills add socialcrawl/skills
 ```
 
 Install globally (available in all projects):
 
 ```bash
-npx skills add socialcrawl/skill -g
+npx skills add socialcrawl/skills -g
 ```
 
 ### Via ClawHub
@@ -53,10 +53,10 @@ npx clawhub@latest install socialcrawl
 
 ```bash
 # Project-scoped (shared via version control)
-git clone https://github.com/socialcrawl/skill .claude/skills/socialcrawl
+git clone https://github.com/socialcrawl/skills .claude/skills/socialcrawl
 
 # User-wide (available in all projects)
-git clone https://github.com/socialcrawl/skill ~/.claude/skills/socialcrawl
+git clone https://github.com/socialcrawl/skills ~/.claude/skills/socialcrawl
 ```
 
 ### Verify installation
