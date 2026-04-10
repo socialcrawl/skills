@@ -49,12 +49,6 @@ npx skills add socialcrawl/skill -g
 npx clawhub@latest install socialcrawl
 ```
 
-### Via npm
-
-```bash
-npx socialcrawl-skill
-```
-
 ### Via Git (manual)
 
 ```bash
