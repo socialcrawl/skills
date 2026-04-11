@@ -18,19 +18,20 @@ Unified social media data API. One API key, one response format, 21 platforms, 1
 
 ## API Key
 
-Resolve the API key before making any call:
+Resolve the API key before making any call, checking these sources in order:
 
-1. Check env var `SOCIALCRAWL_API_KEY`
-2. If the env var is **not set**, or its value is a placeholder (e.g. contains `your_api_key_here`, `xxxxx`, `your_key`, or equals the literal example `sc_your_api_key_here`), do NOT attempt any API calls. Instead:
+1. **Env var**: `echo "$SOCIALCRAWL_API_KEY"` — if set and starts with `sc_` (and is not a placeholder like `sc_your_api_key_here`), use it.
+2. **Config file**: `cat ~/.config/socialcrawl/api_key 2>/dev/null` — if the file exists and contains a key starting with `sc_`, use it.
+3. **Ask the user**: If neither source has a valid key:
    - Tell the user: "I need your SocialCrawl API key to continue. You can find it at https://socialcrawl.dev/dashboard — every account starts with 100 free credits."
-   - Ask them to paste their key
-   - After receiving a key inline, validate it with a test call (see First Use below)
-   - Then suggest they set it permanently:
+   - Ask them to paste their key.
+   - After receiving the key, **auto-save it** so they never need to paste it again:
      ```bash
-     export SOCIALCRAWL_API_KEY="sc_xxxxx"
+     mkdir -p ~/.config/socialcrawl && echo "sc_xxxxx" > ~/.config/socialcrawl/api_key
      ```
-     (Add to `~/.bashrc`, `~/.zshrc`, etc. to persist across sessions.)
-3. If the env var is set to a real key (starts with `sc_` and does not match placeholder patterns), proceed.
+   - Tell the user: "I've saved your key to `~/.config/socialcrawl/api_key` so it will be available in future sessions."
+
+For all subsequent API calls in the session, use the resolved key directly in the curl command (do not rely on the env var being set).
 
 ## First Use
 
@@ -40,8 +41,9 @@ On the first interaction with this skill in a session:
 2. Resolve the API key using the steps above. If the key is missing or a placeholder, stop here and ask for it before proceeding.
 3. Tell the user you'll make a test call that costs 1 credit, then run:
    ```bash
-   curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/tiktok/profile?handle=tiktok"
+   curl -s -H "x-api-key: KEY" "https://www.socialcrawl.dev/v1/tiktok/profile?handle=tiktok"
    ```
+   (Replace `KEY` with the resolved key value.)
 4. If successful, confirm the key works and show credits_remaining. Then respond to whatever the user actually asked.
 5. If it fails, report the error and help troubleshoot (see Error Handling below).
 
