@@ -14,5 +14,5 @@
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/kick/clip?url=https://kick.com/xqc/clips/clip_abc123"
+  "https://www.socialcrawl.dev/v1/kick/clip?url=https://kick.com/xqc/clips/clip_abc123"
 ```

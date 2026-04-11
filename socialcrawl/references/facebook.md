@@ -28,5 +28,5 @@
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/facebook/profile?url=https://www.facebook.com/Meta"
+  "https://www.socialcrawl.dev/v1/facebook/profile?url=https://www.facebook.com/Meta"
 ```

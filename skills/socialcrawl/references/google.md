@@ -19,5 +19,5 @@
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/google/search?query=best%20restaurants%20in%20London"
+  "https://www.socialcrawl.dev/v1/google/search?query=best%20restaurants%20in%20London"
 ```

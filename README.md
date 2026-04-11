@@ -126,7 +126,7 @@ Under the hood, the skill constructs standard HTTP requests:
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/tiktok/profile?handle=charlidamelio"
+  "https://www.socialcrawl.dev/v1/tiktok/profile?handle=charlidamelio"
 ```
 
 Every response follows a unified envelope:

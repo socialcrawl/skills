@@ -21,23 +21,29 @@ Unified social media data API. One API key, one response format, 21 platforms, 1
 Resolve the API key before making any call:
 
 1. Check env var `SOCIALCRAWL_API_KEY`
-2. If not set, ask the user for their key
-3. After receiving a key inline, suggest they set it for future sessions:
-   ```bash
-   export SOCIALCRAWL_API_KEY="sc_xxxxx"
-   ```
+2. If the env var is **not set**, or its value is a placeholder (e.g. contains `your_api_key_here`, `xxxxx`, `your_key`, or equals the literal example `sc_your_api_key_here`), do NOT attempt any API calls. Instead:
+   - Tell the user: "I need your SocialCrawl API key to continue. You can find it at https://socialcrawl.dev/dashboard — every account starts with 100 free credits."
+   - Ask them to paste their key
+   - After receiving a key inline, validate it with a test call (see First Use below)
+   - Then suggest they set it permanently:
+     ```bash
+     export SOCIALCRAWL_API_KEY="sc_xxxxx"
+     ```
+     (Add to `~/.bashrc`, `~/.zshrc`, etc. to persist across sessions.)
+3. If the env var is set to a real key (starts with `sc_` and does not match placeholder patterns), proceed.
 
 ## First Use
 
 On the first interaction with this skill in a session:
 
 1. Briefly introduce: "SocialCrawl provides a single API for 21 social media platforms (105 endpoints). Let me verify your API key."
-2. Tell the user you'll make a test call that costs 1 credit, then run:
+2. Resolve the API key using the steps above. If the key is missing or a placeholder, stop here and ask for it before proceeding.
+3. Tell the user you'll make a test call that costs 1 credit, then run:
    ```bash
-   curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://api.socialcrawl.com/v1/tiktok/profile?handle=tiktok"
+   curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/tiktok/profile?handle=tiktok"
    ```
-3. If successful, confirm the key works and show credits_remaining. Then respond to whatever the user actually asked.
-4. If it fails, report the error and help troubleshoot (see Error Handling below).
+4. If successful, confirm the key works and show credits_remaining. Then respond to whatever the user actually asked.
+5. If it fails, report the error and help troubleshoot (see Error Handling below).
 
 ## Platforms
 
@@ -89,7 +95,7 @@ Determine what the user wants, then follow the matching workflow:
 
 **User asks about credits/balance:**
 1. Resolve API key
-2. Run: `curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://api.socialcrawl.com/api/credits/balance"`
+2. Run: `curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/api/credits/balance"`
 3. Return the balance
 
 **Ambiguous platform:** If the user says "get profile for @nike" without specifying a platform, ask which platform they mean.
@@ -98,13 +104,13 @@ Determine what the user wants, then follow the matching workflow:
 
 ## Making API Calls
 
-Base URL: `https://api.socialcrawl.com`
+Base URL: `https://www.socialcrawl.dev`
 
 All endpoints are GET requests:
 
 ```
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/{platform}/{resource}?{param}={value}"
+  "https://www.socialcrawl.dev/v1/{platform}/{resource}?{param}={value}"
 ```
 
 URL-encode parameter values that contain spaces or special characters.
@@ -125,7 +131,7 @@ Before executing an advanced or premium call, mention the credit cost to the use
 |------|--------|--------|
 | MISSING_API_KEY | 401 | Ask user for their API key |
 | INVALID_API_KEY | 401 | "Your API key appears invalid. Check your SocialCrawl dashboard." |
-| INSUFFICIENT_CREDITS | 402 | "You're out of credits. Top up at socialcrawl.com/dashboard/billing" |
+| INSUFFICIENT_CREDITS | 402 | "You're out of credits. Top up at socialcrawl.dev/dashboard/billing" |
 | INVALID_REQUEST | 400 | Check required params in the platform reference file |
 | ENDPOINT_NOT_FOUND | 404 | "That endpoint doesn't exist. Check the platform table above." |
 | RESOURCE_NOT_FOUND | 404 | "That profile/post wasn't found on the platform." |

@@ -14,5 +14,5 @@
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/snapchat/profile?handle=djkhaled305"
+  "https://www.socialcrawl.dev/v1/snapchat/profile?handle=djkhaled305"
 ```

@@ -30,5 +30,5 @@
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/instagram/profile?handle=instagram"
+  "https://www.socialcrawl.dev/v1/instagram/profile?handle=instagram"
 ```

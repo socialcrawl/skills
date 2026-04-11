@@ -3,7 +3,7 @@
 ## Base URL
 
 ```
-https://api.socialcrawl.com
+https://www.socialcrawl.dev
 ```
 
 ## Authentication
@@ -12,7 +12,7 @@ Pass your API key in the `x-api-key` header with every request:
 
 ```bash
 curl -s -H "x-api-key: sc_your_api_key_here" \
-  "https://api.socialcrawl.com/v1/tiktok/profile?handle=charlidamelio"
+  "https://www.socialcrawl.dev/v1/tiktok/profile?handle=charlidamelio"
 ```
 
 ## Response Format
@@ -41,7 +41,7 @@ Error responses:
     "type": "INSUFFICIENT_CREDITS",
     "message": "Your account has 0 credits remaining. This endpoint requires 1 credits.",
     "status": 402,
-    "doc_url": "https://socialcrawl.com/docs/errors/insufficient-credits"
+    "doc_url": "https://socialcrawl.dev/docs/errors/insufficient-credits"
   },
   "credits_remaining": 0,
   "request_id": "req-XXXXX"
@@ -71,7 +71,7 @@ Check remaining credits:
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/api/credits/balance"
+  "https://www.socialcrawl.dev/api/credits/balance"
 ```
 
 Returns: `{ "balance": 4999 }`
@@ -82,7 +82,7 @@ Add `?format=raw` to any endpoint to receive the original upstream response with
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/tiktok/profile?handle=charlidamelio&format=raw"
+  "https://www.socialcrawl.dev/v1/tiktok/profile?handle=charlidamelio&format=raw"
 ```
 
 ## Error Codes

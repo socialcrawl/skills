@@ -28,5 +28,5 @@
 
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://api.socialcrawl.com/v1/youtube/channel?handle=MrBeast"
+  "https://www.socialcrawl.dev/v1/youtube/channel?handle=MrBeast"
 ```
