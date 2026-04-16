@@ -5,7 +5,7 @@
 **Give your AI agent access to 21 social media platforms through a single API**
 
 [![Platforms](https://img.shields.io/badge/Platforms-21-blue?style=flat-square)](https://socialcrawl.dev)
-[![Endpoints](https://img.shields.io/badge/Endpoints-105-green?style=flat-square)](https://socialcrawl.dev/docs)
+[![Endpoints](https://img.shields.io/badge/Endpoints-108-green?style=flat-square)](https://socialcrawl.dev/docs)
 [![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
 [![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
 
@@ -19,7 +19,7 @@
 
 `@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social media data — profiles, posts, comments, search results, and analytics — from 21 platforms using the [SocialCrawl API](https://socialcrawl.dev).
 
-One API key. One consistent response format. Every platform.
+One API key. One consistent response format. Every platform. Every response is wrapped in a unified envelope with transparent credit accounting, and the key social archetypes (`Author`, `Post`) go through per-platform **field maps** that normalize 13 platforms' quirky upstream shapes into a single schema — plus four computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) that most data APIs don't give you.
 
 **What the skill does:**
 - Fetches social media data on your behalf (profiles, posts, comments, search, trending)
@@ -137,26 +137,42 @@ Every response follows a unified envelope:
   "platform": "tiktok",
   "endpoint": "/v1/tiktok/profile",
   "data": {
-    "content": { "text": "...", "media_urls": ["..."] },
-    "author": { "username": "charlidamelio", "followers": 156000000 },
-    "engagement": { "likes": 5200, "engagement_rate": 0.045 },
-    "metadata": { "language": "en", "content_category": "entertainment" }
+    "author": {
+      "id": "5831967",
+      "username": "charlidamelio",
+      "display_name": "charli d'amelio",
+      "avatar_url": "https://...",
+      "bio": "...",
+      "verified": true,
+      "followers": 156800000,
+      "following": 1300,
+      "posts_count": 2800,
+      "likes_count": 11600000000
+    },
+    "computed": {
+      "engagement_rate": 0.074,
+      "language": "en",
+      "content_category": "entertainment",
+      "estimated_reach": 1163120000
+    }
   },
   "credits_used": 1,
-  "credits_remaining": 99
+  "credits_remaining": 99,
+  "request_id": "req-a1b2c3d4e5f6",
+  "cached": false
 }
 ```
 
 > [!NOTE]
-> Add `?format=raw` to any endpoint to receive the original upstream response without schema transformation.
+> Add `?format=raw` to any endpoint to receive the original upstream response without unified schema transformation or computed fields.
 
 ## Supported Platforms
 
 | Platform | Endpoints | Data Available |
 |----------|-----------|----------------|
-| **TikTok** | 24 | Profiles, videos, comments, followers, search, trending, live, Shop |
+| **TikTok** | 26 | Profiles, videos, comments, followers, showcase, search, trending, live, Shop |
 | **Instagram** | 12 | Profiles, posts, reels, comments, highlights, search |
-| **YouTube** | 11 | Channels, videos, shorts, playlists, comments, trending |
+| **YouTube** | 12 | Channels, videos, shorts, playlists, comments, comment replies, trending |
 | **Facebook** | 12 | Profiles, posts, reels, photos, groups, Ad Library |
 | **Twitter/X** | 6 | Profiles, tweets, communities |
 | **LinkedIn** | 6 | Profiles, company pages, posts, Ad Library |
@@ -176,7 +192,7 @@ Every response follows a unified envelope:
 | **Pillar** | 1 | Link pages |
 | **Utility** | 1 | Age & gender detection |
 
-**Total: 105 endpoints across 21 platforms.**
+**Total: 108 endpoints across 21 platforms.**
 
 ## Credit System
 
@@ -184,7 +200,7 @@ Every API call costs credits based on its complexity:
 
 | Tier | Cost | Endpoints | Examples |
 |------|------|-----------|----------|
-| **Standard** | 1 credit | 81 | Profiles, posts, search, comments |
+| **Standard** | 1 credit | 84 | Profiles, posts, search, comments |
 | **Advanced** | 5 credits | 18 | Audience demographics, ad libraries, trending |
 | **Premium** | 10 credits | 6 | Video transcripts, AI analysis |
 
@@ -194,11 +210,11 @@ Every API call costs credits based on its complexity:
 |------|-------|---------|----------------|
 | **Free** | £0 | 100 (one-time) | — |
 | **Starter** | £14 | 5,000 | £2.80 |
-| **Growth** | £49 | 25,000 | £1.96 |
-| **Pro** | £299 | 180,000 | £1.66 |
+| **Growth** | £49 | 20,000 | £2.45 |
+| **Pro** | £299 | 150,000 | £1.99 |
 | **Enterprise** | Contact | Custom | Custom |
 
-Credits never expire. No rate limits. No monthly commitments.
+Credits never expire. Pay-as-you-go, no monthly commitments. Failed upstream calls, open circuit breakers, and internal errors auto-refund credits.
 
 > [!IMPORTANT]
 > The skill will inform you of the credit cost before executing advanced or premium tier calls.

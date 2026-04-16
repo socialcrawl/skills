@@ -10,6 +10,10 @@
 
 - `url`: Full Kick clip URL (e.g., `https://kick.com/xqc/clips/clip_abc123`)
 
+## Field Maps
+
+The `clip` endpoint returns a `Post` response normalized by the `kick-post` field map. Kick clip responses are nested under `clip.*` upstream; the field map flattens them. Includes computed fields under `data.computed`.
+
 ## Example
 
 ```bash

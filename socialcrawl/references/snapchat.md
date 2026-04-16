@@ -10,6 +10,10 @@
 
 - `handle`: Snapchat username (e.g., `djkhaled305`)
 
+## Field Maps
+
+The `profile` endpoint returns an `Author` response normalized by the `snapchat-author` field map. Snapchat profile responses are nested under `userProfile.*` upstream; the field map flattens them. Includes computed fields under `data.computed`.
+
 ## Example
 
 ```bash

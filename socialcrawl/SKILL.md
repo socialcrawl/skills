@@ -2,7 +2,7 @@
 name: socialcrawl
 description: >
   Interact with the SocialCrawl API — a unified social media data API covering
-  21 platforms and 105 endpoints. Fetch profiles, posts, comments, search results,
+  21 platforms and 108 endpoints. Fetch profiles, posts, comments, search results,
   and analytics from TikTok, Instagram, YouTube, Facebook, Twitter/X, LinkedIn,
   Reddit, Threads, Pinterest, and 12 more platforms through a single API.
   Use when the user wants to: (1) fetch social media data (profiles, posts,
@@ -14,7 +14,7 @@ description: >
 
 # SocialCrawl API
 
-Unified social media data API. One API key, one response format, 21 platforms, 105 endpoints.
+Unified social media data API. One API key, one response format, 21 platforms, 108 endpoints. Author and Post responses are normalized through platform field maps and enriched with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) — add `?format=raw` to bypass both and get the upstream JSON unchanged.
 
 ## API Key
 
@@ -51,9 +51,9 @@ On the first interaction with this skill in a session:
 
 | Platform | Endpoints | Reference |
 |----------|-----------|-----------|
-| TikTok | 24 | [references/tiktok.md](references/tiktok.md) |
+| TikTok | 26 | [references/tiktok.md](references/tiktok.md) |
 | Instagram | 12 | [references/instagram.md](references/instagram.md) |
-| YouTube | 11 | [references/youtube.md](references/youtube.md) |
+| YouTube | 12 | [references/youtube.md](references/youtube.md) |
 | Facebook | 12 | [references/facebook.md](references/facebook.md) |
 | Twitter/X | 6 | [references/twitter.md](references/twitter.md) |
 | LinkedIn | 6 | [references/linkedin.md](references/linkedin.md) |
@@ -116,6 +116,13 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
 ```
 
 URL-encode parameter values that contain spaces or special characters.
+
+### Parameter rules
+
+- **Required params** — each platform reference file lists the required query parameters for every endpoint. A request missing any of them returns `400 INVALID_REQUEST` with the message `Missing required parameter(s): ...`; no credit is deducted.
+- **`oneOf` groups** — some endpoints (notably on YouTube, Facebook, TikTok, Instagram, Reddit, Google, Truth Social) accept mutually-substitutable identifiers such as `channelId / handle / url`. Pass at least one member of the group; the platform reference file lists the valid choices.
+- **Optional params** — any non-required param listed in the reference file may be forwarded. Anything unrecognized is rejected upstream.
+- **`format=raw`** — disables field maps and computed fields so you receive the original ScrapeCreators JSON.
 
 ## Credit Tiers
 

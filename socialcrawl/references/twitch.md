@@ -12,6 +12,10 @@
 - `handle`: Twitch username (e.g., `ninja`)
 - `url`: Full Twitch clip URL (e.g., `https://www.twitch.tv/ninja/clip/ExampleClipSlug`)
 
+## Field Maps
+
+The `profile` endpoint returns an `Author` response normalized by the `twitch-author` field map, and `clip` returns a `Post` normalized by `twitch-post`. Twitch clip responses are nested under `clip.*` upstream; the field map flattens them. Both include computed fields under `data.computed`.
+
 ## Example
 
 ```bash

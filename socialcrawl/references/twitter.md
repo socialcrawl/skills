@@ -16,6 +16,10 @@
 - `handle`: Twitter username without @ symbol (e.g., `elonmusk`)
 - `url`: Full tweet or community URL (e.g., `https://x.com/elonmusk/status/1234567890`)
 
+## Field Maps
+
+The `profile` endpoint returns an `Author` response normalized by the `twitter-author` field map, and `tweet` returns a `Post` normalized by `twitter-post`. Both include computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Twitter responses use GraphQL-style deep nesting upstream — the field map flattens them into the unified schema. Use `?format=raw` to see the original deeply-nested JSON.
+
 ## Example
 
 ```bash
