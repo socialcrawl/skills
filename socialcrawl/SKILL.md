@@ -14,7 +14,7 @@ description: >
 
 # SocialCrawl API
 
-Unified social media data API. One API key, one response format, 21 platforms, 108 endpoints. Author and Post responses are normalized through platform field maps and enriched with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) — add `?format=raw` to bypass both and get the upstream JSON unchanged.
+Unified social media data API. One API key, one response format, 21 platforms, 108 endpoints. Author and Post responses are normalized through platform field maps and augmented with deterministic computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. List archetypes (PostList, CommentList, SearchResult, Audience, Analytics) pass through as `{ items, next_cursor?, total? }` without computed fields. Add `?format=raw` to bypass the transform pipeline entirely.
 
 ## API Key
 
@@ -97,8 +97,8 @@ Determine what the user wants, then follow the matching workflow:
 
 **User asks about credits/balance:**
 1. Resolve API key
-2. Run: `curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/api/credits/balance"`
-3. Return the balance
+2. Run: `curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/credits/balance"`
+3. Return `data.balance` from the envelope (the call costs 0 credits)
 
 **Ambiguous platform:** If the user says "get profile for @nike" without specifying a platform, ask which platform they mean.
 
@@ -130,9 +130,42 @@ URL-encode parameter values that contain spaces or special characters.
 |------|------|-------------------|
 | standard | 1 credit | Profiles, posts, search, comments |
 | advanced | 5 credits | Audience demographics, ad libraries, trending |
-| premium | 10 credits | Video transcripts, AI analysis |
+| premium | 10 credits | Video transcripts, age/gender detection |
 
 Before executing an advanced or premium call, mention the credit cost to the user. After every call, report `credits_used` and `credits_remaining` from the response.
+
+**Free calls (0 credits deducted):**
+- **Cache hits** — `cached: true` + `X-Cache: HIT`. Same data, no charge.
+- **Idempotent replays** — `X-Idempotent-Replay: true`. See "Idempotent Retries" below.
+- **Empty-upstream 404s** — when upstream returns a 200 with an empty body (nonexistent profile/post), the credit is auto-refunded and you get `RESOURCE_NOT_FOUND`.
+- **`GET /v1/credits/balance`** — meta endpoint.
+- **Pre-flight rejections** — 400/401/402/405/409/422/404-endpoint-not-found never deduct.
+
+## Idempotent Retries
+
+Any `/v1/*` call can be made safe to retry by sending an `Idempotency-Key` header (UUIDv4 or any opaque 16+ char string). Replays of the same key + same params return the original body verbatim with `X-Idempotent-Replay: true` and 0 credits deducted. Keys last 24h. Reusing the key with different params returns 422; a key owned by a different account returns 409.
+
+```bash
+curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
+  -H "Idempotency-Key: 7a5e1b4c-2d8f-4a3b-9c1e-6e8b4d2a1f3c" \
+  "https://www.socialcrawl.dev/v1/tiktok/profile?handle=tiktok"
+```
+
+## Response Headers
+
+| Header | Value |
+|--------|-------|
+| X-Request-Id | `req-XXXXX` |
+| X-Credits-Used | Credits charged (0 on cache hit, replay, or refund) |
+| X-Credits-Remaining | Balance after this call |
+| X-Cache | `HIT` or `MISS` |
+| X-Idempotent-Replay | `"true"` on replays (absent otherwise) |
+| Retry-After | `"30"` — only on 503 circuit-breaker responses |
+| Allow | `"GET"` — only on 405 METHOD_NOT_ALLOWED |
+
+## Warnings Channel
+
+Successful responses may include an optional `data._warnings: string[]` with advisory notices from the transform pipeline (e.g. a clamped `engagement_rate > 1.0`, or an unresolved field-map path). Treat as observability-only — do not gate logic on it. Empty arrays are omitted.
 
 ## Error Handling
 
@@ -141,10 +174,13 @@ Before executing an advanced or premium call, mention the credit cost to the use
 | MISSING_API_KEY | 401 | Ask user for their API key |
 | INVALID_API_KEY | 401 | "Your API key appears invalid. Check your SocialCrawl dashboard." |
 | INSUFFICIENT_CREDITS | 402 | "You're out of credits. Top up at socialcrawl.dev/dashboard/billing" |
-| INVALID_REQUEST | 400 | Check required params in the platform reference file |
+| INVALID_REQUEST | 400 | Missing required param OR malformed handle/URL (format validator). Check required params + formats in the platform reference. |
+| METHOD_NOT_ALLOWED | 405 | All `/v1/*` endpoints are GET-only. Response includes `Allow: GET`. |
 | ENDPOINT_NOT_FOUND | 404 | "That endpoint doesn't exist. Check the platform table above." |
-| RESOURCE_NOT_FOUND | 404 | "That profile/post wasn't found on the platform." |
-| CONCURRENCY_LIMIT | 429 | "Too many concurrent requests. Wait a moment and retry." |
+| RESOURCE_NOT_FOUND | 404 | "That profile/post wasn't found on the platform." Credits were refunded if the upstream returned an empty body. |
+| IDEMPOTENCY_KEY_CONFLICT | 409 | "That Idempotency-Key is in use by a different account. Pick a new key." |
+| IDEMPOTENCY_KEY_PAYLOAD_MISMATCH | 422 | "You reused an Idempotency-Key with different params. Use a fresh key." |
+| CONCURRENCY_LIMIT | 429 | "Too many concurrent requests (limit 50/key). Wait a moment and retry." |
 | UPSTREAM_ERROR | 502 | "Platform temporarily unavailable. Credits were refunded." |
 | SERVICE_UNAVAILABLE | 503 | "Platform circuit breaker is open. Try again in 30s. Credits refunded." |
 | INTERNAL_ERROR | 500 | "Unexpected error. Credits were refunded." |
