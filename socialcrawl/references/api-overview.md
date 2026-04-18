@@ -66,7 +66,7 @@ Error responses:
 |------|------|-------|-------------------|
 | standard | 1 credit | 84 endpoints | Profiles, posts, search, comments |
 | advanced | 5 credits | 18 endpoints | Audience, ad libraries, trending |
-| premium | 10 credits | 6 endpoints | Transcripts, AI analysis |
+| premium | 10 credits | 6 endpoints | Transcripts, age/gender detection |
 
 Total: **108 endpoints across 21 platforms.**
 
@@ -120,7 +120,7 @@ Unified **Author** schema: `id`, `username`, `display_name`, `avatar_url`, `bio`
 
 Unified **Post** schema: `id`, `content.text`, `content.media_urls`, `content.thumbnail_url`, `content.duration_seconds`, `author.username`, `author.display_name`, `author.avatar_url`, `author.verified`, `engagement.views`, `engagement.likes`, `engagement.comments`, `engagement.shares`, `engagement.saves`, `published_at`.
 
-Endpoints that return lists (PostList, CommentList, SearchResult, Analytics, Audience) are currently passthrough for computed fields — they **do** go through the upstream-envelope stripper, which normalises list responses to `{ items, next_cursor?, total? }` regardless of the upstream key name (`posts | videos | tweets | aweme_list | media_data | data | ...`).
+Endpoints that return lists (PostList, CommentList, SearchResult, Analytics, Audience) are currently passthrough for computed fields — they **do** go through the upstream-envelope stripper, which normalises list responses to `{ items, next_cursor?, total? }` regardless of the upstream key name. The stripper walks a 26-key priority list (`posts`, `comments`, `aweme_list`, `search_item_list`, `videos`, `shorts`, `reels`, `tweets`, `ads`, `products`, `product_reviews`, `pins`, `photos`, `highlights`, `boards`, `users`, `user_list`, `followers`, `followings`, `advertisers`, `searchResults`, `results`, `media_data`, `mediaData`, `data`, `items`) and prefers the first non-empty array, so mixed-shape endpoints (e.g. YouTube `channel/shorts` returning `{ videos: [], shorts: [...] }`) land on the populated list rather than the first one seen.
 
 ## Response Warnings (`data._warnings`)
 
@@ -190,11 +190,15 @@ Requests without an `Idempotency-Key` header skip this subsystem entirely.
 
 Some upstream endpoints return HTTP 200 with an all-null payload for nonexistent handles/posts (IG, TikTok, Twitter, Snapchat, Reddit, Kick, Twitch). An archetype-aware guard catches this after transform:
 
-- **Author**: `id` AND `username` both missing → empty.
-- **Post**: `id` missing AND all engagement counts (`views`, `likes`, `comments`, `shares`) missing → empty.
-- **List variants**: `items.length === 0` → empty.
+- **Author / Post / Comment**: the wrapper (`data.author`, `data.post`, `data.comment`) is missing OR contains zero populated non-null fields (recursive scan — a nested object of all-null leaves still counts as empty).
+- **PostList / CommentList / SearchResult**: `items.length === 0`.
+- **Audience**: `data.audience` is missing or not a record.
+- **Analytics**: the payload has zero keys.
+- **Transcript**: no non-empty `transcript` string/array AND no populated `transcripts` array.
 
 When the guard trips, the credit is **auto-refunded** and the response is `404 RESOURCE_NOT_FOUND`. This also fires on cache hits of previously-empty bodies.
+
+**Guard is skipped** for `Author | Post | Comment | Audience` endpoints that ship without a field map (they never produce the canonical wrapper keys the guard relies on). Affected endpoints include Linktree/Linkbio/Linkme/Komi/Pillar `page`, Instagram `basic-profile` + `user/embed`, Twitter `community`, YouTube `community-post`, TikTok `song` + `shop/product` + `user/audience`, LinkedIn `ad`, Facebook `adlibrary/ad`, Reddit `ad`, Google `ad`, and Amazon `shop` — these return upstream data as-is and cannot auto-refund on empty bodies.
 
 ## Circuit Breaker & Refunds
 
