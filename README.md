@@ -2,10 +2,10 @@
 
 # @socialcrawl
 
-**Give your AI agent access to 21 social media platforms through a single API**
+**Give your AI agent access to 27 social + research platforms through a single API**
 
-[![Platforms](https://img.shields.io/badge/Platforms-21-blue?style=flat-square)](https://socialcrawl.dev)
-[![Endpoints](https://img.shields.io/badge/Endpoints-108-green?style=flat-square)](https://socialcrawl.dev/docs)
+[![Platforms](https://img.shields.io/badge/Platforms-27-blue?style=flat-square)](https://socialcrawl.dev)
+[![Endpoints](https://img.shields.io/badge/Endpoints-133-green?style=flat-square)](https://socialcrawl.dev/docs)
 [![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
 [![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
 
@@ -17,12 +17,13 @@
 
 ## Overview
 
-`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social media data — profiles, posts, comments, search results, and analytics — from 21 platforms using the [SocialCrawl API](https://socialcrawl.dev).
+`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social and research data — profiles, posts, comments, search results, prediction markets, AI-grounded answers, and a universal cross-platform search — from 27 platforms using the [SocialCrawl API](https://socialcrawl.dev).
 
 One API key. One consistent response format. Every platform. Every response is wrapped in a unified envelope with transparent credit accounting, and the key social archetypes (`Author`, `Post`) go through per-platform **field maps** that normalize 13 platforms' quirky upstream shapes into a single schema — plus four computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) that most data APIs don't give you.
 
 **What the skill does:**
-- Fetches social media data on your behalf (profiles, posts, comments, search, trending)
+- Fetches social media + research data on your behalf (profiles, posts, comments, search, trending, prediction markets, web research)
+- Runs a universal cross-platform search that fans out to 12 sources in parallel (sync JSON or SSE streaming, 20 credits flat)
 - Generates working code snippets that call the SocialCrawl API
 - Answers questions about endpoints, pricing, and capabilities
 - Checks your credit balance
@@ -171,17 +172,23 @@ Every response follows a unified envelope:
 | Platform | Endpoints | Data Available |
 |----------|-----------|----------------|
 | **TikTok** | 26 | Profiles, videos, comments, followers, showcase, search, trending, live, Shop |
+| **GitHub** | 12 | Profiles, repos, READMEs, releases, issues, PRs, search, composite dossiers, profile-velocity analytics |
 | **Instagram** | 12 | Profiles, posts, reels, comments, highlights, search |
 | **YouTube** | 12 | Channels, videos, shorts, playlists, comments, comment replies, trending |
 | **Facebook** | 12 | Profiles, posts, reels, photos, groups, Ad Library |
-| **Twitter/X** | 6 | Profiles, tweets, communities |
-| **LinkedIn** | 6 | Profiles, company pages, posts, Ad Library |
 | **Reddit** | 7 | Subreddits, posts, comments, search, ads |
+| **Twitter/X** | 7 | Profiles, tweets, communities, AI-powered freeform search (Grok 4.20 + `x_search`) |
+| **LinkedIn** | 6 | Profiles, company pages, posts, Ad Library |
 | **Threads** | 5 | Profiles, posts, search |
 | **Pinterest** | 4 | Search, pins, boards |
 | **Google** | 4 | Search, Ad Library |
+| **Hacker News** | 4 | Search, stories, story comments, profiles |
+| **Tavily** | 4 | Web search (with LLM answer), URL extraction, sitegraph, multi-page crawl |
 | **Truth Social** | 3 | Profiles, posts |
+| **Polymarket** | 2 | Prediction-market search + server-side topic-expansion research |
 | **Twitch** | 2 | Profiles, clips |
+| **Search (universal)** | 1 | Cross-platform meta-search across 12 sources (sync JSON / SSE streaming, 20cr flat) |
+| **Perplexity** | 1 | Web-grounded research (LLM answer + cited sources) |
 | **Snapchat** | 1 | Profiles |
 | **Kick** | 1 | Clips |
 | **Amazon** | 1 | Shop pages |
@@ -192,7 +199,7 @@ Every response follows a unified envelope:
 | **Pillar** | 1 | Link pages |
 | **Utility** | 1 | Age & gender detection |
 
-**Total: 108 endpoints across 21 platforms.**
+**Total: 133 endpoints across 27 platforms.**
 
 ## Credit System
 
@@ -200,9 +207,10 @@ Every API call costs credits based on its complexity:
 
 | Tier | Cost | Endpoints | Examples |
 |------|------|-----------|----------|
-| **Standard** | 1 credit | 84 | Profiles, posts, search, comments |
-| **Advanced** | 5 credits | 18 | Audience demographics, ad libraries, trending |
-| **Premium** | 10 credits | 6 | Video transcripts, AI analysis |
+| **Standard** | 1 credit | 104 | Profiles, posts, search, comments, GitHub, HN, Tavily, Perplexity, Twitter AI Search |
+| **Advanced** | 5 credits | 21 | Audience demographics, ad libraries, trending, GitHub composites, Polymarket research |
+| **Premium** | 10 credits | 7 | Video transcripts, AI analysis, GitHub `user/profile-velocity` |
+| **Flat override** | 20 credits | 1 | `/v1/search/everywhere` — universal cross-platform search across 12 sources |
 
 ### Pricing
 
@@ -228,14 +236,20 @@ socialcrawl/
 ├── SKILL.md              # Main skill definition
 └── references/
     ├── api-overview.md    # Auth, response format, errors, credits
+    ├── search.md          # Universal cross-platform search (/v1/search/everywhere)
     ├── tiktok.md          # TikTok endpoints & parameters
+    ├── github.md          # GitHub endpoints & parameters
     ├── instagram.md       # Instagram endpoints & parameters
     ├── youtube.md         # YouTube endpoints & parameters
     ├── facebook.md        # Facebook endpoints & parameters
-    ├── twitter.md         # Twitter/X endpoints & parameters
+    ├── twitter.md         # Twitter/X endpoints (incl. ai-search)
     ├── linkedin.md        # LinkedIn endpoints & parameters
     ├── reddit.md          # Reddit endpoints & parameters
     ├── threads.md         # Threads endpoints & parameters
+    ├── hackernews.md      # Hacker News endpoints & parameters
+    ├── tavily.md          # Tavily web search/extract/map/crawl
+    ├── polymarket.md      # Polymarket prediction-market search
+    ├── perplexity.md      # Perplexity Sonar web research
     └── ...                # 12 more platform references
 ```
 

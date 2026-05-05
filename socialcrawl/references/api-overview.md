@@ -64,11 +64,14 @@ Error responses:
 
 | Tier | Cost | Count | Typical endpoints |
 |------|------|-------|-------------------|
-| standard | 1 credit | 84 endpoints | Profiles, posts, search, comments |
-| advanced | 5 credits | 18 endpoints | Audience, ad libraries, trending |
-| premium | 10 credits | 6 endpoints | Transcripts, age/gender detection |
+| standard | 1 credit | 104 endpoints | Profiles, posts, search, comments, GitHub direct calls, HN, Tavily, Perplexity research, Twitter AI Search |
+| advanced | 5 credits | 21 endpoints | Audience, ad libraries, trending, GitHub composites (`repo/top-issues`, `repo/dossier`), Polymarket research |
+| premium | 10 credits | 7 endpoints | Transcripts, age/gender detection, GitHub `user/profile-velocity` |
+| **flat override** | **20 credits** | 1 endpoint | `/v1/search/everywhere` (universal cross-platform search) |
 
-Total: **108 endpoints across 21 platforms.**
+Total: **133 endpoints across 27 platforms.**
+
+Some endpoints carry a `cost` override that bypasses the 1/5/10 ladder — currently only `/v1/search/everywhere` (20 credits flat). The override is the single source of truth across the router, doc generators, and Explorer.
 
 ## Credit Balance
 
@@ -185,6 +188,24 @@ Lookup outcomes for `(user_id, key)`:
 | Conflict (same key, different account) | 409 `IDEMPOTENCY_KEY_CONFLICT` | 0 | Pick a new key |
 
 Requests without an `Idempotency-Key` header skip this subsystem entirely.
+
+> **Streaming exception**: SSE streaming requests to `/v1/search/everywhere` (`Accept: text/event-stream`) cannot be replayed via idempotency. Replays serve the cached sync envelope (or 409 if no sync body was ever cached). Idempotency is meaningful only for sync responses.
+
+## Non-ScrapeCreators Platforms
+
+Six platforms proxy upstreams other than ScrapeCreators and behave identically through the standard envelope, but have a few platform-specific quirks worth knowing:
+
+| Platform | Upstream | Notes |
+|----------|----------|-------|
+| **GitHub** | GitHub REST v3 (Bearer auth, shared service token) | 9 direct + 3 composite endpoints. Composites fan out 2–15 sub-calls. |
+| **Hacker News** | Algolia public HN API (no auth) | 4 endpoints. `/search` strips Algolia noise (`children`, `_highlightResult`, `_snippetResult`). |
+| **Perplexity** | Sonar via Vercel AI Gateway | Returns `{ answer, sources }`. No field map. |
+| **Polymarket** | Gamma API (no auth) | 1 thin proxy + 1 fan-out research endpoint (5cr). Returns full Gamma event shape — no unified Author/Post mapping. |
+| **Tavily** | Tavily POST API (Bearer auth) | Public surface is GET; fetcher translates to POST + JSON body server-side. CSV array params. |
+| **Twitter AI Search** | Grok 4.20 via Vercel AI Gateway with `x_search` tool | `/v1/twitter/ai-search` only — the other 6 Twitter endpoints stay on ScrapeCreators. |
+| **Search (universal)** | Internal — fans out to 12 platforms | Flat 20cr. Sync JSON or SSE streaming. Auto-refunds on zero-floor (every source failed). |
+
+Field maps and computed fields apply only to ScrapeCreators-backed Author/Post endpoints. `?format=raw` is therefore a no-op on non-ScrapeCreators platforms — there's no transform pipeline to bypass.
 
 ## Empty-Upstream Guard
 
