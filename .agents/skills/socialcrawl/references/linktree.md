@@ -1,18 +1,16 @@
-# Linktree (1 endpoint)
+# Linktree
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| page | `url` | standard | Get Linktree page |
+Credit costs on this platform: single endpoint at 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/linktree/page — 1 credit (standard)
 
-- `url`: Full Linktree URL (e.g., `https://linktr.ee/charlidamelio`)
+Get Linktree page.
 
-## Example
+- `url` (required) — Full URL of the Linktree page
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/linktree/page?url=https://linktr.ee/charlidamelio"
+curl "https://www.socialcrawl.dev/v1/linktree/page?url=https://linktr.ee/charlidamelio" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

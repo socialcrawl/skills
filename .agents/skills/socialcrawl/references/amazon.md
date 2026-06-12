@@ -1,18 +1,70 @@
-# Amazon (1 endpoint)
+# Amazon
 
-## Endpoints
+5 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| shop | `url` | standard | Get shop page |
+Credit costs on this platform: shop, product-search, and sellers are 1 credit (standard); product and reviews are 5 credits (advanced) — exact cost listed per endpoint below.
 
-## Parameter Details
+Notes:
+- `asin` params are validated as 10-char alphanumeric before any charge.
+- `country` (default US) covers ~13 Amazon marketplaces.
+- `amazon/reviews` returns the ~5–13 reviews embedded on the ASIN page.
 
-- `url`: Full Amazon shop or storefront URL (e.g., `https://www.amazon.com/shop/influencer123`)
+## GET /v1/amazon/shop — 1 credit (standard)
 
-## Example
+Get Amazon shop page
+
+- `url` (required) — Full URL of the Amazon shop or storefront page
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/amazon/shop?url=https://www.amazon.com/shop/influencer123"
+curl "https://www.socialcrawl.dev/v1/amazon/shop?url=https://www.amazon.com/shop/sydneydelrey" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/amazon/product-search — 1 credit (standard)
+
+Search Amazon products by keyword
+
+- `query` (required) — Search keyword or phrase.
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+- `depth` (optional, integer) — Maximum number of products to return (max 700). Higher depth returns more rows at the same flat credit cost.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/amazon/product-search?query=wireless earbuds" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/amazon/product — 5 credits (advanced)
+
+Get an Amazon product by ASIN
+
+- `asin` (required) — 10-character Amazon ASIN (the product identifier).
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/amazon/product?asin=B0FQFB8FMG" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/amazon/reviews — 5 credits (advanced)
+
+Get Amazon product reviews. Returns the ~5–13 reviews embedded on the ASIN page.
+
+- `asin` (required) — 10-character Amazon ASIN (the product identifier).
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/amazon/reviews?asin=B0DCH8VDXF" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/amazon/sellers — 1 credit (standard)
+
+Get Amazon sellers and offers for a product
+
+- `asin` (required) — 10-character Amazon ASIN (the product identifier).
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/amazon/sellers?asin=B09SM24S8C" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

@@ -1,18 +1,16 @@
-# Linkme (1 endpoint)
+# Linkme
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| page | `url` | standard | Get Linkme page |
+Credit costs on this platform: single endpoint at 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/linkme/page — 1 credit (standard)
 
-- `url`: Full Linkme URL (e.g., `https://linkme.bio/example`)
+Get Linkme profile.
 
-## Example
+- `url` (required) — Full URL of the Linkme page
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/linkme/page?url=https://linkme.bio/example"
+curl "https://www.socialcrawl.dev/v1/linkme/page?url=https://link.me/example" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

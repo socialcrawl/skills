@@ -2,10 +2,10 @@
 
 # @socialcrawl
 
-**Give your AI agent access to 27 social + research platforms through a single API**
+**Give your AI agent access to 39 social, commerce + research platforms through a single API**
 
-[![Platforms](https://img.shields.io/badge/Platforms-27-blue?style=flat-square)](https://socialcrawl.dev)
-[![Endpoints](https://img.shields.io/badge/Endpoints-133-green?style=flat-square)](https://socialcrawl.dev/docs)
+[![Platforms](https://img.shields.io/badge/Platforms-39-blue?style=flat-square)](https://socialcrawl.dev)
+[![Endpoints](https://img.shields.io/badge/Endpoints-221-green?style=flat-square)](https://socialcrawl.dev/docs)
 [![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
 [![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
 
@@ -17,15 +17,16 @@
 
 ## Overview
 
-`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social and research data — profiles, posts, comments, search results, prediction markets, AI-grounded answers, and a universal cross-platform search — from 27 platforms using the [SocialCrawl API](https://socialcrawl.dev).
+`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social, commerce, and research data — profiles, posts, comments, search results, transcripts, ad libraries, product/app/business reviews, places & hotels, prediction markets, AI-grounded answers, and a universal cross-platform search — from 39 platforms (221 endpoints) using the [SocialCrawl API](https://socialcrawl.dev).
 
-One API key. One consistent response format. Every platform. Every response is wrapped in a unified envelope with transparent credit accounting, and the key social archetypes (`Author`, `Post`) go through per-platform **field maps** that normalize 13 platforms' quirky upstream shapes into a single schema — plus four computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) that most data APIs don't give you.
+One API key. One consistent response format. Every platform. Every response is wrapped in a unified envelope with transparent credit accounting. Social archetypes (`Author`, `Post`, `Comment`) go through per-platform **field maps** that normalize dozens of quirky upstream shapes into a single schema — plus four computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) that most data APIs don't give you. Commerce, review, place, and app-store endpoints share first-class canonical `Product` / `Review` / `Seller` / `Place` / `App` schemas.
 
 **What the skill does:**
-- Fetches social media + research data on your behalf (profiles, posts, comments, search, trending, prediction markets, web research)
-- Runs a universal cross-platform search that fans out to 12 sources in parallel (sync JSON or SSE streaming, 20 credits flat)
+- Fetches social, commerce + research data on your behalf (profiles, posts, comments, search, trending, products, reviews, app-store data, places, prediction markets, web research)
+- Runs a universal cross-platform search that fans out to 12+ sources in parallel (sync JSON or SSE streaming, 20 credits flat)
 - Generates working code snippets that call the SocialCrawl API
-- Answers questions about endpoints, pricing, and capabilities
+- Answers questions about endpoints, parameters, and capabilities
+- Gives exact per-endpoint pricing for all 221 endpoints (bundled pricing reference)
 - Checks your credit balance
 
 ## Installation
@@ -74,7 +75,7 @@ Or simply ask your agent to fetch social media data — the skill activates auto
 
 ### 1. Get your API key
 
-Sign up at [socialcrawl.dev](https://socialcrawl.dev/dashboard) and grab your API key from the dashboard. Every account starts with **100 free credits** — no credit card required.
+Sign up at [socialcrawl.dev](https://socialcrawl.dev/dashboard) and grab your API key from the dashboard. Every account starts with **400 free credits** — no credit card required.
 
 ### 2. Set the environment variable
 
@@ -171,27 +172,39 @@ Every response follows a unified envelope:
 
 | Platform | Endpoints | Data Available |
 |----------|-----------|----------------|
-| **TikTok** | 26 | Profiles, videos, comments, followers, showcase, search, trending, live, Shop |
+| **Facebook** | 21 | Pages, posts, comments, reels, photos, groups, events, Marketplace, Ad Library, transcripts |
+| **TikTok** | 18 | Profiles, videos, comments, followers, search, trending, hashtags, songs, live, transcripts, audience demographics |
+| **YouTube** | 16 | Channels, videos, shorts, playlists, comments, search, trending, sponsors, community posts, live streams, transcripts |
+| **Instagram** | 15 | Profiles, posts, reels, comments, highlights, hashtag/profile search, audio reels, trending, transcripts |
 | **GitHub** | 12 | Profiles, repos, READMEs, releases, issues, PRs, search, composite dossiers, profile-velocity analytics |
-| **Instagram** | 12 | Profiles, posts, reels, comments, highlights, search |
-| **YouTube** | 12 | Channels, videos, shorts, playlists, comments, comment replies, trending |
-| **Facebook** | 12 | Profiles, posts, reels, photos, groups, Ad Library |
-| **Reddit** | 7 | Subreddits, posts, comments, search, ads |
-| **Twitter/X** | 7 | Profiles, tweets, communities, AI-powered freeform search (Grok 4.20 + `x_search`) |
-| **LinkedIn** | 6 | Profiles, company pages, posts, Ad Library |
-| **Threads** | 5 | Profiles, posts, search |
-| **Pinterest** | 4 | Search, pins, boards |
-| **Google** | 4 | Search, Ad Library |
+| **Naver** | 11 | 11 Korean search corpora — blog, news, cafe, KnowledgeiN, local, shopping, image, web, book, academic, encyclopedia |
+| **Content Analysis** | 10 | Cross-web brand mentions with sentiment, trends over time, rating histograms, category taxonomy |
+| **Google** | 10 | Web search, Ad Library, Business Profiles, multi-source reviews, updates, Q&A, hotels |
+| **Google Play** | 8 | App search, full app details, reviews, store charts, paginated listings DB, reference data |
+| **Apple App Store** | 8 | App search, full app details, reviews, store charts, paginated listings DB, reference data |
+| **LinkedIn** | 8 | Profiles, company pages, posts, keyword search, Ad Library, transcripts |
+| **Twitter/X** | 7 | Profiles, tweets, communities, transcripts, AI-powered freeform search (Grok + `x_search`) |
+| **Reddit** | 6 | Subreddits, posts, comments, search, subreddit search, transcripts |
+| **Spotify** | 6 | Artists, tracks, albums, podcasts, episodes, search |
+| **Amazon** | 5 | Product search, ASIN details, reviews, sellers & offers, shop pages |
+| **Pinterest** | 5 | Pin search, pin details, boards, URL save-counts |
+| **Rumble** | 5 | Channels, videos, search, comments, transcripts |
+| **Threads** | 5 | Profiles, posts, post search, user search |
+| **TikTok Shop** | 5 | Products, product reviews, shop listings, search, creator showcases |
+| **Google Shopping** | 4 | Product search, product details, cross-retailer reviews, sellers |
 | **Hacker News** | 4 | Search, stories, story comments, profiles |
 | **Tavily** | 4 | Web search (with LLM answer), URL extraction, sitegraph, multi-page crawl |
+| **Twitch** | 4 | Profiles, clips, videos, stream schedules |
+| **Bluesky** | 3 | Profiles, posts |
+| **Kwai** | 3 | Profiles, posts |
 | **Truth Social** | 3 | Profiles, posts |
-| **Polymarket** | 2 | Prediction-market search + server-side topic-expansion research |
-| **Twitch** | 2 | Profiles, clips |
-| **Search (universal)** | 1 | Cross-platform meta-search across 12 sources (sync JSON / SSE streaming, 20cr flat) |
+| **Tripadvisor** | 2 | Place/business search, traveler reviews (with auto-translation metadata) |
+| **Trustpilot** | 2 | Business search, company reviews |
+| **Search (universal)** | 1 | Cross-platform meta-search across 12+ sources (sync JSON / SSE streaming, 20cr flat) |
 | **Perplexity** | 1 | Web-grounded research (LLM answer + cited sources) |
+| **Polymarket** | 1 | Prediction-market multi-query research |
 | **Snapchat** | 1 | Profiles |
 | **Kick** | 1 | Clips |
-| **Amazon** | 1 | Shop pages |
 | **Linktree** | 1 | Link pages |
 | **Linkbio** | 1 | Link pages |
 | **Linkme** | 1 | Link pages |
@@ -199,7 +212,7 @@ Every response follows a unified envelope:
 | **Pillar** | 1 | Link pages |
 | **Utility** | 1 | Age & gender detection |
 
-**Total: 133 endpoints across 27 platforms.**
+**Total: 221 endpoints across 39 platforms.**
 
 ## Credit System
 
@@ -207,17 +220,17 @@ Every API call costs credits based on its complexity:
 
 | Tier | Cost | Endpoints | Examples |
 |------|------|-----------|----------|
-| **Standard** | 1 credit | 104 | Profiles, posts, search, comments, GitHub, HN, Tavily, Perplexity, Twitter AI Search |
-| **Advanced** | 5 credits | 21 | Audience demographics, ad libraries, trending, GitHub composites, Polymarket research |
-| **Premium** | 10 credits | 7 | Video transcripts, AI analysis, GitHub `user/profile-velocity` |
-| **Flat override** | 20 credits | 1 | `/v1/search/everywhere` — universal cross-platform search across 12 sources |
+| **Standard** | 1 credit | 169 | Profiles, posts, search, comments, Naver corpora, GitHub, HN, Tavily, Perplexity, reference data |
+| **Advanced** | 5 credits | 37 | Audience demographics, ad libraries, trending, app data, business/place reviews, GitHub composites, Polymarket research |
+| **Premium** | 10 credits | 14 | Video transcripts, age-gender detection, GitHub `user/profile-velocity`, app listings search |
+| **Flat override** | 20 credits | 1 | `/v1/search/everywhere` — universal cross-platform search across 12+ sources |
 
 ### Pricing
 
 | Plan | Price | Credits | Per 1k Credits |
 |------|-------|---------|----------------|
-| **Free** | £0 | 100 (one-time) | — |
-| **Starter** | £14 | 5,000 | £2.80 |
+| **Free** | £0 | 400 (one-time) | — |
+| **Starter** | £15 | 2,500 | £6.00 |
 | **Growth** | £49 | 20,000 | £2.45 |
 | **Pro** | £299 | 150,000 | £1.99 |
 | **Enterprise** | Contact | Custom | Custom |
@@ -235,22 +248,24 @@ The installed skill contains:
 socialcrawl/
 ├── SKILL.md              # Main skill definition
 └── references/
-    ├── api-overview.md    # Auth, response format, errors, credits
+    ├── api-overview.md    # Auth, response envelope, unified schemas, pagination, caching, idempotency, errors
+    ├── pricing.md         # Exact credit cost for every one of the 221 endpoints + credit packs
     ├── search.md          # Universal cross-platform search (/v1/search/everywhere)
     ├── tiktok.md          # TikTok endpoints & parameters
-    ├── github.md          # GitHub endpoints & parameters
     ├── instagram.md       # Instagram endpoints & parameters
     ├── youtube.md         # YouTube endpoints & parameters
     ├── facebook.md        # Facebook endpoints & parameters
     ├── twitter.md         # Twitter/X endpoints (incl. ai-search)
-    ├── linkedin.md        # LinkedIn endpoints & parameters
-    ├── reddit.md          # Reddit endpoints & parameters
-    ├── threads.md         # Threads endpoints & parameters
-    ├── hackernews.md      # Hacker News endpoints & parameters
-    ├── tavily.md          # Tavily web search/extract/map/crawl
-    ├── polymarket.md      # Polymarket prediction-market search
-    ├── perplexity.md      # Perplexity Sonar web research
-    └── ...                # 12 more platform references
+    ├── amazon.md          # Amazon product search, details, reviews, sellers
+    ├── google_shopping.md # Google Shopping products, reviews, sellers
+    ├── google_play.md     # Google Play app data, reviews, charts
+    ├── app_store.md       # Apple App Store app data, reviews, charts
+    ├── trustpilot.md      # Trustpilot business search + reviews
+    ├── tripadvisor.md     # Tripadvisor places + traveler reviews
+    ├── content_analysis.md# Cross-web brand mentions + sentiment
+    ├── github.md          # GitHub endpoints & parameters
+    ├── naver.md           # Naver Korean search corpora
+    └── ...                # 22 more platform references
 ```
 
 The skill reads the appropriate reference file for each platform on demand, keeping context usage minimal.

@@ -1,22 +1,16 @@
-# Snapchat (1 endpoint)
+# Snapchat
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| profile | `handle` | standard | Get user profile |
+Credit costs on this platform: 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/snapchat/profile — 1 credit (standard)
 
-- `handle`: Snapchat username (e.g., `djkhaled305`)
+Get Snapchat user profile
 
-## Field Maps
-
-The `profile` endpoint returns an `Author` response normalized by the `snapchat-author` field map. Snapchat profile responses are nested under `userProfile.*` upstream; the field map flattens them. Includes computed fields under `data.computed`.
-
-## Example
+- `handle` (required) — Snapchat username
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/snapchat/profile?handle=djkhaled305"
+curl "https://www.socialcrawl.dev/v1/snapchat/profile?handle=djkhaled305" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

@@ -1,22 +1,16 @@
-# Kick (1 endpoint)
+# Kick
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| clip | `url` | standard | Get clip details |
+Credit costs on this platform: 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/kick/clip — 1 credit (standard)
 
-- `url`: Full Kick clip URL (e.g., `https://kick.com/xqc/clips/clip_abc123`)
+Get Kick clip details
 
-## Field Maps
-
-The `clip` endpoint returns a `Post` response normalized by the `kick-post` field map. Kick clip responses are nested under `clip.*` upstream; the field map flattens them. Includes computed fields under `data.computed`.
-
-## Example
+- `url` (required) — Full URL of the Kick clip
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/kick/clip?url=https://kick.com/xqc/clips/clip_abc123"
+curl "https://www.socialcrawl.dev/v1/kick/clip?url=https://kick.com/xqc/clips/clip_abc123" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

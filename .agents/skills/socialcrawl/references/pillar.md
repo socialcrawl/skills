@@ -1,18 +1,16 @@
-# Pillar (1 endpoint)
+# Pillar
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| page | `url` | standard | Get Pillar page |
+Credit costs on this platform: single endpoint at 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/pillar/page — 1 credit (standard)
 
-- `url`: Full Pillar URL (e.g., `https://pillar.io/example`)
+Get Pillar page.
 
-## Example
+- `url` (required) — Full URL of the Pillar page
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/pillar/page?url=https://pillar.io/example"
+curl "https://www.socialcrawl.dev/v1/pillar/page?url=https://pillar.io/example" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

@@ -1,24 +1,65 @@
-# Threads (5 endpoints)
+# Threads
 
-## Endpoints
+5 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| profile | `handle` | standard | Get user profile |
-| user/posts | `handle` | standard | List user posts |
-| post | `url` | standard | Get post details |
-| search | `query` | standard | Search posts |
-| search/users | `query` | standard | Search users |
+Credit costs on this platform: every endpoint costs 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/threads/profile — 1 credit (standard)
 
-- `handle`: Threads username without @ symbol (e.g., `zuck`)
-- `url`: Full Threads post URL (e.g., `https://www.threads.net/@zuck/post/CwABCDEFGHI`)
-- `query`: Search keyword or phrase (e.g., `artificial intelligence`)
+Get Threads user profile
 
-## Example
+- `handle` (required) — Threads username without the @ symbol
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/threads/profile?handle=zuck"
+curl "https://www.socialcrawl.dev/v1/threads/profile?handle=zuck" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/threads/user/posts — 1 credit (standard)
+
+List Threads user posts
+
+- `handle` (required) — Threads username without the @ symbol
+- `trim` (optional, boolean) — Set to true for a trimmed down version of the response
+
+```bash
+curl "https://www.socialcrawl.dev/v1/threads/user/posts?handle=zuck" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/threads/post — 1 credit (standard)
+
+Get Threads post details
+
+- `url` (required) — Full URL of the Threads post
+- `trim` (optional, boolean) — Set to true for a trimmed down version of the response
+
+```bash
+curl "https://www.socialcrawl.dev/v1/threads/post?url=https://www.threads.net/@zuck/post/CwABCDEFGHI" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/threads/search — 1 credit (standard)
+
+Search Threads posts
+
+- `query` (required) — Search keyword or phrase to find Threads posts
+- `start_date` (optional, string) — Start date to search for
+- `end_date` (optional, string) — End date to search for
+- `trim` (optional, boolean) — Set to true for a trimmed down version of the response
+
+```bash
+curl "https://www.socialcrawl.dev/v1/threads/search?query=artificial intelligence" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/threads/search/users — 1 credit (standard)
+
+Search Threads users
+
+- `query` (required) — Search keyword or phrase to find Threads users
+
+```bash
+curl "https://www.socialcrawl.dev/v1/threads/search/users?query=tech" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

@@ -1,18 +1,16 @@
-# Utility (1 endpoint)
+# Utility
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| age-gender | `url` | premium | Detect age and gender from image |
+Credit costs on this platform: the single endpoint is 10 credits (premium) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/utility/age-gender — 10 credits (premium)
 
-- `url`: Direct URL of the image to analyze (e.g., `https://example.com/photo.jpg`)
+Detect age and gender
 
-## Example
+- `url` (required) — Social profile URL whose avatar should be analyzed (e.g. a Twitter/X profile URL)
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/utility/age-gender?url=https://example.com/photo.jpg"
+curl "https://www.socialcrawl.dev/v1/utility/age-gender?url=https://twitter.com/levelsio" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

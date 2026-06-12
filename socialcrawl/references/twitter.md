@@ -1,46 +1,90 @@
-# Twitter/X (7 endpoints)
+# Twitter/X
 
-## Endpoints
+7 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| profile | `handle` | standard | Get user profile |
-| user/tweets | `handle` | standard | List user tweets |
-| tweet | `url` | standard | Get tweet details |
-| community | `url` | standard | Get community details |
-| community/tweets | `url` | standard | List community tweets |
-| ai-search | `query` | standard | **AI-powered freeform Twitter search via Grok 4.20 — returns `{ answer, sources, tool_calls_count }`** |
-| tweet/transcript | `url` | premium | Get video transcript |
+Credit costs on this platform: every endpoint costs 1 credit (standard) except video transcript at 10 (premium) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/twitter/profile — 1 credit (standard)
 
-- `handle`: Twitter username without @ symbol (e.g. `elonmusk`)
-- `url`: Full tweet or community URL (e.g. `https://x.com/elonmusk/status/1234567890`)
-- `query`: Natural-language prompt for `ai-search` (e.g. `What did @elonmusk say about xAI this week?`)
+Get Twitter user profile
 
-## `ai-search` optional params
-
-| Param | Notes |
-|-------|-------|
-| `from_handles` | CSV, max 10 — restrict search to these handles. Mutually exclusive with `exclude_handles`. |
-| `exclude_handles` | CSV, max 10 — exclude these handles. |
-| `from_date` | ISO 8601 `YYYY-MM-DD` lower bound. |
-| `to_date` | ISO 8601 `YYYY-MM-DD` upper bound. |
-
-## Field Maps
-
-The `profile` endpoint returns an `Author` response normalized by the `twitter-author` field map, and `tweet` returns a `Post` normalized by `twitter-post`. Both include computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Twitter responses use GraphQL-style deep nesting upstream — the field map flattens them into the unified schema. Use `?format=raw` to see the original deeply-nested JSON.
-
-`ai-search` is passthrough — archetype `Analytics`. Returns `{ answer, sources, tool_calls_count }` directly under `data`. `tool_calls_count` reports how many times Grok invoked its `x_search` tool during reasoning (cost depth signal — client still pays only 1 credit).
-
-## Examples
+- `handle` (required) — Twitter username without the @ symbol
 
 ```bash
-# Standard profile
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/twitter/profile?handle=elonmusk"
+curl "https://www.socialcrawl.dev/v1/twitter/profile?handle=elonmusk" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
 
-# AI-powered freeform search scoped to specific handles + date range
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/twitter/ai-search?query=what+is+elon+saying+about+xAI&from_handles=elonmusk,xai&from_date=2026-04-01&to_date=2026-04-30"
+## GET /v1/twitter/user/tweets — 1 credit (standard)
+
+List Twitter user tweets
+
+- `handle` (required) — Twitter username without the @ symbol
+- `trim` (optional, boolean) — Set to true for a trimmed down version of the response
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/user/tweets?handle=elonmusk" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/twitter/tweet — 1 credit (standard)
+
+Get Twitter tweet details
+
+- `url` (required) — Full URL of the tweet
+- `trim` (optional, boolean) — Set to true for a trimmed down version of the response
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/tweet?url=https://x.com/elonmusk/status/1234567890" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/twitter/community — 1 credit (standard)
+
+Get Twitter community details
+
+- `url` (required) — Full URL of the Twitter/X community
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/community?url=https://x.com/i/communities/1926186499399139650" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/twitter/community/tweets — 1 credit (standard)
+
+List Twitter community tweets
+
+- `url` (required) — Full URL of the Twitter/X community
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/community/tweets?url=https://x.com/i/communities/1234567890" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/twitter/tweet/transcript — 10 credits (premium)
+
+Get Twitter video transcript
+
+- `url` (required) — Full URL of the tweet containing a video
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/tweet/transcript?url=https://x.com/TheoVon/status/1916982720317821050" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/twitter/ai-search — 1 credit (standard)
+
+AI-powered X (Twitter) search via xAI Grok
+
+Note: this endpoint is AI-powered (xAI Grok `x_search`) and returns `{ answer, sources, tool_calls_count }` rather than a normalized post list.
+
+- `query` (required) — Natural-language prompt describing what you want to learn from X. The model autonomously searches X using the x_search tool with any handle / date filters you provide.
+- `from_handles` (optional, string) — Comma-separated X handles (max 10). Restricts the search to posts from these accounts only. Mutually exclusive with exclude_handles.
+- `exclude_handles` (optional, string) — Comma-separated X handles (max 10) to exclude from search results. Mutually exclusive with from_handles.
+- `from_date` (optional, string) — ISO 8601 start date (YYYY-MM-DD). Limits the search window to posts on or after this date.
+- `to_date` (optional, string) — ISO 8601 end date (YYYY-MM-DD). Limits the search window to posts on or before this date.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/ai-search?query=What is @elonmusk saying about xAI this week?" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

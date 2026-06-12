@@ -1,18 +1,16 @@
-# Komi (1 endpoint)
+# Komi
 
-## Endpoints
+1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-| Resource | Params | Tier | Description |
-|----------|--------|------|-------------|
-| page | `url` | standard | Get Komi page |
+Credit costs on this platform: single endpoint at 1 credit (standard) — exact cost listed per endpoint below.
 
-## Parameter Details
+## GET /v1/komi/page — 1 credit (standard)
 
-- `url`: Full Komi URL (e.g., `https://komi.io/example`)
+Get Komi page.
 
-## Example
+- `url` (required) — Full URL of the Komi page
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/komi/page?url=https://komi.io/example"
+curl "https://www.socialcrawl.dev/v1/komi/page?url=https://kimkardashian.komi.io/" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
