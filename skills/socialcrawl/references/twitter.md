@@ -1,8 +1,8 @@
 # Twitter/X
 
-7 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+8 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint costs 1 credit (standard) except video transcript at 10 (premium) — exact cost listed per endpoint below.
+Credit costs on this platform: every endpoint costs 1 credit (standard) except video transcript at 10 (premium) and the `profile/full` Prism composite at a flat 5 credits — exact cost listed per endpoint below.
 
 ## GET /v1/twitter/profile — 1 credit (standard)
 
@@ -86,5 +86,19 @@ Note: this endpoint is AI-powered (xAI Grok `x_search`) and returns `{ answer, s
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/twitter/ai-search?query=What is @elonmusk saying about xAI this week?" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/twitter/profile/full — 5 credits (flat override)
+
+Profile-360 composite — profile, recent posts, and a computed analytics block (avg engagement rate, posts/week cadence, top post, format mix) folded into one call. Part of the "Prism" composite family.
+
+- `handle` (optional, string) — Twitter username without the @ symbol.
+- `posts` (optional, integer) — How many recent posts to fetch + average the computed metrics over (1–100, default 25).
+- `cursor` (optional, string) — Pass a prior response's `posts_cursor` to deepen the post window.
+- `include` (optional, string) — CSV subset of `posts,computed` (default both). `include=computed` drops the raw `posts[]` to save payload.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/twitter/profile/full?handle=elonmusk" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

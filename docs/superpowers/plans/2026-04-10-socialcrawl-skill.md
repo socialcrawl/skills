@@ -19,8 +19,8 @@
 - [ ] **Step 1: Run init_skill.py to scaffold**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl"
-python "C:/Users/doodd/.claude/skills/skill-creator/scripts/init_skill.py" socialcrawl --path for-agents
+cd "<project-root>"
+python "~/.claude/skills/skill-creator/scripts/init_skill.py" socialcrawl --path for-agents
 ```
 
 Expected: Directory `for-agents/socialcrawl/` created with template SKILL.md, scripts/, references/, assets/ directories.
@@ -40,7 +40,7 @@ Expected: Only `for-agents/socialcrawl/SKILL.md` and empty `for-agents/socialcra
 - [ ] **Step 3: Commit scaffold**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl/SKILL.md socialcrawl/references/
 git commit -m "chore: scaffold socialcrawl skill via init_skill.py"
 ```
@@ -210,7 +210,7 @@ Expected: approximately 140-160 lines (under the 200 target, well under the 500 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl/SKILL.md
 git commit -m "feat: write SKILL.md with workflows, platform index, and error handling"
 ```
@@ -333,7 +333,7 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
 - [ ] **Step 2: Commit**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl/references/api-overview.md
 git commit -m "feat: add api-overview reference with auth, response format, errors, credits"
 ```
@@ -423,7 +423,7 @@ Example curl should use the `profile` endpoint with `url=https://www.facebook.co
 - [ ] **Step 5: Commit**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl/references/tiktok.md socialcrawl/references/instagram.md socialcrawl/references/youtube.md socialcrawl/references/facebook.md
 git commit -m "feat: add platform references for TikTok, Instagram, YouTube, Facebook"
 ```
@@ -498,7 +498,7 @@ Example curl: `search` endpoint with `query=best restaurants in London`.
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl/references/twitter.md socialcrawl/references/linkedin.md socialcrawl/references/reddit.md socialcrawl/references/threads.md socialcrawl/references/pinterest.md socialcrawl/references/google.md
 git commit -m "feat: add platform references for Twitter, LinkedIn, Reddit, Threads, Pinterest, Google"
 ```
@@ -580,7 +580,7 @@ Example curl: `age-gender` endpoint.
 - [ ] **Step 12: Commit**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl/references/twitch.md socialcrawl/references/truthsocial.md socialcrawl/references/snapchat.md socialcrawl/references/kick.md socialcrawl/references/amazon.md socialcrawl/references/linktree.md socialcrawl/references/linkbio.md socialcrawl/references/linkme.md socialcrawl/references/komi.md socialcrawl/references/pillar.md socialcrawl/references/utility.md
 git commit -m "feat: add platform references for remaining 11 platforms"
 ```
@@ -597,13 +597,13 @@ git commit -m "feat: add platform references for remaining 11 platforms"
 - [ ] **Step 1: Verify file count and structure**
 
 ```bash
-find "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents/socialcrawl" -type f -name "*.md" | wc -l
+find "<project-root>/for-agents/socialcrawl" -type f -name "*.md" | wc -l
 ```
 
 Expected: 23 files (1 SKILL.md + 1 api-overview.md + 21 platform files).
 
 ```bash
-ls "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents/socialcrawl/references/"
+ls "<project-root>/for-agents/socialcrawl/references/"
 ```
 
 Expected: 22 .md files listed (api-overview + 21 platforms).
@@ -619,7 +619,7 @@ Read `for-agents/socialcrawl/SKILL.md` and confirm:
 - [ ] **Step 3: Verify no TODO placeholders remain**
 
 ```bash
-grep -r "TODO" "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents/socialcrawl/" || echo "No TODOs found"
+grep -r "TODO" "<project-root>/for-agents/socialcrawl/" || echo "No TODOs found"
 ```
 
 Expected: "No TODOs found"
@@ -627,8 +627,8 @@ Expected: "No TODOs found"
 - [ ] **Step 4: Package the skill**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl"
-python "C:/Users/doodd/.claude/skills/skill-creator/scripts/package_skill.py" "for-agents/socialcrawl" "for-agents"
+cd "<project-root>"
+python "~/.claude/skills/skill-creator/scripts/package_skill.py" "for-agents/socialcrawl" "for-agents"
 ```
 
 Expected: Validation passes, `for-agents/socialcrawl.skill` file created.
@@ -636,7 +636,7 @@ Expected: Validation passes, `for-agents/socialcrawl.skill` file created.
 - [ ] **Step 5: Verify the .skill file**
 
 ```bash
-ls -la "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents/socialcrawl.skill"
+ls -la "<project-root>/for-agents/socialcrawl.skill"
 ```
 
 Expected: File exists, reasonable size (should be under 50KB since it's all text).
@@ -644,7 +644,7 @@ Expected: File exists, reasonable size (should be under 50KB since it's all text
 - [ ] **Step 6: Commit the packaged skill**
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add socialcrawl.skill
 git commit -m "feat: package socialcrawl.skill for distribution"
 ```
@@ -680,7 +680,7 @@ Count the rows in the SKILL.md platform table (should be 21). Count the referenc
 If any issues were found and fixed:
 
 ```bash
-cd "c:/Users/doodd/Documents/RidioCompany/Projects/SocialCrawl/for-agents"
+cd "<project-root>/for-agents"
 git add -A socialcrawl/
 git commit -m "fix: address review findings in socialcrawl skill"
 ```

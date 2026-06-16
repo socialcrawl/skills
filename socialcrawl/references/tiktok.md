@@ -1,8 +1,8 @@
 # TikTok
 
-18 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+19 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: 1 credit (standard) for most endpoints; 5 (advanced) for trending and user audience demographics; 10 (premium) for transcripts — exact cost listed per endpoint below.
+Credit costs on this platform: 1 credit (standard) for most endpoints; 5 (advanced) for trending and user audience demographics; 10 (premium) for transcripts; the `profile/full` Prism composite is a flat 5 credits — exact cost listed per endpoint below.
 
 ## GET /v1/tiktok/profile — 1 credit (standard)
 
@@ -239,5 +239,20 @@ Get TikTok profile region
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktok/profile/region?handle=stoolpresidente" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/tiktok/profile/full — 5 credits (flat override)
+
+Profile-360 composite — profile, recent posts, and a computed analytics block (avg engagement rate, posts/week cadence, top post, format mix) folded into one call. Part of the "Prism" composite family.
+
+- `handle` (optional, string) — TikTok username without the @ symbol.
+- `user_id` (optional, string) — TikTok numeric user ID. Use this for faster responses.
+- `posts` (optional, integer) — How many recent posts to fetch + average the computed metrics over (1–100, default 25).
+- `cursor` (optional, string) — Pass a prior response's `posts_cursor` to deepen the post window.
+- `include` (optional, string) — CSV subset of `posts,computed` (default both). `include=computed` drops the raw `posts[]` to save payload.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/tiktok/profile/full?handle=charlidamelio" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

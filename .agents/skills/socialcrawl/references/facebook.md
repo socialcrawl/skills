@@ -1,8 +1,8 @@
 # Facebook
 
-21 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+22 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: most endpoints cost 1 credit (standard); Ad Library endpoints cost 5 (advanced); video/ad transcripts cost 10 (premium) — exact cost listed per endpoint below.
+Credit costs on this platform: most endpoints cost 1 credit (standard); Ad Library endpoints cost 5 (advanced); video/ad transcripts cost 10 (premium); the `profile/full` Prism composite is a flat 5 credits — exact cost listed per endpoint below.
 
 ## GET /v1/facebook/profile — 1 credit (standard)
 
@@ -304,5 +304,19 @@ Get a Facebook Ad Library video ad transcript
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/facebook/adlibrary/ad/transcript" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/facebook/profile/full — 5 credits (flat override)
+
+Profile-360 composite — page profile, recent posts, and a computed analytics block (avg engagement rate, posts/week cadence, top post, format mix) folded into one call. Part of the "Prism" composite family.
+
+- `url` (optional, string) — Full URL of the Facebook page or profile.
+- `posts` (optional, integer) — How many recent posts to fetch + average the computed metrics over (1–100, default 25).
+- `cursor` (optional, string) — Pass a prior response's `posts_cursor` to deepen the post window.
+- `include` (optional, string) — CSV subset of `posts,computed` (default both). `include=computed` drops the raw `posts[]` to save payload.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/facebook/profile/full?url=https://www.facebook.com/Meta" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

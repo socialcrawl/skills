@@ -2,7 +2,7 @@
 
 7 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint costs 1 credit (standard) except video post transcript at 10 (premium) — exact cost listed per endpoint below.
+Credit costs on this platform: every endpoint costs 1 credit (standard) except video post transcript at 10 (premium) and the `omni-search` Prism composite, which is metered — 1 credit per search page plus 1 credit per expanded thread, with a 5-credit minimum — exact cost listed per endpoint below.
 
 ## GET /v1/reddit/subreddit — 1 credit (standard)
 
@@ -85,5 +85,22 @@ Get a Reddit video post transcript
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/reddit/post/transcript?url=https://www.reddit.com/r/youseeingthisshit/comments/1oiu9xm/football_nostalgiasaints_punter_head_coach_cant/" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/reddit/omni-search — metered (1cr/search page + 1cr/expanded thread, 5-credit minimum)
+
+Voice-of-customer sweep — one keyword pulls the top threads across all of Reddit with subreddit attribution, top comments inline on each expanded thread, and a subreddit rollup. Part of the "Prism" composite family.
+
+- `query` (required) — Keyword or phrase to sweep across Reddit.
+- `threads` (optional, integer) — How many top threads to expand comments for (1–8, default 8).
+- `sort` (optional, enum: relevance | new | top | comment_count) — Search sort order.
+- `timeframe` (optional, enum: all | day | week | month | year) — Time window for the search.
+- `subreddit` (optional, string) — Scope the sweep to one subreddit (bare name, no r/ prefix).
+- `cursor` (optional, string) — Opaque cursor from a prior response's `next_cursor` to page deeper.
+- `include` (optional, string) — CSV subset of `subreddits,comments` (default both).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/reddit/omni-search?query=best mechanical keyboard" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

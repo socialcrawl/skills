@@ -1,6 +1,6 @@
 # SocialCrawl Pricing Reference
 
-Complete per-endpoint credit pricing for all 221 active endpoints across 39 platforms. Auto-derived from the live endpoint registry.
+Complete per-endpoint credit pricing for all 264 active endpoints across 42 platforms. Auto-derived from the live endpoint registry.
 
 ## How billing works
 
@@ -8,16 +8,19 @@ Complete per-endpoint credit pricing for all 221 active endpoints across 39 plat
 - **Cache hits are free** — a response served from cache costs 0 credits (`X-Cache: HIT`, `cached: true`).
 - **Automatic refunds** — credits are refunded on upstream errors (502), circuit-breaker rejections (503), internal errors (500), and empty-upstream results (404 `RESOURCE_NOT_FOUND`). You only pay for calls that return real data.
 - **Idempotent replays are free** — resending with the same `Idempotency-Key` returns the stored response at 0 credits.
+- **Metered composites** — some Prism composites (e.g. `prism/comments`, `prism/ai-visibility`) deduct an upfront ceiling and auto-refund down to the actual work done; the response `credits_used` is the real charge.
 - `GET /v1/credits/balance` is always 0 credits.
 
 ## Credit tiers
 
 | Tier | Cost per call | Endpoints | Typical endpoints |
 |------|--------------|-----------|-------------------|
-| standard | 1 credit | 169 | Profiles, posts, comments, search, Naver corpora, GitHub direct calls, reference data |
-| advanced | 5 credits | 37 | Ad libraries, trending, audience analytics, app data, business/place reviews, GitHub composites, Polymarket research |
-| premium | 10 credits | 14 | Video transcripts, age-gender audience detection, profile-velocity composite, app listings search |
-| flat override | 20 credits | 1 | `/v1/search/everywhere` (universal cross-platform search) |
+| standard | 1 credit | 184 | Profiles, posts, comments, search, Naver corpora, GitHub direct calls, reference data |
+| advanced | 5 credits | 55 | Ad libraries, trending, audience analytics, app data, business/place reviews, GitHub composites, Polymarket research |
+| premium | 10 credits | 25 | Video transcripts, age-gender audience detection, profile-velocity composite, app listings search |
+| flat / metered | varies (0–50) | — | `/v1/search/everywhere` (20) & `search/forums` (10); `naver/brief` (10); `{platform}/profile/full` (5); all `/v1/prism/*` composites (0–50, flat or metered per recipe) |
+
+Cross-platform **Prism** composites (`/v1/prism/*`) and the per-platform `profile/full` / `omni-search` composites override the 1/5/10 ladder with a flat or metered per-recipe price — each fans out across several endpoints. Per-endpoint costs are listed below.
 
 ## Credit packs
 
@@ -79,7 +82,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/content_analysis/categories` | List the Content Analysis category taxonomy | 1 (standard) |
 | `/v1/content_analysis/filters` | List the filterable fields for Content Analysis | 1 (standard) |
 
-### Facebook (21)
+### Facebook (22)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -104,6 +107,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/facebook/events` | List Facebook events for a city | 1 (standard) |
 | `/v1/facebook/event/details` | Get details for a Facebook event | 1 (standard) |
 | `/v1/facebook/adlibrary/ad/transcript` | Get a Facebook Ad Library video ad transcript | 10 (premium) |
+| `/v1/facebook/profile/full` | Facebook profile, recent posts, and computed analytics in one call. | 5 (standard) |
 
 ### GitHub (12)
 
@@ -137,6 +141,20 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/google/hotels/search` | Search Google hotels | 1 (standard) |
 | `/v1/google/hotels/info` | Get Google hotel detail | 5 (advanced) |
 
+### Google Finance (3)
+
+| Endpoint | What it returns | Credits |
+|----------|-----------------|---------|
+| `/v1/google_finance/quote` | Get a financial instrument quote | 5 (advanced) |
+| `/v1/google_finance/ticker-search` | Search financial instruments by name | 1 (standard) |
+| `/v1/google_finance/markets` | Get a markets overview (indices + movers) | 1 (standard) |
+
+### Google News (1)
+
+| Endpoint | What it returns | Credits |
+|----------|-----------------|---------|
+| `/v1/google_news/search` | Search Google News | 1 (standard) |
+
 ### Google Play (8)
 
 | Endpoint | What it returns | Credits |
@@ -168,7 +186,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/hackernews/story/comments` | Get comments on a Hacker News story | 1 (standard) |
 | `/v1/hackernews/profile` | Get a Hacker News user profile | 1 (standard) |
 
-### Instagram (15)
+### Instagram (16)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -187,6 +205,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/instagram/search/hashtag` | Search Instagram posts by hashtag | 1 (standard) |
 | `/v1/instagram/search/profiles` | Search Instagram profiles by keyword | 1 (standard) |
 | `/v1/instagram/reels/trending` | Get trending Instagram reels | 5 (advanced) |
+| `/v1/instagram/profile/full` | Instagram profile, recent posts, and computed analytics in one call. | 5 (standard) |
 
 ### Kick (1)
 
@@ -208,13 +227,13 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/kwai/user/posts` | List a Kwai user's posts | 1 (standard) |
 | `/v1/kwai/post` | Get a Kwai post | 1 (standard) |
 
-### Linkbio (1)
+### LinkBio (1)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
 | `/v1/linkbio/page` | Get Linkbio page | 1 (standard) |
 
-### LinkedIn (8)
+### LinkedIn (9)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -226,8 +245,9 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/linkedin/ads/search` | Search LinkedIn ads | 5 (advanced) |
 | `/v1/linkedin/search/posts` | Search public LinkedIn posts by keyword | 1 (standard) |
 | `/v1/linkedin/post/transcript` | Get a LinkedIn post video transcript | 10 (premium) |
+| `/v1/linkedin/profile/full` | LinkedIn company profile, recent posts, and computed analytics in one call. | 5 (standard) |
 
-### Linkme (1)
+### LinkMe (1)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -239,7 +259,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 |----------|-----------------|---------|
 | `/v1/linktree/page` | Get Linktree page | 1 (standard) |
 
-### Naver (11)
+### Naver (12)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -254,6 +274,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/naver/doc/search` | Search Naver Academic Documents (전문자료) | 1 (standard) |
 | `/v1/naver/image/search` | Search Naver Image | 1 (standard) |
 | `/v1/naver/webkr/search` | Search Naver Web (웹문서) | 1 (standard) |
+| `/v1/naver/brief` | One query across the Korean internet (6 Naver corpora) + optional digest. | 10 (advanced) |
 
 ### Perplexity (1)
 
@@ -283,7 +304,42 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 |----------|-----------------|---------|
 | `/v1/polymarket/research` | Polymarket prediction markets — multi-query research | 5 (advanced) |
 
-### Reddit (6)
+### Prism (30)
+
+| Endpoint | What it returns | Credits |
+|----------|-----------------|---------|
+| `/v1/prism/lookup` | Universal URL dispatcher: any social/commerce URL → the right detail endpoint's unified response. | 0 (standard) |
+| `/v1/prism/comments` | Every comment on a post, replies nested, server-paginated to completion. | 1 (standard) |
+| `/v1/prism/brand-mentions` | Brand mention volume time-series, sentiment split, top sources, and recent mentions for one keyword. | 20 (advanced) |
+| `/v1/prism/demand-signals` | Consumer-demand nowcast: app-review velocity, web mention slope, Reddit velocity, and commerce review levels, fused into a published demand index. | 30 (advanced) |
+| `/v1/prism/campaign` | Campaign tracker: pre/during/post volume lift, cross-platform engagement, and ranked top amplifiers for a hashtag or phrase. | 35 (advanced) |
+| `/v1/prism/ai-visibility` | AI Share-of-Voice / GEO monitoring: prompt set x reruns to per-brand appearance-% per AI engine plus a cited-domain ranking. | 2 (advanced) |
+| `/v1/prism/crisis-postmortem` | Crisis post-mortem: a who-said-what-first timeline across web, Reddit, Hacker News, and social, with an origin, peak, propagation sequence, and a grounded narrative. | 35 (advanced) |
+| `/v1/prism/crisis-radar` | Stateless crisis breach check: a z-score on daily mention volume and negative share, with on-breach confirmation and a severity grade. | 10 (advanced) |
+| `/v1/prism/devtool-pulse` | Developer-brand health: a devtool's repo dossier + Hacker News reaction + Reddit chatter + dev-blog echo, in one call. | 15 (advanced) |
+| `/v1/prism/leads` | Ranked feed of public conversations where people seek alternatives to or are switching from a competitor. | 20 (advanced) |
+| `/v1/prism/earned-media` | A brand's earned-media footprint — news + tech-press + fresh-web clips, deduped and ranked, with an outlet-coverage rollup. | 20 (advanced) |
+| `/v1/prism/truthsocial-pulse` | A Truth Social handle's pulse — profile, recent posts, per-post detail drill, and the news echo, in one call. | 8 (advanced) |
+| `/v1/prism/launch-echo` | How a launch landed — the Hacker News reaction (top threads + comments), the dev-blog echo, and an optional repo dossier. | 10 (advanced) |
+| `/v1/prism/audience-overlap` | How much two TikTok creators' commenter audiences overlap — Jaccard, shared-fan count, and a confidence label. | 20 (advanced) |
+| `/v1/prism/reputation` | A brand's cross-source reputation — Trustpilot + app stores + Google Business + web sentiment, blended into one weighted score with themed pros/cons. | 30 (premium) |
+| `/v1/prism/employer-brand` | A company's employer brand — what people say about working there across Reddit, the web, YouTube, Naver, and the company's own LinkedIn voice. | 30 (premium) |
+| `/v1/prism/audience-questions` | The real questions a topic's audience asks — harvested from Reddit + YouTube threads and clustered by intent (who/what/why/how/vs). | 30 (premium) |
+| `/v1/prism/product-reviews` | A product's reviews across Amazon + Google Shopping + Trustpilot, folded into a cross-marketplace rating + themed pros/cons report. | 30 (premium) |
+| `/v1/prism/apps-lookup` | One app across Google Play + the App Store — resolved, title-matched, and compared into a cross-store rating + listing report. | 30 (premium) |
+| `/v1/prism/org-radar` | A GitHub org's footprint — its top repos each expanded into a full dossier (releases, issue load, top request/complaint), rolled up. | 26 (premium) |
+| `/v1/prism/creator-vet` | Vet a creator before partnering — engagement quality, commenter authenticity, posting cadence, and controversy signals, optionally across platforms. | 50 (premium) |
+| `/v1/prism/korea-gap` | What the world is talking about that Korea isn't (and vice versa) — the global vs Korean (Naver) conversation gap for a brand/topic. | 40 (premium) |
+| `/v1/prism/share-of-voice` | Engagement-weighted Share of Voice across 2-5 brands, with web+social split, emotion overlay, and ESOV. | 40 (premium) |
+| `/v1/prism/review-integrity` | Cross-source review integrity verdict (statistical, deterministic). | 30 (premium) |
+| `/v1/prism/answers` | Multi-engine AI consensus: one question → Perplexity + Grok + Tavily answers verbatim, merged citations, and an agreement matrix. | 15 (premium) |
+| `/v1/prism/video-intel` | One video URL → detail + stats + transcript + top comments + commenter sample, across YouTube/TikTok/Rumble/Instagram. | 5 (advanced) |
+| `/v1/prism/voice` | One person's public posts across X, Threads, Bluesky, and Truth Social, time-merged. | 5 (advanced) |
+| `/v1/prism/app-reviews` | Cross-store app review intelligence (Google Play + App Store) — translated, clustered, sentiment-scored. | 15 (advanced) |
+| `/v1/prism/creator-card` | One handle, unified author cards across TikTok, Instagram, YouTube, X (and more). | 5 (advanced) |
+| `/v1/prism/post-stats` | Up to 100 mixed-platform post URLs → current engagement per URL, failed URLs refunded. | 1 (standard) |
+
+### Reddit (7)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -293,6 +349,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/reddit/post/comments` | List Reddit post comments | 1 (standard) |
 | `/v1/reddit/subreddit/search` | Search within a subreddit | 1 (standard) |
 | `/v1/reddit/post/transcript` | Get a Reddit video post transcript | 10 (premium) |
+| `/v1/reddit/omni-search` | Reddit VoC sweep: one keyword → threads across all of Reddit with subreddit attribution and top comments inline. | 1 (standard) |
 
 ### Rumble (5)
 
@@ -304,11 +361,12 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/rumble/video/transcript` | Get a Rumble video transcript | 10 (premium) |
 | `/v1/rumble/video/comments` | List top-level comments on a Rumble video | 1 (standard) |
 
-### Universal Search (1)
+### Universal Search (2)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
-| `/v1/search/everywhere` | Universal social search across 12 platforms | 20 (flat) |
+| `/v1/search/everywhere` | Universal social search across 12 platforms | 20 (standard) |
+| `/v1/search/forums` | Fused forum search across Reddit, Hacker News, and Naver 지식iN/카페 — with top comments inline on hero threads by default. | 10 (standard) |
 
 ### Snapchat (1)
 
@@ -346,7 +404,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/threads/search` | Search Threads posts | 1 (standard) |
 | `/v1/threads/search/users` | Search Threads users | 1 (standard) |
 
-### TikTok (18)
+### TikTok (19)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -368,6 +426,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/tiktok/song` | Get TikTok song details | 1 (standard) |
 | `/v1/tiktok/song/videos` | List TikTok videos using a song | 1 (standard) |
 | `/v1/tiktok/profile/region` | Get TikTok profile region | 1 (standard) |
+| `/v1/tiktok/profile/full` | TikTok profile, recent posts, and computed analytics in one call. | 5 (standard) |
 
 ### TikTok Shop (5)
 
@@ -410,7 +469,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/twitch/user/videos` | List a Twitch user's videos | 1 (standard) |
 | `/v1/twitch/user/schedule` | Get a Twitch user's stream schedule | 1 (standard) |
 
-### Twitter/X (7)
+### Twitter/X (8)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -421,6 +480,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/twitter/community/tweets` | List Twitter community tweets | 1 (standard) |
 | `/v1/twitter/tweet/transcript` | Get Twitter video transcript | 10 (premium) |
 | `/v1/twitter/ai-search` | AI-powered X (Twitter) search via xAI Grok | 1 (standard) |
+| `/v1/twitter/profile/full` | X (Twitter) profile, recent posts, and computed analytics in one call. | 5 (standard) |
 
 ### Utility (1)
 
@@ -428,7 +488,7 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 |----------|-----------------|---------|
 | `/v1/utility/age-gender` | Detect age and gender | 10 (premium) |
 
-### YouTube (16)
+### YouTube (17)
 
 | Endpoint | What it returns | Credits |
 |----------|-----------------|---------|
@@ -448,3 +508,8 @@ Current packs and any promotions: https://socialcrawl.dev/pricing
 | `/v1/youtube/channel/playlists` | List a YouTube channel's playlists | 1 (standard) |
 | `/v1/youtube/channel/lives` | List a YouTube channel's live streams | 1 (standard) |
 | `/v1/youtube/channel/community-posts` | List a YouTube channel's community posts | 1 (standard) |
+| `/v1/youtube/profile/full` | YouTube profile, recent posts, and computed analytics in one call. | 5 (standard) |
+
+## Monitors (not counted above)
+
+Monitors (`/v1/monitors/*`) are a stateful scheduled wrapper, **not** registry endpoints, so they're excluded from the 264-endpoint total. Managing a monitor (create/list/get/runs/timeseries/pause/resume/delete) costs **0 credits**; each scheduled run bills the wrapped recipe's normal cost **plus a 1-credit scheduling premium**. See [monitors.md](monitors.md).

@@ -17,7 +17,7 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
 
 ## Surface
 
-**39 platforms, 221 active endpoints** (231 registered; 10 are soft-disabled while their upstream source is down — calling one returns `503` with no charge). All endpoints are `GET /v1/{platform}/{resource}`.
+**42 platforms, 264 active endpoints**. Most are `GET /v1/{platform}/{resource}`. Two surfaces sit on top of the registry: the cross-platform **Prism** composites (`/v1/prism/*` and per-platform `profile/full` / `omni-search`), and the stateful **Monitors** family (`/v1/monitors/*`, which also uses POST/PATCH/DELETE and is not counted in the 264). See [prism.md](prism.md) and [monitors.md](monitors.md).
 
 ## Response Format
 
@@ -220,6 +220,14 @@ Two response modes via the `Accept` header:
 - `text/event-stream` — typed SSE chunks: `meta`, `source_started`, `items`, `source_failed`, `plan_refined`, `ranked_partial`, `ranked_final`, `comments_enriched`, `clusters`, `warning`, `done`, `error`.
 
 Fully refunded when every source fails or returns empty (sync and streaming both).
+
+## Prism Composites (`/v1/prism/*`)
+
+Server-side composites that fan out to several detail endpoints and fold the legs into one unified payload behind the standard envelope. Every composite emits a `legs[]` transparency array (`{endpoint, status, credits_used, latency_ms, error}`). Cross-platform recipes live under `/v1/prism/*`; a few keep their platform's own path and carry a `family: "prism"` flag (`{tiktok,instagram,youtube,twitter,facebook,linkedin}/profile/full`, `reddit/omni-search`). Pricing is flat or metered per recipe (0–50 credits); metered composites (e.g. `prism/comments`, `prism/ai-visibility`) deduct an upfront ceiling and refund to the actual work done. Streaming composites (`prism/comments`, `reddit/omni-search`) also support `Accept: text/event-stream`. Full list: [prism.md](prism.md).
+
+## Monitors (`/v1/monitors/*`)
+
+A stateful, scheduled wrapper: a monitor re-runs any registered recipe or Prism composite on a cadence (hourly/daily/weekly/cron), delivers each result to an HMAC-signed webhook, evaluates alert rules, and accumulates a per-run time-series. Monitors are **not** registry endpoints (not counted in the 264) and use POST/GET/PATCH/DELETE. Managing them costs 0 credits; each scheduled run bills the recipe's normal cost plus a 1-credit scheduling premium. Full contract: [monitors.md](monitors.md).
 
 ## Platform Status
 

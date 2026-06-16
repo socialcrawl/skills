@@ -1,8 +1,8 @@
 # LinkedIn
 
-8 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+9 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: most endpoints are 1 credit (standard); ad endpoints are 5 credits (advanced); video transcript is 10 credits (premium) — exact cost listed per endpoint below.
+Credit costs on this platform: most endpoints are 1 credit (standard); ad endpoints are 5 credits (advanced); video transcript is 10 credits (premium); the `profile/full` Prism composite is a flat 5 credits — exact cost listed per endpoint below.
 
 ## GET /v1/linkedin/profile — 1 credit (standard)
 
@@ -98,5 +98,19 @@ Get a LinkedIn post video transcript
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/linkedin/post/transcript?url=https://www.linkedin.com/posts/gemini-35-flash-is-a-step-forward-for-google-ugcPost-7465082215316525056-MHBd/" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/linkedin/profile/full — 5 credits (flat override)
+
+Profile-360 composite for a LinkedIn **company** page — company profile, recent posts, and a computed analytics block (avg engagement rate, posts/week cadence, top post, format mix) folded into one call. Part of the "Prism" composite family.
+
+- `url` (optional, string) — Full URL of the LinkedIn company page.
+- `posts` (optional, integer) — How many recent posts to fetch + average the computed metrics over (1–100, default 25).
+- `cursor` (optional, string) — Pass a prior response's `posts_cursor` to deepen the post window.
+- `include` (optional, string) — CSV subset of `posts,computed` (default both). `include=computed` drops the raw `posts[]` to save payload.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/linkedin/profile/full?url=https://www.linkedin.com/company/microsoft/" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

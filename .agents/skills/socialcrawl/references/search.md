@@ -1,10 +1,13 @@
 # Universal Search
 
-1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+2 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: the single endpoint costs a FLAT 20 credits (override — not the standard 1/5/10 ladder) — exact cost listed per endpoint below.
+Credit costs on this platform: both endpoints use flat overrides (not the standard 1/5/10 ladder) — `/v1/search/everywhere` is a FLAT 20 credits and `/v1/search/forums` is a FLAT 10 credits — exact cost listed per endpoint below.
 
-`/v1/search/everywhere` is a meta-search endpoint that fans out a single query across **up to 15 sources in parallel** — `reddit`, `twitter-ai-search`, `youtube`, `tiktok`, `instagram`, `hackernews`, `polymarket`, `github`, `threads`, `pinterest`, `perplexity`, `tavily`, plus tiktok/instagram/youtube hashtag siblings in hashtag mode — then fuses, reranks, and clusters the results server-side. It collapses what would otherwise be a dozen separate `/v1/{platform}/{resource}` calls into one billable request.
+Universal Search offers two fan-out lanes:
+
+- **`/v1/search/everywhere`** — the wide lane. Fans out a single query across **up to 15 sources in parallel** — `reddit`, `twitter-ai-search`, `youtube`, `tiktok`, `instagram`, `hackernews`, `polymarket`, `github`, `threads`, `pinterest`, `perplexity`, `tavily`, plus tiktok/instagram/youtube hashtag siblings in hashtag mode — then fuses, reranks, and clusters the results server-side. It collapses what would otherwise be a dozen separate `/v1/{platform}/{resource}` calls into one billable request.
+- **`/v1/search/forums`** — the discussion lane. A fused forum search across Reddit, Hacker News, and Naver 지식iN/카페, with top comments inline on hero threads by default — for voice-of-customer and Q&A research without the wide-lane breadth or price.
 
 ## GET /v1/search/everywhere — 20 credits (flat override)
 
@@ -87,4 +90,20 @@ Excluding sources:
 ```bash
 curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
   "https://www.socialcrawl.dev/v1/search/everywhere?query=elections+2026&exclude=pinterest,polymarket"
+```
+
+## GET /v1/search/forums — 10 credits (flat override)
+
+Fused forum search across Reddit, Hacker News, and Naver 지식iN/카페 — with top comments inline on hero threads by default.
+
+- `query` (required) — Search query (2–256 chars), forwarded to every forum search.
+- `sources` (optional, string) — Optional CSV allowlist of forum sources (`reddit`, `hackernews`, `naver_kin`, `naver_cafe`). Mutually exclusive with `exclude`.
+- `exclude` (optional, string) — Optional CSV blocklist of forum sources. Mutually exclusive with `sources`.
+- `comments` (optional, string) — Comment enrichment toggle (`on`|`off`, default `on`). `off` returns thread-only.
+- `timeframe` (optional, string) — Recency window passed to Reddit; HN filtered client-side (`all`|`day`|`week`|`month`|`year`, default `all`).
+- `lookback_days` (optional, integer) — Alt recency window in days (1–365); HN filtered client-side.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/search/forums?query=airpods pro 3 battery" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
