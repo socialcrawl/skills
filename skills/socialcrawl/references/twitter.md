@@ -2,7 +2,7 @@
 
 8 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint costs 1 credit (standard) except video transcript at 10 (premium) and the `profile/full` Prism composite at a flat 5 credits — exact cost listed per endpoint below.
+**Credit costs:** 5 standard (1 credit), 1 advanced (5), 1 premium (10), 1 custom (flat/metered) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/twitter/profile — 1 credit (standard)
 
@@ -72,11 +72,9 @@ curl "https://www.socialcrawl.dev/v1/twitter/tweet/transcript?url=https://x.com/
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/twitter/ai-search — 1 credit (standard)
+## GET /v1/twitter/ai-search — 5 credits (advanced)
 
 AI-powered X (Twitter) search via xAI Grok
-
-Note: this endpoint is AI-powered (xAI Grok `x_search`) and returns `{ answer, sources, tool_calls_count }` rather than a normalized post list.
 
 - `query` (required) — Natural-language prompt describing what you want to learn from X. The model autonomously searches X using the x_search tool with any handle / date filters you provide.
 - `from_handles` (optional, string) — Comma-separated X handles (max 10). Restricts the search to posts from these accounts only. Mutually exclusive with exclude_handles.
@@ -89,16 +87,16 @@ curl "https://www.socialcrawl.dev/v1/twitter/ai-search?query=What is @elonmusk s
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/twitter/profile/full — 5 credits (flat override)
+## GET /v1/twitter/profile/full — 5 credits (custom)
 
-Profile-360 composite — profile, recent posts, and a computed analytics block (avg engagement rate, posts/week cadence, top post, format mix) folded into one call. Part of the "Prism" composite family.
+X (Twitter) profile, recent posts, and computed analytics in one call.
 
-- `handle` (optional, string) — Twitter username without the @ symbol.
+- `handle` (optional, string)
 - `posts` (optional, integer) — How many recent posts to fetch + average the computed metrics over (1–100, default 25).
-- `cursor` (optional, string) — Pass a prior response's `posts_cursor` to deepen the post window.
-- `include` (optional, string) — CSV subset of `posts,computed` (default both). `include=computed` drops the raw `posts[]` to save payload.
+- `cursor` (optional, string) — Pass a prior response's posts_cursor to deepen the post window.
+- `include` (optional, string) — CSV subset of posts,computed (default both). include=computed drops the raw posts[] to save payload.
 
 ```bash
-curl "https://www.socialcrawl.dev/v1/twitter/profile/full?handle=elonmusk" \
+curl "https://www.socialcrawl.dev/v1/twitter/profile/full" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

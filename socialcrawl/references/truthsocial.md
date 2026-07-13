@@ -2,7 +2,7 @@
 
 3 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: all endpoints are 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 3 standard (1 credit) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/truthsocial/profile — 1 credit (standard)
 

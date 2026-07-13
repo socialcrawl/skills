@@ -2,7 +2,7 @@
 
 1 endpoint. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: the single endpoint is 10 credits (premium) — exact cost listed per endpoint below.
+**Credit costs:** 1 premium (10) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/utility/age-gender — 10 credits (premium)
 

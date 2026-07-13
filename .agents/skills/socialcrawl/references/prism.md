@@ -1,490 +1,519 @@
-# Prism — composite recipes
+# Prism
 
-Prism endpoints are **server-side composites**: one call fans out to several of the underlying detail endpoints, runs them in parallel, and folds the legs into a single unified payload behind the standard response envelope. They turn what would be a dozen chained `/v1/{platform}/{resource}` calls into one billable request with one consistent shape.
+33 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**30 cross-platform recipes live under `/v1/prism/*`.** A handful of composites keep their platform's own path (and carry a `family: "prism"` flag) — those are documented in their platform's reference file:
+**Credit costs:** 1 standard (1 credit), 32 custom (flat/metered) — the exact cost is in each endpoint heading below.
 
-- `/v1/{tiktok,instagram,youtube,facebook,twitter,linkedin}/profile/full` — a profile-360 (profile + recent posts + computed analytics), 5 credits. See the per-platform reference files.
-- `/v1/reddit/omni-search` — Reddit voice-of-customer sweep. See [reddit.md](reddit.md).
-- `/v1/naver/brief` — one query across 6 Naver corpora. See [naver.md](naver.md).
-- `/v1/search/forums` — fused forum search. See [search.md](search.md).
+Prism composites are server-side recipes that fan out to several detail endpoints and fold the legs into one unified payload behind the standard envelope. Every composite emits a `legs[]` transparency array (`{endpoint, status, credits_used, latency_ms, error}`). Cross-platform recipes live under `/v1/prism/*`; a few keep their own platform path and carry `family: "prism"` (e.g. `{platform}/profile/full`, `reddit/omni-search`). Pricing is flat or **metered** per recipe (0–50 credits) — metered composites (e.g. `prism/comments`, `prism/ai-visibility`) deduct an upfront ceiling and refund down to the actual work done, so the response `credits_used` is the real charge. Streaming composites (`prism/comments`, `reddit/omni-search`) also accept `Accept: text/event-stream`. Mention the cost before calling any composite priced above 10 credits.
 
-All endpoints below are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+## GET /v1/prism/lookup — 0 credits (custom)
 
-## How Prism composites behave
-
-- **`legs[]` transparency.** Every composite response carries a `legs[]` array — one entry per upstream call `{endpoint, status, credits_used, latency_ms, error}` — so you can see exactly what ran.
-- **Degrade, don't fail.** Most legs degrade to empty/null when their upstream misses; usually only one "critical" leg (the profile, the search, the first page) can fail the whole call. A critical-leg failure → full refund.
-- **Coverage-floor refunds.** Multi-source composites refund automatically when a strict majority of legs fail: `0 < coverage < 0.5` → 50% refund; all legs fail (`ok:false`) → full refund. You never pay full price when most of the fan-out failed.
-- **Three cost modes** (see [pricing.md](pricing.md) for the per-endpoint table):
-  - **Flat** — a fixed price (e.g. `reputation` 30cr), refunded on failure/low coverage.
-  - **Param-derived flat** — the validated request shape sets the price up front, no metering (e.g. `app-reviews` 15cr both stores / 10cr single; `creator-card` 5cr ≤4 platforms +1cr/extra).
-  - **Metered ("deduct-ceiling → refund-to-actual")** — cost scales with runtime work; the router deducts a query-derived ceiling and refunds the unused units (e.g. `comments`, `post-stats`, `org-radar`, `creator-vet`, `ai-visibility`).
-- **SSE streaming.** `comments`, `video-intel`, `app-reviews`, `post-stats`, and `answers` stream when you send `Accept: text/event-stream` — a `result`/`leg` chunk per unit as it settles, then a terminal `done{credits_used}`. `answers` always streams.
-- **Pricing note:** Prism composites are premium-priced (0–50 credits). **Always tell the user the credit cost before executing a Prism call.** After the call, report `credits_used` and `credits_remaining`, and surface `legs[]`/coverage when a refund happened.
-
----
-
-## Universal helpers
-
-### GET /v1/prism/lookup — 0 credits (resolves to the underlying endpoint's cost)
-
-Universal URL dispatcher: any social/commerce URL → the right detail endpoint's unified response. No surcharge — you pay the resolved endpoint's normal cost.
+Universal URL dispatcher: any social/commerce URL → the right detail endpoint's unified response.
 
 - `url` (required) — Absolute http(s) URL of the post / profile / product to resolve.
-- `include` (optional) — CSV of optional flags forwarded verbatim to the resolved endpoint (e.g. `trim`).
+- `include` (optional, string) — CSV of optional flags to forward verbatim to the resolved endpoint (e.g. `trim`). Each member must be an optional param of that endpoint.
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/lookup?url=https://www.youtube.com/watch?v=A9TikdsD5eg"
+curl "https://www.socialcrawl.dev/v1/prism/lookup?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### GET /v1/prism/comments — metered, 1cr/page, min 2 credits
+## GET /v1/prism/comments — 1 credit (standard)
 
-Every comment on a post, replies nested, server-paginated to completion. SSE-capable.
+Every comment on a post, replies nested, server-paginated to completion.
 
 - `url` (required) — Absolute http(s) URL of the post whose comments to harvest.
-- `max` (optional, integer) — Stop after roughly this many top-level comments (1–5000, default 1000); whole pages return so the count can slightly exceed this.
-- `replies` (optional, boolean) — Expand replies where the platform supports it (default true; TikTok/YouTube/Facebook).
-- `cursor` (optional) — Opaque composite cursor from a prior response's `next_cursor` to resume.
+- `max` (optional, integer) — Stop after roughly this many top-level comments (1–5000, default 1000). Whole pages are returned, so the actual count can slightly exceed this. Drives billing and, for `sort=top`, the depth of the ranking scan.
+- `replies` (optional, boolean) — Expand replies for comments that have them, where the platform supports it (default true; TikTok/YouTube/Facebook only). Pair with `replies=false` when you only want the top comments.
+- `cursor` (optional, string) — Opaque composite cursor from a prior response's `next_cursor` to resume harvesting.
+- `sort` (optional, enum: top | recent) — `recent` (default — natural order) or `top` (most-liked first, ranked by each comment's like count). With `top`, the response adds `sorted_by: "likes_desc"`.
+- `limit` (optional, integer) — Cap on how many top-level comments to return after sorting/scanning (1–5000, defaults to `max`). Truncates only the returned set — never what was scanned or billed. The response reports `returned`.
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/comments?url=https://www.youtube.com/watch?v=A9TikdsD5eg"
+curl "https://www.socialcrawl.dev/v1/prism/comments?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### POST /v1/prism/post-stats — metered, 1 credit per successful URL
+## GET /v1/prism/brand-mentions — 50 credits (custom)
 
-Bulk URL stats refresh for verification loops (e.g. clipper payouts) — up to 100 mixed-platform post URLs → one engagement row per URL. **The only POST endpoint.** Failed/unsupported URLs are refunded; net charge = count of `status:"ok"` rows. SSE-capable; never cached.
+Brand mention volume time-series, sentiment split, top sources, and recent mentions for one keyword.
 
-- `urls` (required) — JSON array of 1–100 absolute http(s) post URLs (mixed platforms allowed).
-- `include` (optional) — CSV subset of `views,likes,comments,shares,saves` to trim each row's engagement block.
+- `keyword` (required) — The brand or term to track. Wrap in quotes for exact-phrase semantics.
+- `date_from` (required) — Window start (YYYY-MM-DD). Required by the trend leg.
+- `date_to` (optional, string) — Window end (YYYY-MM-DD). Defaults to the latest crawl.
+- `date_group` (optional, enum: day | week | month) — Trend bucket size: day (default), week, or month.
+- `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) — Optional surface filter: ecommerce, news, blogs, message-boards, or organization.
+- `include` (optional, string) — Set `digest` to add an LLM narrative summary leg.
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  -X POST "https://www.socialcrawl.dev/v1/prism/post-stats" \
-  -H "Content-Type: application/json" \
-  -d '{"urls":["https://www.youtube.com/watch?v=A9TikdsD5eg"]}'
+curl "https://www.socialcrawl.dev/v1/prism/brand-mentions?keyword=socialcrawl" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
----
+## GET /v1/prism/demand-signals — 30 credits (custom)
 
-## Profiles, creators & audiences
+Consumer-demand nowcast: app-review velocity, web mention slope, Reddit velocity, and commerce review levels, fused into a published demand index.
 
-### GET /v1/prism/creator-card — 5 credits (≤4 platforms; +1cr per extra platform)
-
-One handle → unified author cards across N platforms (`cards{}` + `found_on` + `totals`). A handle missing on a platform returns `null` (that's the answer, not a failure); only an all-platform miss refunds.
-
-- `handle` (required) — Looked up across every requested platform (a single leading `@` is stripped).
-- `platforms` (optional) — CSV of `tiktok,instagram,youtube,twitter,threads,bluesky,truthsocial` (default first four).
-- `include` (optional) — CSV subset of `cards,totals`.
+- `keyword` (required) — The brand or product to nowcast. Drives the mention, Reddit, and Amazon legs.
+- `google_play_id` (optional, string) — Google Play package name (e.g. com.spotify.music) for the app-review velocity axis.
+- `app_store_id` (optional, string) — Apple App Store numeric id for the app-review velocity axis.
+- `signals` (optional, string) — CSV subset of app_reviews,mentions,reddit,commerce (default all). app_reviews is dropped when no app id is supplied.
+- `amazon_query` (optional, string) — Override the Amazon product-search term if it differs from the brand.
+- `country` (optional, string) — Location for the app-review legs (default United States); a 2-letter code is also applied to the Amazon leg.
+- `date_from` (optional, string) — Window start (YYYY-MM-DD) for the mention-slope leg. Defaults to 30 days ago.
+- `date_to` (optional, string) — Window end (YYYY-MM-DD). Defaults to today.
+- `depth` (optional, integer) — Reviews per store for the velocity computation (1-600, default 150).
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/creator-card?handle=mrbeast"
+curl "https://www.socialcrawl.dev/v1/prism/demand-signals?keyword=spotify" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### GET /v1/prism/creator-vet — metered 50 credits (75 with `cross_platform`)
+## GET /v1/prism/campaign — 35 credits (custom)
 
-Vet a creator before partnering — engagement quality, commenter authenticity, posting cadence, and controversy signals. Core profile leg is critical (not found → full refund).
+Campaign tracker: pre/during/post volume lift, cross-platform engagement, and ranked top amplifiers for a hashtag or phrase.
 
-- `handle` (required) — The creator handle to vet.
-- `platform` (optional) — Primary platform (`tiktok`/`youtube`/`instagram`).
-- `depth` (optional) — Set `deep` to widen the post + commenter sample.
-- `include` (optional) — Set `cross_platform` to add the universal presence leg (+25cr, refunded if it fails).
+- `hashtag` (optional, string) — The campaign hashtag (with or without #). One of hashtag or phrase is required.
+- `phrase` (optional, string) — A campaign slogan/phrase instead of a hashtag. One of hashtag or phrase is required.
+- `window_start` (optional, string) — Campaign launch date (YYYY-MM-DD) — the pre/during boundary. Optional; defaults to 30 days ago.
+- `window_end` (optional, string) — Campaign end date (YYYY-MM-DD) — the during/post boundary. Defaults to today.
+- `pre_days` (optional, integer) — Baseline days before window_start for lift measurement (1-90, default 14).
+- `post_days` (optional, integer) — Days after window_end for the post window (0-90, default 14; 0 = no post window).
+- `include` (optional, string) — Set amplifier_dates to date YouTube amplifiers via direct youtube/video calls (undated in fusion).
+
+**At least one of `hashtag` / `phrase` is required.**
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/creator-vet?handle=mkbhd"
+curl "https://www.socialcrawl.dev/v1/prism/campaign" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### GET /v1/prism/voice — 5 credits
+## GET /v1/prism/ai-visibility — 2 credits (custom)
 
-One person's public posts across X + Threads + Bluesky + Truth Social, time-merged. Microblogs the handle isn't on return empty + `platform_presence:false`; all-miss → full refund.
+AI Share-of-Voice / GEO monitoring: prompt set x reruns to per-brand appearance-% per AI engine plus a cited-domain ranking.
 
-- `handle` (required) — Looked up across all four microblogs (a single leading `@` is stripped).
-- `platforms` (optional) — CSV subset of `twitter,threads,bluesky,truthsocial`.
-- `cursor` (optional) — Opaque per-platform token from `cursors_by_platform`.
-- `include` (optional) — CSV subset of `posts_by_platform,merged_timeline,computed`.
+- `brand` (optional, string) — The brand whose appearance-% is measured (required). Matched against each answer plus its aliases.
+- `prompts` (optional, string) — The category prompts to probe, as a JSON array or a pipe-delimited list (1-20). One of prompts or topic is required.
+- `topic` (optional, string) — A topic probed as a single prompt in v1 (one of prompts or topic is required).
+- `competitors` (optional, string) — CSV of up to 5 competitors also measured for appearance-% from the same answers.
+- `engines` (optional, string) — CSV subset of perplexity,grok (default both) — the grounded-answer engines probed.
+- `runs` (optional, integer) — Reruns per (prompt, engine) to measure variance (1-20, default 8).
+- `preset` (optional, enum: quick | standard | deep) — quick|standard|deep — sets runs and caps prompts for a flat probe budget.
+- `include` (optional, string) — Set web_baseline to cross-join AI-cited domains against your web top domains.
+- `brand_domains` (optional, string) — CSV of your own domains so the citation ranking can flag the ones you already rank on.
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/voice?handle=nasa"
+curl "https://www.socialcrawl.dev/v1/prism/ai-visibility" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### GET /v1/prism/audience-overlap — 20 credits
+## GET /v1/prism/crisis-postmortem — 35 credits (custom)
 
-Two TikTok creators → the deterministic overlap of their commenter audiences (Jaccard, shared-fan count, a/b-only counts, a `confidence` label). **TikTok-only in v1.** If either creator can't be fetched → full refund.
+Crisis post-mortem: a who-said-what-first timeline across web, Reddit, Hacker News, and social, with an origin, peak, propagation sequence, and a grounded narrative.
+
+- `brand` (required) — The brand or entity the crisis is about (required).
+- `window_start` (optional, string) — Start of the crisis window (YYYY-MM-DD) — the earliest point on the timeline. Optional; defaults to 30 days ago.
+- `window_end` (optional, string) — End of the crisis window (YYYY-MM-DD). Defaults to today.
+- `crisis_terms` (optional, string) — Optional CSV of up to 5 terms (e.g. recall,defect) that scope the legs to the actual incident.
+- `include` (optional, string) — narrative (default on) adds the grounded LLM propagation narrative; pass an empty value for the raw timeline only.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/crisis-postmortem?brand=acme" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/crisis-radar — 15 credits (custom)
+
+Stateless crisis breach check: a z-score on daily mention volume and negative share, with on-breach confirmation and a severity grade.
+
+- `brand` (optional, string) — The brand to watch (required).
+- `sensitivity` (optional, string) — Z-score breach threshold (0.5-6, default 2.0). z>=sensitivity on volume or negative-share fires a breach.
+- `confirm` (optional, boolean) — true -> on a breach, run the escalation legs and grade severity (+30 credits, charged only when a breach fires).
+- `baseline_days` (optional, integer) — Rolling-mean window for the z-score (3-30, default 7).
+- `date_to` (optional, string) — The day being evaluated (YYYY-MM-DD). Defaults to today.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/crisis-radar" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/devtool-pulse — 20 credits (custom)
+
+Developer-brand health: a devtool's repo dossier + Hacker News reaction + Reddit chatter + dev-blog echo, in one call.
+
+- `query` (required) — The devtool name to sweep across Hacker News, Reddit, and the dev-blog index (e.g. Bun, Drizzle ORM, tRPC).
+- `repo` (optional, string) — The repo to dossier — owner/repo or a github.com/{owner}/{repo} URL. Recommended for a precise dossier.
+- `subreddit` (optional, string) — Optional scope for the Reddit leg (bare name, no r/) — switches it to a subreddit search.
+- `include` (optional, string) — CSV subset of dossier,hn,reddit,blogs (default all). Trims which legs run, not the flat price.
+- `date_from` (optional, string) — Optional window start (YYYY-MM-DD) applied to the time-bounded legs.
+- `date_to` (optional, string) — Optional window end (YYYY-MM-DD).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/devtool-pulse?query=Bun" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/leads — 50 credits (custom)
+
+Ranked feed of public conversations where people seek alternatives to or are switching from a competitor.
+
+- `competitor` (required) — The competitor/product to mine alternative-seeking conversations for (≤80 chars).
+- `product_category` (optional, string) — Optional disambiguator appended to the social queries to cut cross-domain noise (e.g. 'project management').
+- `freshness` (optional, string) — Recency floor — Nd/Nw/Nm (e.g. 30d) or an ISO date. Default 30d.
+- `include` (optional, string) — Set `comments` to attach top-thread Reddit comments to the top leads.
+- `limit` (optional, integer) — Max leads in the fused feed (1–100, default 50).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/leads?competitor=notion" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/earned-media — 25 credits (custom)
+
+A brand's earned-media footprint — news + tech-press + fresh-web clips, deduped and ranked, with an outlet-coverage rollup.
+
+- `brand` (required) — The brand/company to map earned media for.
+- `competitor` (optional, string) — Optional competitor for a share-of-coverage gap.
+- `date_from` (optional, string) — Window start (YYYY-MM-DD).
+- `date_to` (optional, string) — Window end (YYYY-MM-DD).
+- `min_domain_rank` (optional, integer) — Drop clips from sites below this domain authority.
+- `include` (optional, string) — Set `digest` to add an LLM narrative summary.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/earned-media?brand=Vercel" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/truthsocial-pulse — 20 credits (custom)
+
+A Truth Social handle's pulse — profile, recent posts, per-post detail drill, and the news echo, in one call.
+
+- `handle` (required) — The Truth Social handle (no @).
+- `drill` (optional, integer) — How many top posts to drill for full detail (0 to skip).
+- `posts` (optional, integer) — How many recent posts to pull (window cap).
+- `news_query` (optional, string) — Override the content_analysis news keyword (defaults to the handle/display name).
+- `include` (optional, string) — CSV subset of posts,news to trim which legs run.
+- `cursor` (optional, string) — Opaque pagination cursor for the posts leg.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/truthsocial-pulse?handle=realDonaldTrump" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/launch-echo — 20 credits (custom)
+
+How a launch landed — the Hacker News reaction (top threads + comments), the dev-blog echo, and an optional repo dossier.
+
+- `query` (required) — The launch/product name to measure reception for.
+- `repo` (optional, string) — Optional owner/repo or github URL to anchor the dossier.
+- `threads` (optional, integer) — How many top HN threads to dig comments for.
+- `date_from` (optional, string) — Window start (YYYY-MM-DD).
+- `date_to` (optional, string) — Window end (YYYY-MM-DD).
+- `include` (optional, string) — CSV subset toggling the comments/blogs/dossier legs.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/launch-echo?query=Bun 1.2" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/audience-overlap — 20 credits (custom)
+
+How much two TikTok creators' commenter audiences overlap — Jaccard, shared-fan count, and a confidence label.
 
 - `handle_a` (required) — First TikTok creator handle.
 - `handle_b` (required) — Second TikTok creator handle.
-- `platform` (optional) — `tiktok` only in v1.
-- `videos_per_creator` (optional, integer) — Recent videos sampled per creator (1–10, default 5).
-- `depth` (optional) — Set `deep` to widen the shared-fan sample.
+- `platform` (optional, string) — Platform (tiktok only in v1; default tiktok).
+- `videos_per_creator` (optional, integer) — Recent videos sampled per creator (1–10, default 5) — caps the commenter pull.
+- `depth` (optional, string) — Set `deep` to widen the shared-fan enrichment sample.
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/audience-overlap?handle_a=mkbhd&handle_b=mrwhosetheboss"
+curl "https://www.socialcrawl.dev/v1/prism/audience-overlap?handle_a=mkbhd" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### GET /v1/prism/video-intel — 5 credits (+10cr with `transcript`, refunded when null)
+## GET /v1/prism/reputation — 30 credits (custom)
 
-One video URL → detail + stats + top comments + optional transcript + ≤3 commenter profiles, across YouTube / TikTok / Rumble / Instagram. Only the detail leg is critical. SSE when `include=transcript`.
+A brand's cross-source reputation — Trustpilot + app stores + Google Business + web sentiment, blended into one weighted score with themed pros/cons.
 
-- `url` (required) — Absolute http(s) URL of a YouTube, TikTok, Rumble, or Instagram video.
-- `comments` (optional) — How many top comments (0–50, default 20; `0` skips).
-- `include` (optional) — CSV of `transcript` (+10cr, refunded when null) and/or `commenter_profiles` (TikTok/Instagram in v1).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/video-intel?url=https://www.youtube.com/watch?v=A9TikdsD5eg&include=transcript"
-```
-
----
-
-## Brand, reputation & market
-
-### GET /v1/prism/brand-mentions — 20 credits
-
-Brand mention volume time-series, sentiment split, top sources, and recent mentions for one keyword. `include=digest` adds an LLM narrative.
-
-- `keyword` (required) — Brand or term (wrap in quotes for exact phrase).
-- `date_from` (required) — Window start (YYYY-MM-DD).
-- `date_to` (optional) — Window end (defaults to latest crawl).
-- `date_group` (optional, enum day|week|month) — Trend bucket (default day).
-- `page_type` (optional, enum ecommerce|news|blogs|message-boards|organization) — Surface filter.
-- `include` (optional) — Set `digest` for an LLM summary.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/brand-mentions?keyword=socialcrawl&date_from=2026-05-01"
-```
-
-### GET /v1/prism/reputation — 30 credits
-
-A brand's cross-source reputation — Trustpilot + app stores + Google Business + web sentiment blended into one weighted score (company vs product axes) with themed pros/cons.
-
-- `brand` (required) — Brand/business/domain to assess.
-- `sources` (optional) — CSV subset of `trustpilot,google_play,app_store,google,tripadvisor,web`.
-- `country` (optional) — Marketplace/locale (default United States).
+- `brand` (required) — The brand/business/domain to assess.
+- `sources` (optional, string) — CSV subset of trustpilot,google_play,app_store,google,tripadvisor,web (default the core set).
+- `country` (optional, string) — Marketplace/locale (DFS location). Defaults to United States.
 - `depth` (optional, integer) — Reviews per source (Trustpilot clamped ≤20).
-- `place` (optional) — Enable place-based legs (Google Business + TripAdvisor).
-- `axis` (optional, enum company|product|both) — Which axis to headline (default both).
-- `app_store_id` / `google_play_id` (optional) — Anchor an app axis directly.
+- `place` (optional, string) — Set to enable the place-based legs (Google Business + TripAdvisor).
+- `axis` (optional, enum: company | product | both) — Which reputation axis to headline: company, product, or both (default).
+- `app_store_id` (optional, string) — App Store id to anchor that axis directly (skips resolver).
+- `google_play_id` (optional, string) — Google Play id to anchor that axis directly (skips resolver).
+- `include` (optional, string) — Optional leg toggles.
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/reputation?brand=Notion"
+curl "https://www.socialcrawl.dev/v1/prism/reputation?brand=Notion" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-### GET /v1/prism/review-integrity — 30 credits
+## GET /v1/prism/employer-brand — 30 credits (custom)
 
-A deterministic (no-LLM) cross-source review-integrity verdict: rating divergence, distribution bimodality, forum-tone contrast, spam-domain clustering → an A–F grade with per-signal evidence.
-
-- One of `query` / `asin` / `gid` is required (`gid` = `product.ext.gid`, NOT the catalog id).
-- `sources` (optional) — CSV subset of `amazon,google_shopping,trustpilot,web,forums`.
-- `country` (optional) — Marketplace country (default United States).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/review-integrity?query=sony wh-1000xm5"
-```
-
-### GET /v1/prism/product-reviews — 30 credits
-
-A product's reviews across Amazon + Google Shopping + Trustpilot → a cross-marketplace rating + themed pros/cons report with per-topic rating impact. Commerce legs are slow (20–60s).
-
-- One of `query` / `asin` / `gid` is required (`gid` = `product.ext.gid`, NOT the catalog id).
-- `sources` (optional) — CSV subset of `amazon,google_shopping,trustpilot`.
-- `country` (optional) — Marketplace country.
-- `depth` (optional, integer) — Reviews per source (Trustpilot ≤20).
-- `competitors` (optional) — Optional competitor products.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/product-reviews?query=airpods pro 2"
-```
-
-### GET /v1/prism/earned-media — 20 credits
-
-A brand's earned-media footprint — news + tech-press + fresh-web clips, deduped and ranked, with an outlet-coverage rollup and optional competitor gap. `include=digest` adds an LLM narrative.
-
-- `brand` (required) — Brand/company to map.
-- `competitor` (optional) — For a share-of-coverage gap.
-- `date_from` / `date_to` (optional) — Window (YYYY-MM-DD).
-- `min_domain_rank` (optional, integer) — Drop clips below this domain authority.
-- `include` (optional) — Set `digest` for an LLM narrative.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/earned-media?brand=Vercel"
-```
-
-### GET /v1/prism/share-of-voice — metered 40 credits (20 web-only)
-
-Engagement-weighted Share of Voice across 2–5 brands — web + social split, emotion overlay, true-share-of-category, and ESOV. Drop `social` for the cheaper web-only variant.
-
-- `brands` (required) — 2–5 competitor brand names (CSV).
-- `category_code` (optional) — Numeric DFS taxonomy code for true-share-of-category.
-- `market_shares` (optional) — JSON map of real market share per brand for ESOV.
-- `include` (optional) — CSV toggles (default `emotions,social`).
-- `page_type` (optional, enum) — Surface filter.
-- `date_from` / `date_to` (optional) — Window (defaults: 90 days ago → today).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/share-of-voice?brands=notion,coda,airtable"
-```
-
-### GET /v1/prism/demand-signals — 30 credits
-
-A consumer-demand nowcast fusing app-review velocity + web-mention slope + Reddit velocity + Amazon review level into a published, deterministic demand index (every weight/anchor/window disclosed). Honest one-shot v1 — true deltas need a monitor.
-
-- `keyword` (required) — Brand/product to nowcast.
-- `google_play_id` / `app_store_id` (optional) — Enable the app-review axis.
-- `signals` (optional) — CSV subset of `app_reviews,mentions,reddit,commerce`.
-- `amazon_query` / `country` / `date_from` / `date_to` / `depth` (optional).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/demand-signals?keyword=spotify"
-```
-
-### GET /v1/prism/campaign — 35 credits
-
-A hashtag/phrase campaign tracker: pre/during/post volume lift + cross-platform engagement rollup + ranked top amplifiers.
-
-- One of `hashtag` / `phrase` is required.
-- `window_start` (required) — Launch date (YYYY-MM-DD) — the pre/during boundary.
-- `window_end` (optional) — End date (default today).
-- `pre_days` (optional, integer, default 14) / `post_days` (optional, integer, default 14).
-- `include` (optional) — Set `amplifier_dates` to date YouTube amplifiers.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/campaign?hashtag=shotoniphone&window_start=2026-05-01"
-```
-
----
-
-## Crisis monitoring
-
-### GET /v1/prism/crisis-radar — 10 credits baseline (+30cr on a confirmed breach)
-
-A stateless crisis breach check: a 7-day rolling z-score on mention volume + negative-share → an `alert_level` (`calm`/`watch`/`alert`/`crisis`). With `confirm=true`, a breach triggers escalation legs and a severity grade — the +30cr is charged ONLY when a breach actually fires.
-
-- `brand` (required) — The brand to watch.
-- `sensitivity` (optional, default 2.0) — Z-score breach threshold (0.5–6).
-- `confirm` (optional, boolean) — Run escalation on breach (+30cr only when it fires).
-- `baseline_days` (optional, default 7) / `date_to` (optional).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/crisis-radar?brand=Acme&confirm=true"
-```
-
-### GET /v1/prism/crisis-postmortem — 35 credits
-
-A who-said-what-first crisis timeline across web + Reddit + Hacker News + social, with an origin (from natively-dated events only), peak day, propagation sequence, and a grounded LLM narrative.
-
-- `brand` (required) — The entity the crisis is about.
-- `window_start` (required) — Crisis window start (YYYY-MM-DD).
-- `window_end` (optional) — Default today.
-- `crisis_terms` (optional) — CSV of ≤5 scoping terms.
-- `include` (optional) — `narrative` is on by default; pass empty for the raw timeline only.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/crisis-postmortem?brand=Acme&window_start=2026-05-01"
-```
-
----
-
-## Developer & launch intelligence
-
-### GET /v1/prism/devtool-pulse — 15 credits
-
-Developer-brand health: a devtool's GitHub repo dossier + Hacker News reaction + Reddit chatter + dev-blog echo, folded into a health block (release recency, open issues, top feature request/complaint, attention, a `pulse` label).
-
-- `query` (required) — The devtool name (e.g. Bun, Drizzle ORM, tRPC).
-- `repo` (optional) — `owner/repo` or a github URL (recommended for a precise dossier).
-- `subreddit` (optional) — Scope the Reddit leg.
-- `include` (optional) — CSV subset of `dossier,hn,reddit,blogs`.
-- `date_from` / `date_to` (optional).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/devtool-pulse?query=Bun"
-```
-
-### GET /v1/prism/launch-echo — 10 credits
-
-How a launch landed — the Hacker News reaction (top threads + comments) + dev-blog echo + an optional GitHub repo dossier.
-
-- `query` (required) — The launch/product name.
-- `repo` (optional) — `owner/repo` or github URL to anchor the dossier.
-- `threads` (optional, integer) — Top HN threads to dig comments for.
-- `date_from` / `date_to` / `include` (optional).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/launch-echo?query=Bun 1.2"
-```
-
-### GET /v1/prism/org-radar — metered, 1 credit + 5 credits per repo
-
-A GitHub org → its top repos each expanded into a full dossier (releases, issue load, top request/complaint), rolled up to an org level. Ceiling = 1 + 5×`repos`; unused per-repo credits refund.
-
-- `org` (required) — GitHub org login or `github.com/{org}` URL.
-- `repos` (optional, integer) — Top repos to dossier (1–10, default 5) — drives the metered price.
-- `sort` (optional, enum stars|updated|pushed) — Repo ranking (default stars).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/org-radar?org=vercel"
-```
-
----
-
-## Research & answers
-
-### GET /v1/prism/answers — 15 credits (always SSE)
-
-Multi-engine AI consensus: one question → Perplexity + Grok + Tavily answers kept verbatim, citations merged + deduped, plus an LLM-judged agreement matrix and disputed claims. Always streams; never cached. Coverage-floor partial refund.
-
-- `query` (required) — The question, forwarded verbatim to every engine.
-- `engines` (optional) — CSV subset of `perplexity,grok,tavily`.
-- `include` (optional) — `polymarket` adds market grounding.
-
-```bash
-curl -N -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  -H "Accept: text/event-stream" \
-  "https://www.socialcrawl.dev/v1/prism/answers?query=will the fed cut rates in september"
-```
-
-### GET /v1/prism/ai-visibility — metered, 2 credits per probe (prompt × run × engine)
-
-AI Share-of-Voice / GEO monitoring — a prompts × runs × engines matrix across grounded-answer engines → per-brand **appearance-%** per engine (never volatile rank) + a cited-domain ranking. Unran/unparsed probes are refunded.
-
-- `brand` (required) — Whose appearance-% is measured.
-- One of `prompts` / `topic` is required (`prompts` = JSON array or pipe-delimited list, 1–20).
-- `competitors` (optional) — CSV of up to 5.
-- `engines` (optional) — CSV subset of `perplexity,grok`.
-- `runs` (optional, integer 1–20, default 8) / `preset` (quick|standard|deep) / `include=web_baseline` / `brand_domains`.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/ai-visibility?brand=Notion&topic=best note taking app"
-```
-
-### GET /v1/prism/audience-questions — 30 credits
-
-The real questions a topic's audience asks — harvested from Reddit + YouTube threads and LLM-clustered by intent (who/what/why/how/vs) with verbatim quotes + per-question source counts.
-
-- `topic` (required) — The topic/keyword.
-- `platforms` (optional) — CSV subset of `reddit,youtube,web`.
-- `max_questions` / `threads_per_source` / `timeframe` (optional).
-- `include` (optional) — Set `web` to add the universal-search leg.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/audience-questions?topic=kubernetes operators"
-```
-
-### GET /v1/prism/leads — 20 credits
-
-A ranked, deduped feed of public conversations seeking alternatives to (or switching from) a competitor. **Conversation-level intent only — no author PII.** Deterministic, no LLM.
-
-- `competitor` (required) — The competitor/product to mine (≤80 chars).
-- `product_category` (optional) — Disambiguator to cut cross-domain noise.
-- `freshness` (optional, default 30d) — `Nd`/`Nw`/`Nm` or an ISO date.
-- `limit` (optional, integer 1–100, default 50).
-- `include` (optional) — Set `comments` to attach top-thread Reddit comments.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/leads?competitor=notion&product_category=project management"
-```
-
----
-
-## App stores
-
-### GET /v1/prism/apps-lookup — 30 credits
-
-One app across Google Play + the App Store — resolved, title-matched (so same-named apps aren't conflated), and compared into a cross-store rating + listing report. Neither store resolves → 404 + refund.
-
-- One of `title` / `google_play_id` / `app_store_id` is required.
-- `stores` (optional) — CSV subset of `google_play,app_store`.
-- `country` / `language` (optional).
-- `match_threshold` (optional, default 0.6) — Title-similarity guard (0–1).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/apps-lookup?title=Notion"
-```
-
-### GET /v1/prism/app-reviews — 15 credits both stores / 10 credits single store
-
-Cross-store app review intelligence (Google Play + App Store) — per-store rating summary, LLM topic clusters + feature requests, a sentiment timeline, dev-response rate, plus every raw review. SSE-capable.
-
-- One of `google_play_id` / `app_store_id` / `query` is required.
-- `country` / `language` (optional).
-- `depth` (optional, integer) — Reviews per store (default 150 Google / 50 Apple, max 600).
-- `stores` (optional) — CSV subset of `google_play,app_store`.
-- `include` (optional) — CSV of `topics,sentiment_timeline,feature_requests,responses`.
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/app-reviews?query=Spotify"
-```
-
----
-
-## Regional & specialized
-
-### GET /v1/prism/korea-gap — metered 40 credits (15 web-only)
-
-The gap between the global/English conversation and the Korean (Naver) conversation for a brand/topic — a per-surface presence index + a Korean channel map + translated quote samples. Drop `social` for the 15cr web-only variant.
-
-- `query` (required) — The brand/topic to compare.
-- `include` (optional) — `social` (the everywhere leg) + `digest`.
-- `date_from` / `date_to` / `display` (optional).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/korea-gap?query=Stanley cup"
-```
-
-### GET /v1/prism/truthsocial-pulse — 8 credits
-
-A Truth Social handle's pulse — profile + recent posts + per-post detail drill + a news echo, folded into a deterministic activity/sentiment pulse. Profile leg critical (404 → full refund). Handle-scoped (no Truth Social search exists upstream).
-
-- `handle` (required) — The Truth Social handle (no @).
-- `drill` (optional, integer) — Top posts to drill for full detail (0 to skip).
-- `posts` (optional, integer) — Recent posts to pull.
-- `news_query` / `include` / `cursor` (optional).
-
-```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/truthsocial-pulse?handle=realDonaldTrump"
-```
-
-### GET /v1/prism/employer-brand — 30 credits
-
-A company's employer brand — what people say about working there across Reddit + web + YouTube + Naver + the company's own LinkedIn voice, with a posting-tone-vs-reality gap.
+A company's employer brand — what people say about working there across Reddit, the web, YouTube, Naver, and the company's own LinkedIn voice.
 
 - `company` (required) — The employer/company name.
-- `linkedin_url` (optional) — Enables the LinkedIn voice axis + the posting-vs-reality gap.
-- `surfaces` / `phrases` / `timeframe` / `date_from` / `date_to` (optional).
+- `linkedin_url` (optional, string) — The company's LinkedIn URL — enables the LinkedIn voice axis + the posting-vs-reality gap.
+- `surfaces` (optional, string) — CSV subset of the surfaces to include.
+- `phrases` (optional, string) — Optional extra Reddit search phrases.
+- `timeframe` (optional, string) — Reddit timeframe window.
+- `date_from` (optional, string) — Window start (YYYY-MM-DD).
+- `date_to` (optional, string) — Window end (YYYY-MM-DD).
 
 ```bash
-curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
-  "https://www.socialcrawl.dev/v1/prism/employer-brand?company=Stripe"
+curl "https://www.socialcrawl.dev/v1/prism/employer-brand?company=Stripe" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
----
+## GET /v1/prism/audience-questions — 30 credits (custom)
 
-## Monitors — scheduled Prism
+The real questions a topic's audience asks — harvested from Reddit + YouTube threads and clustered by intent (who/what/why/how/vs).
 
-Any Prism recipe (or raw endpoint) can be wrapped in a **stateful schedule** that re-runs it on a cadence, delivers each result to a signed webhook, and accumulates a time-series. *"Prism answers once; monitors watch it for you."* Monitors live at `/v1/monitors/*` (POST/GET/PATCH/DELETE) and are documented separately — see **[monitors.md](monitors.md)**.
+- `topic` (required) — The topic/keyword to mine audience questions for.
+- `platforms` (optional, string) — CSV subset of reddit,youtube,web (default reddit,youtube).
+- `max_questions` (optional, integer) — Cap on questions returned.
+- `threads_per_source` (optional, integer) — How many top threads to dig per source.
+- `timeframe` (optional, string) — Recency window.
+- `include` (optional, string) — Set `web` to add the universal-search leg.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/audience-questions?topic=kubernetes operators" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/product-reviews — 30 credits (custom)
+
+A product's reviews across Amazon + Google Shopping + Trustpilot, folded into a cross-marketplace rating + themed pros/cons report.
+
+- `query` (optional, string) — Product name to auto-resolve across marketplaces.
+- `asin` (optional, string) — Amazon ASIN to anchor the Amazon axis directly.
+- `gid` (optional, string) — Google product id (gid) to anchor the Google Shopping axis (NOT the catalogid).
+- `sources` (optional, string) — CSV subset of amazon,google_shopping,trustpilot (default all).
+- `country` (optional, string) — Marketplace country (DFS location).
+- `depth` (optional, integer) — Reviews per source (Trustpilot clamped ≤20).
+- `competitors` (optional, string) — Optional competitor products for a comparison (validated; deeper sweep is a fast-follow).
+- `include` (optional, string) — Optional leg toggles.
+
+**At least one of `query` / `asin` / `gid` is required.**
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/product-reviews" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/apps-lookup — 30 credits (custom)
+
+One app across Google Play + the App Store — resolved, title-matched, and compared into a cross-store rating + listing report.
+
+- `title` (optional, string) — The app title to resolve across both stores.
+- `google_play_id` (optional, string) — Google Play app id to anchor that store directly.
+- `app_store_id` (optional, string) — App Store app id to anchor that store directly.
+- `stores` (optional, string) — CSV subset of google_play,app_store (default both).
+- `country` (optional, string) — Store country.
+- `language` (optional, string) — Store language.
+- `match_threshold` (optional, string) — Title-similarity threshold for the cross-store match guard (0–1, default 0.6).
+- `include` (optional, string) — Optional leg toggles.
+
+**At least one of `title` / `google_play_id` / `app_store_id` is required.**
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/apps-lookup" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/org-radar — 26 credits (custom)
+
+A GitHub org's footprint — its top repos each expanded into a full dossier (releases, issue load, top request/complaint), rolled up.
+
+- `org` (required) — The GitHub org login or a github.com/{org} URL.
+- `repos` (optional, integer) — How many top repos to dossier (1–10, default 5) — drives the metered price.
+- `sort` (optional, enum: stars | updated | pushed) — Repo ranking: stars (default), updated, or pushed.
+- `include` (optional, string) — Optional leg toggles.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/org-radar?org=vercel" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/creator-vet — 50 credits (custom)
+
+Vet a creator before partnering — engagement quality, commenter authenticity, posting cadence, and controversy signals, optionally across platforms.
+
+- `handle` (required) — The creator handle to vet.
+- `platform` (optional, string) — Primary platform (tiktok/youtube/instagram).
+- `depth` (optional, string) — Set `deep` to widen the post + commenter sample.
+- `include` (optional, string) — Set `cross_platform` to add the universal cross-platform presence leg (+25cr).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/creator-vet?handle=mkbhd" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/korea-gap — 40 credits (custom)
+
+What the world is talking about that Korea isn't (and vice versa) — the global vs Korean (Naver) conversation gap for a brand/topic.
+
+- `query` (required) — The brand/topic to compare across the global and Korean conversations.
+- `include` (optional, string) — Members include `social` (the everywhere leg) + `digest`. Drop `social` for the 15cr web-only variant.
+- `date_from` (optional, string) — Window start (YYYY-MM-DD).
+- `date_to` (optional, string) — Window end (YYYY-MM-DD).
+- `display` (optional, integer) — Naver results per corpus.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/korea-gap?query=Stanley cup" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/share-of-voice — 40 credits (custom)
+
+Engagement-weighted Share of Voice across 2-5 brands, with web+social split, emotion overlay, and ESOV.
+
+- `brands` (required) — 2-5 competitor brand names (CSV).
+- `category_code` (optional, string) — Numeric DFS taxonomy code for true-share-of-category (use content_analysis/categories to look one up).
+- `market_shares` (optional, string) — JSON map of real market share per brand (fraction or %), e.g. {"notion":0.4,"coda":0.25,"airtable":0.35}, to compute ESOV.
+- `include` (optional, string) — CSV toggles (default `emotions,social`). Drop `social` for the cheaper web-only variant; drop `emotions` to skip the sentiment leg.
+- `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) — Optional surface filter forwarded to the content_analysis legs.
+- `date_from` (optional, string) — Window start (YYYY-MM-DD). Defaults to 90 days ago.
+- `date_to` (optional, string) — Window end (YYYY-MM-DD). Defaults to today.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/share-of-voice?brands=notion,coda,airtable" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/review-integrity — 30 credits (custom)
+
+Cross-source review integrity verdict (statistical, deterministic).
+
+- `query` (optional, string) — Product or brand name to evaluate.
+- `asin` (optional, string) — Amazon ASIN to anchor the Amazon axis directly (skips product-search).
+- `gid` (optional, string) — Google product id (gid) to anchor the Google Shopping axis (NOT the catalogid product.id).
+- `sources` (optional, string) — CSV subset of amazon,google_shopping,trustpilot,web,forums (default all).
+- `country` (optional, string) — Marketplace country (DFS location). Defaults to United States.
+
+**At least one of `query` / `asin` / `gid` is required.**
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/review-integrity" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/answers — 15 credits (custom)
+
+Multi-engine AI consensus: one question → Perplexity + Grok + Tavily answers verbatim, merged citations, and an agreement matrix.
+
+- `query` (required) — The question, forwarded verbatim to every engine.
+- `engines` (optional, string) — CSV subset of perplexity,grok,tavily (default all three).
+- `include` (optional, string) — CSV of optional grounding legs: `polymarket` adds market probabilities (trimmed).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/answers?query=will the fed cut rates in september" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/video-intel — 5 credits (custom)
+
+One video URL → detail + stats + transcript + top comments + commenter sample, across YouTube/TikTok/Rumble/Instagram.
+
+- `url` (required) — Absolute http(s) URL of a YouTube, TikTok, Rumble, or Instagram video.
+- `comments` (optional, string) — How many top comments to fetch (0–50, default 20). `0` skips the comments leg.
+- `include` (optional, string) — CSV of optional costed legs: `transcript` (adds the dedicated transcript leg, +10cr, refunded when null) and/or `commenter_profiles` (≤3 commenter mini-profiles, TikTok/Instagram in v1).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/video-intel?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/voice — 5 credits (custom)
+
+One person's public posts across X, Threads, Bluesky, and Truth Social, time-merged.
+
+- `handle` (required) — The handle to look up across all four microblogs (a single leading @ is stripped).
+- `platforms` (optional, string) — CSV subset of twitter,threads,bluesky,truthsocial (default all four).
+- `cursor` (optional, string) — Opaque per-platform pagination token from a prior response's cursors_by_platform (twitter is a single non-paginatable page).
+- `include` (optional, string) — CSV subset of posts_by_platform,merged_timeline,computed to trim the payload (posts_by_platform is always returned).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/voice?handle=nasa" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/app-reviews — 15 credits (custom)
+
+Cross-store app review intelligence (Google Play + App Store) — translated, clustered, sentiment-scored.
+
+- `google_play_id` (optional, string) — Google Play package name (e.g. com.spotify.music).
+- `app_store_id` (optional, string) — App Store numeric app id (e.g. 324684580).
+- `query` (optional, string) — App name to auto-resolve the top hit on each requested store (when no id is given).
+- `country` (optional, string) — Storefront country (DFS location name or numeric code). Defaults to the DFS default location.
+- `language` (optional, string) — Language code (e.g. en).
+- `depth` (optional, integer) — Reviews per store (default 150 Google / 50 Apple, max 600). The App Store returns ~50 at depth 40.
+- `stores` (optional, string) — CSV subset of google_play,app_store. Defaults to whichever ids/query resolve.
+- `include` (optional, string) — CSV of topics,sentiment_timeline,feature_requests,responses (default all). Omitting topics+feature_requests skips the LLM step.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/app-reviews" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/creator-card — 5 credits (custom)
+
+One handle, unified author cards across TikTok, Instagram, YouTube, X (and more).
+
+- `handle` (required) — The handle to look up across every requested platform (a single leading @ is stripped).
+- `platforms` (optional, string) — CSV subset of tiktok,instagram,youtube,twitter,threads,bluesky,truthsocial (default the first four). Unknown platforms are ignored.
+- `include` (optional, string) — CSV subset of cards,totals to trim the payload (cards is always returned).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/creator-card?handle=mrbeast" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/handle-audit — 5 credits (custom)
+
+Should you pull this handle? One call scores a handle across platforms, ranks the best ones, and projects the data volume + credit cost to pull it.
+
+- `handle` (required) — The handle to audit across every requested platform. Accepts a bare handle, a leading @, or a full profile URL (the platform is sniffed from the host).
+- `platforms` (optional, string) — CSV subset of tiktok,instagram,youtube,twitter,threads,bluesky,truthsocial (default the first four). Unknown platforms are ignored. Max 8.
+- `sample` (optional, string) — Recent posts sampled per found platform for the engagement + activity metrics (default 10, max 25).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/handle-audit?handle=mrbeast" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/post-stats — 1 credit (custom)
+
+Up to 100 mixed-platform post URLs → current engagement per URL, failed URLs refunded.
+
+- `urls` (required) — JSON array of 1–100 absolute http(s) post URLs (mixed platforms allowed).
+- `include` (optional, string) — CSV subset of views,likes,comments,shares,saves to trim each row's engagement block.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/post-stats?urls=["https://www.youtube.com/watch?v=dQw4w9WgXcQ"]" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/comment-lookup — 2 credits (custom)
+
+Re-check up to 25 known comments in one call — per-item results, failed items refunded.
+
+- `items` (required) — JSON array of 1–25 lookup items. Each item is `{ "comment_url": "…" }` or `{ "platform": "tiktok"|"instagram", "post_url": "…", "comment_id": "…" }`, optionally with `parent_comment_id`, `position_hint`, and `deep_scan`.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/comment-lookup?items=[{"comment_url":"https://www.tiktok.com/@mrbeast/video/7654638524729216287?comment_id=7654640784985211670"},{"platform":"instagram","post_url":"https://www.instagram.com/p/CnpPou9hWqq/","comment_id":"18007013966365752"}]" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/prism/profiles — 1 credit (custom)
+
+Up to 50 (platform, handle) pairs → one canonical Author per row, failed handles refunded.
+
+- `items` (required) — JSON array of 1–50 items. Each item is `{ "platform": "tiktok", "handle": "@scout2015", "custom_id"?: "…" }`. `handle` accepts an @handle, a bare handle, or a pasted profile URL.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/prism/profiles?items=[{"platform":"tiktok","handle":"@scout2015"},{"platform":"linkedin","handle":"williamhgates","custom_id":"vet-1"}]" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```

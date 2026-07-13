@@ -2,11 +2,11 @@
 
 6 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint is 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 6 standard (1 credit) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/spotify/artist — 1 credit (standard)
 
-Get a Spotify artist.
+Get a Spotify artist
 
 - `id` (optional, string) — Spotify artist ID.
 - `url` (optional, string) — Spotify artist URL.
@@ -20,7 +20,7 @@ curl "https://www.socialcrawl.dev/v1/spotify/artist" \
 
 ## GET /v1/spotify/track — 1 credit (standard)
 
-Get a Spotify track.
+Get a Spotify track
 
 - `id` (optional, string) — Spotify track ID.
 - `url` (optional, string) — Spotify track URL.
@@ -34,7 +34,7 @@ curl "https://www.socialcrawl.dev/v1/spotify/track" \
 
 ## GET /v1/spotify/album — 1 credit (standard)
 
-Get a Spotify album.
+Get a Spotify album
 
 - `id` (optional, string) — Spotify album ID.
 - `url` (optional, string) — Spotify album URL.
@@ -48,7 +48,7 @@ curl "https://www.socialcrawl.dev/v1/spotify/album" \
 
 ## GET /v1/spotify/search — 1 credit (standard)
 
-Search Spotify.
+Search Spotify
 
 - `query` (required) — Search query.
 
@@ -59,7 +59,7 @@ curl "https://www.socialcrawl.dev/v1/spotify/search?query=my first million" \
 
 ## GET /v1/spotify/podcast — 1 credit (standard)
 
-Get a Spotify podcast.
+Get a Spotify podcast
 
 - `id` (optional, string) — Spotify podcast (show) ID.
 - `url` (optional, string) — Spotify podcast (show) URL.
@@ -73,7 +73,7 @@ curl "https://www.socialcrawl.dev/v1/spotify/podcast" \
 
 ## GET /v1/spotify/podcast/episodes — 1 credit (standard)
 
-List a Spotify podcast's episodes.
+List a Spotify podcast's episodes
 
 - `id` (optional, string) — Spotify podcast (show) ID.
 - `url` (optional, string) — Spotify podcast (show) URL.

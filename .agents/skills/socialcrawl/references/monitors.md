@@ -2,7 +2,7 @@
 
 The stateful, scheduled wrapper around any SocialCrawl recipe. A monitor re-runs a registered endpoint or a Prism composite on a cadence, delivers each result to a signed webhook, evaluates alert rules, and accumulates a per-run time-series you can read back. *"Prism answers once; monitors watch it for you."*
 
-Monitors are **not** registry endpoints — they live at `/v1/monitors/*`, use methods beyond GET (POST/PATCH/DELETE), and are **not** counted in the 264-endpoint total. Auth is the same `x-api-key` header.
+Monitors are **not** registry endpoints — they live at `/v1/monitors/*`, use methods beyond GET (POST/PATCH/DELETE), and are **not** counted in the 357-endpoint total. Auth is the same `x-api-key` header.
 
 **Billing:** managing monitors (create / list / get / runs / timeseries / pause / delete) costs **0 credits**. Each *scheduled run* bills the underlying recipe's normal cost **plus 1 credit** (e.g. a daily `prism/reputation` monitor costs 30 + 1 = 31 credits per run). Skipped runs (insufficient balance) are never charged, and a run whose recipe returns `ok:false` is fully refunded. The `create` response returns `estimated_cost_per_run` and `estimated_monthly_cost`. The webhook auto-pauses after 10 consecutive delivery failures.
 

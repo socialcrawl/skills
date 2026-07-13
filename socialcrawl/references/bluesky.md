@@ -2,11 +2,11 @@
 
 3 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint is 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 3 standard (1 credit) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/bluesky/profile — 1 credit (standard)
 
-Get a Bluesky profile.
+Get a Bluesky profile
 
 - `handle` (required) — Bluesky handle (e.g. `espn.com`).
 
@@ -17,7 +17,7 @@ curl "https://www.socialcrawl.dev/v1/bluesky/profile?handle=espn.com" \
 
 ## GET /v1/bluesky/user/posts — 1 credit (standard)
 
-List a Bluesky user's posts.
+List a Bluesky user's posts
 
 - `handle` (optional, string) — Bluesky handle.
 - `user_id` (optional, string) — Bluesky `did` (Bluesky's internal user ID format, e.g. `did:plc:x7d6j54pm22ufehkes6jo4jf`).
@@ -31,7 +31,7 @@ curl "https://www.socialcrawl.dev/v1/bluesky/user/posts" \
 
 ## GET /v1/bluesky/post — 1 credit (standard)
 
-Get a Bluesky post.
+Get a Bluesky post
 
 - `url` (required) — Bluesky post URL.
 

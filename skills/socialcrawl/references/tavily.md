@@ -2,9 +2,7 @@
 
 4 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint is 1 credit (standard) — exact cost listed per endpoint below.
-
-Real-time web search, page extraction, and crawling via the Tavily API. The public surface is GET — the fetcher translates query params into a Bearer-auth POST + JSON body server-side, so caching, idempotency, and the OpenAPI spec stay consistent with every other endpoint. Responses preserve the full Tavily payload (`results`, `answer`, `query_analysis`, `suggestions`, `total_results`, `time_taken`); `include_answer=true` is the high-value flag on `search` — it returns Tavily's LLM-synthesized answer. An empty `results: []` is billed normally as a successful 200.
+**Credit costs:** 4 standard (1 credit) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/tavily/search — 1 credit (standard)
 

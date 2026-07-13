@@ -2,13 +2,14 @@
 name: socialcrawl
 description: >
   Interact with the SocialCrawl API — a unified social, commerce, and research
-  data API covering 42 platforms and 264 endpoints, plus cross-platform Prism
+  data API covering 44 platforms and 357 endpoints, plus cross-platform Prism
   composites and scheduled Monitors. Fetch profiles, posts, comments, search
   results, transcripts, ad libraries, product/app/business reviews, places,
-  prediction markets, news, finance quotes, AI-grounded answers, and a universal
-  cross-platform search from TikTok, Instagram, YouTube, Twitter/X, Facebook,
-  Reddit, Amazon, Google Play, the App Store, Trustpilot, GitHub, Naver, and
-  many more through a single API. Use when the user wants to: (1) fetch social
+  prediction markets, news, finance quotes, Google Trends, web scraping/search,
+  AI-grounded answers, and a universal cross-platform search from TikTok,
+  Instagram, YouTube, Twitter/X, Facebook, Reddit, Amazon, Google Play, the App
+  Store, Trustpilot, GitHub, Naver, and many more through a single API. Use when
+  the user wants to: (1) fetch social
   media, commerce, app-store, or review data, (2) generate code that calls the
   SocialCrawl API, (3) understand SocialCrawl endpoints, parameters, pricing,
   or capabilities, (4) check their SocialCrawl credit balance, (5) run a
@@ -19,7 +20,7 @@ description: >
 
 # SocialCrawl API
 
-Unified social media, commerce, and research data API. One API key, one response format, **42 platforms, 264 endpoints** — plus cross-platform **Prism** composites and stateful scheduled **Monitors**. Author and Post responses are normalized through platform field maps and augmented with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Commerce, review, place, and app endpoints share first-class canonical Product / Review / Seller / Place / App schemas. List responses are always `{ items, next_cursor?, total? }`. Add `?format=raw` to bypass the transform pipeline.
+Unified social media, commerce, and research data API. One API key, one response format, **44 platforms, 357 endpoints** — plus cross-platform **Prism** composites and stateful scheduled **Monitors**. Author and Post responses are normalized through platform field maps and augmented with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Commerce, review, place, and app endpoints share first-class canonical Product / Review / Seller / Place / App schemas. List responses are always `{ items, next_cursor?, total? }`. Add `?format=raw` to bypass the transform pipeline.
 
 ## API Key
 
@@ -28,7 +29,7 @@ Resolve the API key before making any call, checking these sources in order:
 1. **Env var**: `echo "$SOCIALCRAWL_API_KEY"` — if set and starts with `sc_` (and is not a placeholder like `sc_your_api_key_here`), use it.
 2. **Config file**: `cat ~/.config/socialcrawl/api_key 2>/dev/null` — if the file exists and contains a key starting with `sc_`, use it.
 3. **Ask the user**: If neither source has a valid key:
-   - Tell the user: "I need your SocialCrawl API key to continue. You can find it at https://socialcrawl.dev/dashboard — every account starts with 400 free credits."
+   - Tell the user: "I need your SocialCrawl API key to continue. You can find it at https://socialcrawl.dev/dashboard — every account starts with 100 free credits."
    - Ask them to paste their key.
    - After receiving the key, **auto-save it** so they never need to paste it again:
      ```bash
@@ -42,7 +43,7 @@ For all subsequent API calls in the session, use the resolved key directly in th
 
 On the first interaction with this skill in a session:
 
-1. Briefly introduce: "SocialCrawl provides a single API for 42 social, commerce, and research platforms (264 endpoints, plus Prism composites and Monitors). Let me verify your API key."
+1. Briefly introduce: "SocialCrawl provides a single API for 44 social, commerce, and research platforms (357 endpoints, plus Prism composites and Monitors). Let me verify your API key."
 2. Resolve the API key using the steps above. If the key is missing or a placeholder, stop here and ask for it before proceeding.
 3. Verify it with the free balance endpoint (0 credits):
    ```bash
@@ -58,13 +59,13 @@ On the first interaction with this skill in a session:
 
 | Platform | Endpoints | Reference |
 |----------|-----------|-----------|
-| TikTok | 19 | [references/tiktok.md](references/tiktok.md) |
+| TikTok | 20 | [references/tiktok.md](references/tiktok.md) |
 | TikTok Shop | 5 | [references/tiktokshop.md](references/tiktokshop.md) |
-| Instagram | 16 | [references/instagram.md](references/instagram.md) |
-| YouTube | 17 | [references/youtube.md](references/youtube.md) |
+| Instagram | 33 | [references/instagram.md](references/instagram.md) |
+| YouTube | 28 | [references/youtube.md](references/youtube.md) |
 | Facebook | 22 | [references/facebook.md](references/facebook.md) |
 | Twitter/X | 8 | [references/twitter.md](references/twitter.md) |
-| LinkedIn | 9 | [references/linkedin.md](references/linkedin.md) |
+| LinkedIn | 44 | [references/linkedin.md](references/linkedin.md) |
 | Reddit | 7 | [references/reddit.md](references/reddit.md) |
 | Threads | 5 | [references/threads.md](references/threads.md) |
 | Pinterest | 5 | [references/pinterest.md](references/pinterest.md) |
@@ -87,13 +88,14 @@ On the first interaction with this skill in a session:
 | Tripadvisor | 2 | [references/tripadvisor.md](references/tripadvisor.md) |
 | Google (SERP, ads, Business, hotels) | 10 | [references/google.md](references/google.md) |
 | Google Finance (quotes, markets, tickers) | 3 | [references/google_finance.md](references/google_finance.md) |
+| Google Trends (interest over time, rising) | 2 | [references/google_trends.md](references/google_trends.md) |
 
 **App stores:**
 
 | Platform | Endpoints | Reference |
 |----------|-----------|-----------|
-| Google Play | 8 | [references/google_play.md](references/google_play.md) |
-| Apple App Store | 8 | [references/app_store.md](references/app_store.md) |
+| Google Play | 9 | [references/google_play.md](references/google_play.md) |
+| Apple App Store | 9 | [references/app_store.md](references/app_store.md) |
 
 **Research, dev & data:**
 
@@ -107,6 +109,7 @@ On the first interaction with this skill in a session:
 | Polymarket (prediction markets) | 1 | [references/polymarket.md](references/polymarket.md) |
 | Content Analysis (brand mentions + sentiment) | 10 | [references/content_analysis.md](references/content_analysis.md) |
 | Google News (news SERP search) | 1 | [references/google_news.md](references/google_news.md) |
+| Web (scrape, search, crawl, map any URL) | 22 | [references/web.md](references/web.md) |
 | Universal Search (all platforms at once) | 2 | [references/search.md](references/search.md) |
 
 **Link-in-bio:**
@@ -124,10 +127,10 @@ On the first interaction with this skill in a session:
 
 | Surface | Endpoints | Reference |
 |---------|-----------|-----------|
-| Prism (cross-platform composites) | 30 | [references/prism.md](references/prism.md) |
+| Prism (cross-platform composites) | 33 | [references/prism.md](references/prism.md) |
 | Monitors (scheduled recipes + webhooks) | — | [references/monitors.md](references/monitors.md) |
 
-Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook — they are a stateful resource family, **not** registry endpoints, so they're not part of the 264 count and use POST/PATCH/DELETE in addition to GET.
+Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook — they are a stateful resource family, **not** registry endpoints, so they're not part of the 357 count and use POST/PATCH/DELETE in addition to GET.
 
 ## Workflow
 
@@ -162,13 +165,14 @@ Determine what the user wants, then follow the matching workflow:
 3. Managing monitors is free; each scheduled run bills the recipe's normal cost + a 1-credit scheduling premium
 
 **User asks about pricing or credit costs:**
-1. Read [references/pricing.md](references/pricing.md) — it has the exact credit cost for every one of the 264 endpoints, the tier system, credit packs, and refund rules
+1. Read [references/pricing.md](references/pricing.md) — it has the exact credit cost for every one of the 357 endpoints, the tier system, credit packs, and refund rules
 2. Per-endpoint costs are also listed inline in each platform reference file
 
 **User asks about credits/balance:**
 1. Resolve API key
 2. Run: `curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/credits/balance"` (0 credits)
 3. Return the balance
+4. For a line-by-line credit ledger (deductions/refunds, newest first, cursor-paginated), use `curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/credits/transactions?limit=50"` (0 credits)
 
 **Ambiguous platform:** If the user says "get profile for @nike" without specifying a platform, ask which platform they mean.
 
@@ -197,10 +201,10 @@ The only exception is the Monitors family (`/v1/monitors/*`), which also uses PO
 
 | Tier | Cost | Endpoints | Typical endpoints |
 |------|------|-----------|-------------------|
-| standard | 1 credit | 184 | Profiles, posts, search, comments, reference data |
-| advanced | 5 credits | 55 | Ad libraries, trending, audience analytics, app data, reviews |
-| premium | 10 credits | 25 | Video transcripts, age-gender detection, app listings search |
-| flat / metered | varies (0–50) | — | `/v1/search/everywhere` (20) & `search/forums` (10); `naver/brief` (10); `{platform}/profile/full` (5); all `/v1/prism/*` composites (0–50, flat or metered per recipe) |
+| standard | 1 credit | 176 | Profiles, posts, search, comments, reference data |
+| advanced | 5 credits | 90 | Ad libraries, trending, audience analytics, app data, reviews, Google Trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
+| premium | 10 credits | 18 | Video transcripts, age-gender detection, LinkedIn people/job search + reactions, app listings search |
+| custom (flat / metered) | varies (0–50) | 73 | `/v1/search/everywhere` (20) & `search/forums` (10); `naver/brief` (10); `{platform}/profile/full` (5); web scrape/crawl; all `/v1/prism/*` composites (0–50, flat or metered per recipe) |
 
 Cache hits, idempotent replays, and `/v1/credits/balance` cost 0 credits. Failed calls (upstream errors, not-found resources) are auto-refunded. Metered composites deduct an upfront ceiling and refund down to the actual work done. Full per-endpoint pricing: [references/pricing.md](references/pricing.md).
 
@@ -226,7 +230,7 @@ Before executing an advanced (5), premium (10), universal-search (20), or Prism 
 ## References
 
 - **[references/api-overview.md](references/api-overview.md)** — Read when user asks about authentication, response envelope, unified schemas (Author/Post/Comment/Product/Review/Seller/Place/App), computed fields, pagination, caching, idempotency, `?format=raw`, concurrency, or error details
-- **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, or refunds; has the exact cost of all 264 endpoints
+- **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, or refunds; has the exact cost of all 357 endpoints
 - **[references/prism.md](references/prism.md)** — Read when user wants a cross-platform composite (`/v1/prism/*`) — one call that fans out across many platforms
 - **[references/monitors.md](references/monitors.md)** — Read when user wants to schedule a recipe to re-run on a cadence with webhook delivery (`/v1/monitors/*`)
 - **[references/{platform}.md](references/)** — Read the specific platform file when user asks about or wants to call that platform's endpoints

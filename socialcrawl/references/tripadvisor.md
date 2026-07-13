@@ -2,12 +2,11 @@
 
 2 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint is 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 2 standard (1 credit) — the exact cost is in each endpoint heading below.
 
-Notes:
-- Two-step workflow: `reviews` requires the `url_path` that only `search` returns.
-- Task-polled upstream — expect ~10–45s of latency.
-- TripAdvisor auto-translates reviews to the place's domain language; each review surfaces `original_language` and a `translated` flag.
+**Latency:** Tripadvisor endpoints are task-polled upstream — expect ~10–45s responses. Use a 60s timeout.
+
+**Two-step:** `reviews` needs the `url_path` returned by `search` first.
 
 ## GET /v1/tripadvisor/search — 1 credit (standard)
 

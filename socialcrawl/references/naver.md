@@ -2,13 +2,7 @@
 
 12 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every per-corpus endpoint is 1 credit (standard); the `brief` Prism composite is a flat 10 credits — exact cost listed per endpoint below.
-
-Naver is Korea's dominant search portal. This platform exposes 11 Korean search corpora (blog, news, book, encyclopedia, cafe articles, KnowledgeiN, local places, shopping, academic documents, images, web documents), plus the `brief` composite that folds 6 of them into one Korean-internet brief. Notes that apply across all corpora:
-
-- `query` is required everywhere — free-text UTF-8 (Korean or English).
-- The `local` corpus caps `display` at 5 and `start` at 1; all other corpora allow `display` up to 100 and `start` up to 1000.
-- Item text fields contain Naver `<b>` highlight markup around matched terms — strip or render it as needed.
+**Credit costs:** 11 standard (1 credit), 1 custom (flat/metered) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/naver/blog/search — 1 credit (standard)
 
@@ -164,17 +158,17 @@ curl "https://www.socialcrawl.dev/v1/naver/webkr/search?query=기후변화" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/naver/brief — 10 credits (flat override)
+## GET /v1/naver/brief — 10 credits (custom)
 
-One query across 6 Naver corpora (news, blog, cafearticle, kin, shop, webkr) folded into a single Korean-internet brief, with an optional English `digest`. Part of the "Prism" composite family.
+One query across the Korean internet (6 Naver corpora) + optional digest.
 
 - `query` (required) — Search query (Korean or any language).
-- `corpora` (optional, string) — CSV subset of `news,blog,cafearticle,kin,shop,webkr` (default all six).
+- `corpora` (optional, string) — CSV subset of news,blog,cafearticle,kin,shop,webkr (default all six).
 - `display` (optional, integer) — Items per corpus (1–100, default 20).
 - `start` (optional, integer) — 1-indexed offset per corpus (1–1000, default 1). Prefer `cursor` for paging.
-- `sort` (optional, string) — `sim` (relevance, default) or `date`; shop also `asc`/`dsc` (price); kin also `point`.
+- `sort` (optional, string) — sim (relevance, default) or date; shop also asc/dsc (price); kin also point.
 - `include` (optional, string) — Set to `digest` for an LLM English digest with translated quotes.
-- `cursor` (optional, string) — Opaque pagination token from a prior response's `next_cursor`.
+- `cursor` (optional, string) — Opaque pagination token from a prior response's next_cursor.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/naver/brief?query=삼성전자" \

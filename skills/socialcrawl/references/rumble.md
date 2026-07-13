@@ -2,11 +2,11 @@
 
 5 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: 1 credit (standard) for everything except the video transcript at 10 credits (premium) — exact cost listed per endpoint below.
+**Credit costs:** 4 standard (1 credit), 1 premium (10) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/rumble/search — 1 credit (standard)
 
-Search Rumble videos.
+Search Rumble videos
 
 - `query` (required) — Search query.
 - `cursor` (optional, string) — Cursor from the previous response — the next page number (e.g. `2`).
@@ -18,7 +18,7 @@ curl "https://www.socialcrawl.dev/v1/rumble/search?query=funny cats" \
 
 ## GET /v1/rumble/channel/videos — 1 credit (standard)
 
-List videos for a Rumble channel.
+List videos for a Rumble channel
 
 - `handle` (optional, string) — Rumble channel handle.
 - `url` (optional, string) — Rumble channel URL.
@@ -33,7 +33,7 @@ curl "https://www.socialcrawl.dev/v1/rumble/channel/videos" \
 
 ## GET /v1/rumble/video — 1 credit (standard)
 
-Get a Rumble video.
+Get a Rumble video
 
 - `url` (required) — Rumble video URL.
 
@@ -44,7 +44,7 @@ curl "https://www.socialcrawl.dev/v1/rumble/video?url=https://rumble.com/v79xhhm
 
 ## GET /v1/rumble/video/transcript — 10 credits (premium)
 
-Get a Rumble video transcript.
+Get a Rumble video transcript
 
 - `url` (required) — Rumble video URL.
 
@@ -55,7 +55,7 @@ curl "https://www.socialcrawl.dev/v1/rumble/video/transcript?url=https://rumble.
 
 ## GET /v1/rumble/video/comments — 1 credit (standard)
 
-List top-level comments on a Rumble video.
+List top-level comments on a Rumble video
 
 - `url` (required) — Rumble video URL.
 

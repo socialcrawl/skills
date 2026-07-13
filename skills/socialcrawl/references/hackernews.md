@@ -2,9 +2,7 @@
 
 4 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: every endpoint costs 1 credit (standard) — exact cost listed per endpoint below.
-
-Hacker News is exposed via Algolia's public HN API — no separate auth needed; customers use their normal `sc_...` SocialCrawl key.
+**Credit costs:** 4 standard (1 credit) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/hackernews/search — 1 credit (standard)
 
@@ -12,7 +10,7 @@ Search Hacker News
 
 - `query` (required) — Free-text search term.
 - `tags` (optional, string) — Algolia tag filter — comma-separated. Common values: "story", "comment", "poll", "show_hn", "ask_hn", "front_page", "author_<username>". Defaults to "story".
-- `numericFilters` (optional, string) — Algolia numeric filter expression — e.g. "created_at_i>1700000000,points>10". Combine with commas for AND. Overrides the default "points>2" floor when provided.
+- `numericFilters` (optional, string) — Algolia numeric filter expression on `created_at_i` (the only filterable numeric attribute) — e.g. "created_at_i>1700000000". Combine with commas for AND. No filter is applied by default.
 - `hitsPerPage` (optional, integer) — Hits per page (1–1000). Defaults to 30.
 - `page` (optional, integer) — 0-indexed page number for pagination.
 

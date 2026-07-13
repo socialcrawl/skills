@@ -1,8 +1,8 @@
 # TikTok
 
-19 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
+20 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: 1 credit (standard) for most endpoints; 5 (advanced) for trending and user audience demographics; 10 (premium) for transcripts; the `profile/full` Prism composite is a flat 5 credits — exact cost listed per endpoint below.
+**Credit costs:** 15 standard (1 credit), 2 advanced (5), 1 premium (10), 2 custom (flat/metered) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/tiktok/profile — 1 credit (standard)
 
@@ -39,10 +39,9 @@ curl "https://www.socialcrawl.dev/v1/tiktok/profile/videos?handle=charlidamelio"
 Get TikTok post details
 
 - `url` (required) — Full URL of the TikTok video
-- `get_transcript` (optional, boolean) — Get transcript of the video
 - `region` (optional, string) — Region of the proxy. Sometimes you'll need to specify the region if you're not getting a response. Commonly for videos from the Phillipines, in which case you'd use 'PH'. Use 2 letter country codes like US, GB, FR, etc
 - `trim` (optional, boolean) — Set to true to get a trimmed response
-- `download_media` (optional, boolean) — Set to true to download the video/images and get back permanent Supabase URLs. Costs 10 credits if media is found, 1 credit otherwise.
+- `download_media` (optional, boolean) — Set to true to also download the video/images and get back permanent, durable media URLs under `data.post.ext.download_media_urls` (`[{ post_id, cdn_url, type, cached }]`). Use these for archiving — the raw `media_urls` are short-lived signed CDN links that expire. Adds a few seconds of latency while the media is fetched.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktok/post?url=https://www.tiktok.com/@charlidamelio/video/7321485815660738859" \
@@ -72,6 +71,25 @@ List TikTok comment replies
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktok/video/comment/replies?comment_id=7623828115408274207" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/tiktok/comment — 2 credits (custom)
+
+Look up one TikTok comment by URL or id
+
+- `comment_url` (optional, string) — A TikTok comment URL: `https://www.tiktok.com/@{handle}/video/{videoId}?comment_id={cid}`, the `m.tiktok.com/v/{id}.html?...&share_comment_id={cid}` share form, or a `vm.tiktok.com/{code}` / `tiktok.com/t/{code}` shortlink. Mutually exclusive with `post_url`+`comment_id`.
+- `post_url` (optional, string) — The post URL (`https://www.tiktok.com/@{handle}/video/{videoId}`). Combine with `comment_id`, or with `author_username`/`text_contains` for a search.
+- `comment_id` (optional, string) — The target comment's numeric id (the `cid` from the comments endpoint). Requires `post_url`.
+- `parent_comment_id` (optional, string) — The parent comment's numeric id — supply this when the target is a reply so it can be resolved directly via the native replies endpoint.
+- `author_username` (optional, string) — Return up to `max` comments authored by this username (no comment id needed). Mutually exclusive with `text_contains` and any comment id.
+- `text_contains` (optional, string) — Return up to `max` comments whose text contains this snippet (case-insensitive). Mutually exclusive with `author_username` and any comment id.
+- `deep_scan` (optional, boolean) — Widen the scan budget for deeply-buried comments (raises the page ceiling and deadline). Bills 6 credits instead of 2.
+- `position_hint` (optional, string) — Opaque token from a prior lookup's `lookup.position_hint`. Passing it back probes the comment's last-known location first, making a re-check of an already-found comment cheap.
+- `max` (optional, integer) — For `author_username`/`text_contains` search: max matches to return (1–20, default 5).
+
+```bash
+curl "https://www.socialcrawl.dev/v1/tiktok/comment" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
@@ -242,17 +260,17 @@ curl "https://www.socialcrawl.dev/v1/tiktok/profile/region?handle=stoolpresident
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/profile/full — 5 credits (flat override)
+## GET /v1/tiktok/profile/full — 5 credits (custom)
 
-Profile-360 composite — profile, recent posts, and a computed analytics block (avg engagement rate, posts/week cadence, top post, format mix) folded into one call. Part of the "Prism" composite family.
+TikTok profile, recent posts, and computed analytics in one call.
 
-- `handle` (optional, string) — TikTok username without the @ symbol.
-- `user_id` (optional, string) — TikTok numeric user ID. Use this for faster responses.
+- `handle` (optional, string)
+- `user_id` (optional, string)
 - `posts` (optional, integer) — How many recent posts to fetch + average the computed metrics over (1–100, default 25).
-- `cursor` (optional, string) — Pass a prior response's `posts_cursor` to deepen the post window.
-- `include` (optional, string) — CSV subset of `posts,computed` (default both). `include=computed` drops the raw `posts[]` to save payload.
+- `cursor` (optional, string) — Pass a prior response's posts_cursor to deepen the post window.
+- `include` (optional, string) — CSV subset of posts,computed (default both). include=computed drops the raw posts[] to save payload.
 
 ```bash
-curl "https://www.socialcrawl.dev/v1/tiktok/profile/full?handle=charlidamelio" \
+curl "https://www.socialcrawl.dev/v1/tiktok/profile/full" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```

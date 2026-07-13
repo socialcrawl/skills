@@ -2,12 +2,7 @@
 
 5 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: shop, product-search, and sellers are 1 credit (standard); product and reviews are 5 credits (advanced) — exact cost listed per endpoint below.
-
-Notes:
-- `asin` params are validated as 10-char alphanumeric before any charge.
-- `country` (default US) covers ~13 Amazon marketplaces.
-- `amazon/reviews` returns the ~5–13 reviews embedded on the ASIN page.
+**Credit costs:** 3 standard (1 credit), 2 advanced (5) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/amazon/shop — 1 credit (standard)
 
@@ -25,7 +20,7 @@ curl "https://www.socialcrawl.dev/v1/amazon/shop?url=https://www.amazon.com/shop
 Search Amazon products by keyword
 
 - `query` (required) — Search keyword or phrase.
-- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Note: non-US marketplaces (especially EU) are best-effort — the upstream provider is slower and occasionally times out for these; such calls are refunded, and US is the most reliable marketplace.
 - `depth` (optional, integer) — Maximum number of products to return (max 700). Higher depth returns more rows at the same flat credit cost.
 
 ```bash
@@ -38,7 +33,7 @@ curl "https://www.socialcrawl.dev/v1/amazon/product-search?query=wireless earbud
 Get an Amazon product by ASIN
 
 - `asin` (required) — 10-character Amazon ASIN (the product identifier).
-- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Note: non-US marketplaces (especially EU) are best-effort — the upstream provider is slower and occasionally times out for these; such calls are refunded, and US is the most reliable marketplace.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/amazon/product?asin=B0FQFB8FMG" \
@@ -47,10 +42,10 @@ curl "https://www.socialcrawl.dev/v1/amazon/product?asin=B0FQFB8FMG" \
 
 ## GET /v1/amazon/reviews — 5 credits (advanced)
 
-Get Amazon product reviews. Returns the ~5–13 reviews embedded on the ASIN page.
+Get Amazon product reviews
 
 - `asin` (required) — 10-character Amazon ASIN (the product identifier).
-- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Note: non-US marketplaces (especially EU) are best-effort — the upstream provider is slower and occasionally times out for these; such calls are refunded, and US is the most reliable marketplace.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/amazon/reviews?asin=B0DCH8VDXF" \
@@ -62,7 +57,7 @@ curl "https://www.socialcrawl.dev/v1/amazon/reviews?asin=B0DCH8VDXF" \
 Get Amazon sellers and offers for a product
 
 - `asin` (required) — 10-character Amazon ASIN (the product identifier).
-- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL.
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) — Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Note: non-US marketplaces (especially EU) are best-effort — the upstream provider is slower and occasionally times out for these; such calls are refunded, and US is the most reliable marketplace.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/amazon/sellers?asin=B09SM24S8C" \

@@ -2,13 +2,11 @@
 
 4 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: product-search is 5 credits (advanced); product, reviews, and sellers are 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 3 standard (1 credit), 1 advanced (5) — the exact cost is in each endpoint heading below.
 
-Notes:
-- ALL Google Shopping calls are task-polled upstream — expect roughly 10–28 seconds of latency.
-- Two-step workflow: `product`, `reviews`, and `sellers` all require opaque ids (`product_id` / `gid` / `data_docid`) that only `product-search` returns (surfaced as `product.id` + `product.ext.{gid,data_docid}` on each search result).
-- `reviews` aggregates across retailers; each review carries `review.source` (the hosting retailer domain).
-- A product with no reviews returns 404 with automatic credit refund.
+**Latency:** All Google Shopping endpoints are task-polled upstream — expect ~10–45s responses. Use a 60s timeout.
+
+**Two-step:** `product`, `reviews`, and `sellers` need a product id (`product_id`/`gid`) obtained from `product-search` first.
 
 ## GET /v1/google_shopping/product-search — 5 credits (advanced)
 

@@ -2,22 +2,18 @@
 
 10 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: the 6 analysis endpoints (search, summary, sentiment, rating-distribution, phrase-trends, category-trends) are 5 credits (advanced); the 4 reference lookups (languages, locations, categories, filters) are 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 4 standard (1 credit), 6 custom (flat/metered) — the exact cost is in each endpoint heading below.
 
-Notes:
-- Cross-web brand-mention + sentiment intelligence over a web-citation database (news/blogs/ecommerce/message boards) — page-level mentions, not native platform posts.
-- `search` is the only paginated resource (`next_cursor` from `offset_token`).
-- The 4 reference resources (languages, locations, categories, filters) are static lookup data.
-- `category-trends` keys on a numeric `category_code` obtained from `/categories`.
+Content Analysis endpoints surface brand mentions and per-mention sentiment across the open web. Results are passthrough (native upstream keys), not the unified Author/Post schema.
 
-## GET /v1/content_analysis/search — 5 credits (advanced)
+## GET /v1/content_analysis/search — 20 credits (custom)
 
 Search web citations of a keyword with per-mention sentiment
 
 - `keyword` (required) — Brand or term to find mentions of. Wrap in escaped double-quotes for an exact phrase (e.g. "logitech mouse").
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) — Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization. Translated to a page_types filter upstream.
 - `search_mode` (optional, enum: as_is | one_per_domain) — as_is (default) returns every matching page; one_per_domain dedupes to the top page per domain.
-- `limit` (optional, integer) — Number of citations to return per page (1–1000, default 10).
+- `limit` (optional, integer) — Number of citations to return per page (1–100, default 10). Paginate via `cursor` for more.
 - `cursor` (optional, string) — Opaque pagination cursor — pass the `next_cursor` from the previous response to fetch the next page.
 - `order_by` (optional, string) — Sort rules as "field,direction"; separate multiple rules with ";" (e.g. content_info.sentiment_connotations.anger,desc).
 - `filters` (optional, string) — Advanced DataForSEO filter expression as a JSON array (≤8 conditions). Combined with page_type via AND when both are present.
@@ -27,7 +23,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/search?keyword=openai" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/content_analysis/summary — 5 credits (advanced)
+## GET /v1/content_analysis/summary — 20 credits (custom)
 
 Aggregate mention summary for a keyword
 
@@ -43,7 +39,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/summary?keyword=openai" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/content_analysis/sentiment — 5 credits (advanced)
+## GET /v1/content_analysis/sentiment — 20 credits (custom)
 
 Sentiment breakdown for a keyword
 
@@ -57,7 +53,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/sentiment?keyword=openai" 
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/content_analysis/rating-distribution — 5 credits (advanced)
+## GET /v1/content_analysis/rating-distribution — 20 credits (custom)
 
 Rating histogram for a keyword
 
@@ -70,7 +66,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/rating-distribution?keywor
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/content_analysis/phrase-trends — 5 credits (advanced)
+## GET /v1/content_analysis/phrase-trends — 20 credits (custom)
 
 Keyword mention volume + sentiment over time
 
@@ -87,7 +83,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/phrase-trends?keyword=open
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/content_analysis/category-trends — 5 credits (advanced)
+## GET /v1/content_analysis/category-trends — 20 credits (custom)
 
 Category mention volume + sentiment over time
 
@@ -105,7 +101,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/category-trends?category_c
 
 ## GET /v1/content_analysis/languages — 1 credit (standard)
 
-List supported Content Analysis languages. No parameters.
+List supported Content Analysis languages
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/languages" \
@@ -114,7 +110,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/languages" \
 
 ## GET /v1/content_analysis/locations — 1 credit (standard)
 
-List supported Content Analysis locations. No parameters.
+List supported Content Analysis locations
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/locations" \
@@ -123,7 +119,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/locations" \
 
 ## GET /v1/content_analysis/categories — 1 credit (standard)
 
-List the Content Analysis category taxonomy. No parameters.
+List the Content Analysis category taxonomy
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/categories" \
@@ -132,7 +128,7 @@ curl "https://www.socialcrawl.dev/v1/content_analysis/categories" \
 
 ## GET /v1/content_analysis/filters — 1 credit (standard)
 
-List the filterable fields for Content Analysis. No parameters.
+List the filterable fields for Content Analysis
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/filters" \

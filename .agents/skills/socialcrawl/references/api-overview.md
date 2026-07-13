@@ -17,7 +17,7 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
 
 ## Surface
 
-**42 platforms, 264 active endpoints**. Most are `GET /v1/{platform}/{resource}`. Two surfaces sit on top of the registry: the cross-platform **Prism** composites (`/v1/prism/*` and per-platform `profile/full` / `omni-search`), and the stateful **Monitors** family (`/v1/monitors/*`, which also uses POST/PATCH/DELETE and is not counted in the 264). See [prism.md](prism.md) and [monitors.md](monitors.md).
+**44 platforms, 357 active endpoints**. Most are `GET /v1/{platform}/{resource}`. Two surfaces sit on top of the registry: the cross-platform **Prism** composites (`/v1/prism/*` and per-platform `profile/full` / `omni-search`), and the stateful **Monitors** family (`/v1/monitors/*`, which also uses POST/PATCH/DELETE and is not counted in the 357). See [prism.md](prism.md) and [monitors.md](monitors.md).
 
 ## Response Format
 
@@ -68,14 +68,14 @@ Error responses:
 
 | Tier | Cost | Endpoints | Typical endpoints |
 |------|------|-----------|-------------------|
-| standard | 1 credit | 169 | Profiles, posts, comments, search, Naver corpora, GitHub direct calls, reference data |
-| advanced | 5 credits | 37 | Ad libraries, trending, audience analytics, app data, business/place reviews, GitHub composites |
-| premium | 10 credits | 14 | Video transcripts, age-gender detection, profile-velocity composite, app listings search |
-| **flat override** | **20 credits** | 1 | `/v1/search/everywhere` (universal cross-platform search) |
+| standard | 1 credit | 176 | Profiles, posts, comments, search, Naver corpora, GitHub direct calls, reference data |
+| advanced | 5 credits | 90 | Ad libraries, trending, audience analytics, app data, business/place reviews, Google Trends, LinkedIn social graph + jobs, Instagram relationship/discovery data, GitHub composites |
+| premium | 10 credits | 18 | Video transcripts, age-gender detection, LinkedIn people/job search + reactions, app listings search |
+| **custom (flat / metered)** | **varies (0–50)** | 73 | `/v1/search/everywhere` (20) & `search/forums` (10); `naver/brief` (10); `{platform}/profile/full` (5); web scrape/crawl; all `/v1/prism/*` composites (0–50, flat or metered per recipe) |
 
-Per-endpoint costs for every endpoint: see [pricing.md](pricing.md).
+Counted by underlying tier (custom endpoints folded into their base tier), the split is **210 standard · 117 advanced · 30 premium = 357**. Per-endpoint costs for every endpoint: see [pricing.md](pricing.md).
 
-Every account starts with **400 free credits**. Credit packs (one-time, no subscription): Starter 2,500 (£15), Growth 20,000 (£49), Pro 150,000 (£299), Enterprise custom — current packs at https://socialcrawl.dev/pricing.
+Every account starts with **100 free credits**. Credit packs (one-time, no subscription): Starter 2,500 (£15), Growth 20,000 (£49), Pro 150,000 (£299), Enterprise custom — current packs at https://socialcrawl.dev/pricing.
 
 **Auto-refunds.** Credits are refunded automatically on `502 UPSTREAM_ERROR`, `503 SERVICE_UNAVAILABLE`, `500 INTERNAL_ERROR`, and `404 RESOURCE_NOT_FOUND` from the empty-upstream guard. You only pay for calls that return real data.
 
@@ -105,6 +105,13 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
 ```
 
 The dashboard UI uses a separate session-authed `/api/credits/balance` route — programmatic callers must use `/v1/credits/balance`.
+
+For a full credit ledger (dispute-grade receipts — deductions negative, refunds positive, newest first), call `GET /v1/credits/transactions` (also **0 credits**, never cached). It is cursor-paginated (`limit` defaults to 50, capped at 100) and filterable by `request_id`:
+
+```bash
+curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
+  "https://www.socialcrawl.dev/v1/credits/transactions?limit=50"
+```
 
 ## Unified Canonical Schemas
 
@@ -158,7 +165,7 @@ A failing request returns `400 INVALID_REQUEST` with `Missing required parameter
 
 ## Pagination
 
-List responses use `{ items, next_cursor?, total? }`. **59 endpoints paginate** (48 cursor-based, 11 offset-based):
+List responses use `{ items, next_cursor?, total? }`. **Most list endpoints paginate** (cursor-based for nearly all platforms; offset-based on Naver):
 
 - **Cursor-based**: pass `next_cursor` back verbatim (don't decode or trim it) in the platform's cursor param — `max_cursor` (TikTok), `continuationToken` (YouTube), `next_max_id` (Instagram, Truth Social), `after` (Reddit), `paginationToken`/`cursor` (LinkedIn), `cursor` (most others). Stop when `next_cursor` is absent.
 - **Offset-based** (Naver only): increment `start` yourself (1-indexed, cap 1000) with `display` page size.
@@ -173,7 +180,7 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" \
   "https://www.socialcrawl.dev/v1/tiktok/profile?handle=charlidamelio&format=raw"
 ```
 
-`?format=raw` is a no-op on non-ScrapeCreators platforms (GitHub, Hacker News, Tavily, Polymarket, Perplexity, Naver, Amazon, Google Shopping, Trustpilot, Tripadvisor, Google Business, Google Play, App Store, Content Analysis, Pinterest url-stats, twitter ai-search) — there is no transform pipeline to bypass.
+`?format=raw` is a no-op on non-ScrapeCreators platforms (GitHub, Hacker News, Tavily, Polymarket, Perplexity, Naver, Amazon, Google Shopping, Google Trends, Trustpilot, Tripadvisor, Google Business, Google Play, App Store, Content Analysis, Web, Pinterest url-stats, twitter ai-search) — there is no transform pipeline to bypass.
 
 ## Caching
 
@@ -227,7 +234,7 @@ Server-side composites that fan out to several detail endpoints and fold the leg
 
 ## Monitors (`/v1/monitors/*`)
 
-A stateful, scheduled wrapper: a monitor re-runs any registered recipe or Prism composite on a cadence (hourly/daily/weekly/cron), delivers each result to an HMAC-signed webhook, evaluates alert rules, and accumulates a per-run time-series. Monitors are **not** registry endpoints (not counted in the 264) and use POST/GET/PATCH/DELETE. Managing them costs 0 credits; each scheduled run bills the recipe's normal cost plus a 1-credit scheduling premium. Full contract: [monitors.md](monitors.md).
+A stateful, scheduled wrapper: a monitor re-runs any registered recipe or Prism composite on a cadence (hourly/daily/weekly/cron), delivers each result to an HMAC-signed webhook, evaluates alert rules, and accumulates a per-run time-series. Monitors are **not** registry endpoints (not counted in the 357) and use POST/GET/PATCH/DELETE. Managing them costs 0 credits; each scheduled run bills the recipe's normal cost plus a 1-credit scheduling premium. Full contract: [monitors.md](monitors.md).
 
 ## Platform Status
 

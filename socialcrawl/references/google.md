@@ -2,14 +2,11 @@
 
 10 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: 1 credit (standard) for web search, business info, business updates, and hotels search; 5 credits (advanced) for ad-library and detail endpoints — exact cost listed per endpoint below.
+**Credit costs:** 4 standard (1 credit), 6 advanced (5) — the exact cost is in each endpoint heading below.
 
-This platform spans two families:
+**Latency:** Google Business, hotels, and some SERP resources are task-polled upstream — expect ~10–45s responses on those. Use a 60s timeout.
 
-1. **Ads / SERP-style endpoints** — Google web search plus the Google Ads Transparency Center (advertiser search, company ad listings, ad detail).
-2. **Google Business / Maps endpoints** — business profile info, extended (multi-source) reviews, profile updates, Q&A, and hotels search/info. These are task-polled upstream, so calls can take roughly **10–45 seconds** to return — set client timeouts accordingly.
-
-Note: `google/hotels/info` requires a `hotel_identifier` obtained from `google/hotels/search` first.
+**Two-step:** `hotels/info` needs a `hotel_identifier` returned by `hotels/search` first.
 
 ## GET /v1/google/search — 1 credit (standard)
 

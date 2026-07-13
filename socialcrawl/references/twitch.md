@@ -2,7 +2,7 @@
 
 4 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: all endpoints are 1 credit (standard) — exact cost listed per endpoint below.
+**Credit costs:** 4 standard (1 credit) — the exact cost is in each endpoint heading below.
 
 ## GET /v1/twitch/profile — 1 credit (standard)
 
@@ -31,7 +31,7 @@ curl "https://www.socialcrawl.dev/v1/twitch/clip?url=https://www.twitch.tv/ninja
 List a Twitch user's videos
 
 - `handle` (required) — Twitch username.
-- `filter_by` (optional, enum: HIGHLIGHT | ARCHIVE | UPLOAD) — Filter the returned videos by type — `HIGHLIGHT`, `ARCHIVE`, or `UPLOAD`.
+- `filter_by` (optional, enum: HIGHLIGHT | UPLOAD) — Filter the returned videos by type — `HIGHLIGHT` or `UPLOAD`. (Archived past broadcasts are not currently available upstream.)
 - `sort_by` (optional, enum: TIME | VIEWS) — Sort order — `TIME` (newest first) or `VIEWS`.
 
 ```bash

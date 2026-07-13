@@ -2,13 +2,9 @@
 
 2 endpoints. All are GET requests against `https://www.socialcrawl.dev` with header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-Credit costs on this platform: business-search is 1 credit (standard); reviews is 5 credits (advanced) — exact cost listed per endpoint below.
+**Credit costs:** 1 standard (1 credit), 1 advanced (5) — the exact cost is in each endpoint heading below.
 
-Notes:
-- Trustpilot is COMPANY-reputation data keyed by `domain` — not product reviews (use amazon/reviews or google_shopping/reviews for products).
-- Task-polled upstream — calls can take ~15–45s.
-- Reviews batch in 20s, max depth 200.
-- The total platform-wide review count for a business is the `posts_count` field on the matching `business-search` row.
+**Latency:** Trustpilot endpoints are task-polled upstream — expect ~10–45s responses. Use a 60s timeout.
 
 ## GET /v1/trustpilot/business-search — 1 credit (standard)
 
