@@ -368,11 +368,12 @@ curl "https://www.socialcrawl.dev/v1/youtube/shorts/trending" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## POST /v1/youtube/transcripts - 3 credits (custom)
+## POST /v1/youtube/transcripts - 3-300 credits (request-shaped)
 
 Up to 100 YouTube video ids → one transcript per row, failed ids refunded.
 
-**Cost** 3 credits (custom) · **Cache** not cached (every call is live and billed) · **Returns** Transcript · **Pagination** none
+**Cost** 3-300 credits (request-shaped) · **Cache** not cached (every call is live and billed) · **Returns** Transcript · **Pagination** none
+**Pricing** 3 credits per submitted video ID, up to 100 IDs and a 300-credit hold. Only successful transcript rows settle as charged; failed, not-found, and deferred rows are refunded.
 **Streaming** Optional SSE - send `Accept: text/event-stream` for incremental frames, or omit it for one JSON body.
 
 Batch transcript lookup for LLM corpora. POST a JSON body with an `ids` array of 1–100 BARE 11-character YouTube video ids (full watch URLs are not accepted here — use GET /v1/youtube/video/transcript for a single URL); returns one row per id — the transcript (`format: "text"` joins it into one string; `format: "segments"` returns `[{start_ms, duration_ms, text}]`), the resolved `language`, and a `status` of ok / not_found / error / deferred — in input order. Optional `language` picks a preferred caption track. Per-id isolation: one caption-less or deleted video never fails the batch — a caption-less video is `not_found` with `ext.reason: "no_captions"`, a deleted/unavailable one is `not_found` with `ext.reason: "video_gone"`. Billing is per successful row at 3 credits (the single-transcript registry tier); not_found / errored / deferred rows are refunded, so you pay exactly for the transcripts you got. Never cached. Optionally streams Server-Sent Events when the client sends `Accept: text/event-stream`.

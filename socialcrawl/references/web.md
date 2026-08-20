@@ -30,11 +30,11 @@ curl -X POST "https://www.socialcrawl.dev/v1/web/agent" \
   -d '{"url":"https://example.com","prompt":"Find the pricing page."}'
 ```
 
-## POST /v1/web/batch-scrape - 1 credit (custom)
+## POST /v1/web/batch-scrape - N credits for N submitted URLs (request-shaped)
 
 Start an async batch scrape
 
-**Cost** 1 credit (custom) · **Cache** not cached (every call is live and billed) · **Returns** Analytics · **Pagination** none
+**Cost** N credits for N submitted URLs (request-shaped) · **Cache** not cached (every call is live and billed) · **Returns** Analytics · **Pagination** none
 **Pricing** 1 credit per URL submitted, held up front and refunded down to the URLs actually scraped when the job settles.
 **Execution** Async job - the call returns a `job_id`; poll `GET /v1/web/jobs/{job_id}` (or pass `webhook_url`) for the result.
 
@@ -426,11 +426,11 @@ curl "https://www.socialcrawl.dev/v1/web/sessions" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## POST /v1/web/sessions - 5 credits (custom)
+## POST /v1/web/sessions - 5-20 credits (request-shaped)
 
 Create an interactive web session
 
-**Cost** 5 credits (custom) · **Cache** not cached (every call is live and billed) · **Returns** WebPage · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
+**Cost** 5-20 credits (request-shaped) · **Cache** not cached (every call is live and billed) · **Returns** WebPage · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 **Pricing** 20 credits per browser-hour, minimum 5. The hold is taken from `ttl_seconds` when the session is created (60s default = 5, the 3,600s maximum = 20) and settled when it closes.
 **Execution** Stateful browser-session route. The session itself is billed by duration when it is created; managing and closing it is free.
 

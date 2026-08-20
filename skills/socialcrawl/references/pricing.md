@@ -22,7 +22,7 @@ Most endpoints sit on a simple 1 / 5 / 10 ladder. A set of bundle and fan-out en
 | standard | 1 credit | 175 | Profiles, posts, comments, search, reference data |
 | advanced | 5 credits | 102 | Ad libraries, trending, audience analytics, app/product/business/place reviews, retail catalogs, LinkedIn social graph + jobs |
 | premium | 10 credits | 17 | Video transcripts, LinkedIn people/job search + reactions, app-listings search |
-| **custom (flat/metered)** | **varies (0-50)** | 87 | Prism composites, `{platform}/profile/full`, `search/everywhere` (20), `search/forums` (10), `search/news` (2-14 metered), `naver/brief` (10), the free `/v1/utility/*` endpoints, web scrape/crawl/agent/sessions |
+| **custom (flat / request-shaped)** | **varies by request** | 87 | Free discovery, fixed composites, per-row batches, per-probe AI visibility, per-page crawl and search, browser sessions, and recurring monitors |
 
 Counted by underlying tier (custom endpoints folded into their base tier), the split is **218 standard · 134 advanced · 29 premium = 381**. Exact per-endpoint costs are in the tables below.
 
@@ -79,7 +79,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 
 ## Metered and custom-priced endpoints
 
-28 endpoints do not charge a flat ladder price. Each one holds an upfront ceiling and refunds the unused portion, so the response `credits_used` is always the real charge. Quote the RANGE to a user before calling, then report the actual charge afterwards.
+32 endpoints do not charge a flat ladder price. Each one is billed from request shape or completed work rather than the registry's base/unit number. Quote the exact request hold or safe maximum before calling, then report the settled charge afterwards. See [cost-gate.md](cost-gate.md) for the mandatory preflight format.
 
 | Endpoint | Range | How it is charged |
 |----------|-------|-------------------|
@@ -87,8 +87,9 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/instagram/comment` | 5-15 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/instagram/profile/posts/full` | 5-25 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/instagram/profile/reels/full` | 5-25 credits | An upfront ceiling is held and refunded down to the work actually done. |
-| `GET /v1/prism/ai-visibility` | 2-1605 credits | An upfront ceiling is held and refunded down to the work actually done. |
+| `GET /v1/prism/ai-visibility` | 2-1605 credits | `2 x prompts x runs x engines`, plus 5 for `web_baseline`. One prompt at the 8-run, 2-engine defaults holds 32 credits. |
 | `GET /v1/prism/app-reviews` | 10-15 credits | An upfront ceiling is held and refunded down to the work actually done. |
+| `POST /v1/prism/comment-lookup` | 2-100 credits | Sum row rates (TikTok 2/6 deep, Instagram 5/15 deep), capped at a 100-credit batch hold; only found rows bill. |
 | `GET /v1/prism/comments` | 2-200 credits | 1 credit per comment page scanned, except on Instagram, where a post URL is a flat 5 credits whatever `max` and `replies` you pass |
 | `GET /v1/prism/creator-card` | 5-8 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/prism/creator-vet` | 50-75 credits | An upfront ceiling is held and refunded down to the work actually done. |
@@ -96,20 +97,23 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/prism/handle-audit` | 5-8 credits | 5 credits for any selection of up to 4 supported platforms; +1 credit per selected platform beyond 4 |
 | `GET /v1/prism/korea-gap` | 15-40 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/prism/org-radar` | 6-51 credits | An upfront ceiling is held and refunded down to the work actually done. |
+| `POST /v1/prism/post-stats` | 1-500 credits | Sum the routed rate for 1-100 URLs: most platforms 1 each, Instagram and LinkedIn 5 each; only successful rows bill. |
+| `POST /v1/prism/profiles` | 1-250 credits | Sum the routed profile rate for 1-50 rows: most platforms 1 each, LinkedIn 5; only successful rows bill. |
 | `GET /v1/prism/share-of-voice` | 20-200 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/prism/video-intel` | 5-15 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/reddit/omni-search` | 5-9 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/search/news` | 2-14 credits | 2 credits + 1 credit per country/angle leg that returns at least one article. The upfront hold is 2 + min(5 x countries, max_legs, 12) credits (maximum 14) and settles down to the actual charge; empty or failed legs bill 0. |
 | `GET /v1/threads/search` | 1-7 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/tiktok/comment` | 2-6 credits | An upfront ceiling is held and refunded down to the work actually done. |
-| `POST /v1/web/batch-scrape` | 1 credit | 1 credit per URL submitted, held up front and refunded down to the URLs actually scraped when the job settles |
+| `POST /v1/web/batch-scrape` | N credits for N submitted URLs | Count the actual request body: the submit holds 1 credit per URL and refunds unused work when the job settles. |
 | `POST /v1/web/crawl` | 1-10000 credits | 1 credit per page crawled. Submitting holds `limit` credits up front (default limit 10, max 10,000) and the unused portion is refunded when the job settles |
 | `GET /v1/web/extract` | 5 credits | Priced through the metered pricer, but the charge does not vary with your params. |
 | `GET /v1/web/scrape` | 1-5 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/web/search` | 2-120 credits | An upfront ceiling is held and refunded down to the work actually done. |
-| `POST /v1/web/sessions` | 5 credits | 20 credits per browser-hour, minimum 5. The hold is taken from `ttl_seconds` when the session is created (60s default = 5, the 3,600s maximum = 20) and settled when it closes |
+| `POST /v1/web/sessions` | 5-20 credits | 20 credits per browser-hour, minimum 5. The hold is taken from `ttl_seconds` when the session is created (60s default = 5, the 3,600s maximum = 20) and settled when it closes. |
 | `POST /v1/youtube/channels` | 5-100 credits | An upfront ceiling is held and refunded down to the work actually done. |
 | `GET /v1/youtube/search/advanced` | 1-6 credits | An upfront ceiling is held and refunded down to the work actually done. |
+| `POST /v1/youtube/transcripts` | 3-300 credits | 3 credits per submitted video ID (maximum 100); only successful transcript rows bill. |
 | `POST /v1/youtube/videos` | 5-100 credits | An upfront ceiling is held and refunded down to the work actually done. |
 
 ## Per-endpoint pricing
@@ -474,7 +478,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/prism/audience-questions` | GET | The real questions a topic's audience asks — harvested from Reddit + YouTube threads and clustered by intent (who/what/why/how/vs). | 30 | custom | 1800s |
 | `/v1/prism/brand-mentions` | GET | Brand mention volume time-series, sentiment split, top sources, and recent mentions for one keyword. | 50 | custom | 1800s |
 | `/v1/prism/campaign` | GET | Campaign tracker: pre/during/post volume lift, cross-platform engagement, and ranked top amplifiers for a hashtag or phrase. | 35 | custom | 1800s |
-| `/v1/prism/comment-lookup` | POST | Re-check up to 25 known comments in one call — per-item results, failed items refunded. | 2 | custom | none |
+| `/v1/prism/comment-lookup` | POST | Re-check up to 25 known comments in one call — per-item results, failed items refunded. | 2-100 (request-shaped) | custom | none |
 | `/v1/prism/comments` | GET | Every comment on a post, replies nested, server-paginated to completion. | 2-200 (metered) | standard | 300s |
 | `/v1/prism/creator-card` | GET | One handle, unified author cards across TikTok, Instagram, YouTube, X (and more). | 5-8 (metered) | custom | 900s |
 | `/v1/prism/creator-vet` | GET | Vet a creator before partnering — engagement quality, commenter authenticity, posting cadence, and controversy signals, optionally across platforms. | 50-75 (metered) | custom | 1800s |
@@ -490,9 +494,9 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/prism/leads` | GET | Ranked feed of public conversations where people seek alternatives to or are switching from a competitor. | 50 | custom | 1800s |
 | `/v1/prism/lookup` | GET | Universal URL dispatcher: any social/commerce URL → the right detail endpoint's unified response. | 0 | custom | 600s |
 | `/v1/prism/org-radar` | GET | A GitHub org's footprint — its top repos each expanded into a full dossier (releases, issue load, top request/complaint), rolled up. | 6-51 (metered) | custom | 1800s |
-| `/v1/prism/post-stats` | POST | Up to 100 mixed-platform post URLs → current engagement per URL, failed URLs refunded. | 1 | custom | none |
+| `/v1/prism/post-stats` | POST | Up to 100 mixed-platform post URLs → current engagement per URL, failed URLs refunded. | 1-500 (request-shaped) | custom | none |
 | `/v1/prism/product-reviews` | GET | A product's reviews across Amazon + Google Shopping + Trustpilot, folded into a cross-marketplace rating + themed pros/cons report. | 30 | custom | 1800s |
-| `/v1/prism/profiles` | POST | Up to 50 (platform, handle) pairs → one canonical Author per row, failed handles refunded. | 1 | custom | none |
+| `/v1/prism/profiles` | POST | Up to 50 (platform, handle) pairs → one canonical Author per row, failed handles refunded. | 1-250 (request-shaped) | custom | none |
 | `/v1/prism/reputation` | GET | A brand's cross-source reputation — Trustpilot + app stores + Google Business + web sentiment, blended into one weighted score with themed pros/cons. | 30 | custom | 1800s |
 | `/v1/prism/review-integrity` | GET | Cross-source review integrity verdict (statistical, deterministic). | 30 | custom | 1800s |
 | `/v1/prism/share-of-voice` | GET | Engagement-weighted Share of Voice across 2-5 brands, with web+social split, emotion overlay, and ESOV. | 20-200 (metered) | custom | 1800s |
@@ -682,7 +686,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/web/agent` | POST | Start an async web agent job | 25 | custom | none |
-| `/v1/web/batch-scrape` | POST | Start an async batch scrape | 1 | custom | none |
+| `/v1/web/batch-scrape` | POST | Start an async batch scrape | N for N submitted URLs (request-shaped) | custom | none |
 | `/v1/web/crawl` | POST | Start an async web crawl | 1-10000 (metered) | custom | none |
 | `/v1/web/extract` | GET | Extract structured data from a web page | 5 (metered) | custom | none |
 | `/v1/web/jobs` | GET | List async web jobs | 0 | custom | none |
@@ -699,7 +703,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/web/scrape` | GET | Scrape a web page | 1-5 (metered) | custom | none |
 | `/v1/web/search` | GET | Search the web | 2-120 (metered) | custom | 120s |
 | `/v1/web/sessions` | GET | List interactive web sessions | 0 | custom | none |
-| `/v1/web/sessions` | POST | Create an interactive web session | 5 | custom | none |
+| `/v1/web/sessions` | POST | Create an interactive web session | 5-20 (request-shaped) | custom | none |
 | `/v1/web/sessions/{session_id}` | GET | Get an interactive web session | 0 | custom | none |
 | `/v1/web/sessions/{session_id}` | DELETE | Close an interactive web session | 0 | custom | none |
 | `/v1/web/sessions/{session_id}/execute` | POST | Execute an interaction in a web session | 0 | custom | none |
@@ -724,7 +728,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/youtube/search/hashtag` | GET | Search YouTube by hashtag | 1 | standard | 120s |
 | `/v1/youtube/search/suggestions` | GET | Get YouTube search suggestions | 1 | standard | 120s |
 | `/v1/youtube/shorts/trending` | GET | Get trending YouTube shorts | 5 | advanced | 120s |
-| `/v1/youtube/transcripts` | POST | Up to 100 YouTube video ids → one transcript per row, failed ids refunded. | 3 | custom | none |
+| `/v1/youtube/transcripts` | POST | Up to 100 YouTube video ids → one transcript per row, failed ids refunded. | 3-300 (request-shaped) | custom | none |
 | `/v1/youtube/video` | GET | Get YouTube video details | 1 | standard | 600s |
 | `/v1/youtube/video/audio` | GET | Get a YouTube video's audio file streams | 5 | advanced | none |
 | `/v1/youtube/video/comment/replies` | GET | List YouTube comment replies | 1 | standard | 300s |

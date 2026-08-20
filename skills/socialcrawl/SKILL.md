@@ -27,34 +27,27 @@ Unified social media, commerce, and research data API. One API key, one response
 
 ## API Key
 
-Resolve the API key before making any call, checking these sources in order:
+Resolve the API key only when a live API call is needed. Documentation, capability, pricing, and code-generation questions do not need a key.
 
-1. **Env var**: `echo "$SOCIALCRAWL_API_KEY"` — if set and starts with `sc_` (and is not a placeholder like `sc_your_api_key_here`), use it.
-2. **Config file**: `cat ~/.config/socialcrawl/api_key 2>/dev/null` — if the file exists and contains a key starting with `sc_`, use it.
-3. **Ask the user**: If neither source has a valid key:
-   - Tell the user: "I need your SocialCrawl API key to continue. You can find it at https://socialcrawl.dev/dashboard — every account starts with 100 free credits."
-   - Ask them to paste their key.
-   - After receiving the key, **auto-save it** so they never need to paste it again:
-     ```bash
-     mkdir -p ~/.config/socialcrawl && echo "sc_xxxxx" > ~/.config/socialcrawl/api_key
-     ```
-   - Tell the user: "I've saved your key to `~/.config/socialcrawl/api_key` so it will be available in future sessions."
+Check these sources in order without displaying their contents:
 
-For all subsequent API calls in the session, use the resolved key directly in the curl command (do not rely on the env var being set).
+1. **Environment variable:** use `SOCIALCRAWL_API_KEY` when it starts with `sc_` and is not an example placeholder.
+2. **Config file:** if the environment variable is absent, load `~/.config/socialcrawl/api_key` into `SOCIALCRAWL_API_KEY` in the current process. On POSIX shells, use `SOCIALCRAWL_API_KEY="$(<"$HOME/.config/socialcrawl/api_key")"; export SOCIALCRAWL_API_KEY`. On PowerShell, use `$env:SOCIALCRAWL_API_KEY = (Get-Content -LiteralPath "$HOME/.config/socialcrawl/api_key" -Raw).Trim()`.
+3. **Missing key:** tell the user to create or rotate a key at https://socialcrawl.dev/dashboard and configure it as `SOCIALCRAWL_API_KEY` or in `~/.config/socialcrawl/api_key`. Do not ask them to paste a secret into chat. Stop before the live call until they say it is configured.
 
-## First Use
+Never print, paste, log, or return the key. Never place a literal key in generated code, a command, a URL, an error message, or a saved transcript. Keep `$SOCIALCRAWL_API_KEY` (POSIX) or `$env:SOCIALCRAWL_API_KEY` (PowerShell) as a variable reference in examples. If the key appeared in chat or output, advise the user to revoke it in the dashboard and create a replacement.
 
-On the first interaction with this skill in a session:
+## First Live Call
 
-1. Briefly introduce: "SocialCrawl provides a single API for 48 social, commerce, and research platforms (381 endpoints, plus Prism composites and Monitors). Let me verify your API key."
-2. Resolve the API key using the steps above. If the key is missing or a placeholder, stop here and ask for it before proceeding.
-3. Verify it with the free balance endpoint (0 credits):
+Before the first live call in a session:
+
+1. Resolve the API key using the steps above. If it is missing or a placeholder, stop before making the call.
+2. Verify it with the free balance endpoint (0 credits):
    ```bash
-   curl -s -H "x-api-key: KEY" "https://www.socialcrawl.dev/v1/credits/balance"
+   curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/credits/balance"
    ```
-   (Replace `KEY` with the resolved key value.)
-4. If successful, confirm the key works and show the balance. Then respond to whatever the user actually asked.
-5. If it fails, report the error and help troubleshoot (see Error Handling below).
+3. If successful, show the balance and continue with the user's request.
+4. If it fails, report the error without including request headers or the key, then follow Error Handling below.
 
 ## Platforms
 
@@ -156,16 +149,17 @@ Determine what the user wants, then follow the matching workflow:
 1. Identify the platform and resource from their request
 2. Read the platform's reference file from the table above. Each endpoint section carries its exact cost, cache TTL, pagination style, every parameter, and the constraints the API validates before billing
 3. Resolve API key
-4. Check the cost in the endpoint heading. Quote it to the user first when the call is advanced (5), premium (10), metered, or a composite — and quote the top of the range for a metered one
-5. Construct and execute the curl command shown in the reference — copy its HTTP method, most endpoints are GET but the batch, web-job, monitor, and session routes are POST/PATCH/DELETE with a JSON body
-6. Return the raw JSON response
-7. Report `credits_used` and `credits_remaining` from the response — on a metered endpoint `credits_used` is the real charge after the automatic refund, so it is usually below the quote
+4. Read [references/cost-gate.md](references/cost-gate.md), construct the exact request shape, and show its preflight cost gate before every paid call. A heading's number may be a per-row or per-page unit, not the request total
+5. Prefer the cheapest endpoint that fully answers the question. Do not fetch extra pages, enrichment legs, transcripts, replies, engines, countries, or rows the user did not request
+6. If the user already asked to execute this exact paid request, the cost disclosure is enough and you may continue. Ask for confirmation only when you propose a paid call or wider scope that they did not already authorise
+7. Construct and execute the request shown in the reference, preserving its HTTP method and body shape
+8. Return the requested data, then report `credits_used` and `credits_remaining` from the response. For an async job, report the hold at submission and the settled charge when the job completes
 
 **User wants code:**
 1. Identify platform, resource, and target language
-2. Read the platform's reference file
-3. Generate a working code snippet using `$SOCIALCRAWL_API_KEY` env var for the key
-4. Present the code without executing
+2. Read the platform's reference file and [references/cost-gate.md](references/cost-gate.md)
+3. Generate a working code snippet using the `SOCIALCRAWL_API_KEY` environment variable for the key, plus a comment that states the request's billing unit or formula
+4. Present the code without executing and never include a literal credential
 
 **User asks about capabilities:**
 1. Answer from the platform table above
@@ -183,7 +177,7 @@ Determine what the user wants, then follow the matching workflow:
 
 **User wants a cross-platform composite (one call, many platforms):**
 1. Read [references/prism.md](references/prism.md) to pick the right `/v1/prism/*` recipe (or a `{platform}/profile/full` / `reddit/omni-search` per-platform composite)
-2. Prism composites are priced flat or metered per recipe (0–50 credits) — mention the cost before calling
+2. Read [references/cost-gate.md](references/cost-gate.md) and calculate the request-level cost. Some batch composites can reserve hundreds of credits even when the endpoint's unit price is 1 or 2
 3. Resolve API key, call the endpoint, return the unified payload (note the `legs[]` transparency array)
 
 **User wants to schedule/monitor a recipe over time:**
@@ -192,10 +186,10 @@ Determine what the user wants, then follow the matching workflow:
 3. Managing monitors is free; each scheduled run bills the recipe's normal cost + a 1-credit scheduling premium
 
 **User asks about pricing or credit costs:**
-1. Read [references/pricing.md](references/pricing.md) — it has the exact credit cost, tier, and cache TTL for every one of the 381 endpoints, plus the tier system, credit packs, refund rules, and a worked guide to estimating a job before running it
-2. Its **Metered and custom-priced endpoints** table carries the full pricing rule and honest min–max range for every endpoint whose charge varies with your params — read that before quoting one
-3. Its **Free endpoints** table lists everything that never bills
-4. Per-endpoint cost, tier, and cache TTL are also on every endpoint section in each platform reference file
+1. Read [references/cost-gate.md](references/cost-gate.md) first for request-level estimation rules
+2. Read [references/pricing.md](references/pricing.md) for the endpoint inventory, tiers, packs, cache TTLs, refunds, and the full metered/custom table
+3. Distinguish a unit price from a request total. Include the submitted row/page/probe/run count in the arithmetic
+4. Its **Free endpoints** table lists everything that never bills
 
 **User asks about credits/balance:**
 1. Resolve API key
@@ -252,21 +246,30 @@ curl -X POST "https://www.socialcrawl.dev/v1/youtube/transcripts" \
 | standard | 1 credit | 175 | Profiles, posts, search, comments, reference data |
 | advanced | 5 credits | 102 | Ad libraries, trending, audience analytics, app/product/place reviews, retail catalogs, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
 | premium | 10 credits | 17 | Video transcripts, LinkedIn people/job search + reactions, app-listings search, web agent jobs |
-| custom (flat / metered) | varies (0-50) | 87 | `/v1/search/everywhere` (20), `search/forums` (10) & `search/news` (2-14 metered); `naver/brief` (10); `{platform}/profile/full` (5); the free `/v1/utility/*` self-discovery endpoints (0); web scrape/crawl/sessions; all `/v1/prism/*` composites (0-50, flat or metered per recipe) |
+| custom (flat / request-shaped) | varies by request | 87 | Free discovery, fixed composites, per-row batches, per-probe AI visibility, per-page crawl and search, browser sessions, and recurring monitors |
 <!-- END:GENERATED:CREDIT_TIERS -->
 
 Cache hits, idempotent replays, every `/v1/utility/*` endpoint, and `/v1/credits/balance` cost 0 credits. Failed calls (upstream errors, circuit-breaker rejections, request timeouts, not-found resources, empty results) are auto-refunded, and a request rejected for bad params or a rate limit never deducts at all. Metered endpoints deduct an upfront ceiling and refund down to the actual work done, so the response `credits_used` is the real charge.
 
-Before executing an advanced (5), premium (10), universal-search (20), metered, or Prism composite call, mention the credit cost to the user — for a metered endpoint quote the TOP of its range, which is in the endpoint heading and in [references/pricing.md](references/pricing.md). After every call, report `credits_used` and `credits_remaining` from the response.
+Before every paid call, run the preflight in [references/cost-gate.md](references/cost-gate.md). Quote the total for the exact request, not only the endpoint's base or unit cost. After every call, report `credits_used` and `credits_remaining` from the response.
 
 Full per-endpoint pricing — cost, tier, cache TTL, the rule behind every metered endpoint, the free-endpoint list, and how to estimate a large job before running it — is in [references/pricing.md](references/pricing.md).
 
 ## Error Handling
 
+Classify an error before retrying:
+
+- **Fix before retrying:** `MISSING_API_KEY`, `INVALID_API_KEY`, `INSUFFICIENT_CREDITS`, `KEY_BUDGET_EXCEEDED`, `INVALID_REQUEST`, `METHOD_NOT_ALLOWED`, `ENDPOINT_NOT_FOUND`, `PAYLOAD_TOO_LARGE`, and idempotency conflicts. Explain the corrective action and do not automatically repeat the same request.
+- **Wait before retrying:** `RATE_LIMITED`, `CONCURRENCY_LIMIT`, and `SERVICE_UNAVAILABLE`. Honour `Retry-After`, then use exponential backoff with jitter.
+- **Transient upstream failure:** `UPSTREAM_ERROR` and `INTERNAL_ERROR`. Retry at most once, then report the outage with the endpoint and request ID, never the credential.
+- **Not found:** `RESOURCE_NOT_FOUND` is a valid empty outcome, not a retry loop.
+
+For a retryable paid non-streaming request, send an `Idempotency-Key` before the first attempt and reuse it only for the identical payload. Do not automatically retry streaming requests. Never exceed one automatic retry unless the user explicitly asks for continued retries.
+
 <!-- BEGIN:GENERATED:ERRORS (auto-generated by generate-docs.ts - AIP-16b) -->
 | Code | Status | Retry? | What it means / what to do |
 |------|--------|--------|----------------------------|
-| MISSING_API_KEY | 401 | no | No x-api-key header on the request. Ask the user for their key and save it to `~/.config/socialcrawl/api_key` |
+| MISSING_API_KEY | 401 | no | No x-api-key header on the request. Ask the user to configure `SOCIALCRAWL_API_KEY` or `~/.config/socialcrawl/api_key` outside chat, then retry |
 | INVALID_API_KEY | 401 | no | API key is malformed, not found, revoked, or expired. Tell the user to check the key at https://socialcrawl.dev/dashboard |
 | INSUFFICIENT_CREDITS | 402 | no | Credit balance is lower than the endpoint cost. Point the user at https://socialcrawl.dev/dashboard/billing |
 | INVALID_REQUEST | 400 | no | A required parameter is missing, a value failed validation, or no one-of group member was provided. Re-read the endpoint's params and Constraints in its platform reference before retrying - this is free, so a retry costs nothing |
@@ -287,6 +290,7 @@ Full per-endpoint pricing — cost, tier, cache TTL, the rule behind every meter
 ## References
 
 - **[references/api-overview.md](references/api-overview.md)** — Read when user asks about authentication, response envelope, unified schemas (Author/Post/Comment/Product/Review/Seller/Place/App), computed fields, pagination, caching, idempotency, `?format=raw`, concurrency, or error details
+- **[references/cost-gate.md](references/cost-gate.md)** — Read before every paid call and whenever estimating a job. It turns row, URL, probe, page, chunk, runtime, and recurring-run units into the total for the exact request
 - **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, refunds, or what a job will cost; has the exact cost, tier, and cache TTL of all 381 endpoints, the full rule and honest range for every metered endpoint, and the free-endpoint list
 - **[references/prism.md](references/prism.md)** — Read when user wants a cross-platform composite (`/v1/prism/*`) — one call that fans out across many platforms
 - **[references/monitors.md](references/monitors.md)** — Read when user wants to schedule a recipe to re-run on a cadence with webhook delivery (`/v1/monitors/*`)

@@ -8,6 +8,7 @@
 [![Endpoints](https://img.shields.io/badge/Endpoints-381-green?style=flat-square)](https://socialcrawl.dev/docs)
 [![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
 [![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 [Overview](#overview) | [Installation](#installation) | [Setup](#setup) | [Usage](#usage) | [Platforms](#supported-platforms) | [Credits](#credit-system)
 
@@ -49,6 +50,14 @@ Install globally (available in all projects):
 npx skills add socialcrawl/skills -g
 ```
 
+Update an existing installation to the latest published skill:
+
+```bash
+npx skills update socialcrawl --yes
+```
+
+Prefer a single downloadable package? [Download the latest `socialcrawl.skill`](https://github.com/socialcrawl/skills/raw/main/socialcrawl.skill). That URL always follows the `main` branch.
+
 ### Via ClawHub
 
 ```bash
@@ -58,12 +67,19 @@ npx clawhub@latest install socialcrawl
 ### Via Git (manual)
 
 ```bash
+# Clone the repository, then copy the actual skill directory.
+git clone --depth 1 https://github.com/socialcrawl/skills socialcrawl-skills
+
 # Project-scoped (shared via version control)
-git clone https://github.com/socialcrawl/skills .claude/skills/socialcrawl
+mkdir -p .claude/skills
+cp -R socialcrawl-skills/socialcrawl .claude/skills/socialcrawl
 
 # User-wide (available in all projects)
-git clone https://github.com/socialcrawl/skills ~/.claude/skills/socialcrawl
+mkdir -p ~/.claude/skills
+cp -R socialcrawl-skills/socialcrawl ~/.claude/skills/socialcrawl
 ```
+
+Pull `socialcrawl-skills`, then repeat the copy step to update a manual installation. Cloning the repository directly to `.claude/skills/socialcrawl` is not supported because the repository root is a distribution workspace, not the skill directory itself.
 
 ### Verify installation
 
@@ -90,7 +106,7 @@ export SOCIALCRAWL_API_KEY="sc_your_api_key_here"
 Add this to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) so it persists across sessions.
 
 > [!TIP]
-> If the environment variable isn't set, the skill will ask you for your API key inline during the first interaction.
+> If the environment variable is not set, the skill will ask you to configure it or `~/.config/socialcrawl/api_key` outside the chat. It never asks you to paste a secret into the conversation.
 
 ## Usage
 
@@ -233,10 +249,10 @@ Every API call costs credits based on its complexity:
 
 | Tier | Cost | Endpoints | Examples |
 |------|------|-----------|----------|
-| **Standard** | 1 credit | 218 | Profiles, posts, search, comments, Naver corpora, GitHub, HN, Tavily, Perplexity, reference data |
-| **Advanced** | 5 credits | 134 | Audience demographics, ad libraries, trending, app data, retail catalogs, business/place reviews, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
-| **Premium** | 10 credits | 29 | Video transcripts, LinkedIn people/job search + reactions, app listings search, web agent jobs |
-| **Custom (flat / metered)** | varies (0–50) | 87 | `/v1/search/everywhere` (20), `search/forums` (10) & `search/news` (2–14 metered); `naver/brief` (10); `{platform}/profile/full` (5); the free `/v1/utility/*` endpoints (0); web scrape/crawl/agent/sessions; all `/v1/prism/*` composites (0–50, flat or metered per recipe) |
+| **Standard** | 1 credit | 175 | Profiles, posts, search, comments, Naver corpora, GitHub, HN, Tavily, Perplexity, reference data |
+| **Advanced** | 5 credits | 102 | Audience demographics, ad libraries, trending, app data, retail catalogs, business/place reviews, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
+| **Premium** | 10 credits | 17 | Video transcripts, LinkedIn people/job search + reactions, app listings search, web agent jobs |
+| **Custom (flat / request-shaped)** | varies by request | 87 | Free discovery, fixed composites, per-row batches, per-probe AI visibility, per-page crawl and search, browser sessions, and recurring monitors |
 
 ### Pricing
 
@@ -251,7 +267,7 @@ Every API call costs credits based on its complexity:
 Credits never expire. Pay-as-you-go, no monthly commitments. Failed upstream calls, open circuit breakers, and internal errors auto-refund credits.
 
 > [!IMPORTANT]
-> The skill will inform you of the credit cost before executing advanced, premium, or metered calls — and for a metered endpoint it quotes the top of the range, then reports the real charge (`credits_used`) after the automatic refund.
+> The skill shows a request-level cost gate before every paid call. It includes the billing unit, the row/page/probe/runtime arithmetic, the upfront hold or safe maximum, and the refund rule, then reports the real `credits_used` afterwards.
 
 ## Skill Contents
 
@@ -259,9 +275,11 @@ The installed skill contains:
 
 ```
 socialcrawl/
+├── LICENSE               # MIT terms included with every installable copy
 ├── SKILL.md              # Main skill definition
 └── references/
     ├── api-overview.md    # Auth, response envelope, unified schemas, pagination, caching, idempotency, errors
+    ├── cost-gate.md       # Mandatory request-level pricing formulas and preflight format
     ├── pricing.md         # Exact credit cost for every one of the 381 endpoints + credit packs
     ├── prism.md           # Cross-platform Prism composite recipes (/v1/prism/*)
     ├── monitors.md        # Scheduled recipe runs + webhook delivery (/v1/monitors/*)
@@ -300,7 +318,7 @@ The skill handles common API errors automatically:
 
 | Error | What happens |
 |-------|-------------|
-| Missing/invalid API key | Prompts you to provide or fix your key |
+| Missing/invalid API key | Asks you to configure or rotate it outside chat; never prints or persists a pasted secret |
 | Insufficient credits | Tells you your balance and links to billing |
 | Resource not found | Reports that the profile/post wasn't found |
 | Platform unavailable | Reports the outage; credits are refunded automatically |
@@ -313,3 +331,24 @@ The skill handles common API errors automatically:
 - [API Documentation](https://socialcrawl.dev/docs)
 - [Dashboard & API Keys](https://socialcrawl.dev/dashboard)
 - [Billing & Credits](https://socialcrawl.dev/dashboard/billing)
+
+## Maintaining the release
+
+Edit `.agents/skills/socialcrawl`, which is the canonical source. Then regenerate the installable directory copies and deterministic `socialcrawl.skill` archive:
+
+```bash
+python scripts/build_skill.py
+```
+
+Before publishing, run the same checks used in CI:
+
+```bash
+python scripts/build_skill.py --check
+python -m unittest discover -s tests -v
+```
+
+The release check fails when the licence, pricing safeguards, directory copies, or downloadable archive are missing or stale.
+
+## Licence
+
+This repository is available under the [MIT License](LICENSE). You may reuse and adapt the skill, including its key-resolution and error-handling guidance, in public plugins and derivative skills. Retaining the included copyright and permission notice is sufficient attribution; a link back to `github.com/socialcrawl/skills` is appreciated but not required by the licence.
