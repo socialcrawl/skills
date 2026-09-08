@@ -12,7 +12,7 @@ Get a Bluesky post
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Post · **Pagination** none
 
-Returns a single Bluesky post — record text, author info, embeds, replyCount, repostCount, likeCount, quoteCount, and a threaded `replies` array.
+Returns a single Bluesky post: record text, author info, embeds, replyCount, repostCount, likeCount, quoteCount, and a threaded `replies` array.
 
 **Query params**
 
@@ -29,7 +29,7 @@ Get a Bluesky profile
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Author · **Pagination** none
 
-Returns a Bluesky user's public profile — handle, displayName, avatar, description, followersCount, followsCount, postsCount, createdAt, and verification status.
+Returns a Bluesky user's public profile: handle, displayName, avatar, description, followersCount, followsCount, postsCount, createdAt, and verification status.
 
 **Query params**
 
@@ -46,7 +46,7 @@ List a Bluesky user's posts
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
-Returns a feed of posts for a Bluesky user — uri, record text, author info, embeds, replyCount, repostCount, likeCount, quoteCount, and indexedAt. Pass either `handle` or `user_id` (Bluesky calls user IDs `did`).
+Returns a feed of posts for a Bluesky user: uri, record text, author info, embeds, replyCount, repostCount, likeCount, quoteCount, and indexedAt. Pass either `handle` or `user_id` (Bluesky calls user IDs `did`).
 
 **Query params**
 

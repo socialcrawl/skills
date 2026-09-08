@@ -12,7 +12,7 @@ Crawl a website with LLM-driven path selection
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Multi-page crawl starting from a root URL. Returns each crawled page with its extracted content (unlike map, which returns only URLs). Use `instructions` to guide the crawler in natural language — Tavily uses an LLM to follow only the paths matching your intent. Use `select_*` / `exclude_*` filters (comma-separated regex patterns) to constrain scope.
+Multi-page crawl starting from a root URL. Returns each crawled page with its extracted content (unlike map, which returns only URLs). Use `instructions` to guide the crawler in natural language. Tavily uses an LLM to follow only the paths matching your intent. Use `select_*` / `exclude_*` filters (comma-separated regex patterns) to constrain scope.
 
 **Query params**
 
@@ -21,10 +21,10 @@ Multi-page crawl starting from a root URL. Returns each crawled page with its ex
 - `max_breadth` (optional, integer) - Maximum number of links followed per level (per page). Defaults to 20.
 - `limit` (optional, integer) - Total number of pages the crawler will process before stopping. Defaults to 50.
 - `instructions` (optional, string) - Natural-language instructions for the crawler (e.g. 'Find all product pages with pricing').
-- `select_paths` (optional, string) - Comma-separated regex patterns — only crawl URLs whose path matches.
-- `select_domains` (optional, string) - Comma-separated regex patterns — only crawl URLs whose domain matches.
-- `exclude_paths` (optional, string) - Comma-separated regex patterns — skip URLs whose path matches.
-- `exclude_domains` (optional, string) - Comma-separated regex patterns — skip URLs whose domain matches.
+- `select_paths` (optional, string) - Comma-separated regex patterns: only crawl URLs whose path matches.
+- `select_domains` (optional, string) - Comma-separated regex patterns: only crawl URLs whose domain matches.
+- `exclude_paths` (optional, string) - Comma-separated regex patterns: skip URLs whose path matches.
+- `exclude_domains` (optional, string) - Comma-separated regex patterns: skip URLs whose domain matches.
 - `allow_external` (optional, boolean) - Whether to follow links to external domains. Defaults to true.
 - `extract_depth` (optional, enum: basic | advanced) - Per-page extraction strategy. `basic` is faster; `advanced` handles harder pages.
 - `format` (optional, enum: markdown | text) - Output format for extracted content. `markdown` (default) or `text`.
@@ -50,7 +50,7 @@ Pulls clean, AI-ready text out of one or more URLs via Tavily's extractor. Pass 
 - `format` (optional, enum: markdown | text) - Output format for the extracted content. `markdown` (default) preserves structure; `text` is plain.
 - `include_images` (optional, boolean) - Include images extracted from each URL.
 - `include_favicon` (optional, boolean) - Include the favicon URL for each page.
-- `timeout` (optional, integer) - Per-URL timeout in seconds (1–60).
+- `timeout` (optional, integer) - Per-URL timeout in seconds (1-60).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tavily/extract?urls=https://en.wikipedia.org/wiki/Lionel_Messi" \
@@ -63,7 +63,7 @@ Map a website's sitegraph
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns the sitegraph of a website starting from a root URL — a list of discovered URLs without their full content. Cheaper and faster than crawl when you only need to enumerate pages (e.g. for sitemap discovery or coverage analysis). Use `instructions` to guide the mapper in natural language and the `select_*` / `exclude_*` filters (regex patterns, comma-separated) to narrow scope.
+Returns the sitegraph of a website starting from a root URL: a list of discovered URLs without their full content. Cheaper and faster than crawl when you only need to enumerate pages (e.g. for sitemap discovery or coverage analysis). Use `instructions` to guide the mapper in natural language and the `select_*` / `exclude_*` filters (regex patterns, comma-separated) to narrow scope.
 
 **Query params**
 
@@ -72,12 +72,12 @@ Returns the sitegraph of a website starting from a root URL — a list of discov
 - `max_breadth` (optional, integer) - Maximum number of links followed per level (per page). Defaults to 20.
 - `limit` (optional, integer) - Total number of links the mapper will process before stopping. Defaults to 50.
 - `instructions` (optional, string) - Natural-language instructions for the mapper (e.g. 'Find all pages related to API documentation').
-- `select_paths` (optional, string) - Comma-separated regex patterns — only include URLs whose path matches.
-- `select_domains` (optional, string) - Comma-separated regex patterns — only include URLs whose domain matches.
-- `exclude_paths` (optional, string) - Comma-separated regex patterns — exclude URLs whose path matches.
-- `exclude_domains` (optional, string) - Comma-separated regex patterns — exclude URLs whose domain matches.
+- `select_paths` (optional, string) - Comma-separated regex patterns: only include URLs whose path matches.
+- `select_domains` (optional, string) - Comma-separated regex patterns: only include URLs whose domain matches.
+- `exclude_paths` (optional, string) - Comma-separated regex patterns: exclude URLs whose path matches.
+- `exclude_domains` (optional, string) - Comma-separated regex patterns: exclude URLs whose domain matches.
 - `allow_external` (optional, boolean) - Whether to follow / return links to external domains. Defaults to true.
-- `timeout` (optional, integer) - Maximum time in seconds (10–150).
+- `timeout` (optional, integer) - Maximum time in seconds (10-150).
 - `categories` (optional, string) - Comma-separated list of category hints to bias mapping toward.
 
 ```bash
@@ -95,12 +95,12 @@ Runs a web search via Tavily and returns ranked results plus an optional LLM-gen
 
 **Query params**
 
-- `query` (required) - The search query — natural-language free text. · e.g. `claude opus 4.7 release notes`
+- `query` (required) - The search query: natural-language free text. · e.g. `claude opus 4.7 release notes`
 - `search_depth` (optional, enum: basic | advanced | fast | ultra-fast) - Latency-vs-relevance tradeoff. `basic` is the default; `advanced` unlocks `chunks_per_source` and higher-relevance ranking.
 - `topic` (optional, enum: general | news | finance) - Search category. Defaults to `general`. Use `news` for time-sensitive queries and `finance` for market data.
 - `time_range` (optional, enum: day | week | month | year | d | w | m | y) - Time window relative to now. Accepts `day` / `week` / `month` / `year` (or shorthand `d` / `w` / `m` / `y`).
-- `max_results` (optional, integer) - Number of results to return (1–20). Defaults to 5.
-- `chunks_per_source` (optional, integer) - Max relevant chunks returned per source (1–5). Only honoured when `search_depth=advanced`. Defaults to 3.
+- `max_results` (optional, integer) - Number of results to return (1-20). Defaults to 5.
+- `chunks_per_source` (optional, integer) - Max relevant chunks returned per source (1-5). Only honoured when `search_depth=advanced`. Defaults to 3.
 - `include_images` (optional, boolean) - Include images alongside the result content.
 - `include_image_descriptions` (optional, boolean) - Include AI-generated descriptions for the returned images.
 - `include_answer` (optional, boolean) - Include an LLM-generated answer string synthesised from the top sources.

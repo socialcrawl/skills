@@ -12,12 +12,17 @@ Get TikTok Shop product details
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Product · **Pagination** none
 
-Returns detailed information about a TikTok Shop product including price, rating, review count, seller info, and images. Region note: the upstream currently serves product lookups from the US only, so listings visible exclusively in other regional markets (for example a GB-only listing) resolve as 404. Regional coverage is available on tiktokshop/search, tiktokshop/products, and tiktokshop/product/reviews.
+Returns detailed information about a TikTok Shop product: full listing description, price and discount, rating, review count, brand, specifications, stock availability, seller details, shipping and delivery estimate, and images. Identify the product by `url` or by `product_id`. Region note: the upstream currently serves product lookups from the US only, so listings visible exclusively in other regional markets (for example a GB-only listing) resolve as 404. Regional coverage is available on tiktokshop/search, tiktokshop/products, and tiktokshop/product/reviews.
 
 **Query params**
 
-- `url` (required) - Full URL of the TikTok Shop product page · e.g. `https://www.tiktok.com/shop/pdp/goli-ashwagandha-gummies-with-vitamin-d-ksm-66-vegan-non-gmo/1729587769570529799`
+- `url` (optional, string) - Full URL of the TikTok Shop product page. Provide this or `product_id`. · e.g. `https://www.tiktok.com/shop/pdp/goli-ashwagandha-gummies-with-vitamin-d-ksm-66-vegan-non-gmo/1729587769570529799`
+- `product_id` (optional, string) - Numeric TikTok Shop product id, as returned in `product.id` by tiktokshop/search, tiktokshop/products and tiktokshop/user/showcase. Provide this or `url`. · e.g. `1729587769570529799`
 - `region` (optional, enum: US) - Region the lookup is served from. Currently US only (an upstream limitation; other regions are rejected before billing). Support for more regions is planned upstream but has no date.
+
+**Constraints**
+
+- Provide at least one of `url`, `product_id`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktokshop/product?url=https://www.tiktok.com/shop/pdp/goli-ashwagandha-gummies-with-vitamin-d-ksm-66-vegan-non-gmo/1729587769570529799" \
@@ -28,15 +33,16 @@ curl "https://www.socialcrawl.dev/v1/tiktokshop/product?url=https://www.tiktok.c
 
 List TikTok Shop product reviews
 
-**Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
+**Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** page - `page`
 
-Returns reviews for a TikTok Shop product. Each review includes rating, text, author, and timestamp. Upstream pagination is not currently supported — the `page` parameter doesn't round-trip — so only page 1 is returned.
+Returns reviews for a TikTok Shop product. Each review includes rating, text, author, buyer country, verified-purchase and incentivised-review flags, the purchased SKU, and a timestamp. Pages 10 reviews at a time through the standard `cursor` contract; `data.total` carries the product's full review count. Identify the product by `url` or by `product_id`.
 
 **Query params**
 
-- `url` (optional, string) - Full URL of the TikTok Shop product page · e.g. `https://www.tiktok.com/shop/pdp/cat-nail-clipper-by-potaroma-adjustable-sizes-built-in-file-safe-for-kittens-cats/1731578642912612516`
+- `url` (optional, string) - Full URL of the TikTok Shop product page. Provide this or `product_id`. · e.g. `https://www.tiktok.com/shop/pdp/cat-nail-clipper-by-potaroma-adjustable-sizes-built-in-file-safe-for-kittens-cats/1731578642912612516`
 - `product_id` (optional, string) - The ID of the product (required if url is not provided)
-- `region` (optional, string) - ISO 3166-1 alpha-2 region for the product (e.g. `US`). Important when the product is regionally scoped.
+- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - ISO 3166-1 alpha-2 region for the product (e.g. `US`). Important when the product is regionally scoped.
+- `page` (optional, integer, min 1) - Page number to retrieve, 10 reviews per page. Prefer passing back `pagination.next_cursor`, which carries the same position and stays correct if the underlying paging mechanism changes.
 
 **Constraints**
 
@@ -51,15 +57,16 @@ curl "https://www.socialcrawl.dev/v1/tiktokshop/product/reviews?url=https://www.
 
 List TikTok Shop products
 
-**Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** ProductList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
+**Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** ProductList · **Pagination** cursor - `cursor`
 
-Returns products from a TikTok Shop page — title, cover images, URL, price info, sold count, review count, and rating. Sort by best-selling (`sort_by=top`) or newest (`sort_by=new_releases`); filter by `region`. Pagination via the upstream `cursor` is not currently exposed — only page 1 is returned.
+Returns the products listed on one TikTok Shop storefront: title, images, canonical URL, price and original price, sold count, review count, rating, SKU id, and the shop's own profile (name, rating, follower count, lifetime units sold, region). Sort by best-selling (`sort_by=top`) or newest (`sort_by=new_releases`); filter by `region`. Pages through the whole catalogue via `pagination.next_cursor`, and `data.total` carries the storefront's on-sale product count.
 
 **Query params**
 
 - `url` (required) - Full URL of the TikTok Shop page · e.g. `https://www.tiktok.com/shop/store/goli-nutrition/7495794203056835079`
 - `sort_by` (optional, enum: top | new_releases) - Sort products by best-selling (`top`) or newest (`new_releases`). Defaults to `top`.
-- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to get shop products from. Defaults to US if not provided.
+- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to get shop products from. A storefront is only reachable from its own market, so a GB shop needs `region=GB`; the default is US.
+- `cursor` (optional, string) - Pagination cursor. Pass back `pagination.next_cursor` from the previous response.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktokshop/products?url=https://www.tiktok.com/shop/store/goli-nutrition/7495794203056835079" \
@@ -70,15 +77,15 @@ curl "https://www.socialcrawl.dev/v1/tiktokshop/products?url=https://www.tiktok.
 
 Search TikTok Shop products
 
-**Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** page - `page`
+**Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** ProductList · **Pagination** page - `page`
 
-Searches TikTok Shop for products matching a query. Returns matching products with prices, ratings, and seller info.
+Searches TikTok Shop across every storefront for products matching a keyword, in any supported market. Each result is the same canonical product object `tiktokshop/products` returns, id, title, canonical URL, images, price and original price, rating, review count, sold count, seller, plus the merchandising signals only search carries: the seller trust label, where the item ships from, promotion badges, the category breadcrumb, and the demo video when the listing has one.
 
 **Query params**
 
 - `query` (required) - Search keyword or phrase to find TikTok Shop products · e.g. `phone case`
-- `page` (optional, integer) - Page number to retrieve
-- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to search shop products in.
+- `page` (optional, integer, min 1) - Page number to retrieve. Prefer passing back `pagination.next_cursor`, which carries the same position.
+- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to search shop products in. Results, prices and currency follow the market; defaults to US.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktokshop/search?query=phone case" \
@@ -91,7 +98,7 @@ List TikTok user showcase products
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** cursor - `cursor`
 
-Fetches products featured in a TikTok user's public showcase — the products a creator promotes on their profile. Each product includes title, price, images, and shop details. Region note: the upstream currently serves showcase lookups from the US only, so a showcase whose products are visible exclusively in another regional market (for example a GB creator selling GB-only listings) can return an empty list at 0 credits.
+Fetches products featured in a TikTok user's public showcase: the products a creator promotes on their profile. Each product includes title, price, rating, sold count, images, and shop details. A handle that TikTok does not resolve returns 404 at no charge; a creator who exists but promotes nothing returns an empty list. Region note: the upstream currently serves showcase lookups from the US only, so a showcase whose products are visible exclusively in another regional market can return an empty list at 0 credits.
 
 **Query params**
 

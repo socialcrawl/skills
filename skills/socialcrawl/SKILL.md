@@ -2,28 +2,33 @@
 name: socialcrawl
 description: >
   Interact with the SocialCrawl API — a unified social, commerce, and research
-  data API covering 48 platforms and 381 endpoints, plus cross-platform Prism
-  composites and scheduled Monitors. Fetch profiles, posts, comments, search
-  results, transcripts, ad libraries, retail product catalogs and reviews,
-  app-store listings and reviews, places, prediction markets, news, finance
-  quotes, Google and Naver trends, web scraping/crawling/browser agents,
-  AI-grounded answers, and a universal cross-platform search from TikTok,
-  Instagram, YouTube, Twitter/X, Facebook, LinkedIn, Reddit, Threads, Amazon,
-  Walmart, Target, eBay, Home Depot, Google Play, the App Store, Trustpilot,
-  Tripadvisor, GitHub, Naver, and many more through a single API. Use when
-  the user wants to: (1) fetch social
-  media, commerce, retail, app-store, or review data, (2) generate code that
-  calls the SocialCrawl API, (3) understand SocialCrawl endpoints, parameters,
-  pricing, or capabilities, (4) check their SocialCrawl credit balance or work
-  out what a job will cost, (5) run a universal search across many sources with
-  one call, (6) run a cross-platform Prism composite or schedule a Monitor,
-  (7) scrape, crawl, or monitor an arbitrary web page, or mentions
-  "SocialCrawl", "social crawl", or "social media API".
+  data API covering 65 platforms and 572 endpoints, plus cross-platform Prism
+  composites, scheduled Monitors, and audience-filtered Cohorts. Fetch
+  profiles, posts, comments, search results, transcripts, ad libraries, retail
+  and marketplace product catalogs and reviews, app-store listings and reviews,
+  places and local businesses, job listings and salary bands, market quotes and
+  financial statements, congressional trading disclosures, prediction markets,
+  news, Google and Naver trends, on-page SEO audits, web scraping/crawling/
+  browser agents, AI-grounded answers, and a universal cross-platform search
+  from TikTok, Instagram, YouTube, Twitter/X, Facebook, LinkedIn, Reddit,
+  Threads, Douyin, Telegram, Quora, Amazon, Walmart, Target, eBay, Home Depot,
+  Klarna, AliExpress, Etsy, Sephora, H&M, Kohl's, Wayfair, Gumtree, Google
+  Play, the App Store, Trustpilot, G2, Tripadvisor, Yelp, GitHub, Naver, and
+  many more through a single API. Use when the user wants to: (1) fetch social
+  media, commerce, retail, app-store, review, jobs, or finance data,
+  (2) generate code that calls the SocialCrawl API, (3) understand SocialCrawl
+  endpoints, parameters, pricing, or capabilities, (4) check their SocialCrawl
+  credit balance or work out what a job will cost, (5) run a universal search
+  across many sources with one call, (6) run a cross-platform Prism composite
+  or schedule a Monitor, (7) scrape, crawl, or monitor an arbitrary web page,
+  (8) find out which of a specific list of public accounts posted about
+  something (Cohorts), or mentions "SocialCrawl", "social crawl", or
+  "social media API".
 ---
 
 # SocialCrawl API
 
-Unified social media, commerce, and research data API. One API key, one response format, **48 platforms, 381 endpoints** — plus cross-platform **Prism** composites and stateful scheduled **Monitors**. Author and Post responses are normalized through platform field maps and augmented with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Commerce, review, place, and app endpoints share first-class canonical Product / Review / Seller / Place / App schemas. List responses are always `{ items, next_cursor?, total? }`. Add `?format=raw` to bypass the transform pipeline.
+Unified social media, commerce, and research data API. One API key, one response format, **65 platforms, 572 endpoints** — plus cross-platform **Prism** composites, stateful scheduled **Monitors**, and audience-filtered **Cohorts**. Author and Post responses are normalized through platform field maps and augmented with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Commerce, review, place, and app endpoints share first-class canonical Product / Review / Seller / Place / App schemas. List responses are always `{ items, next_cursor?, total? }`. Add `?format=raw` to bypass the transform pipeline.
 
 ## API Key
 
@@ -56,14 +61,14 @@ Before the first live call in a session:
 
 | Platform | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| TikTok | 21 | GET | [references/tiktok.md](references/tiktok.md) |
+| TikTok | 34 | GET | [references/tiktok.md](references/tiktok.md) |
 | TikTok Shop | 5 | GET | [references/tiktokshop.md](references/tiktokshop.md) |
-| Instagram | 33 | GET | [references/instagram.md](references/instagram.md) |
-| YouTube | 28 | GET/POST | [references/youtube.md](references/youtube.md) |
-| Facebook | 23 | GET | [references/facebook.md](references/facebook.md) |
-| Twitter/X | 8 | GET | [references/twitter.md](references/twitter.md) |
-| LinkedIn | 44 | GET | [references/linkedin.md](references/linkedin.md) |
-| Reddit | 8 | GET | [references/reddit.md](references/reddit.md) |
+| Instagram | 37 | GET | [references/instagram.md](references/instagram.md) |
+| YouTube | 29 | GET/POST | [references/youtube.md](references/youtube.md) |
+| Facebook | 24 | GET | [references/facebook.md](references/facebook.md) |
+| Twitter/X | 15 | GET | [references/twitter.md](references/twitter.md) |
+| LinkedIn | 45 | GET | [references/linkedin.md](references/linkedin.md) |
+| Reddit | 14 | GET | [references/reddit.md](references/reddit.md) |
 | Threads | 6 | GET | [references/threads.md](references/threads.md) |
 | Pinterest | 5 | GET | [references/pinterest.md](references/pinterest.md) |
 | Bluesky | 3 | GET | [references/bluesky.md](references/bluesky.md) |
@@ -72,21 +77,40 @@ Before the first live call in a session:
 | Kwai | 3 | GET | [references/kwai.md](references/kwai.md) |
 | Truth Social | 3 | GET | [references/truthsocial.md](references/truthsocial.md) |
 | Twitch | 4 | GET | [references/twitch.md](references/twitch.md) |
-| Snapchat | 1 | GET | [references/snapchat.md](references/snapchat.md) |
+| Snapchat | 2 | GET | [references/snapchat.md](references/snapchat.md) |
 | Kick | 1 | GET | [references/kick.md](references/kick.md) |
+| Douyin (Chinese TikTok, mostly metered) | 8 | GET | [references/douyin.md](references/douyin.md) |
+| Telegram (public channels) | 3 | GET | [references/telegram.md](references/telegram.md) |
+| Quora (questions, answers, spaces) | 7 | GET | [references/quora.md](references/quora.md) |
+| Apple Music (artists, albums, tracks) | 4 | GET | [references/apple_music.md](references/apple_music.md) |
 
-**Commerce, retail & reviews:**
+**Commerce, retail & marketplaces:**
 
 | Platform | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| Amazon (products, reviews, sellers) | 5 | GET | [references/amazon.md](references/amazon.md) |
+| Amazon (products, reviews, sellers) | 8 | GET | [references/amazon.md](references/amazon.md) |
 | Walmart (products, reviews, offers, categories) | 5 | GET | [references/walmart.md](references/walmart.md) |
 | Target (products, reviews, categories, stores) | 5 | GET | [references/target.md](references/target.md) |
-| eBay (product + search) | 2 | GET | [references/ebay.md](references/ebay.md) |
-| Home Depot (product + reviews) | 2 | GET | [references/home_depot.md](references/home_depot.md) |
-| Google Shopping | 4 | GET | [references/google_shopping.md](references/google_shopping.md) |
+| eBay (product + search, incl. sold listings) | 2 | GET | [references/ebay.md](references/ebay.md) |
+| Home Depot (search, product, reviews, stores) | 4 | GET | [references/home_depot.md](references/home_depot.md) |
+| Google Shopping | 5 | GET | [references/google_shopping.md](references/google_shopping.md) |
+| Klarna (products, merchant offers, price history, reviews) | 18 | GET | [references/klarna.md](references/klarna.md) |
+| AliExpress (products, search, reviews, shipping, promos) | 9 | GET | [references/aliexpress.md](references/aliexpress.md) |
+| Etsy (listings, shop catalog, similar items) | 4 | GET | [references/etsy.md](references/etsy.md) |
+| Sephora (products, reviews, brands, stores, availability) | 11 | GET | [references/sephora.md](references/sephora.md) |
+| H&M (search, stores, categories, supplier disclosure) | 6 | GET | [references/hm.md](references/hm.md) |
+| Kohl's (search, reviews, Q&A, stores) | 5 | GET | [references/kohls.md](references/kohls.md) |
+| Wayfair (search, product, reviews) | 3 | GET | [references/wayfair.md](references/wayfair.md) |
+| Gumtree (UK classifieds: listings, sellers, locations) | 11 | GET | [references/gumtree.md](references/gumtree.md) |
+
+**Reviews, places & reputation:**
+
+| Platform | Endpoints | Methods | Reference |
+|----------|-----------|---------|-----------|
 | Trustpilot | 2 | GET | [references/trustpilot.md](references/trustpilot.md) |
-| Tripadvisor | 2 | GET | [references/tripadvisor.md](references/tripadvisor.md) |
+| G2 (software products + reviews) | 7 | GET | [references/g2.md](references/g2.md) |
+| Tripadvisor | 16 | GET | [references/tripadvisor.md](references/tripadvisor.md) |
+| Yelp (businesses, reviews, search) | 5 | GET | [references/yelp.md](references/yelp.md) |
 
 **Search, places, news & finance:**
 
@@ -94,7 +118,7 @@ Before the first live call in a session:
 |----------|-----------|---------|-----------|
 | Google (SERP, ads, Business, hotels) | 10 | GET | [references/google.md](references/google.md) |
 | Google News (news SERP search) | 1 | GET | [references/google_news.md](references/google_news.md) |
-| Google Finance (quotes, markets, tickers) | 3 | GET | [references/google_finance.md](references/google_finance.md) |
+| Finance (quotes, history, statements, options, news) | 7 | GET | [references/finance.md](references/finance.md) |
 | Google Trends (interest over time, rising) | 2 | GET | [references/google_trends.md](references/google_trends.md) |
 | Naver (Korean search corpora, Data Lab trends, brief) | 14 | GET | [references/naver.md](references/naver.md) |
 
@@ -115,8 +139,11 @@ Before the first live call in a session:
 | Perplexity (AI research) | 1 | GET | [references/perplexity.md](references/perplexity.md) |
 | Polymarket (prediction markets) | 1 | GET | [references/polymarket.md](references/polymarket.md) |
 | Content Analysis (brand mentions + sentiment) | 10 | GET | [references/content_analysis.md](references/content_analysis.md) |
+| Jobs (LinkedIn/Indeed/Bing/Xing listings + salaries) | 11 | GET | [references/jobs.md](references/jobs.md) |
+| US Congress Trades (STOCK Act disclosures + statistics) | 19 | GET | [references/us_congress_trades.md](references/us_congress_trades.md) |
+| On-Page (single-URL SEO audit) | 1 | GET | [references/on_page.md](references/on_page.md) |
 | Web Scraping (scrape, search, crawl, map, agent, sessions) | 22 | GET/POST/PATCH/DELETE | [references/web.md](references/web.md) |
-| Universal Search (all platforms at once) | 3 | GET | [references/search.md](references/search.md) |
+| Universal Search (all platforms at once) | 4 | GET | [references/search.md](references/search.md) |
 
 **Link-in-bio:**
 
@@ -128,17 +155,18 @@ Before the first live call in a session:
 | Komi | 1 | GET | [references/komi.md](references/komi.md) |
 | Pillar | 1 | GET | [references/pillar.md](references/pillar.md) |
 
-**Composites, monitoring & meta:**
+**Composites, stateful surfaces & meta:**
 
 | Surface | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
 | Prism (cross-platform composites) | 33 | GET/POST | [references/prism.md](references/prism.md) |
 | Utility (free API self-discovery) | 4 | GET | [references/utility.md](references/utility.md) |
-| Monitors (scheduled recipes + webhooks) | - | GET/POST/PATCH/DELETE | [references/monitors.md](references/monitors.md) |
+| Monitors (scheduled recipes + webhooks) | - | GET/POST/PUT/PATCH/DELETE | [references/monitors.md](references/monitors.md) |
+| Cohorts (audience-filtered mention search) | - | GET/POST/PUT/PATCH/DELETE | [references/cohorts.md](references/cohorts.md) |
 
-Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook - they are a stateful resource family, **not** registry endpoints, so they're not part of the 381 count and use POST/PATCH/DELETE in addition to GET.
+Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 572 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
 
-**Withdrawn platforms:** SoundCloud, Wayfair are registered but soft-disabled - every endpoint returns `503 SERVICE_UNAVAILABLE` and never bills, pending a re-source. Say withdrawn, not unsupported.
+**Withdrawn platforms:** SoundCloud is registered but soft-disabled - every endpoint returns `503 SERVICE_UNAVAILABLE` and never bills, pending a re-source. Say withdrawn, not unsupported.
 <!-- END:GENERATED:PLATFORMS -->
 
 ## Workflow
@@ -185,6 +213,14 @@ Determine what the user wants, then follow the matching workflow:
 2. `POST /v1/monitors` with a `recipe`, `cadence`, and `webhook_url`; manage via list/get/runs/timeseries/pause/resume/delete
 3. Managing monitors is free; each scheduled run bills the recipe's normal cost + a 1-credit scheduling premium
 
+**User wants to know which of THEIR OWN list of accounts talked about something:**
+This is Cohorts, not social listening. The tell is that the user already has the list — a purchaser panel, a customer roster, a creator shortlist — and wants those accounts' public posts, not the open firehose. If they want to *discover* who is talking, use `prism/brand-mentions`, `search/creators`, or `content_analysis` instead.
+1. Read [references/cohorts.md](references/cohorts.md)
+2. `POST /v1/cohorts`, then `PUT /v1/cohorts/{id}/members` in chunks of 1,000 (10,000 max per cohort). Only the 10 identity platforms listed there are accepted; both writes need an `Idempotency-Key` UUID
+3. **Compute the ceiling before submitting** — `SUM(member x page cap x credits per page)`, at 5/page for LinkedIn, 2/page-round for Instagram and YouTube, 1 elsewhere, and a fixed 1 page for X, Bluesky, Threads and Twitch. `max_credits` must clear it or submission 400s before any credit is held
+4. `POST /v1/cohorts/{id}/queries` returns `202`; poll `GET /v1/cohort-queries/{queryId}`, then page `.../results` with `cursor`
+5. Report `coverage` alongside `items`. A member with `window_complete: false` or `status: not_found` means the answer is not exhaustive — saying "no mentions" without checking coverage is the failure mode this surface exists to prevent
+
 **User asks about pricing or credit costs:**
 1. Read [references/cost-gate.md](references/cost-gate.md) first for request-level estimation rules
 2. Read [references/pricing.md](references/pricing.md) for the endpoint inventory, tiers, packs, cache TTLs, refunds, and the full metered/custom table
@@ -199,7 +235,7 @@ Determine what the user wants, then follow the matching workflow:
 
 **Ambiguous platform:** If the user says "get profile for @nike" without specifying a platform, ask which platform they mean.
 
-**Multi-platform requests:** Load each platform's reference file and make sequential calls — or suggest `/v1/search/everywhere` (20 credits) when the user wants one query across many platforms at once. For multi-country news coverage suggest `/v1/search/news` (metered 2-14 credits: it plans and localizes the query, then searches up to 12 Google News country editions in one call).
+**Multi-platform requests:** Load each platform's reference file and make sequential calls — or suggest `/v1/search/everywhere` (20 credits) when the user wants one query across many platforms at once. For multi-country news coverage suggest `/v1/search/news` (metered 2-62 credits: it plans and localizes the query, then searches up to 12 Google News country editions in one call).
 
 ## Making API Calls
 
@@ -219,6 +255,7 @@ URL-encode parameter values that contain spaces or special characters.
 - **Batch reads** (`POST /v1/youtube/videos`, `/v1/youtube/channels`, `/v1/youtube/transcripts`, `/v1/prism/post-stats`, `/v1/prism/profiles`, `/v1/prism/comment-lookup`) — the id/URL list is too large for a query string, so it travels in a JSON body as a real array.
 - **Web jobs, monitors, and sessions** (`/v1/web/*`) — POST to submit or create, GET to poll or list, PATCH to update, DELETE to cancel or close.
 - **Monitors** (`/v1/monitors/*`) — see [references/monitors.md](references/monitors.md).
+- **Cohorts** (`/v1/cohorts/*`, `/v1/cohort-queries/*`) — POST to create a cohort or submit a query, **PUT** to upload members (the only PUT in the API), GET to poll and read results, DELETE to cancel or purge. POST and PUT require an `Idempotency-Key` UUID header. See [references/cohorts.md](references/cohorts.md).
 - **`POST /v1/web/parse`** is `multipart/form-data`, not JSON.
 
 A POST/PATCH call needs both headers:
@@ -234,7 +271,7 @@ curl -X POST "https://www.socialcrawl.dev/v1/youtube/transcripts" \
 
 **Streaming:** a few endpoints (`/v1/search/everywhere`, `/v1/search/news`, `/v1/prism/comments`, `/v1/prism/answers`, `/v1/prism/profiles`, `/v1/prism/app-reviews`, `/v1/reddit/omni-search`, `/v1/youtube/transcripts`) emit Server-Sent Events when you send `Accept: text/event-stream`. Omit that header to get one JSON body instead — each endpoint's reference section says which behaviour it has.
 
-**Latency note:** the DataForSEO-backed endpoints are task-polled upstream — Google Shopping, Trustpilot, Tripadvisor, Google Business, Google Play, App Store, Google Trends, Google Finance, Content Analysis, Pinterest, and Amazon `product`. Expect ~10–45s responses; use a 60s timeout for those. Web crawl / batch-scrape / agent jobs are async by design: they return a `job_id` immediately and you poll `GET /v1/web/jobs/{job_id}`.
+**Latency note:** some endpoints are task-polled upstream — Google Shopping, Trustpilot, Tripadvisor, Google Business, Google Play, App Store, Google Trends, Finance, Content Analysis, Pinterest, and Amazon `product`. Expect ~10–45s responses; use a 60s timeout for those. Web crawl / batch-scrape / agent jobs are async by design: they return a `job_id` immediately and you poll `GET /v1/web/jobs/{job_id}`.
 
 **Two-step endpoints:** some resources need an id from an earlier call — Google Shopping `product`/`reviews`/`sellers` need ids from `product-search`; Tripadvisor `reviews` needs `url_path` from `search`; Google `hotels/info` needs `hotel_identifier` from `hotels/search`; every `linkedin/company/*` sub-resource needs `company_id` from `linkedin/company`; `facebook/post/comment/replies` needs `feedback_id` + `expansion_token` from `facebook/post/comments`; Target `product`/`reviews` need a TCIN; `content_analysis/category-trends` needs a `category_code` from `content_analysis/categories`. Every endpoint's parameter descriptions name its prerequisite.
 
@@ -243,10 +280,10 @@ curl -X POST "https://www.socialcrawl.dev/v1/youtube/transcripts" \
 <!-- BEGIN:GENERATED:CREDIT_TIERS (auto-generated by generate-docs.ts - AIP-16b) -->
 | Tier | Cost | Endpoints | Typical endpoints |
 |------|------|-----------|-------------------|
-| standard | 1 credit | 175 | Profiles, posts, search, comments, reference data |
-| advanced | 5 credits | 102 | Ad libraries, trending, audience analytics, app/product/place reviews, retail catalogs, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
-| premium | 10 credits | 17 | Video transcripts, LinkedIn people/job search + reactions, app-listings search, web agent jobs |
-| custom (flat / request-shaped) | varies by request | 87 | Free discovery, fixed composites, per-row batches, per-probe AI visibility, per-page crawl and search, browser sessions, and recurring monitors |
+| standard | 1 credit | 277 | Profiles, posts, search, comments, reference data |
+| advanced | 5 credits | 171 | Ad libraries, trending, audience analytics, app/product/place reviews, retail catalogs, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
+| premium | 10 credits | 22 | Video transcripts, LinkedIn people/job search + reactions, app-listings search, web agent jobs |
+| custom (flat / metered) | varies (0-10000) | 102 | `/v1/search/everywhere` (20), `search/forums` (10) & `search/news` (2-62 metered); `naver/brief` (10); `{platform}/profile/full` (5); the free `/v1/utility/*` self-discovery endpoints (0); web scrape/crawl/sessions; all `/v1/prism/*` composites (0-1605, flat or metered per recipe) |
 <!-- END:GENERATED:CREDIT_TIERS -->
 
 Cache hits, idempotent replays, every `/v1/utility/*` endpoint, and `/v1/credits/balance` cost 0 credits. Failed calls (upstream errors, circuit-breaker rejections, request timeouts, not-found resources, empty results) are auto-refunded, and a request rejected for bad params or a rate limit never deducts at all. Metered endpoints deduct an upfront ceiling and refund down to the actual work done, so the response `credits_used` is the real charge.
@@ -269,7 +306,7 @@ For a retryable paid non-streaming request, send an `Idempotency-Key` before the
 <!-- BEGIN:GENERATED:ERRORS (auto-generated by generate-docs.ts - AIP-16b) -->
 | Code | Status | Retry? | What it means / what to do |
 |------|--------|--------|----------------------------|
-| MISSING_API_KEY | 401 | no | No x-api-key header on the request. Ask the user to configure `SOCIALCRAWL_API_KEY` or `~/.config/socialcrawl/api_key` outside chat, then retry |
+| MISSING_API_KEY | 401 | no | No x-api-key header on the request. Ask the user for their key and save it to `~/.config/socialcrawl/api_key` |
 | INVALID_API_KEY | 401 | no | API key is malformed, not found, revoked, or expired. Tell the user to check the key at https://socialcrawl.dev/dashboard |
 | INSUFFICIENT_CREDITS | 402 | no | Credit balance is lower than the endpoint cost. Point the user at https://socialcrawl.dev/dashboard/billing |
 | INVALID_REQUEST | 400 | no | A required parameter is missing, a value failed validation, or no one-of group member was provided. Re-read the endpoint's params and Constraints in its platform reference before retrying - this is free, so a retry costs nothing |
@@ -280,8 +317,17 @@ For a retryable paid non-streaming request, send an `Idempotency-Key` before the
 | SERVICE_UNAVAILABLE | 503 | yes | Temporarily unavailable for this platform, either after repeated failures or because the upstream provider is rate-limiting us; honor Retry-After, credits are refunded. Retry after ~30s |
 | INTERNAL_ERROR | 500 | yes | Unexpected server error; credits are automatically refunded |
 | METHOD_NOT_ALLOWED | 405 | no | Wrong HTTP method for this endpoint. Check the method in the platform reference - the `/v1/web/*` job, monitor, and session routes and the batch endpoints are POST/PATCH/DELETE, not GET |
-| IDEMPOTENCY_KEY_CONFLICT | 409 | no | The Idempotency-Key is already in use by another account. Use a fresh Idempotency-Key |
+| IDEMPOTENCY_KEY_CONFLICT | 409 | no | The Idempotency-Key conflicts with an incompatible active reservation. Use a fresh Idempotency-Key |
+| IDEMPOTENCY_IN_PROGRESS | 409 | yes | A request with this Idempotency-Key is still running; retry after the Retry-After delay. Unbilled - wait for Retry-After, then retry with the same Idempotency-Key |
+| IDEMPOTENCY_REPLAY_UNAVAILABLE | 409 | no | The original outcome is known, but its response body exceeded the idempotent replay storage limit; use a new key only to make a new billable request. The prior call already completed; use a new key only to make a new billable request |
 | IDEMPOTENCY_KEY_PAYLOAD_MISMATCH | 422 | no | The Idempotency-Key was reused with a different request payload. Use a fresh Idempotency-Key for the changed payload |
+| COHORT_MEMBER_LIMIT_EXCEEDED | 400 | no | The cohort member limit would be exceeded by this upload |
+| COHORT_LIMIT_EXCEEDED | 400 | no | The account already holds the maximum number of cohorts |
+| COHORT_IDENTITY_PLATFORM_UNSUPPORTED | 400 | no | The identity platform is not supported for cohort queries |
+| COHORT_IDENTITY_CONFLICT | 409 | no | The normalized identity is already assigned to another external ID |
+| COHORT_QUERY_NOT_CANCELLABLE | 409 | no | The cohort query is terminal and cannot be cancelled |
+| COHORT_QUERY_NOT_READY | 409 | no | The cohort query has not completed and its results are not available |
+| COHORT_RESULT_TOO_LARGE | 413 | no | One cohort query result exceeds the maximum response-page size |
 | PAYLOAD_TOO_LARGE | 413 | no | The JSON request body exceeds the 1 MB size limit |
 | RATE_LIMITED | 429 | yes | More than 600 requests in a 1-minute window on the same API key; honor Retry-After, then back off. Unbilled - wait for `Retry-After`, then retry |
 | KEY_BUDGET_EXCEEDED | 402 | no | This API key has spent its per-key credit limit; the account balance is unaffected. Raise or reset the key's limit in Dashboard → API Keys, or use a key with no limit |
@@ -291,7 +337,8 @@ For a retryable paid non-streaming request, send an `Idempotency-Key` before the
 
 - **[references/api-overview.md](references/api-overview.md)** — Read when user asks about authentication, response envelope, unified schemas (Author/Post/Comment/Product/Review/Seller/Place/App), computed fields, pagination, caching, idempotency, `?format=raw`, concurrency, or error details
 - **[references/cost-gate.md](references/cost-gate.md)** — Read before every paid call and whenever estimating a job. It turns row, URL, probe, page, chunk, runtime, and recurring-run units into the total for the exact request
-- **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, refunds, or what a job will cost; has the exact cost, tier, and cache TTL of all 381 endpoints, the full rule and honest range for every metered endpoint, and the free-endpoint list
+- **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, refunds, or what a job will cost; has the exact cost, tier, and cache TTL of all 572 endpoints, the full rule and honest range for every metered endpoint, and the free-endpoint list
 - **[references/prism.md](references/prism.md)** — Read when user wants a cross-platform composite (`/v1/prism/*`) — one call that fans out across many platforms
 - **[references/monitors.md](references/monitors.md)** — Read when user wants to schedule a recipe to re-run on a cadence with webhook delivery (`/v1/monitors/*`)
+- **[references/cohorts.md](references/cohorts.md)** — Read when user supplies their own list of public accounts and wants to know which of *them* posted about a keyword (`/v1/cohorts/*`), including the panel limits, the computed credit ceiling, and the coverage contract
 - **[references/{platform}.md](references/)** — Read the specific platform file when user asks about or wants to call that platform's endpoints. Every endpoint section there carries its HTTP method, exact credit cost, cache TTL, response archetype, pagination style, every parameter with its type / enum values / bounds / example, the pre-billing constraints (one-of groups, param dependencies, CSV limits), and a runnable curl

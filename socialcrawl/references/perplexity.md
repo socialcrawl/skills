@@ -12,11 +12,11 @@ Web research via Perplexity Sonar
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Natural-language research over the live web powered by Perplexity Sonar. Returns a synthesised answer plus the URLs Sonar cited as evidence under `data.sources`. Costs 1 credit per call. Auto-refunds on upstream failure. Best for freeform questions like 'what is the latest funding round for Anthropic' or 'summarise this week's biggest LLM releases' that need fresh, web-grounded answers — the kind of question a structured social-media call cannot answer.
+Natural-language research over the live web powered by Perplexity Sonar. Returns a synthesised answer plus the URLs Sonar cited as evidence under `data.sources`. Costs 1 credit per call. Auto-refunds on upstream failure. Best for freeform questions like 'what is the latest funding round for Anthropic' or 'summarise this week's biggest LLM releases' that need fresh, web-grounded answers: the kind of question a structured social-media call cannot answer.
 
 **Query params**
 
-- `query` (required) - Natural-language research prompt. Sonar autonomously searches the live web and grounds the response in real sources. No prompt-engineering required — phrase it as you would to a search engine or research assistant. · e.g. `What is the capital of France?`
+- `query` (required) - Natural-language research prompt. Sonar autonomously searches the live web and grounds the response in real sources. No prompt-engineering required: phrase it as you would to a search engine or research assistant. · e.g. `What is the capital of France?`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/perplexity/research?query=What is the capital of France?" \

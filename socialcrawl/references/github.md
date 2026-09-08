@@ -12,11 +12,11 @@ Get a single issue or pull request
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Post · **Pagination** none
 
-Returns full metadata for an issue or PR — title, body, author, labels, state, reactions, comments count, and timestamps — mapped to the unified Post schema. Pass either an `/issues/N` or `/pull/N` URL; GitHub's API treats them interchangeably under `/issues/N`. Use `/v1/github/issue/comments` for the discussion thread.
+Returns full metadata for an issue or PR (title, body, author, labels, state, reactions, comments count, and timestamps) mapped to the unified Post schema. Pass either an `/issues/N` or `/pull/N` URL; GitHub's API treats them interchangeably under `/issues/N`. Use `/v1/github/issue/comments` for the discussion thread.
 
 **Query params**
 
-- `url` (required) - GitHub HTML URL — `https://github.com/{owner}/{repo}/issues/{n}` or `/pull/{n}`. · e.g. `https://github.com/facebook/react/issues/27522`
+- `url` (required) - GitHub HTML URL: `https://github.com/{owner}/{repo}/issues/{n}` or `/pull/{n}`. · e.g. `https://github.com/facebook/react/issues/27522`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/github/issue?url=https://github.com/facebook/react/issues/27522" \
@@ -29,13 +29,13 @@ Get comments on an issue or pull request
 
 **Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** CommentList · **Pagination** page - `page`, page size `per_page`
 
-Returns comments under `data.items[]` — each entry includes `id`, `user.login`, `body`, `reactions.total_count`, and `created_at`. Pass either an `/issues/N` or `/pull/N` URL; both resolve to the same comment thread on GitHub's API. Comments are returned in ascending `created_at` order (GitHub does not support re-sorting a single issue's comments).
+Returns comments under `data.items[]`: each entry includes `id`, `user.login`, `body`, `reactions.total_count`, and `created_at`. Pass either an `/issues/N` or `/pull/N` URL; both resolve to the same comment thread on GitHub's API. Comments are returned in ascending `created_at` order (GitHub does not support re-sorting a single issue's comments).
 
 **Query params**
 
 - `url` (required) - GitHub HTML URL of the issue or PR. · e.g. `https://github.com/facebook/react/issues/27522`
 - `since` (optional, string) - Only comments updated at or after this ISO 8601 timestamp.
-- `per_page` (optional, integer) - Comments per page (1–100). Defaults to 30.
+- `per_page` (optional, integer) - Comments per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number.
 
 ```bash
@@ -49,11 +49,11 @@ Get a GitHub user profile
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Author · **Pagination** none
 
-Returns public profile information for a GitHub user — login, name, avatar, bio, follower / following / public-repos counts, and account-creation date — mapped to the unified Author schema. `author.likes_count` surfaces `public_gists` (a creation-count analog); `author.verified` surfaces the rare `site_admin` flag (true only for GitHub staff accounts).
+Returns public profile information for a GitHub user (login, name, avatar, bio, follower / following / public-repos counts, and account-creation date) mapped to the unified Author schema. `author.likes_count` surfaces `public_gists` (a creation-count analog); `author.verified` surfaces the rare `site_admin` flag (true only for GitHub staff accounts).
 
 **Query params**
 
-- `handle` (required) - GitHub username — 1–39 chars, alphanumeric + non-consecutive hyphens, no leading/trailing hyphen. · e.g. `octocat`
+- `handle` (required) - GitHub username: 1-39 chars, alphanumeric + non-consecutive hyphens, no leading/trailing hyphen. · e.g. `octocat`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/github/profile?handle=octocat" \
@@ -66,15 +66,15 @@ List a GitHub user's repositories
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** PostList · **Pagination** page - `page`, page size `per_page`
 
-Returns the public repositories owned by the user under `data.items[]` — each entry includes `id`, `name`, `full_name`, `description`, `language`, `stargazers_count`, `forks_count`, `created_at`, and `pushed_at`. Sortable by `created`, `updated`, `pushed`, or `full_name`. Use `/v1/github/repo` for a single richer repo dossier.
+Returns the public repositories owned by the user under `data.items[]`: each entry includes `id`, `name`, `full_name`, `description`, `language`, `stargazers_count`, `forks_count`, `created_at`, and `pushed_at`. Sortable by `created`, `updated`, `pushed`, or `full_name`. Use `/v1/github/repo` for a single richer repo dossier.
 
 **Query params**
 
 - `handle` (required) - GitHub username. · e.g. `octocat`
-- `type` (optional, enum: all | owner | member) - Filter — `all`, `owner`, or `member`. Defaults to `owner`.
-- `sort` (optional, enum: created | updated | pushed | full_name) - Sort field — `created`, `updated`, `pushed`, or `full_name`. Defaults to `full_name`.
+- `type` (optional, enum: all | owner | member) - Filter: `all`, `owner`, or `member`. Defaults to `owner`.
+- `sort` (optional, enum: created | updated | pushed | full_name) - Sort field: `created`, `updated`, `pushed`, or `full_name`. Defaults to `full_name`.
 - `direction` (optional, enum: asc | desc) - `asc` or `desc`. Defaults to `asc` for full_name, `desc` otherwise.
-- `per_page` (optional, integer) - Repos per page (1–100). Defaults to 30.
+- `per_page` (optional, integer) - Repos per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number for pagination.
 
 ```bash
@@ -88,11 +88,11 @@ Get a GitHub repository
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Author · **Pagination** none
 
-Returns repository metadata — full_name, description, stars, forks, open issues, watchers, language, and creation date — mapped to the unified Author schema. A repo is a follow-able creator-like entity in this API: stars map to `author.followers`, watchers (subscribers) to `author.likes_count`, forks to `author.following`. Use `/v1/github/repo/readme`, `/v1/github/repo/releases`, and `/v1/github/repo/issues` for richer per-repo data.
+Returns repository metadata (full_name, description, stars, forks, open issues, watchers, language, and creation date) mapped to the unified Author schema. A repo is a follow-able creator-like entity in this API: stars map to `author.followers`, watchers (subscribers) to `author.likes_count`, forks to `author.following`. Use `/v1/github/repo/readme`, `/v1/github/repo/releases`, and `/v1/github/repo/issues` for richer per-repo data.
 
 **Query params**
 
-- `url` (required) - GitHub repo URL — `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/octocat/Hello-World`
+- `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/octocat/Hello-World`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/github/repo?url=https://github.com/octocat/Hello-World" \
@@ -105,11 +105,11 @@ Full project dossier for a repository
 
 **Cost** 5 credits (advanced) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Composite endpoint — fetches repo metadata, README excerpt, latest 3 releases, top feature request, and top complaint in parallel and returns a structured dossier `{ info, readme, releases, top_issues }`. Useful for AI-grounding workflows where a single call should return everything you'd need to summarise a project. 5 credits per call.
+Composite endpoint: fetches repo metadata, README excerpt, latest 3 releases, top feature request, and top complaint in parallel and returns a structured dossier `{ info, readme, releases, top_issues }`. Useful for AI-grounding workflows where a single call should return everything you'd need to summarise a project. 5 credits per call.
 
 **Query params**
 
-- `url` (required) - GitHub repo URL — `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
+- `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/github/repo/dossier?url=https://github.com/facebook/react" \
@@ -122,18 +122,18 @@ List a repository's issues (and PRs)
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** page - `page`, page size `per_page`
 
-Returns issues for the repository under `data.items[]`. NOTE: GitHub treats pull requests as issues for this endpoint — every PR also appears here, distinguishable by the presence of a `pull_request` field on the item. Filter by `state`, comma-separated `labels`, sort by `created`/`updated`/`comments`, and paginate with `per_page`/`page`. `since` accepts an ISO 8601 timestamp.
+Returns issues for the repository under `data.items[]`. NOTE: GitHub treats pull requests as issues for this endpoint: every PR also appears here, distinguishable by the presence of a `pull_request` field on the item. Filter by `state`, comma-separated `labels`, sort by `created`/`updated`/`comments`, and paginate with `per_page`/`page`. `since` accepts an ISO 8601 timestamp.
 
 **Query params**
 
-- `url` (required) - GitHub repo URL — `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
-- `type` (optional, enum: issue | pr | all) - Filter the unified issues+PRs list — `issue` returns only issues, `pr` returns only pull requests, `all` (default) returns both. Each item also carries `post.ext.type` (`issue`/`pull_request`).
+- `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
+- `type` (optional, enum: issue | pr | all) - Filter the unified issues+PRs list: `issue` returns only issues, `pr` returns only pull requests, `all` (default) returns both. Each item also carries `post.ext.type` (`issue`/`pull_request`).
 - `state` (optional, enum: open | closed | all) - `open`, `closed`, or `all`. Defaults to `open`.
 - `labels` (optional, string) - Comma-separated label names (e.g. `bug,help wanted`).
 - `sort` (optional, enum: created | updated | comments) - `created`, `updated`, or `comments`. Defaults to `created`.
 - `direction` (optional, enum: asc | desc) - `asc` or `desc`. Defaults to `desc`.
 - `since` (optional, string) - Only issues updated at or after this ISO 8601 timestamp.
-- `per_page` (optional, integer) - Issues per page (1–100). Defaults to 30.
+- `per_page` (optional, integer) - Issues per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number.
 
 ```bash
@@ -151,7 +151,7 @@ Returns the repository's README in raw form (the file contents, not base64-wrapp
 
 **Query params**
 
-- `url` (required) - GitHub repo URL — `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/octocat/Hello-World`
+- `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/octocat/Hello-World`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/github/repo/readme?url=https://github.com/octocat/Hello-World" \
@@ -164,12 +164,12 @@ List a repository's releases
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** page - `page`, page size `per_page`
 
-Returns the most recent releases for the repository under `data.items[]` — each entry includes `tag_name`, `name`, `body` (markdown release notes), `published_at`, `prerelease`, and `assets[]`. Sorted newest-first by upstream default.
+Returns the most recent releases for the repository under `data.items[]`: each entry includes `tag_name`, `name`, `body` (markdown release notes), `published_at`, `prerelease`, and `assets[]`. Sorted newest-first by upstream default.
 
 **Query params**
 
-- `url` (required) - GitHub repo URL — `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
-- `per_page` (optional, integer) - Releases per page (1–100). Defaults to 30.
+- `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
+- `per_page` (optional, integer) - Releases per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number.
 
 ```bash
@@ -183,11 +183,11 @@ Top feature request and top complaint for a repository
 
 **Cost** 5 credits (advanced) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Composite endpoint — runs two `/search/issues` queries in parallel: `top_feature_request` (issues with `enhancement` label, sorted by reactions; falls back to top open issue by reactions if no label exists) and `top_complaint` (most-discussed open issue, sorted by comments). Returns `{ top_feature_request, top_complaint }`. 5 credits per call.
+Composite endpoint: runs two `/search/issues` queries in parallel: `top_feature_request` (issues with `enhancement` label, sorted by reactions; falls back to top open issue by reactions if no label exists) and `top_complaint` (most-discussed open issue, sorted by comments). Returns `{ top_feature_request, top_complaint }`. 5 credits per call.
 
 **Query params**
 
-- `url` (required) - GitHub repo URL — `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
+- `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/github/repo/top-issues?url=https://github.com/facebook/react" \
@@ -200,14 +200,14 @@ Search GitHub issues and pull requests
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** page - `page`, page size `per_page`
 
-Searches issues and PRs across all of GitHub via the `/search/issues` endpoint. Supports GitHub's full search syntax — qualifiers like `repo:owner/name`, `is:issue`, `is:pr`, `is:open`, `label:bug`, `created:>2026-01-01`, `author:username`, `comments:>10`. Sort by `reactions`, `comments`, `created`, or `updated`. Results land under `data.items[]` with `total_count` and `incomplete_results` siblings. Rate-limited to 30 req/min per token.
+Searches issues and PRs across all of GitHub via the `/search/issues` endpoint. Supports GitHub's full search syntax: qualifiers like `repo:owner/name`, `is:issue`, `is:pr`, `is:open`, `label:bug`, `created:>2026-01-01`, `author:username`, `comments:>10`. Sort by `reactions`, `comments`, `created`, or `updated`. Results land under `data.items[]` with `total_count` and `incomplete_results` siblings. Rate-limited to 30 req/min per token.
 
 **Query params**
 
-- `query` (required) - GitHub search query (uses GitHub's qualifier syntax — see https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests). · e.g. `repo:vercel/next.js is:issue is:open`
-- `sort` (optional, enum: reactions | comments | created | updated) - Sort field — `reactions`, `comments`, `created`, `updated`. Defaults to best-match relevance.
+- `query` (required) - GitHub search query (uses GitHub's qualifier syntax: see https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests). · e.g. `repo:vercel/next.js is:issue is:open`
+- `sort` (optional, enum: reactions | comments | created | updated) - Sort field: `reactions`, `comments`, `created`, `updated`. Defaults to best-match relevance.
 - `order` (optional, enum: asc | desc) - `asc` or `desc`. Defaults to `desc`.
-- `per_page` (optional, integer) - Results per page (1–100). Defaults to 30.
+- `per_page` (optional, integer) - Results per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number.
 
 **Constraints**
@@ -225,7 +225,7 @@ User contribution velocity dossier
 
 **Cost** 10 credits (premium) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Composite endpoint — combines a `/search/issues` PR-velocity query (total + merged), the user's own repo list, and parallel per-repo enrichment (stars + releases for external repos; README + releases + top-issues for own repos) into a structured contribution dossier `{ velocity, contributed_repos[], own_repos[] }`. The `depth` param controls fan-out width: `quick` enriches up to 5 external + 3 own repos, `default` 10 + 5, `deep` 15 + 5. 10 credits per call.
+Composite endpoint: combines a `/search/issues` PR-velocity query (total + merged), the user's own repo list, and parallel per-repo enrichment (stars + releases for external repos; README + releases + top-issues for own repos) into a structured contribution dossier `{ velocity, contributed_repos[], own_repos[] }`. The `depth` param controls fan-out width: `quick` enriches up to 5 external + 3 own repos, `default` 10 + 5, `deep` 15 + 5. 10 credits per call.
 
 **Query params**
 

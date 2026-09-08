@@ -10,14 +10,15 @@
 
 Get Pinterest board
 
-**Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
+**Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** cursor - `cursor`
 
-Returns pins from a Pinterest board. Each pin includes title, image URL, save count, and link destination. Pagination is not currently supported on this endpoint — the upstream returns a single page only.
+Returns pins from a Pinterest board, roughly 15 per page. Each pin includes title, image URL, save count, and link destination. Send `pagination.next_cursor` back as `cursor` to walk the rest of the board; `has_more` goes false on the last page.
 
 **Query params**
 
 - `url` (required) - Full URL of the Pinterest board · e.g. `https://www.pinterest.com/lizmrodgers/moms-night/`
 - `trim` (optional, boolean) - Set to true for a trimmed down version of the response
+- `cursor` (optional, string) - Cursor to get the next page of pins. Take it from `pagination.next_cursor` on the previous response.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/pinterest/board?url=https://www.pinterest.com/lizmrodgers/moms-night/" \
@@ -67,11 +68,11 @@ Get Pinterest save counts for external URLs
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns how many times each URL (up to 10 per request, comma-separated) has been saved to Pinterest via the Save Button. Counts are exact-URL-string keyed: scheme, trailing slash, and query string each produce a different count — URLs are passed through verbatim, never normalized. A count of 0 can mean either 'never pinned' or 'page does not exist'. Counts come from the Pinterest Save Button embed ecosystem; pages outside it may undercount. Single page only — no pagination.
+Returns how many times each URL (up to 10 per request, comma-separated) has been saved to Pinterest via the Save Button. Counts are exact-URL-string keyed: scheme, trailing slash, and query string each produce a different count. URLs are passed through verbatim, never normalized. A count of 0 can mean either 'never pinned' or 'page does not exist'. Counts come from the Pinterest Save Button embed ecosystem; pages outside it may undercount. Single page only, no pagination.
 
 **Query params**
 
-- `urls` (required) - Comma-separated list of 1–10 absolute http(s):// URLs, passed to Pinterest verbatim. Variants (https vs http, with/without trailing slash, with/without query string) are counted as different URLs. · e.g. `https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/`
+- `urls` (required) - Comma-separated list of 1-10 absolute http(s):// URLs, passed to Pinterest verbatim. Variants (https vs http, with/without trailing slash, with/without query string) are counted as different URLs. · e.g. `https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/pinterest/url-stats?urls=https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" \

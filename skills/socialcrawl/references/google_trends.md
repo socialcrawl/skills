@@ -13,15 +13,20 @@ Google Trends interest-over-time and rising-queries data. Both endpoints are tas
 Get Google Trends interest over time
 
 **Cost** 5 credits (advanced) · **Cache** 120s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
-Returns Google Trends interest-over-time for up to 5 keywords in one call. Response is `{ series, averages }`: `series` is one entry per keyword, each with dated `points` ({ date, value }) where `value` is Google's 0-100 relative-popularity score; `averages` is the per-keyword mean over the window. Compare terms head-to-head (values are normalised across the keyword set) and scope by `location`, `timeframe`, and `category`. A billed DataForSEO refresh typically takes 3-8s; exact repeats may use the 2-minute search cache and cost 0 credits.
+Returns Google Trends interest-over-time for up to 5 keywords in one call. Response is `{ series, averages }`: `series` is one entry per keyword, each with dated `points` ({ date, datetime, value, partial }) where `value` is Google's 0-100 relative-popularity score; `averages` is the per-keyword mean over the window. `partial` is true on a bucket Google is still accumulating, which is normally the last point: treat it as an incomplete count rather than a fall in interest, and drop it before charting a trend. Compare terms head-to-head (values are normalised across the keyword set) and scope by `location`, `timeframe`, and `category`. A keyword set with no measurable search interest returns 404 and costs 0 credits, so a dead term is never billed. A billed refresh is typically 5-9s and the slow tail reaches about 30s, so set a client timeout of at least 60s: this surface reads Google Trends live and Google itself is the slow part. Exact repeats may use the 2-minute search cache and return in milliseconds at 0 credits.
 
 **Query params**
 
-- `keywords` (required) - 1-5 comma-separated keywords (e.g. 'reverse audio,voice changer'). With multiple keywords the 0-100 values are normalised across the set for direct comparison. · e.g. `uv index`
-- `location` (optional, string) - Location as an ISO country code ('US', 'GB'), a full name ('United States'), or a numeric DFS code ('2840'). Defaults to worldwide-leaning US.
+- `keywords` (required) - 1-5 comma-separated keywords (e.g. 'reverse audio,voice changer'). With multiple keywords the 0-100 values are normalised across the set for direct comparison. Each keyword must be 2 to 100 characters. More than 5 keywords, a 1-character keyword, or a keyword made only of punctuation is rejected with a free 400 before the request is billed. · e.g. `uv index`
+- `location` (optional, string) - Location as an ISO country code ('US', 'KR'), a full country name as Google Trends spells it ('United States', 'South Korea'), or a numeric location code ('2840'). Common spellings and ISO codes are normalised, so 'KR', 'Korea' and 'South Korea' all reach the same place. Google Trends does not publish every country, and a location it has no data for is rejected with a free 400 naming the accepted forms; a 404 means the keyword had no data there, not that the location is unsupported. Defaults to worldwide-leaning US.
 - `timeframe` (optional, enum: past_hour | past_4_hours | past_day | past_7_days | past_30_days | past_90_days | past_12_months | past_5_years) - Preset time window: past_hour, past_4_hours, past_day, past_7_days, past_30_days, past_90_days, past_12_months, or past_5_years. Defaults to past_12_months. · e.g. `past_90_days`
-- `category` (optional, integer) - Numeric Google Trends category code to scope the query (default 0 = all categories).
+- `category` (optional, integer) - Numeric Google Trends category code to scope the query (default 0 = all categories). A non-numeric value is rejected with a free 400 rather than silently returning an all-categories series.
+
+**Constraints**
+
+- `keywords`: at most 5 comma-separated values.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_trends/explore?keywords=uv index" \
@@ -33,14 +38,20 @@ curl "https://www.socialcrawl.dev/v1/google_trends/explore?keywords=uv index" \
 Get related + rising Google Trends queries
 
 **Cost** 5 credits (advanced) · **Cache** 120s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
-Returns the related search queries for ONE keyword as `{ rising, top }`. `rising` is the breakout list — queries whose search interest grew the most over the window, each with a `growth` percentage (a true breakout can read into the thousands, e.g. 3200 = +3200%); `top` is the most-searched related queries, each with a 0-100 relative `value`. The closest thing to a 'breakout terms' primitive — pair it with /v1/google_trends/explore to size a trend and find the queries driving it. A billed DataForSEO refresh typically takes 3-8s; exact repeats may use the 2-minute search cache and cost 0 credits.
+Returns the related search queries for ONE keyword as `{ rising, top }`. `rising` is the breakout list: queries whose search interest grew the most over the window, each with a `growth` percentage (a true breakout can read into the thousands, e.g. 3200 = +3200%); `top` is the most-searched related queries, each with a 0-100 relative `value`. The closest thing to a 'breakout terms' primitive: pair it with /v1/google_trends/explore to size a trend and find the queries driving it. A keyword with too little search volume in the requested location and window to build a related-query list returns 404 at 0 credits: that is a fact about the KEYWORD, not an unsupported location, and the same location will answer 200 for a keyword people there actually search. Widen `timeframe` or use the keyword in the local language before concluding a location is unavailable. A billed refresh is typically 5-9s and the slow tail reaches about 30s, so set a client timeout of at least 60s: this surface reads Google Trends live and Google itself is the slow part. Exact repeats may use the 2-minute search cache and return in milliseconds at 0 credits.
 
 **Query params**
 
-- `keyword` (required) - Single keyword to expand (e.g. 'uv index'). Google Trends returns the related-queries list for one keyword only. · e.g. `uv index`
-- `location` (optional, string) - Location as an ISO country code ('US', 'GB'), a full name ('United States'), or a numeric DFS code ('2840'). Defaults to worldwide-leaning US.
+- `keyword` (required) - Single keyword to expand (e.g. 'uv index'). Google Trends returns the related-queries list for one keyword only, so a comma-separated value is rejected with a free 400 before the request is billed. The keyword must be 2 to 100 characters; use /v1/google_trends/explore for multi-keyword comparisons. · e.g. `uv index`
+- `location` (optional, string) - Location as an ISO country code ('US', 'KR'), a full country name as Google Trends spells it ('United States', 'South Korea'), or a numeric location code ('2840'). Common spellings and ISO codes are normalised, so 'KR', 'Korea' and 'South Korea' all reach the same place. Google Trends does not publish every country, and a location it has no data for is rejected with a free 400 naming the accepted forms; a 404 means the keyword had no data there, not that the location is unsupported. Defaults to worldwide-leaning US.
 - `timeframe` (optional, enum: past_hour | past_4_hours | past_day | past_7_days | past_30_days | past_90_days | past_12_months | past_5_years) - Preset time window: past_hour, past_4_hours, past_day, past_7_days, past_30_days, past_90_days, past_12_months, or past_5_years. Defaults to past_12_months.
+- `category` (optional, integer) - Numeric Google Trends category code to scope the related-query lists (default 0 = all categories). The same codes /v1/google_trends/explore accepts; 0 is every category. A non-numeric value is rejected with a free 400. · e.g. `66`
+
+**Constraints**
+
+- `keyword`: at most 1 comma-separated values.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_trends/rising?keyword=uv index" \

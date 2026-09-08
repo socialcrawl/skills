@@ -29,7 +29,7 @@ Search Naver Blog
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** offset - `start`, page size `display`
 
-Searches naver.com/blog — Korea's dominant long-form blogging platform. Returns ranked posts under `data.items[]` with `title`, `link`, `description` (both HTML-tagged with `<b>` around matched keywords), `bloggername`, `bloggerlink`, and `postdate` (YYYYMMDD).
+Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns ranked posts under `data.items[]` with `title`, `link`, `description` (both HTML-tagged with `<b>` around matched keywords), `bloggername`, `bloggerlink`, and a day-precision `published_at` (ISO-8601 UTC, from Naver's YYYYMMDD `postdate`).
 
 **Query params**
 
@@ -49,14 +49,14 @@ One query across the Korean internet (5 Naver corpora) + optional digest.
 
 **Cost** 10 credits (custom) · **Cache** 120s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** cursor - `cursor`, page size `display`
 
-Fans a single query across Naver News, Blog, Café (community), 지식iN (Q&A), and the Korean web index in parallel, returning each corpus's raw items with the original Korean preserved, plus a volume-by-corpus map and top recent blogs. Add `include=digest` for an English translated synthesis with pull-quotes. The Korea-market brief no western data vendor can produce — all five corpora are native Naver. Paginate each corpus via the opaque `cursor`. Flat 10cr; coverage-based partial refund when a majority of corpora fail. Note `computed.shop_price_range` is retained as a permanent `null` for response-shape stability: Naver retired its Shopping search corpus on 2026-07-31 and offers no replacement.
+Fans a single query across Naver News, Blog, Café (community), 지식iN (Q&A), and the Korean web index in parallel, returning each corpus's raw items with the original Korean preserved, plus a volume-by-corpus map and top recent blogs. Add `include=digest` for an English translated synthesis with pull-quotes. The Korea-market brief no western data vendor can produce: all five corpora are native Naver. Paginate each corpus via the opaque `cursor`. Flat 10cr; coverage-based partial refund when a majority of corpora fail. Note `computed.shop_price_range` is retained as a permanent `null` for response-shape stability: Naver retired its Shopping search corpus on 2026-07-31 and offers no replacement.
 
 **Query params**
 
 - `query` (required) - Search query (Korean or any language). · e.g. `삼성전자`
 - `corpora` (optional, string) - CSV subset of news,blog,cafearticle,kin,webkr (default all five). `shop` was retired by Naver on 2026-07-31 and is rejected. · e.g. `news,blog,kin`
-- `display` (optional, integer) - Items per corpus (1–100, default 20).
-- `start` (optional, integer) - 1-indexed offset per corpus (1–1000, default 1). Prefer `cursor` for paging.
+- `display` (optional, integer) - Items per corpus (1-100, default 20).
+- `start` (optional, integer) - 1-indexed offset per corpus (1-1000, default 1). Prefer `cursor` for paging.
 - `sort` (optional, string) - sim (relevance, default) or date; kin also point.
 - `include` (optional, string) - Set to `digest` for an LLM English digest with translated quotes.
 - `cursor` (optional, string) - Opaque pagination token from a prior response's next_cursor.
@@ -72,7 +72,7 @@ Search Naver Cafe articles
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** offset - `start`, page size `display`
 
-Searches cafe.naver.com — Korea's largest user-community platform (analog of Reddit subreddits / Discord servers). Returns cafe posts under `data.items[]` with `title`, `link`, `description`, `cafename`, and `cafeurl`. Many cafes are member-gated; the `link` URL works only if the caller has joined the cafe (Naver returns a teaser otherwise).
+Searches cafe.naver.com. Korea's largest user-community platform (analog of Reddit subreddits / Discord servers). Returns cafe posts under `data.items[]` with `title`, `link`, `description`, `cafename`, and `cafeurl`. Many cafes are member-gated; the `link` URL works only if the caller has joined the cafe (Naver returns a teaser otherwise).
 
 **Query params**
 
@@ -92,7 +92,7 @@ Search Naver Encyclopedia
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** offset - `start`, page size `display`
 
-Searches terms.naver.com — Naver Knowledge Encyclopedia, a curated reference corpus aggregating dictionaries, technical references, and editorial knowledge entries. Returns entries under `data.items[]` with `title`, `link`, `description`, and `thumbnail`.
+Searches terms.naver.com. Naver Knowledge Encyclopedia, a curated reference corpus aggregating dictionaries, technical references, and editorial knowledge entries. Returns entries under `data.items[]` with `title`, `link`, `description`, and `thumbnail`.
 
 **Query params**
 
@@ -129,7 +129,7 @@ Search Naver Image
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** offset - `start`, page size `display`
 
-Searches Naver Image — image search across crawled Korean web. Returns images under `data.items[]` with `title`, `link` (image URL), `thumbnail` (preview URL), `sizeheight`, and `sizewidth`. Narrow to a size band with `filter`.
+Searches Naver Image: image search across crawled Korean web. Returns images under `data.items[]` with `title`, `link` (image URL), `thumbnail` (preview URL), `sizeheight`, and `sizewidth`. Narrow to a size band with `filter`.
 
 **Query params**
 
@@ -150,7 +150,7 @@ Search Naver KnowledgeiN (지식iN)
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** offset - `start`, page size `display`
 
-Searches kin.naver.com — Korea's dominant Q&A community (analog of StackOverflow + Quora for the general public). Returns Q&A threads under `data.items[]` with `title`, `link`, and `description` (typically a question or answer excerpt).
+Searches kin.naver.com. Korea's dominant Q&A community (analog of StackOverflow + Quora for the general public). Returns Q&A threads under `data.items[]` with `title`, `link`, and `description` (typically a question or answer excerpt).
 
 **Query params**
 
@@ -170,7 +170,7 @@ Search Naver Local (장소 검색)
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** single page - Naver ignores `start` on the local corpus and caps `display` at 5, so there is exactly one page of results. Verified live 2026-08-03.
 
-Searches map.naver.com places — Korean business / point-of-interest catalog. Returns places under `data.items[]` with `title`, `link`, `category`, `description`, `telephone`, `address` (legal-district), `roadAddress` (street), `mapx` / `mapy` (KATEC coordinates). Note: this corpus behaves differently from the others. `display` is capped at 5 and Naver SILENTLY CLAMPS anything higher rather than erroring, and `start` is ignored entirely, so **`local` cannot be paginated**: every page returns the same first 5 places. Verified live 2026-08-03.
+Searches map.naver.com places. Korean business / point-of-interest catalog. Returns places under `data.items[]` with `title`, `link`, `category`, `description`, `telephone`, `address` (legal-district), `roadAddress` (street), `mapx` / `mapy` (KATEC coordinates). Note: this corpus behaves differently from the others. `display` is capped at 5 and Naver SILENTLY CLAMPS anything higher rather than erroring, and `start` is ignored entirely, so **`local` cannot be paginated**: every page returns the same first 5 places. Verified live 2026-08-03.
 
 **Query params**
 
@@ -189,7 +189,7 @@ Search Naver News
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** offset - `start`, page size `display`
 
-Searches news.naver.com — aggregated Korean news from licensed publishers. Returns articles under `data.items[]` with `title`, `originallink` (publisher URL), `link` (naver-hosted URL), `description`, and `pubDate` (RFC 1123).
+Searches news.naver.com: aggregated Korean news from licensed publishers. Returns articles under `data.items[]` with `title`, `originallink` (publisher URL), `link` (naver-hosted URL), `description`, and `pubDate` (RFC 1123).
 
 **Query params**
 
@@ -298,7 +298,7 @@ Search Naver Web (웹문서)
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** offset - `start`, page size `display`
 
-Searches Naver web index — general Korean web search (analog of Google web search, scoped to Naver's crawl of the Korean-language web). Returns pages under `data.items[]` with `title`, `link`, and `description`.
+Searches Naver web index: general Korean web search (analog of Google web search, scoped to Naver's crawl of the Korean-language web). Returns pages under `data.items[]` with `title`, `link`, and `description`.
 
 **Query params**
 

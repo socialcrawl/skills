@@ -12,7 +12,7 @@ Get a Spotify album
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Post · **Pagination** none
 
-Returns album metadata — artists, release date, cover art, copyright info, tracks, and sharing details. Pass either `id` or `url`.
+Returns album metadata: artists, release date, cover art, copyright info, tracks, and sharing details. Pass either `id` or `url`.
 
 **Query params**
 
@@ -34,7 +34,7 @@ Get a Spotify artist
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Author · **Pagination** none
 
-Returns artist metadata — id, name, followers, genres, and related artists. Pass either `id` or `url`.
+Returns artist metadata: id, name, followers, genres, and related artists. Pass either `id` or `url`.
 
 **Query params**
 
@@ -101,7 +101,7 @@ Search Spotify
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
-Searches Spotify playlists matching a query. Note (DR-MS-09): the upstream currently returns Playlist results only, not the full track/artist/album/episode/podcast/audiobook mix — treat non-playlist result types as unavailable until this is expanded.
+Searches Spotify playlists matching a query. Note (DR-MS-09): the upstream currently returns Playlist results only, not the full track/artist/album/episode/podcast/audiobook mix: treat non-playlist result types as unavailable until this is expanded.
 
 **Query params**
 
@@ -118,7 +118,7 @@ Get a Spotify track
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Post · **Pagination** none
 
-Returns track metadata — artists, album info, duration, playability, and sharing details. Pass either `id` or `url`.
+Returns track metadata: artists, album info, duration, playability, and sharing details. Pass either `id` or `url`.
 
 **Query params**
 

@@ -8,7 +8,7 @@
 
 ## GET /v1/polymarket/research - 5 credits (advanced)
 
-Polymarket prediction markets — multi-query research
+Polymarket prediction markets: multi-query research
 
 **Cost** 5 credits (advanced) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
@@ -16,7 +16,7 @@ Server-side fan-out over the Gamma API: expands the topic into up to 6 search qu
 
 **Query params**
 
-- `query` (required) - The research topic — free-text natural language (e.g. 'last 30 days bitcoin halving', 'kanye west tour'). Framing prefixes like 'last N days' and 'what are people saying about' are stripped automatically before expansion. · e.g. `trump 2028 election`
+- `query` (required) - The research topic: free-text natural language (e.g. 'last 30 days bitcoin halving', 'kanye west tour'). Framing prefixes like 'last N days' and 'what are people saying about' are stripped automatically before expansion. · e.g. `trump 2028 election`
 - `limit` (optional, integer) - Max results per result type on each fan-out call (events / markets / profiles). Bounds the response size. Defaults to 10.
 
 ```bash
@@ -28,6 +28,6 @@ curl "https://www.socialcrawl.dev/v1/polymarket/research?query=trump 2028 electi
 
 ## Withdrawn endpoints (do not call)
 
-These stay registered for a future re-source but return `503 SERVICE_UNAVAILABLE` today and never bill.
+These stay registered but return `503 SERVICE_UNAVAILABLE` today and never bill. A permanent withdrawal is not coming back - use the alternative named in the platform's other endpoints rather than retrying.
 
-- `GET /v1/polymarket/search` - Polymarket Gamma API returned HTTP 502 on consecutive probes on 2026-06-06 (see triage-null-fieldmaps.md). Endpoint stays registered for re-source.
+- `GET /v1/polymarket/search` - temporarily withdrawn while its data source is re-established. Returns `503 SERVICE_UNAVAILABLE` and never bills; check the changelog before retrying.

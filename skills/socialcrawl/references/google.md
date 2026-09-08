@@ -4,7 +4,7 @@
 
 **Credit costs:** 4 standard (1 credit), 6 advanced (5) - the exact cost is in each endpoint heading below.
 
-**Latency:** Google Business, hotels, and some SERP resources are task-polled upstream — expect ~10–45s responses on those. Use a 60s timeout.
+**Latency:** Google Business, hotels, and some SERP resources are task-polled upstream. Expect ~10 to 45s responses on those. Use a 60s timeout.
 
 **Two-step:** `hotels/info` needs a `hotel_identifier` returned by `hotels/search` first.
 
@@ -20,7 +20,7 @@ Returns detailed information about a specific Google advertisement including ad 
 
 **Query params**
 
-- `url` (required) - Ads Transparency Center CREATIVE URL — must include both the advertiser and creative segments (`…/advertiser/{AR…}/creative/{CR…}`). Get one from `/v1/google/company/ads`. · e.g. `https://adstransparency.google.com/advertiser/AR01614014350098432001/creative/CR10449491775734153217`
+- `url` (required) - Ads Transparency Center CREATIVE URL: must include both the advertiser and creative segments (`…/advertiser/{AR…}/creative/{CR…}`). Get one from `/v1/google/company/ads`. · e.g. `https://adstransparency.google.com/advertiser/AR01614014350098432001/creative/CR10449491775734153217`
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google/ad?url=https://adstransparency.google.com/advertiser/AR01614014350098432001/creative/CR10449491775734153217" \
@@ -33,7 +33,7 @@ Search Google Ad Library advertisers
 
 **Cost** 5 credits (advanced) · **Cache** 120s (a hit costs 0 credits) · **Returns** AuthorList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
-Searches the Google Ads Transparency Center for advertisers matching a query. Returns matching advertisers with `name`, `advertiser_id`, and `region`, plus their website domains. Defaults to US when `region` is omitted — pass a 2-letter country code (e.g. `AU`, `CA`) to search advertisers in another region.
+Searches the Google Ads Transparency Center for advertisers matching a query. Returns matching advertisers with `name`, `advertiser_id`, and `region`, plus their website domains. Defaults to US when `region` is omitted: pass a 2-letter country code (e.g. `AU`, `CA`) to search advertisers in another region.
 
 **Query params**
 
@@ -51,7 +51,7 @@ Get Google extended (multi-source) reviews
 
 **Cost** 5 credits (advanced) · **Cache** 600s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
 
-Returns reviews of a place aggregated from the Google reviews element — not only Google users but reputable third-party sources (TripAdvisor, Yelp, Trustpilot). Each review carries its source domain, full text (with original-language translation), star rating, reviewer stats, and owner replies. Identify the place by keyword, cid, or place_id. Powered by DataForSEO.
+Returns reviews of a place aggregated from the Google reviews element, not only Google users but reputable third-party sources (TripAdvisor, Yelp, Trustpilot). Each review carries its source domain, full text (with original-language translation), star rating, reviewer stats, and owner replies. Identify the place by keyword, cid, or place_id.
 
 **Query params**
 
@@ -77,12 +77,12 @@ Get a Google Business Profile
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Place · **Pagination** none
 
-Returns the full Google Business Profile (Maps / Knowledge Panel) for a local business — name, category, rating, address, phone, coordinates, hours, attributes, and claimed status. Identify the place by keyword, cid, or place_id (cid/place_id are most reliable). Powered by DataForSEO.
+Returns the full Google Business Profile (Maps / Knowledge Panel) for a local business: name, category, rating, address, phone, coordinates, hours, attributes, and claimed status. Identify the place by keyword, cid, or place_id (cid/place_id are most reliable).
 
 **Query params**
 
 - `keyword` (optional, string) - Business name + address (e.g. 'Irving Farm New York 645 5th Ave'). Use cid/place_id when known for an exact match. · e.g. `Irving Farm New York 645 5th Ave`
-- `cid` (optional, string) - Google customer id (cid) of the place — the most reliable identifier.
+- `cid` (optional, string) - Google customer id (cid) of the place: the most reliable identifier.
 - `place_id` (optional, string) - Google place_id of the place.
 - `location_name` (optional, string) - Geographic context as 'City,Region,Country' (default 'New York,New York,United States').
 - `language_name` (optional, string) - Result language (default 'English').
@@ -102,7 +102,7 @@ Get Google Business Profile questions & answers
 
 **Cost** 5 credits (advanced) · **Cache** 300s (a hit costs 0 credits) · **Returns** CommentList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
 
-Returns the community Q&A on a Google Business Profile — each question and its answers flattened into one comment list linked by parent_id. Identify the business by keyword, cid, or place_id. Powered by DataForSEO.
+Returns the community Q&A on a Google Business Profile: each question and its answers flattened into one comment list linked by parent_id. Identify the business by keyword, cid, or place_id.
 
 **Query params**
 
@@ -128,7 +128,7 @@ Get Google Business Profile posts (updates)
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
 
-Returns the owner-published posts (updates) on a Google Business Profile — text, image, publish date, and any call-to-action link. Most businesses publish none; an empty result is a valid 'no posts' answer. Identify the business by keyword or cid. Powered by DataForSEO.
+Returns the owner-published posts (updates) on a Google Business Profile: text, image, publish date, and any call-to-action link. Most businesses publish none; an empty result is a valid 'no posts' answer. Identify the business by keyword or cid.
 
 **Query params**
 
@@ -182,7 +182,7 @@ Get Google hotel detail
 
 **Cost** 5 credits (advanced) · **Cache** 900s (a hit costs 0 credits) · **Returns** Place · **Pagination** none
 
-Returns full detail for a hotel by its hotel_identifier (from GET /v1/google/hotels/search) — description, star rating, address, phone, coordinates, amenities across 14 categories, 27 review-sentiment topics, and a multi-vendor price comparison. Powered by DataForSEO.
+Returns full detail for a hotel by its hotel_identifier (from GET /v1/google/hotels/search): description, star rating, address, phone, coordinates, amenities across 14 categories, 27 review-sentiment topics, and a multi-vendor price comparison.
 
 **Query params**
 
@@ -201,7 +201,7 @@ Search Google hotels
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PlaceList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
 
-Returns hotels for a query from Google Travel — name, star rating, review score, coordinates, images, and nightly price. Dates default to next-day / one-night / two-visitors when omitted. Each hotel_identifier can be passed to GET /v1/google/hotels/info for full detail. Powered by DataForSEO.
+Returns hotels for a query from Google Travel: name, star rating, review score, coordinates, images, and nightly price. Dates default to next-day / one-night / two-visitors when omitted. Each hotel_identifier can be passed to GET /v1/google/hotels/info for full detail.
 
 **Query params**
 

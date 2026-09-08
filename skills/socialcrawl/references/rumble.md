@@ -18,7 +18,7 @@ Returns channel metadata, videos, shorts, and a numeric cursor for the next page
 
 - `handle` (optional, string) - Rumble channel handle. · e.g. `CuteCats223`
 - `url` (optional, string) - Rumble channel URL.
-- `cursor` (optional, string) - Cursor from the previous response — the next page number (e.g. `2`).
+- `cursor` (optional, string) - Cursor from the previous response: the next page number (e.g. `2`).
 
 **Constraints**
 
@@ -40,7 +40,7 @@ Searches Rumble videos by keyword. Returns matching videos and shorts with title
 **Query params**
 
 - `query` (required) - Search query. · e.g. `funny cats`
-- `cursor` (optional, string) - Cursor from the previous response — the next page number (e.g. `2`).
+- `cursor` (optional, string) - Cursor from the previous response: the next page number (e.g. `2`).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/rumble/search?query=funny cats" \
@@ -70,7 +70,7 @@ List top-level comments on a Rumble video
 
 **Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** CommentList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
-Returns all top-level comments for a Rumble video — comment text, author, `createdAt`, `createdAtText`, `likeCount`, `dislikeCount`, and `replyCount` when comment bodies are public.
+Returns all top-level comments for a Rumble video: comment text, author, `createdAt`, `createdAtText`, `likeCount`, `dislikeCount`, and `replyCount` when comment bodies are public.
 
 **Query params**
 

@@ -35,8 +35,8 @@ Like phrase-trends, but keyed on a category code from the /content_analysis/cate
 - `date_from` (required) - Start of the date range (yyyy-mm-dd). · e.g. `2025-01-01`
 - `date_to` (optional, string) - End of the date range (yyyy-mm-dd); defaults to today.
 - `date_group` (optional, enum: day | week | month) - Bucket size: day, week, or month (default month). · e.g. `month`
-- `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1–20).
-- `filters` (optional, string) - Advanced DataForSEO filter expression as a JSON array (≤8 conditions).
+- `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1-20).
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/category-trends?category_code=10021&date_from=2025-01-01" \
@@ -62,7 +62,7 @@ List supported Content Analysis languages
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns the list of languages (name + ISO code) supported by the Content Analysis endpoints. Static reference data — use the codes to filter or interpret the `language` field on mentions. Heavily cached.
+Returns the list of languages (name + ISO code) supported by the Content Analysis endpoints. Static reference data: use the codes to filter or interpret the `language` field on mentions. Heavily cached.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/languages" \
@@ -75,7 +75,7 @@ List supported Content Analysis locations
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns the list of locations supported by the Content Analysis endpoints. Static reference data — use it to interpret the `country` field on mentions. Heavily cached.
+Returns the list of locations supported by the Content Analysis endpoints. Static reference data: use it to interpret the `country` field on mentions. Heavily cached.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/locations" \
@@ -97,8 +97,8 @@ Returns a time series (one row per day/week/month bucket) of mention volume and 
 - `date_to` (optional, string) - End of the date range (yyyy-mm-dd); defaults to today.
 - `date_group` (optional, enum: day | week | month) - Bucket size: day, week, or month (default month). · e.g. `month`
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) - Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization.
-- `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1–20).
-- `filters` (optional, string) - Advanced DataForSEO filter expression as a JSON array (≤8 conditions).
+- `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1-20).
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/phrase-trends?keyword=openai&date_from=2025-01-01" \
@@ -111,13 +111,13 @@ Rating histogram for a keyword
 
 **Cost** 20 credits (custom) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns a 10-bucket histogram (0.0–0.1 … 0.9–1.0) of the relative ratings found across web mentions of the keyword. Each bucket carries a full summary sub-object (total_count, top_domains, sentiment, categories, page types, countries, languages) so you can see how sentiment and sources vary with rating. Best for products and review-heavy terms.
+Returns a 10-bucket histogram (0.0-0.1 … 0.9-1.0) of the relative ratings found across web mentions of the keyword. Each bucket carries a full summary sub-object (total_count, top_domains, sentiment, categories, page types, countries, languages) so you can see how sentiment and sources vary with rating. Best for products and review-heavy terms.
 
 **Query params**
 
 - `keyword` (required) - Product or term to build the rating histogram for. · e.g. `iphone`
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) - Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization.
-- `filters` (optional, string) - Advanced DataForSEO filter expression as a JSON array (≤8 conditions).
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/rating-distribution?keyword=iphone" \
@@ -130,17 +130,17 @@ Search web citations of a keyword with per-mention sentiment
 
 **Cost** 20 credits (custom) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** cursor - `cursor`, page size `limit`
 
-Returns paginated web citations (news, blogs, ecommerce, message-boards, organization pages) that mention the keyword, each scored on a 6-axis emotional sentiment model (anger, happiness, love, sadness, share, fun) plus positive/negative/neutral connotation probabilities. This is web-wide brand listening over DataForSEO's citation database — page-level mentions, not native platform posts. Cursor-paginated via `cursor`; `total` is the global match count, not the page size.
+Returns paginated web citations (news, blogs, ecommerce, message-boards, organization pages) that mention the keyword, each scored on a 6-axis emotional sentiment model (anger, happiness, love, sadness, share, fun) plus positive/negative/neutral connotation probabilities. This is web-wide brand listening over a web-wide citation index: page-level mentions, not native platform posts. Cursor-paginated via `cursor`; `total` is the global match count, not the page size.
 
 **Query params**
 
 - `keyword` (required) - Brand or term to find mentions of. Wrap in escaped double-quotes for an exact phrase (e.g. "logitech mouse"). · e.g. `openai`
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) - Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization. Translated to a page_types filter upstream.
 - `search_mode` (optional, enum: as_is | one_per_domain) - as_is (default) returns every matching page; one_per_domain dedupes to the top page per domain. · e.g. `as_is`
-- `limit` (optional, integer) - Number of citations to return per page (1–100, default 10). Paginate via `cursor` for more. · e.g. `10`
-- `cursor` (optional, string) - Opaque pagination cursor — pass the `next_cursor` from the previous response to fetch the next page.
+- `limit` (optional, integer) - Number of citations to return per page (1-100, default 10). Paginate via `cursor` for more. · e.g. `10`
+- `cursor` (optional, string) - Opaque pagination cursor: pass the `next_cursor` from the previous response to fetch the next page.
 - `order_by` (optional, string) - Sort rules as "field,direction"; separate multiple rules with ";" (e.g. content_info.sentiment_connotations.anger,desc).
-- `filters` (optional, string) - Advanced DataForSEO filter expression as a JSON array (≤8 conditions). Combined with page_type via AND when both are present.
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions). Combined with page_type via AND when both are present.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/search?keyword=openai" \
@@ -153,14 +153,14 @@ Sentiment breakdown for a keyword
 
 **Cost** 20 credits (custom) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns two sentiment distributions for the keyword's web mentions: a positive/negative/neutral split (each a full summary sub-object) and a 6-axis emotional split (anger, happiness, love, sadness, share, fun — each a full summary sub-object). Sentiment is DataForSEO's model-derived NLP, passed through verbatim — not ground truth.
+Returns two sentiment distributions for the keyword's web mentions: a positive/negative/neutral split (each a full summary sub-object) and a 6-axis emotional split (anger, happiness, love, sadness, share, fun: each a full summary sub-object). Sentiment is model-derived NLP, passed through verbatim, not ground truth.
 
 **Query params**
 
 - `keyword` (required) - Brand or term to analyze. · e.g. `openai`
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) - Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization.
-- `positive_connotation_threshold` (optional, string) - Minimum positive-connotation probability (0–1, default 0.4).
-- `filters` (optional, string) - Advanced DataForSEO filter expression as a JSON array (≤8 conditions).
+- `positive_connotation_threshold` (optional, string) - Minimum positive-connotation probability (0-1, default 0.4).
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/sentiment?keyword=openai" \
@@ -179,10 +179,10 @@ Returns a single roll-up over every web citation of the keyword: total mention c
 
 - `keyword` (required) - Brand or term to summarize. · e.g. `openai`
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) - Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization.
-- `positive_connotation_threshold` (optional, string) - Minimum positive-connotation probability (0–1, default 0.4) for a mention to count as positive.
-- `sentiments_connotation_threshold` (optional, string) - Minimum sentiment-connotation probability (0–1, default 0.4) for the 6-axis emotion buckets.
-- `internal_list_limit` (optional, integer) - Cap on internal arrays such as top_domains / categories (1–20).
-- `filters` (optional, string) - Advanced DataForSEO filter expression as a JSON array (≤8 conditions).
+- `positive_connotation_threshold` (optional, string) - Minimum positive-connotation probability (0-1, default 0.4) for a mention to count as positive.
+- `sentiments_connotation_threshold` (optional, string) - Minimum sentiment-connotation probability (0-1, default 0.4) for the 6-axis emotion buckets.
+- `internal_list_limit` (optional, integer) - Cap on internal arrays such as top_domains / categories (1-20).
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/summary?keyword=openai" \

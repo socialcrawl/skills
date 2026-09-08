@@ -24,29 +24,61 @@ REQUIRED_FILES = (
     "references/cost-gate.md",
     "references/pricing.md",
     "references/prism.md",
+    # The two stateful families. Neither is a registry endpoint, so neither is
+    # reachable from the generated platform tables - a reader who does not get
+    # a reference file for them never learns they exist. `cohorts.md` was
+    # missing from the bundle entirely until 08/09/2026.
+    "references/monitors.md",
+    "references/cohorts.md",
 )
 
+# The endpoints that can hold the most credits in one request, pinned by the
+# RULE rather than by a heading spelling.
+#
+# The previous version of this table pinned heading strings like
+# "## POST /v1/prism/post-stats - 1-500 credits (request-shaped)". Those were
+# hand-written into a tree that is now generated from the endpoint registry, so
+# the guard was asserting a wording no generator produces and would have failed
+# on the first sync. What actually has to survive is the SUBSTANCE: that a
+# reader meets the worst-case hold, not the per-row unit, before they call.
+#
+# post-stats / profiles / comment-lookup now carry a real span in the heading
+# (a display-only PRICING descriptor was added upstream on 08/09/2026 for
+# exactly this reason). batch-scrape and sessions cannot carry one - each
+# shares its registry key with a free GET sibling - so for those two the rule
+# rides the `**Pricing**` line directly under the heading instead.
+# A batch endpoint's heading must state the shape of the charge, not a unit
+# price that reads as the total. "(request-shaped)" is the wording the test
+# suite pins; "(metered)" is the billing-engine word and means nothing to a
+# reader pricing a call.
 PRICING_INVARIANTS = {
     "references/prism.md": (
         "## POST /v1/prism/post-stats - 1-500 credits (request-shaped)",
         "## POST /v1/prism/profiles - 1-250 credits (request-shaped)",
         "## POST /v1/prism/comment-lookup - 2-100 credits (request-shaped)",
-        "2 x 1 x 8 x 2 = 32 credits",
+        "5 on Instagram and LinkedIn",
     ),
     "references/youtube.md": (
         "## POST /v1/youtube/transcripts - 3-300 credits (request-shaped)",
+        "a full batch holds 300",
     ),
     "references/web.md": (
         "## POST /v1/web/batch-scrape - N credits for N submitted URLs (request-shaped)",
         "## POST /v1/web/sessions - 5-20 credits (request-shaped)",
+        "**Pricing** 1 credit per URL submitted, held up front and refunded",
+        "**Pricing** 20 credits per browser-hour, minimum 5.",
+    ),
+    "references/cost-gate.md": (
+        "2 x 1 x 8 x 2 = 32 credits",
+        "2 x 20 x 20 x 2 + 5 = 1,605",
     ),
     "references/pricing.md": (
         "`POST /v1/prism/post-stats` | 1-500 credits",
         "`POST /v1/prism/profiles` | 1-250 credits",
         "`POST /v1/prism/comment-lookup` | 2-100 credits",
         "`POST /v1/youtube/transcripts` | 3-300 credits",
-        "`POST /v1/web/batch-scrape` | N credits for N submitted URLs",
-        "`POST /v1/web/sessions` | 5-20 credits",
+        "1 credit per URL submitted",
+        "20 credits per browser-hour, minimum 5",
     ),
 }
 

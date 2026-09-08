@@ -12,7 +12,7 @@ Get a Hacker News user profile
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Author · **Pagination** none
 
-Returns public profile information for a Hacker News user — id, username, bio (`about`), karma, and account-creation date — mapped to the unified Author schema. HN has no follower / following / posts_count / verified concept, so those unified fields resolve to null.
+Returns public profile information for a Hacker News user (id, username, bio (`about`), karma, and account-creation date) mapped to the unified Author schema. HN has no follower / following / posts_count / verified concept, so those unified fields resolve to null.
 
 **Query params**
 
@@ -29,14 +29,14 @@ Search Hacker News
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** page - `page`
 
-Searches Hacker News stories, comments, and front-page items via the Algolia HN API. Defaults to story-only results sorted by relevance. The HN Algolia index only exposes `created_at_i` for numeric filtering, so use `numericFilters` for date windows (e.g. `created_at_i>1700000000`). Returns the raw Algolia hits in `data.items[]` — each hit includes `objectID`, `title`, `url`, `author`, `points`, `num_comments`, `created_at_i`, and `_tags`.
+Searches Hacker News stories, comments, and front-page items via the Algolia HN API. Defaults to story-only results sorted by relevance. The HN Algolia index only exposes `created_at_i` for numeric filtering, so use `numericFilters` for date windows (e.g. `created_at_i>1700000000`). Results come back in the unified Post shape under `data.items[]`, NOT as raw Algolia hits: each item is `{ post: { id, url, content, author, engagement, flags, published_at }, computed }`. `post.url` is the Hacker News discussion permalink; the submitted article link is at `post.content.media_urls`; `post.engagement.likes` is the HN points score and `post.engagement.comments` is `num_comments`.
 
 **Query params**
 
 - `query` (required) - Free-text search term. · e.g. `claude code`
-- `tags` (optional, string) - Algolia tag filter — comma-separated. Common values: "story", "comment", "poll", "show_hn", "ask_hn", "front_page", "author_<username>". Defaults to "story".
-- `numericFilters` (optional, string) - Algolia numeric filter expression on `created_at_i` (the only filterable numeric attribute) — e.g. "created_at_i>1700000000". Combine with commas for AND. No filter is applied by default.
-- `hitsPerPage` (optional, integer) - Hits per page (1–1000). Defaults to 30.
+- `tags` (optional, string) - Algolia tag filter: comma-separated. Common values: "story", "comment", "poll", "show_hn", "ask_hn", "front_page", "author_<username>". Defaults to "story".
+- `numericFilters` (optional, string) - Algolia numeric filter expression on `created_at_i` (the only filterable numeric attribute): e.g. "created_at_i>1700000000". Combine with commas for AND. No filter is applied by default.
+- `hitsPerPage` (optional, integer) - Hits per page (1-1000). Defaults to 30.
 - `page` (optional, integer) - 0-indexed page number for pagination.
 
 ```bash
@@ -50,7 +50,7 @@ Get a Hacker News story
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Post · **Pagination** none
 
-Returns story metadata for a single HN item — title, url, author, points, num_comments, and published_at — mapped to the unified Post schema. The full nested comment tree is dropped from this response; use `/v1/hackernews/story/comments` to fetch the children.
+Returns story metadata for a single HN item mapped to the unified Post schema: title at `content.text`, author, points at `engagement.likes`, and `published_at`. `post.url` is the Hacker News discussion permalink (`https://news.ycombinator.com/item?id={id}`), and the submitted article link is at `post.content.media_urls`, which is `string | string[] | null` across every platform by canonical design. The nested comment tree is dropped from this response; use `/v1/hackernews/story/comments` for it.
 
 **Query params**
 
@@ -67,7 +67,7 @@ Get comments on a Hacker News story
 
 **Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** CommentList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
-Returns the comment tree for a story under `data.items[]` — each entry includes `id`, `author`, `text` (HTML), `points`, `created_at`, and a recursive `children` array of nested replies. Same upstream call as `/v1/hackernews/story` but the CommentList archetype tells strip-envelope to pick the `children` list.
+Returns the whole comment tree for a story under `data.items[]`, in the unified Comment shape: each entry carries `id`, `author`, `text`, `published_at`, the HN permalink at `url`, its direct-reply count at `engagement.replies`, and its nested replies at `replies[]`, recursively. Algolia serves the entire thread in one response, so there is no cursor and nothing is left behind. Note that a story's `num_comments` on the search index counts every node ever posted, including ones the thread no longer shows, so it can exceed the tree returned here. Same upstream call as `/v1/hackernews/story`, with the CommentList archetype selecting the `children` list.
 
 **Query params**
 

@@ -46,7 +46,7 @@ Get a Twitch user's stream schedule
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns the upcoming stream schedule for a Twitch user — each entry includes start time, end time, title, description, and thumbnail URL.
+Returns the upcoming stream schedule for a Twitch user: each entry includes start time, end time, title, description, and thumbnail URL.
 
 **Query params**
 
@@ -63,13 +63,13 @@ List a Twitch user's videos
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
-Fetches up to 100 videos for a Twitch user — id, slug, URL, embed URL, title, view count, language, duration in seconds, game info, broadcaster details with follower count, thumbnail URL, and available video qualities.
+Fetches up to 100 videos for a Twitch user: id, slug, URL, embed URL, title, view count, language, duration in seconds, game info, broadcaster details with follower count, thumbnail URL, and available video qualities.
 
 **Query params**
 
 - `handle` (required) - Twitch username. · e.g. `ishowspeed`
-- `filter_by` (optional, enum: HIGHLIGHT | UPLOAD) - Filter the returned videos by type — `HIGHLIGHT` or `UPLOAD`. (Archived past broadcasts are not currently available upstream.)
-- `sort_by` (optional, enum: TIME | VIEWS) - Sort order — `TIME` (newest first) or `VIEWS`.
+- `filter_by` (optional, enum: HIGHLIGHT | UPLOAD) - Filter the returned videos by type: `HIGHLIGHT` or `UPLOAD`. (Archived past broadcasts are not currently available upstream.)
+- `sort_by` (optional, enum: TIME | VIEWS) - Sort order: `TIME` (newest first) or `VIEWS`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/twitch/user/videos?handle=ishowspeed" \

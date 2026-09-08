@@ -12,7 +12,7 @@ Get a Kwai post
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Post · **Pagination** none
 
-Returns public Kwai post details — caption, video and cover URLs, view/like/comment/share counts, author info, and music metadata.
+Returns public Kwai post details: caption, video and cover URLs, view/like/comment/share counts, author info, and music metadata.
 
 **Query params**
 
@@ -29,7 +29,7 @@ Get a Kwai user profile
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Author · **Pagination** none
 
-Returns public profile data for a Kwai user — username, bio, avatar, verification status, and follower/following/like/post counts. Pass either `handle` or `url`.
+Returns public profile data for a Kwai user: username, bio, avatar, verification status, and follower/following/like/post counts. Pass either `handle` or `url`.
 
 **Query params**
 
@@ -51,7 +51,7 @@ List a Kwai user's posts
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** cursor - `cursor`, page size `count`
 
-Returns a paginated list of public Kwai posts for a user — captions, media URLs, covers, engagement counts, and author info. Forward the returned `cursor` for the next page. Pass either `handle` or `url`.
+Returns a paginated list of public Kwai posts for a user: captions, media URLs, covers, engagement counts, and author info. Forward the returned `cursor` for the next page. Pass either `handle` or `url`.
 
 **Query params**
 

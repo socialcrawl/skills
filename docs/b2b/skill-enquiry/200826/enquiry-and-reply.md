@@ -35,3 +35,12 @@ As always, please let me know if you have any questions.
 Best regards,
 Oscar
 Co-founder of SocialCrawl
+
+## Interaction log
+
+- **Date:** 20 August 2026
+- **Status:** Investigated and completed locally; awaiting commit and publication to `main`.
+- **Enquiry:** A Claude Code plugin developer requested confirmation that the skills repository could be used under MIT and reported that unit prices were being presented as complete request prices for metered endpoints.
+- **Resolution:** Added MIT licensing to the repository and packaged skill, corrected request-shaped pricing, introduced a mandatory preflight cost gate, strengthened credential and retry guidance, rebuilt every distribution copy, and added deterministic release validation and CI checks.
+- **Verification:** Six package tests passed, the mirrors and archive passed the release check, the archive rebuilt deterministically, and the proposed response passed the Oscar voice linter with no failures.
+- **Follow-up:** Invite the developer to send their compiled endpoint list for a final comparison after the changes are published.
