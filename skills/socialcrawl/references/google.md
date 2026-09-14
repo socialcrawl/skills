@@ -76,6 +76,7 @@ curl "https://www.socialcrawl.dev/v1/google/business/extended-reviews?keyword=Ir
 Get a Google Business Profile
 
 **Cost** 1 credit (standard) · **Cache** 900s (a hit costs 0 credits) · **Returns** Place · **Pagination** none
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
 Returns the full Google Business Profile (Maps / Knowledge Panel) for a local business: name, category, rating, address, phone, coordinates, hours, attributes, and claimed status. Identify the place by keyword, cid, or place_id (cid/place_id are most reliable).
 
@@ -221,8 +222,9 @@ curl "https://www.socialcrawl.dev/v1/google/hotels/search?keyword=hotels in New 
 Google web search
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** page - `page`
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
-Returns Google search results for a query. Each result includes title, URL, snippet, and position.
+Returns Google search results for a query. Each result includes title, URL, and a text snippet.
 
 **Query params**
 

@@ -1,8 +1,8 @@
 # Google Trends
 
-2 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
+3 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**Credit costs:** 2 advanced (5) - the exact cost is in each endpoint heading below.
+**Credit costs:** 3 advanced (5) - the exact cost is in each endpoint heading below.
 
 Google Trends interest-over-time and rising-queries data. Both endpoints are task-polled upstream, so allow a longer timeout than a typical social read.
 
@@ -55,6 +55,29 @@ Returns the related search queries for ONE keyword as `{ rising, top }`. `rising
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_trends/rising?keyword=uv index" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/google_trends/trending - 5 credits (advanced)
+
+Get Google Trends Trending Now for a location
+
+**Cost** 5 credits (advanced) · **Cache** 300s (a hit costs 0 credits) · **Returns** SearchResult · **Pagination** single page - One ranked list per place and window with no pagination. Google returns the whole list in one answer (DE, 24 hours: 431 trends, 13/09/2026); `limit` caps how many rows ship.
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
+
+Returns what people in one country or region are searching for right now, with no keyword in: the Google Trends Trending Now list for a place and a time window. Each item has `rank` (Google's relevance position), `title`, `search_volume` (the lower bound of Google's bucket, so 50000 means 50K+), `increase_percent` (Google shows at most 1000), `started_at`, `ended_at` and `active` (still trending when `ended_at` is null), `categories`, `breakdown` (the related searches Google groups into the trend) and up to 3 `news` articles Google links to it. `total` counts every trend matching your filters before `limit`. Narrow with `hours`, `category` and `status`, and reorder with `sort`; these are the same filters trends.google.com/trending offers. Google publishes no worldwide list, so `location` is required. A place and window with nothing trending returns 404 at 0 credits; filters that match nothing return an empty list at 0 credits. Typically under 2 seconds; allow 30 seconds for the slow tail. Exact repeats within 5 minutes are served from cache at 0 credits.
+
+**Query params**
+
+- `location` (required) - Where to read trends. An ISO country code ('DE', 'US', 'KR'), its English name ('Germany'), or an ISO 3166-2 region inside it ('DE-BY', 'US-CA', 'GB-SCT'). Google covers 125 countries and has no worldwide list; a country it does not cover is rejected with a free 400. · e.g. `DE`
+- `hours` (optional, enum: 4 | 24 | 48 | 168) - Only trends that started in the past 4, 24, 48 or 168 hours (7 days). Defaults to 24. · e.g. `24`
+- `category` (optional, enum: autos_and_vehicles | beauty_and_fashion | business_and_finance | entertainment | food_and_drink | games | health | hobbies_and_leisure | jobs_and_education | law_and_government | other | pets_and_animals | politics | science | shopping | sports | technology | travel_and_transportation | climate) - Keep trends Google tagged with this category: autos_and_vehicles, beauty_and_fashion, business_and_finance, climate, entertainment, food_and_drink, games, health, hobbies_and_leisure, jobs_and_education, law_and_government, other, pets_and_animals, politics, science, shopping, sports, technology, or travel_and_transportation. These are Trending Now's categories, not the numeric codes /v1/google_trends/explore takes. Defaults to every category.
+- `status` (optional, enum: all | active) - `active` keeps only trends that are still trending. Defaults to `all`, which also returns trends that have already ended inside the window.
+- `sort` (optional, enum: relevance | search_volume | recency | title) - relevance (Google's own order, the default), search_volume (largest first), recency (most recently started first), or title (A to Z).
+- `limit` (optional, integer, 1-500) - How many trends to return after filtering and sorting, 1 to 500. Defaults to 100.
+
+```bash
+curl "https://www.socialcrawl.dev/v1/google_trends/trending?location=DE" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 

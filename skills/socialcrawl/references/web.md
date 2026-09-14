@@ -503,7 +503,7 @@ Runs code in an existing browser session and returns the execution result.
 
 - `code` (required) - Code to execute in the browser sandbox. · e.g. `await page.goto("https://example.com"); console.log(await page.title());`
 - `language` (optional, enum: node | python | bash) - Execution language: node, python, or bash. · e.g. `node`
-- `timeout` (optional, integer) - Execution timeout in seconds.
+- `timeout` (optional, integer) - Execution timeout in seconds, from 1 to 40 (default 30). Larger values are capped at 40 so the call always returns inside the request window; a script still running at the cap returns a 504 UPSTREAM_ERROR envelope. Split longer work across several calls to the same session.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/sessions/ws_3g7x1v5m2/execute" \

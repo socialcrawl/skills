@@ -13,8 +13,9 @@
 Get full Apple App Store app details
 
 **Cost** 5 credits (advanced) · **Cache** 600s (a hit costs 0 credits) · **Returns** App · **Pagination** none
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
-Returns the full canonical `App` record for one Apple App Store app keyed by its numeric `app_id`: title, description, developer, rating, price, version, minimum iOS version, size, screenshots, supported languages, age advisories, similar apps, and update date. The `app.store` field is always "app_store"; Google-only leaves (installs, genres, developer email/address) are null, and `released_at` is null (Apple deprecates it). Get the `app_id` from /v1/app_store/app-search.
+Returns the full canonical `App` record for one Apple App Store app keyed by its numeric `app_id`: title, subtitle, description, developer (including public website), rating, price, category, original release date, version, minimum iOS version, size, screenshots, supported languages, age advisories, similar apps, and update date. The `app.store` field is always "app_store"; Google-only leaves (installs, developer email/address) are null. Get the `app_id` from /v1/app_store/app-search.
 
 **Query params**
 
@@ -104,7 +105,7 @@ Search Apple App Store apps by keyword
 
 **Cost** 5 credits (advanced) · **Cache** 120s (a hit costs 0 credits) · **Returns** AppList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
 
-Returns a unified AppList of Apple App Store apps matching a keyword: title, icon, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "app_store"). Detail-only fields (description, screenshots, developer) are null on search items; fetch /v1/app_store/app-info for the full record. Served from the Apple App Store catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
+Returns a unified AppList of Apple App Store apps matching a keyword: title, icon, developer, category, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "app_store"). Detail-only fields (description, screenshots, similar apps) are null on search items; fetch /v1/app_store/app-info for the full record. Served from the Apple App Store catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
 
 **Query params**
 

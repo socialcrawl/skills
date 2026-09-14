@@ -13,6 +13,7 @@
 Get full Google Play app details
 
 **Cost** 5 credits (advanced) · **Cache** 600s (a hit costs 0 credits) · **Returns** App · **Pagination** none
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
 Returns the full canonical `App` record for one Google Play app keyed by its package name (`app_id`): title, description, developer block (incl. email/address/website), rating, price, install count + display ('1,000,000,000+'), version, size, screenshots, genres, chart tags, similar apps, and update date. The `app.store` field is always "google_play"; Apple-only leaves (advisories, languages) are null. Get the `app_id` from /v1/google_play/app-search.
 

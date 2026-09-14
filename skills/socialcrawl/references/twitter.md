@@ -84,14 +84,14 @@ X (Twitter) profile, recent posts, and computed analytics in one call.
 
 **Cost** 5 credits (custom) · **Cache** 900s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** cursor - `cursor`
 
-Fans out to the X (Twitter) profile and recent-posts endpoints in parallel and returns the unified author, the recent-post list, and computed metrics: average engagement rate, posting cadence (with the window it was measured over), the top post, and the format mix. The profile leg is the only critical leg: if posts can't be fetched the call still returns the profile with post-dependent metrics null, and every leg's status is surfaced in legs[]. Flat 5 credits.
+Fans out to the X (Twitter) profile and recent-posts endpoints in parallel and returns the unified author, the recent-post list, and computed metrics: avg_engagement_rate, avg_engagement_rate_by_followers, posting cadence (with the window it was measured over), the top post, and the format mix. avg_engagement_rate is view-based: the mean of each post's (likes + comments + shares) / views, so only posts that carry a view count contribute, and it is null when none does. avg_engagement_rate_by_followers is the mean of likes + comments per post divided by the account's follower count, over every post that carries both, so it covers posts with no view count. One call reads one page of recent posts, which on X (Twitter) is about 10 to 20 tweets (a page of about 20, less the replies to other accounts), and computes the metrics over that page: `posts` can shorten the window but not lengthen it past one page, and `_warnings` says so when fewer posts came back than `posts` asked for. Pass `posts_cursor` back as `cursor` to read the next page, 5 credits a call. The profile leg is the only critical leg: if posts can't be fetched the call still returns the profile with post-dependent metrics null, and every leg's status is surfaced in legs[]. Flat 5 credits.
 
 **Query params**
 
 - `handle` (optional, string) - X (Twitter) username or handle, with or without a leading @. One of the identity params is required. · e.g. `mrbeast`
-- `posts` (optional, integer) - How many recent posts to fetch + average the computed metrics over (1-100, default 25). · e.g. `25`
-- `cursor` (optional, string) - Pass a prior response's posts_cursor to deepen the post window.
-- `include` (optional, string) - CSV subset of posts,computed (default both). include=computed drops the raw posts[] to save payload.
+- `posts` (optional, integer) - How many of the fetched recent posts to return and compute the metrics over (1-100, default 25). One call reads one page, which on X (Twitter) is about 10 to 20 tweets (a page of about 20, less the replies to other accounts), so a larger value returns that page and a `_warnings` note; pass posts_cursor back as cursor for the next page. · e.g. `25`
+- `cursor` (optional, string) - Pass a prior response's posts_cursor to read the next page of posts. Each call is a separate 5-credit call whose metrics cover that page only.
+- `include` (optional, string) - CSV subset of posts,computed (default both). include=computed omits the raw posts[] array from the response to save payload. The metrics are computed from the same fetched posts either way, so they do not change.
 
 **Constraints**
 
@@ -125,13 +125,14 @@ curl "https://www.socialcrawl.dev/v1/twitter/search/tweets?query=nike running sh
 
 Search Twitter users
 
-**Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** AuthorList · **Pagination** single page - Typeahead search: the source returns one fixed set of up to about 10 accounts per query, with no cursor anywhere in the response (verified 28/08/2026).
+**Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** AuthorList · **Pagination** cursor - `cursor`
 
-Searches X (Twitter) for user accounts matching a name, handle, or partial handle. Each match includes the username, display name, avatar, location, verification status, and whether the account is private. Matching is prefix based on the handle and display name with no spelling correction, so a misspelled handle surfaces lookalike accounts; verify the returned handle before relying on it. Returns a single fixed set of up to about 10 accounts with no further pages; refine the query to surface different accounts.
+Searches X (Twitter) for user accounts matching a name, handle, or keyword. Each match includes the username, display name, bio, avatar, follower and following counts, tweet count, location, verification status, join date, and whether the account is private. Matching covers handle and display-name tokens with no spelling correction, so a misspelled handle surfaces lookalike and parody accounts rather than the real one; verify the returned handle before relying on it. Page size is set by the source, typically around 20 accounts. To go deeper, send `pagination.next_cursor` back as `cursor` and repeat until `pagination.has_more` is false; each page costs 1 credit.
 
 **Query params**
 
-- `query` (required) - Name, handle, or partial handle to search accounts for · e.g. `news24`
+- `query` (required) - Name, handle, or keyword to search accounts for · e.g. `news24`
+- `cursor` (optional, string) - Cursor from the previous response's pagination.next_cursor to fetch the next page
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/twitter/search/users?query=news24" \

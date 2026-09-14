@@ -27,7 +27,7 @@ Category mention volume + sentiment over time
 
 **Cost** 20 credits (custom) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Like phrase-trends, but keyed on a category code from the /content_analysis/categories taxonomy instead of a keyword. Returns a time series of mention volume and sentiment for an entire content category (e.g. Apparel) over a date range. Note the different mental model: this trends a category, not a brand term.
+Like phrase-trends, but keyed on a category code from the /content_analysis/categories taxonomy instead of a keyword. Returns a time series of mention volume and sentiment for an entire content category (e.g. Apparel) over a date range. Note the different mental model: this trends a category, not a brand term. With no filter every bucket covers citations from all countries, and its countries and languages maps are that bucket's breakdown; pass filters (for example country = DE) to count only one market's citations.
 
 **Query params**
 
@@ -36,7 +36,7 @@ Like phrase-trends, but keyed on a category code from the /content_analysis/cate
 - `date_to` (optional, string) - End of the date range (yyyy-mm-dd); defaults to today.
 - `date_group` (optional, enum: day | week | month) - Bucket size: day, week, or month (default month). · e.g. `month`
 - `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1-20).
-- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
+- `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions) over the citation fields listed by /content_analysis/filters, applied before the buckets are counted. Example: [["country","=","DE"]] for German-hosted citations, or [["language","=","de"]] for German-language ones.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/category-trends?category_code=10021&date_from=2025-01-01" \
@@ -49,7 +49,7 @@ List the filterable fields for Content Analysis
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
 
-Returns the map of filterable fields → value types (str, num, time, array.num, array.str) accepted by the advanced `filters` param on the search/summary/sentiment endpoints. Use it to build valid filter expressions. Heavily cached.
+Returns the map of filterable fields → value types (str, num, time, array.num, array.str) accepted by the advanced `filters` param on search, summary, sentiment, rating-distribution, phrase-trends and category-trends. Use it to build valid filter expressions. Heavily cached.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/filters" \

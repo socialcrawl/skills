@@ -762,13 +762,13 @@ One person's public posts across X, Threads, Bluesky, and Truth Social, time-mer
 
 **Cost** 5 credits (custom) · **Cache** 600s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** cursor - `cursor`
 
-Fetches a handle's recent posts from four microblogs in parallel, time-merges them into one chronological feed, and computes platform presence, a cross-post rate, and a per-platform tone label (a soft LLM heuristic that degrades to absent on failure). Microblogs the handle isn't on return empty arrays with `platform_presence:false`: the absence map is the product. Flat 5cr; all-miss → full refund. The `legs[]` block reports each leg's status, cost, and latency. v1 is list-level (no per-post detail drill).
+Fetches a handle's recent posts from four microblogs in parallel, time-merges them into one chronological feed, and computes platform presence, a cross-post rate, and a per-platform tone label (a soft LLM heuristic that degrades to absent on failure). Microblogs the handle isn't on return empty arrays with `platform_presence:false`: the absence map is the product. Flat 5cr; all-miss → full refund. The `legs[]` block reports each leg's status, cost, and latency. X pages: pass a prior `next_cursor` back as `cursor`. v1 is list-level (no per-post detail drill).
 
 **Query params**
 
 - `handle` (required) - The handle to look up across all four microblogs (a single leading @ is stripped). · e.g. `nasa`
 - `platforms` (optional, string) - CSV subset of twitter,threads,bluesky,truthsocial (default all four). · e.g. `twitter,threads,bluesky,truthsocial`
-- `cursor` (optional, string) - Opaque per-platform pagination token from a prior response's cursors_by_platform (twitter is a single non-paginatable page).
+- `cursor` (optional, string) - Opaque composite cursor from a prior response's `next_cursor`. X/Twitter pages; Truth Social pages on `next_max_id`; a mangled token is a 400 at 0 credits.
 - `include` (optional, string) - CSV subset of posts_by_platform,merged_timeline,computed to trim the payload (posts_by_platform is always returned).
 
 ```bash

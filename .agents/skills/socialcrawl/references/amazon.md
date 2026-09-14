@@ -12,13 +12,13 @@ Get Amazon Best Sellers in a category
 
 **Cost** 1 credit (standard) · **Cache** 120s (a hit costs 0 credits) · **Returns** ProductList · **Pagination** page - `page`
 
-Returns ranked Amazon Best Seller listings for a category: ASIN, title, price, rating, and image. Pass type to switch to New Releases, Movers and Shakers, Most Wished For, or Gift Ideas. Amazon serves up to two pages of 50; a page past the last typically 503s and is refunded.
+Returns ranked Amazon Best Seller listings for a category: ASIN, title, price, rating, and image. Pass type to switch to New Releases, Most Wished For, or Gift Ideas. Movers and Shakers is accepted but currently returns an empty list at 0 credits, because Amazon publishes no Movers and Shakers rows on the marketplaces we checked. Amazon serves up to two pages of 50; a page past the last typically 503s and is refunded.
 
 **Query params**
 
-- `category` (required) - Best Sellers category slug from the Amazon Best Sellers URL, for example software or amazon-devices. · e.g. `software`
+- `category` (required) - Best Sellers category path from the Amazon Best Sellers URL: a department slug such as software or officeproduct, or a department plus node id for a subcategory, such as officeproduct/202900031 (Karten on amazon.de). · e.g. `software`
 - `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). · e.g. `US`
-- `type` (optional, enum: BEST_SELLERS | NEW_RELEASES | MOVERS_AND_SHAKERS | MOST_WISHED_FOR | GIFT_IDEAS) - List type. Defaults to BEST_SELLERS. · e.g. `BEST_SELLERS`
+- `type` (optional, enum: BEST_SELLERS | NEW_RELEASES | MOVERS_AND_SHAKERS | MOST_WISHED_FOR | GIFT_IDEAS) - List type: BEST_SELLERS (default), NEW_RELEASES, MOST_WISHED_FOR, GIFT_IDEAS, or MOVERS_AND_SHAKERS. MOVERS_AND_SHAKERS currently returns an empty list at 0 credits on US, GB and DE, because Amazon itself shows no Movers and Shakers rows. A category with no list of the requested type also returns empty and free. · e.g. `BEST_SELLERS`
 - `page` (optional, integer, 1-100) - Page number, starting at 1. Prefer the universal cursor parameter.
 
 ```bash
