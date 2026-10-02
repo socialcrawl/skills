@@ -2,7 +2,7 @@
 name: socialcrawl
 description: >
   Interact with the SocialCrawl API — a unified social, commerce, and research
-  data API covering 65 platforms and 575 endpoints, plus cross-platform Prism
+  data API covering 67 platforms and 631 endpoints, plus cross-platform Prism
   composites, scheduled Monitors, and audience-filtered Cohorts. Fetch
   profiles, posts, comments, search results, transcripts, ad libraries, retail
   and marketplace product catalogs and reviews, app-store listings and reviews,
@@ -28,7 +28,7 @@ description: >
 
 # SocialCrawl API
 
-Unified social media, commerce, and research data API. One API key, one response format, **65 platforms, 575 endpoints** — plus cross-platform **Prism** composites, stateful scheduled **Monitors**, and audience-filtered **Cohorts**. Author and Post responses are normalized through platform field maps and augmented with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Commerce, review, place, and app endpoints share first-class canonical Product / Review / Seller / Place / App schemas. List responses are always `{ items, next_cursor?, total? }`. Add `?format=raw` to bypass the transform pipeline.
+Unified social media, commerce, and research data API. One API key, one response format, **67 platforms, 631 endpoints** — plus cross-platform **Prism** composites, stateful scheduled **Monitors**, and audience-filtered **Cohorts**. Author and Post responses are normalized through platform field maps and augmented with computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) under `data.computed`. Commerce, review, place, and app endpoints share first-class canonical Product / Review / Seller / Place / App schemas. List responses are always `{ items, next_cursor?, total? }`. Add `?format=raw` to bypass the transform pipeline.
 
 ## API Key
 
@@ -65,7 +65,7 @@ curl -s -H "x-api-key: $SOCIALCRAWL_API_KEY" "https://www.socialcrawl.dev/v1/uti
 ```
 
 Compare `data.stats.platforms` and `data.stats.endpoints` against the
-**65 platforms, 575 endpoints** this file was built from.
+**67 platforms, 631 endpoints** this file was built from.
 
 - **They match** - the tables below are current. Use them and move on.
 - **The live numbers are HIGHER** - this copy is behind. The API has platforms
@@ -91,17 +91,17 @@ Compare `data.stats.platforms` and `data.stats.endpoints` against the
 
 | Platform | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| TikTok | 36 | GET | [references/tiktok.md](references/tiktok.md) |
+| TikTok | 37 | GET | [references/tiktok.md](references/tiktok.md) |
 | TikTok Shop | 5 | GET | [references/tiktokshop.md](references/tiktokshop.md) |
-| Instagram | 37 | GET | [references/instagram.md](references/instagram.md) |
+| Instagram | 38 | GET | [references/instagram.md](references/instagram.md) |
 | YouTube | 29 | GET/POST | [references/youtube.md](references/youtube.md) |
-| Facebook | 24 | GET | [references/facebook.md](references/facebook.md) |
+| Facebook | 29 | GET | [references/facebook.md](references/facebook.md) |
 | Twitter/X | 15 | GET | [references/twitter.md](references/twitter.md) |
-| LinkedIn | 45 | GET | [references/linkedin.md](references/linkedin.md) |
+| LinkedIn | 68 | GET | [references/linkedin.md](references/linkedin.md) |
 | Reddit | 14 | GET | [references/reddit.md](references/reddit.md) |
 | Threads | 6 | GET | [references/threads.md](references/threads.md) |
-| Pinterest | 5 | GET | [references/pinterest.md](references/pinterest.md) |
-| Bluesky | 3 | GET | [references/bluesky.md](references/bluesky.md) |
+| Pinterest | 6 | GET | [references/pinterest.md](references/pinterest.md) |
+| Bluesky | 4 | GET | [references/bluesky.md](references/bluesky.md) |
 | Spotify | 6 | GET | [references/spotify.md](references/spotify.md) |
 | Rumble | 5 | GET | [references/rumble.md](references/rumble.md) |
 | Kwai | 3 | GET | [references/kwai.md](references/kwai.md) |
@@ -110,9 +110,10 @@ Compare `data.stats.platforms` and `data.stats.endpoints` against the
 | Snapchat | 2 | GET | [references/snapchat.md](references/snapchat.md) |
 | Kick | 1 | GET | [references/kick.md](references/kick.md) |
 | Douyin (Chinese TikTok, mostly metered) | 8 | GET | [references/douyin.md](references/douyin.md) |
+| Xiaohongshu (RedNote, mostly metered) | 6 | GET | [references/xiaohongshu.md](references/xiaohongshu.md) |
 | Telegram (public channels) | 3 | GET | [references/telegram.md](references/telegram.md) |
 | Quora (questions, answers, spaces) | 7 | GET | [references/quora.md](references/quora.md) |
-| Apple Music (artists, albums, tracks) | 4 | GET | [references/apple_music.md](references/apple_music.md) |
+| Apple Music (artists, albums, tracks) | 5 | GET | [references/apple_music.md](references/apple_music.md) |
 
 **Commerce, retail & marketplaces:**
 
@@ -165,6 +166,7 @@ Compare `data.stats.platforms` and `data.stats.endpoints` against the
 |----------|-----------|---------|-----------|
 | GitHub | 12 | GET | [references/github.md](references/github.md) |
 | Hacker News | 4 | GET | [references/hackernews.md](references/hackernews.md) |
+| Product Hunt (current launches feed) | 1 | GET | [references/producthunt.md](references/producthunt.md) |
 | Tavily (web search/extract/crawl) | 4 | GET | [references/tavily.md](references/tavily.md) |
 | Perplexity (AI research) | 1 | GET | [references/perplexity.md](references/perplexity.md) |
 | Polymarket (prediction markets) | 1 | GET | [references/polymarket.md](references/polymarket.md) |
@@ -173,7 +175,7 @@ Compare `data.stats.platforms` and `data.stats.endpoints` against the
 | US Congress Trades (STOCK Act disclosures + statistics) | 19 | GET | [references/us_congress_trades.md](references/us_congress_trades.md) |
 | On-Page (single-URL SEO audit) | 1 | GET | [references/on_page.md](references/on_page.md) |
 | Web Scraping (scrape, search, crawl, map, agent, sessions) | 22 | GET/POST/PATCH/DELETE | [references/web.md](references/web.md) |
-| Universal Search (all platforms at once) | 4 | GET | [references/search.md](references/search.md) |
+| Universal Search (all platforms at once) | 5 | GET | [references/search.md](references/search.md) |
 
 **Link-in-bio:**
 
@@ -189,12 +191,12 @@ Compare `data.stats.platforms` and `data.stats.endpoints` against the
 
 | Surface | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| Prism (cross-platform composites) | 33 | GET/POST | [references/prism.md](references/prism.md) |
-| Utility (free API self-discovery) | 4 | GET | [references/utility.md](references/utility.md) |
+| Prism (cross-platform composites) | 46 | GET/POST | [references/prism.md](references/prism.md) |
+| Utility (free API self-discovery) | 6 | GET | [references/utility.md](references/utility.md) |
 | Monitors (scheduled recipes + webhooks) | - | GET/POST/PUT/PATCH/DELETE | [references/monitors.md](references/monitors.md) |
 | Cohorts (audience-filtered mention search) | - | GET/POST/PUT/PATCH/DELETE | [references/cohorts.md](references/cohorts.md) |
 
-Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 575 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
+Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 631 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
 
 **Withdrawn platforms:** SoundCloud is registered but soft-disabled - every endpoint returns `503 SERVICE_UNAVAILABLE` and never bills, pending a re-source. Say withdrawn, not unsupported.
 <!-- END:GENERATED:PLATFORMS -->
@@ -221,7 +223,7 @@ Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs 
 Determine what the user wants, then follow the matching workflow:
 
 **User wants data:**
-1. Identify the platform and resource from their request
+1. Identify the platform and resource from their request. If the job needs several calls (a creator's profile, then posts, then comments; a brand watch; a multi-platform search), first call the free planner `GET /v1/utility/plan?query=<the job in plain words>` (0 credits, runs nothing): it returns the calls in order with each one's params, price, which earlier step feeds it, and a curl
 2. Read the platform's reference file from the table above. Each endpoint section carries its exact cost, cache TTL, pagination style, every parameter, and the constraints the API validates before billing
 3. Resolve API key
 4. Read [references/cost-gate.md](references/cost-gate.md), construct the exact request shape, and show its preflight cost gate before every paid call. A heading's number may be a per-row or per-page unit, not the request total
@@ -238,11 +240,11 @@ Determine what the user wants, then follow the matching workflow:
 
 **User asks about capabilities:**
 1. Answer from the platform table above
-2. If they need details about auth, response format, unified schemas, pagination, caching, idempotency, or errors, read [references/api-overview.md](references/api-overview.md)
+2. If they need details about auth, response format, unified schemas, pagination, labels, filters, caching, idempotency, or errors, read [references/api-overview.md](references/api-overview.md)
 
 **User asks what the API supports right now (or this skill looks out of date):**
 1. The free `/v1/utility/*` endpoints answer from the live registry at 0 credits — they are always safe to call
-2. `GET /v1/utility/endpoints` lists every live endpoint (filter with `?platform=` or `?search=`); `GET /v1/utility/endpoint?id=tiktok/profile` explains one; `GET /v1/utility/quickstart` returns a ready-to-run first call
+2. `GET /v1/utility/endpoints` lists every live endpoint (filter with `?platform=` or `?search=`); `GET /v1/utility/endpoint?id=tiktok/profile` explains one, including its measured per-field fill rate under `quality` when sampled; `GET /v1/utility/plan?query=...` turns a described job into ordered calls; `GET /v1/utility/quickstart` returns a ready-to-run first call
 3. Prefer the live answer over this file when the two disagree — the registry is the source of truth
 
 **User wants to compare products across retailers:**
@@ -282,7 +284,7 @@ This is Cohorts, not social listening. The tell is that the user already has the
 
 **Ambiguous platform:** If the user says "get profile for @nike" without specifying a platform, ask which platform they mean.
 
-**Multi-platform requests:** Load each platform's reference file and make sequential calls — or suggest `/v1/search/everywhere` (20 credits) when the user wants one query across many platforms at once. For multi-country news coverage suggest `/v1/search/news` (metered 2-62 credits: it plans and localizes the query, then searches up to 12 Google News country editions in one call).
+**Multi-platform requests:** Load each platform's reference file and make sequential calls — or use `/v1/search/multi` for one query across several platforms' own search endpoints in one call (each platform's page price, charged only for platforms that returned rows), or `/v1/search/everywhere` (20 credits) for a planned, ranked, clustered answer across up to 17 sources. Many profiles or post URLs at once go to `POST /v1/prism/profiles` / `POST /v1/prism/post-stats`, or to the background job `POST /v1/prism/jobs` (up to 5,000 items, see [references/prism.md](references/prism.md)). For multi-country news coverage suggest `/v1/search/news` (metered 2-62 credits: it plans and localizes the query, then searches up to 12 Google News country editions in one call).
 
 ## Making API Calls
 
@@ -300,6 +302,7 @@ URL-encode parameter values that contain spaces or special characters.
 **Not everything is a GET.** Never assume the method — every endpoint section in a platform reference is headed by its real verb and carries a runnable curl for it. The non-GET routes are:
 
 - **Batch reads** (`POST /v1/youtube/videos`, `/v1/youtube/channels`, `/v1/youtube/transcripts`, `/v1/prism/post-stats`, `/v1/prism/profiles`, `/v1/prism/comment-lookup`) — the id/URL list is too large for a query string, so it travels in a JSON body as a real array.
+- **Background jobs** (`POST /v1/prism/jobs`) — up to 5,000 `prism/profiles` or `prism/post-stats` items; answers `202` with a `job_id`, poll `GET /v1/prism/jobs/{job_id}` (free).
 - **Web jobs, monitors, and sessions** (`/v1/web/*`) — POST to submit or create, GET to poll or list, PATCH to update, DELETE to cancel or close.
 - **Monitors** (`/v1/monitors/*`) — see [references/monitors.md](references/monitors.md).
 - **Cohorts** (`/v1/cohorts/*`, `/v1/cohort-queries/*`) — POST to create a cohort or submit a query, **PUT** to upload members (the only PUT in the API), GET to poll and read results, DELETE to cancel or purge. POST and PUT require an `Idempotency-Key` UUID header. See [references/cohorts.md](references/cohorts.md).
@@ -316,51 +319,38 @@ curl -X POST "https://www.socialcrawl.dev/v1/youtube/transcripts" \
 
 **Rate limits:** 600 requests per minute and 50 concurrent requests per key. Both return 429 with a `Retry-After`; a rate-limited call is never billed.
 
-**Streaming:** a few endpoints (`/v1/search/everywhere`, `/v1/search/news`, `/v1/prism/comments`, `/v1/prism/answers`, `/v1/prism/profiles`, `/v1/prism/app-reviews`, `/v1/reddit/omni-search`, `/v1/youtube/transcripts`) emit Server-Sent Events when you send `Accept: text/event-stream`. Omit that header to get one JSON body instead — each endpoint's reference section says which behaviour it has.
+**Streaming:** a few endpoints (`/v1/search/everywhere`, `/v1/search/news`, `/v1/prism/comments`, `/v1/prism/profiles`, `/v1/prism/app-reviews`, `/v1/reddit/omni-search`, `/v1/youtube/transcripts`) emit Server-Sent Events when you send `Accept: text/event-stream`. Omit that header to get one JSON body instead. `/v1/prism/answers` always streams, and `/v1/prism/video-intel` streams when `include` contains `transcript` — each endpoint's reference section says which behaviour it has.
 
 **Latency note:** some endpoints are task-polled upstream — Google Shopping, Trustpilot, Tripadvisor, Google Business, Google Play, App Store, Google Trends, Finance, Content Analysis, Pinterest, and Amazon `product`. Expect ~10–45s responses; use a 60s timeout for those. Web crawl / batch-scrape / agent jobs are async by design: they return a `job_id` immediately and you poll `GET /v1/web/jobs/{job_id}`.
 
 **Two-step endpoints:** some resources need an id from an earlier call — Google Shopping `product`/`reviews`/`sellers` need ids from `product-search`; Tripadvisor `reviews` needs `url_path` from `search`; Google `hotels/info` needs `hotel_identifier` from `hotels/search`; every `linkedin/company/*` sub-resource needs `company_id` from `linkedin/company`; `facebook/post/comment/replies` needs `feedback_id` + `expansion_token` from `facebook/post/comments`; Target `product`/`reviews` need a TCIN; `content_analysis/category-trends` needs a `category_code` from `content_analysis/categories`. Every endpoint's parameter descriptions name its prerequisite.
 
+## Reading a Response
+
+Details for each point are in [references/api-overview.md](references/api-overview.md); these are the rules to know before the first call:
+
+- **Placement.** `pagination` (`next_cursor`, `has_more`, `page_size`) and the optional `meta.hint` sit at the envelope root. `dropped`, `_warnings` and every page report (`labels`, `relevance`, `label_share`, `hydration`, `walk`, ...) sit inside `data`. Notices are `data._warnings`, never a top-level `_warnings`; read them, because an ignored parameter (`count was ignored; use limit (page size)`) or a handle that resolved to a different account (`resolved_to_different_handle`) is reported there, not as an error.
+- **Paging.** Send `pagination.next_cursor` back as `cursor` and stop on `has_more: false`, not on a short page or on `total`. A zero-match list is `200` with `items: []` at 0 credits.
+- **Default judgments are free.** Comment, post, review and keyword-search rows carry labels (`computed.labels`) and search rows a relevance score (`computed.relevance`) at no extra cost; `judgments=off` removes them. Opt-in presets (`label=spam|toxic|low_quality|quality|injection|mention`, `relevant_to=`) add **1 credit per 25 newly judged rows**; preview with `dry_run=1` (free). `relevance=filter` against the query is free.
+- **Spend controls.** Creator post lists take `stop_at_id` / `since` so a poll pays only for new pages (`pagination.stopped_at` says why it stopped). Keyword searches take `min_views`, `max_age_days`, `country` / `exclude_country`, `sort_rows=views`, `seen=<id>` (repeats refunded) and `max_pages` (1-5, **each page billed**).
+- **`meta.hint`** names one other call that does the job in fewer steps. Its message states the price when that call costs more; follow it only within what the user authorised.
+
 ## Row Hydration (`include=`)
 
-Many list endpoints return rows the upstream surface does not fully populate — a Pinterest search row carries no save count, a TikTok user-search row no bio or region, a YouTube playlist row no view count, a LinkedIn people row no exact follower count. Those leaves are `null` on a plain call.
-
-**`include=` fills them in the same call.** It is an opt-in, CSV, enum-typed query param: each row is joined to a sibling endpoint on the same platform and only the leaves the row lacks are copied onto it. Nothing already on the row changes. A typo is a free pre-billing 400.
-
-28 lanes across 8 platforms offer one. The tokens are `profile`, `engagement`, `details`, `channel`, `ad`, and `saves`; which one a lane accepts is in its endpoint section, along with exactly which leaves it fills.
-
-**How it is priced — read this before sending one.** The join is charged per row, on top of the page:
-
-- An **upfront ceiling** is held: `base + (credits per row x rows joinable)`.
-- It is **refunded down to rows actually filled**. A row the sibling could not fill is refunded; a row served from the sibling's own cache is **free**.
-- `credits_used` on the response is the real charge. A `data.hydration` block itemises rows looked up, filled, cache hits, credits held and kept, and milliseconds.
-
-So `GET /v1/pinterest/search` is 1 credit plain and **up to 26** with `include=engagement`; `GET /v1/linkedin/search/people` is 10 plain and **up to 50** with `include=profile` (4 credits a row). Never quote the plain heading cost for a hydrated call.
-
-**Four traps worth knowing:**
-
-- **`limit` caps rows and credits together** on the lanes that offer it — `limit=5` on Pinterest search holds `1 + 5`, not `1 + 25`. Use it to bound spend.
-- **`instagram/similar` defaults to its top 20 rows** when you send `include=profile` without `limit` (a hold of 25, not 85). `limit=80` buys the full roster at up to 85 credits.
-- **On `threads/user/posts` and `threads/search`, `limit` is _not_ a row cap** — it switches the source or sets the walker's target. Those two hold their full window (15 and 20) regardless.
-- **YouTube joins are batch-priced**: 1 credit per distinct id but never more than 5 per 50 ids, so a 50-row page adds 5, not 50. On a channel-scoped list (`channel/videos`, `channel/shorts`) the join is a single shared lookup: 1 credit.
-
-Latency: a hydrated page adds roughly 3–10 seconds on a fresh call (lookups run in parallel, bounded per row) and nothing when the rows are already cached.
-
-The per-lane ceilings for all 28 lanes are tabulated in [references/cost-gate.md](references/cost-gate.md#row-hydration-include). Always confirm against the endpoint's own **Pricing** line in its platform reference.
+On 33 list endpoints across 8 platforms, an opt-in `include=` token (`profile`, `engagement`, `details`, `channel`, `ad`, `saves`, `audio`, `creator`, `about`) joins every row to a sibling endpoint and fills the leaves the plain row leaves `null`. **It is charged per row on top of the page:** an upfront ceiling of `base + (credits per row x rows joinable)` is held and refunded down to rows actually filled (cached sibling rows are free); `data.hydration` itemises it and `credits_used` is the real charge. So `pinterest/search` is 1 plain and **up to 26** with `include=engagement`, `linkedin/search/people` 10 plain and **up to 50** with `include=profile`, `instagram/search/reels` 1 plain and **up to 61** with `include=creator`. Never quote the plain heading cost for a hydrated call. `limit` caps rows and credits together on most lanes but **not** on `threads/user/posts`, `threads/search` or the Facebook event, photo and post lanes, and YouTube joins are batch-priced (at most 5 per 50 ids). Per-lane ceilings: [references/cost-gate.md](references/cost-gate.md#row-hydration-include); the traps and the same-account check: [references/api-overview.md](references/api-overview.md#row-hydration-include). Always confirm against the endpoint's own **Pricing** line.
 
 ## Credit Tiers
 
 <!-- BEGIN:GENERATED:CREDIT_TIERS (auto-generated by generate-docs.ts - AIP-16b) -->
 | Tier | Cost | Endpoints | Typical endpoints |
 |------|------|-----------|-------------------|
-| standard | 1 credit | 258 | Profiles, posts, search, comments, reference data |
-| advanced | 5 credits | 166 | Ad libraries, trending, audience analytics, app/product/place reviews, retail catalogs, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
-| premium | 10 credits | 19 | Video transcripts, LinkedIn people/job search + reactions, app-listings search, web agent jobs |
-| custom (flat / metered) | varies (0-10000) | 132 | `/v1/search/everywhere` (20), `search/forums` (10) & `search/news` (2-62 metered); `naver/brief` (10); `{platform}/profile/full` (5); the free `/v1/utility/*` self-discovery endpoints (0); web scrape/crawl/sessions; all `/v1/prism/*` composites (0-1605, flat or metered per recipe) |
+| standard | 1 credit | 239 | Profiles, posts, search, comments, reference data |
+| advanced | 5 credits | 167 | Ad libraries, trending, audience analytics, app/product/place reviews, retail catalogs, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
+| premium | 10 credits | 25 | Video transcripts, LinkedIn people/job search + reactions, app-listings search, web agent jobs |
+| custom (flat / metered) | varies (0-10000) | 200 | `/v1/search/everywhere` (20), `search/forums` (10) & `search/news` (2-62 metered); `naver/brief` (10); `{platform}/profile/full` (5); the free `/v1/utility/*` self-discovery endpoints (0); web scrape/crawl/sessions; all `/v1/prism/*` composites (0-1605, flat or metered per recipe) |
 <!-- END:GENERATED:CREDIT_TIERS -->
 
-Cache hits, idempotent replays, every `/v1/utility/*` endpoint, and `/v1/credits/balance` cost 0 credits. Failed calls (upstream errors, circuit-breaker rejections, request timeouts, not-found resources, empty results) are auto-refunded, and a request rejected for bad params or a rate limit never deducts at all. Metered endpoints deduct an upfront ceiling and refund down to the actual work done, so the response `credits_used` is the real charge.
+Cache hits, idempotent replays, every `/v1/utility/*` endpoint, and `/v1/credits/balance` cost 0 credits. Failed calls (upstream errors, circuit-breaker rejections, request timeouts, not-found resources, empty results) are auto-refunded, and a request rejected for bad params, a page past the source's last page, or a rate limit never deducts at all. Metered endpoints deduct an upfront ceiling and refund down to the actual work done, so the response `credits_used` is the real charge.
 
 Before every paid call, run the preflight in [references/cost-gate.md](references/cost-gate.md). Quote the total for the exact request, not only the endpoint's base or unit cost. After every call, report `credits_used` and `credits_remaining` from the response.
 
@@ -376,6 +366,13 @@ Classify an error before retrying:
 - **Wait before retrying:** `RATE_LIMITED`, `CONCURRENCY_LIMIT`, and `SERVICE_UNAVAILABLE`. Honour `Retry-After`, then use exponential backoff with jitter.
 - **Transient upstream failure:** `UPSTREAM_ERROR` and `INTERNAL_ERROR`. Retry at most once, then report the outage with the endpoint and request ID, never the credential.
 - **Not found:** `RESOURCE_NOT_FOUND` is a valid empty outcome, not a retry loop.
+
+Every error carries `error.retryable`, and many carry `error.details.reason`; act on it rather than on the status alone:
+
+- **402** (`balance_too_low`, `key_budget_reached`) says `retry_will_succeed: false`: never retry, point the user at `top_up_url` or `key_settings_url`. On a metered call `pricing: "ceiling"` means the quoted credits are the maximum hold, and `lower_cost_with` names the params that hold less.
+- **400 `page_limit`** (`max_page`, `narrow_with`): the source has no further pages for this query; stop paging and narrow the query instead. A 400 that says `Did you mean ...?` names the parameter or value to fix.
+- **404 `account_gone` / `account_private` / `handle_unresolved`**: follow `error.details.suggestion` once (for a YouTube handle, retry with the stored `channelId` to tell a rename from a removal), then report. `site_not_supported` on `web/scrape` is final; its `suggestion` names the SocialCrawl endpoint for a social link.
+- **404 `ENDPOINT_NOT_FOUND`** may suggest the right path; check the live registry before saying something is unsupported.
 
 For a retryable paid non-streaming request, send an `Idempotency-Key` before the first attempt and reuse it only for the identical payload. Do not automatically retry streaming requests. Never exceed one automatic retry unless the user explicitly asks for continued retries.
 
@@ -411,9 +408,9 @@ For a retryable paid non-streaming request, send an `Idempotency-Key` before the
 
 ## References
 
-- **[references/api-overview.md](references/api-overview.md)** — Read when user asks about authentication, response envelope, unified schemas (Author/Post/Comment/Product/Review/Seller/Place/App), computed fields, pagination, caching, idempotency, `?format=raw`, concurrency, or error details
+- **[references/api-overview.md](references/api-overview.md)** — Read when user asks about authentication, response envelope, `data._warnings`, unified schemas (Author/Post/Comment/Product/Review/Seller/Place/App), computed fields, labels / relevance / `judgments=off` / `dry_run` / `fit=goal`, incremental sync (`since`, `stop_at_id`), search filters and `max_pages` / `seen`, row hydration, chain hints, account-state reasons, the free planner, pagination, caching (`Cache-Control: no-cache`), idempotency, `?format=raw`, concurrency, or `error.details` reasons
 - **[references/cost-gate.md](references/cost-gate.md)** — Read before every paid call and whenever estimating a job. It turns row, URL, probe, page, chunk, runtime, and recurring-run units into the total for the exact request, and a paged walk into the total for the whole walk
-- **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, refunds, or what a job will cost; has the exact cost, tier, and cache TTL of all 575 endpoints, the full rule and honest range for every metered endpoint, and the free-endpoint list
+- **[references/pricing.md](references/pricing.md)** — Read when user asks about pricing, credit costs, tiers, credit packs, refunds, or what a job will cost; has the exact cost, tier, and cache TTL of all 631 endpoints, the full rule and honest range for every metered endpoint, and the free-endpoint list
 - **[references/prism.md](references/prism.md)** — Read when user wants a cross-platform composite (`/v1/prism/*`) — one call that fans out across many platforms
 - **[references/monitors.md](references/monitors.md)** — Read when user wants to schedule a recipe to re-run on a cadence with webhook delivery (`/v1/monitors/*`)
 - **[references/cohorts.md](references/cohorts.md)** — Read when user supplies their own list of public accounts and wants to know which of *them* posted about a keyword (`/v1/cohorts/*`), including the panel limits, the computed credit ceiling, and the coverage contract

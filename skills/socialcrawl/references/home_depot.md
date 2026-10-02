@@ -2,7 +2,7 @@
 
 4 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**Credit costs:** 1 standard (1 credit), 3 advanced (5) - the exact cost is in each endpoint heading below.
+**Credit costs:** 1 standard (1 credit), 2 advanced (5), 1 custom (flat/metered) - the exact cost is in each endpoint heading below.
 
 Home Depot catalog data. Product detail and product reviews, on the canonical Product / Review schemas shared with the other retail platforms.
 
@@ -15,13 +15,13 @@ Get a Home Depot product by item id or URL
 **Cost** 5 credits (advanced) · **Cache** 600s (a hit costs 0 credits) · **Returns** Product · **Pagination** none
 **Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
-Returns full product detail for a Home Depot item: title, brand, model number, UPC, description, highlight bullets, current and original price, star rating, review count, the image gallery, and stock status. It also returns per-store inventory under product.ext.store_inventory, giving the actual unit count on the shelf at each nearby store, which is the field nothing else in this API sells. Pass store_id to localise pricing and that inventory; get a store id from GET /v1/home_depot/stores. For the review text call GET /v1/home_depot/reviews with the same item id.
+Returns full product detail for a Home Depot item: title, brand, model number, UPC, description, highlight bullets, current and original price, star rating, review count, the image gallery, and stock status. It also returns inventory under product.ext.store_inventory, giving the actual unit count at each location that can fulfil the item, which is the field nothing else in this API sells. Home Depot lists one location per fulfilment path, so a row is not always a store: each row carries fulfillment (pickup or delivery), service (for example bopis, express delivery or sth), location_type (store or online), and is_selected_store. One row has is_selected_store true, and that row is the store the request was localised to, echoing the store_id you sent in the same format. Read that flag rather than matching store ids numerically, because a delivery node can share digits with a store number (0121 is not store 121). On the rare response where the flag is null for every row, the selected store is the pickup row whose store_id equals the store_id you sent, compared as an exact string. Pass store_id to localise that inventory; without it Home Depot picks a default store. Prices are Home Depot's online price and did not vary by store in any comparison we have run (four stores in three states on 28/09/2026), so in-store-only shelf markdowns are not in this data. A markdown Home Depot publishes online appears under product.ext.promotion with its label (Clearance or Special Buys), amount_off and percent_off, and price.original is the price before that markdown. When Home Depot withholds a price, price.current is null and product.ext.price_note says why, for example see final price in cart. Get a store id from GET /v1/home_depot/stores. For the review text call GET /v1/home_depot/reviews with the same item id.
 
 **Query params**
 
 - `item_id` (optional, string) - Home Depot internet number (item id), the numeric id at the end of a homedepot.com product URL: homedepot.com/p/<name>/326680222 is item id 326680222. Pass url instead if you would rather hand over the whole product URL. · e.g. `326680222`
 - `url` (optional, string) - Full Home Depot product page URL, used instead of item_id. The item id is extracted from it.
-- `store_id` (optional, string) - Home Depot store number used to localise price, stock, and pickup availability, for example 121.
+- `store_id` (optional, string) - Home Depot store number used to localise stock and pickup availability, for example 0159. Prices are Home Depot's online price and do not change with the store. It is a string: pass it exactly as GET /v1/home_depot/stores returns it (four digits, zero-padded). The store_inventory row with is_selected_store true is this store, and an unknown store number is rejected.
 
 **Constraints**
 
@@ -32,11 +32,12 @@ curl "https://www.socialcrawl.dev/v1/home_depot/product?item_id=326680222" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/home_depot/reviews - 5 credits (advanced)
+## GET /v1/home_depot/reviews - 5-9 credits (request-shaped)
 
 Get Home Depot product reviews
 
-**Cost** 5 credits (advanced) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - The upstream returns one fixed page of 10 reviews and exposes no paging parameter: page, offset and startIndex were each verified live on 2026-09-05 to return the identical first review. total reports the full review count so you can see what is not returned.
+**Cost** 5-9 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - The upstream returns one fixed page of 10 reviews and exposes no paging parameter: page, offset and startIndex were each verified live on 2026-09-05 to return the identical first review. total reports the full review count so you can see what is not returned.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 5-9 credits; the response `credits_used` is the real charge after refund).
 **Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
 Returns the ten most relevant written customer reviews for a Home Depot product, each with the review text, star rating, reviewer name and location, submission date, verified-purchaser flag, helpful-vote count, and reviewer photos. This is a single page: the upstream exposes no paging parameter, so there is no cursor to follow, and total reports the full number of reviews on the product so you can see how many exist beyond the ten returned.
@@ -44,6 +45,22 @@ Returns the ten most relevant written customer reviews for a Home Depot product,
 **Query params**
 
 - `item_id` (required) - Home Depot internet number (item id), the numeric id at the end of a homedepot.com product URL: homedepot.com/p/<name>/326680222 is item id 326680222. Pass url instead if you would rather hand over the whole product URL. · e.g. `326680222`
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
+
+**Constraints**
+
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/home_depot/reviews?item_id=326680222" \
@@ -57,13 +74,13 @@ Search Home Depot products by keyword
 **Cost** 5 credits (advanced) · **Cache** 120s (a hit costs 0 credits) · **Returns** ProductList · **Pagination** page - `page`
 **Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
-Returns Home Depot products matching a keyword, 24 per page, each with its item id, title, brand, model number, current and original price, star rating, review count, image gallery, stock status, and department. Feed a returned item id into GET /v1/home_depot/product for full detail including per-store shelf counts, or GET /v1/home_depot/reviews for the review text. Pass store_id to localise pricing and availability; get a store id from GET /v1/home_depot/stores. This is also the keyword-to-item-id resolver for the rest of the Home Depot API. It takes no sort or filter parameters and rejects them rather than ignoring them, so filter and sort on the returned rows. total is the real match count and holds steady across pages; paginate on has_more, capped at 30 pages.
+Returns Home Depot products matching a keyword, 24 per page, each with its item id, title, brand, model number, current and original price, star rating, review count, image gallery, stock status, and department. Feed a returned item id into GET /v1/home_depot/product for full detail including per-store shelf counts, or GET /v1/home_depot/reviews for the review text. Pass store_id to localise stock: each row's product.ext.store_inventory then lists that store with is_selected_store true, and availability reflects whether any fulfilment path has the item in stock. Get a store id from GET /v1/home_depot/stores. Prices are Home Depot's online price and did not vary by store in any comparison we have run, so in-store-only shelf markdowns are not in this data. A markdown Home Depot publishes online appears under product.ext.promotion with its label (Clearance or Special Buys), amount_off and percent_off, and price.original is the price before that markdown. A null price.current comes with product.ext.price_note, for example see final price in cart. This is also the keyword-to-item-id resolver for the rest of the Home Depot API. It takes no sort or filter parameters and rejects them rather than ignoring them, so filter and sort on the returned rows. total is the real match count and holds steady across pages; paginate on has_more, capped at 30 pages.
 
 **Query params**
 
 - `query` (required) - Free-text product search, for example drill or cordless impact driver. · e.g. `drill`
 - `page` (optional, integer, 1-30) - Page number, 1 to 30. Prefer the universal cursor parameter.
-- `store_id` (optional, string) - Home Depot store number used to localise price, stock, and pickup availability, for example 121.
+- `store_id` (optional, string) - Home Depot store number used to localise stock and pickup availability, for example 0723. Prices are Home Depot's online price and do not change with the store. Pass the id exactly as GET /v1/home_depot/stores returns it; rows echo it without the leading zero on search (723).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/home_depot/search?query=drill" \
@@ -76,7 +93,7 @@ Find Home Depot stores near a ZIP code
 
 **Cost** 1 credit (standard) · **Cache** 1800s (a hit costs 0 credits) · **Returns** PlaceList · **Pagination** single page - The upstream returns one fixed set of nearby stores per ZIP (20 on 2026-09-05) and exposes no page or radius parameter.
 
-Returns Home Depot stores near a US ZIP code, each with its store id, name, full address, phone number, distance in miles, store type, and seven days of opening hours. The store id is the value GET /v1/home_depot/search and GET /v1/home_depot/product take as store_id to localise price and per-store stock, so this is the endpoint that turns a postcode into localised pricing. Store data changes rarely, so it is 1 credit and heavily cached.
+Returns Home Depot stores near a US ZIP code, each with its store id, name, full address, phone number, distance in miles, store type, and seven days of opening hours. The store id is the value GET /v1/home_depot/search and GET /v1/home_depot/product take as store_id to localise per-store stock, so this is the endpoint that turns a postcode into a store. Store data changes rarely, so it is 1 credit and heavily cached.
 
 **Query params**
 

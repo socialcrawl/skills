@@ -56,7 +56,7 @@ PRICING_INVARIANTS = {
         "## POST /v1/prism/post-stats - 1-500 credits (request-shaped)",
         "## POST /v1/prism/profiles - 1-250 credits (request-shaped)",
         "## POST /v1/prism/comment-lookup - 2-100 credits (request-shaped)",
-        "5 on Instagram and LinkedIn",
+        "2 on Instagram and 5 on LinkedIn",
     ),
     "references/youtube.md": (
         "## POST /v1/youtube/transcripts - 3-300 credits (request-shaped)",

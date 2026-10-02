@@ -77,6 +77,7 @@ Starts an async crawl job and returns a SocialCrawl job id (job_...). Poll or ca
 - `exclude_paths` (optional, string) - CSV of URL path patterns to skip, e.g. '/tag/.*'. Applied after include_paths.
 - `webhook_url` (optional, string) - Optional webhook URL for terminal job updates.
 - `formats` (optional, string) - CSV of output formats for each crawled page, e.g. 'markdown' (default) or 'markdown,html'.
+- `goal` (optional, string) - Optional. What you are looking for on the site, in your own words. SocialCrawl maps the site, scrapes the URLs that likely hold it (always at least two), and lists every skipped URL with p. Without this param the crawl follows links by depth only.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/crawl" \
@@ -185,6 +186,7 @@ Discovers URLs for a public site and returns them as a normalized WebPageList.
 - `include_subdomains` (optional, boolean) - Follow links onto subdomains of the root URL. Default true.
 - `ignore_query_parameters` (optional, boolean) - Treat URLs differing only by query string as one URL, which keeps paginated and tracking-tagged duplicates out of the result. Default true.
 - `fresh` (optional, boolean) - Bypass the upstream cache and re-discover the site now. Slower; use it when the map is known to be stale.
+- `goal` (optional, string) - Optional. What you are looking for on the site, in your own words. The map still returns every URL, ranked, with skipped_urls listing the ones that look unlikely to hold it (each with p). Without this param the map is unchanged.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/map?url=https://example.com" \
@@ -355,6 +357,7 @@ Scrape a web page
 
 **Cost** 1-5 credits (request-shaped) · **Cache** not cached (every call is live and billed) · **Returns** WebPage · **Pagination** none
 **Pricing** 1 credit for a standard scrape. It rises to a flat 5 when the fetch needs more than a plain request: `proxy=auto`, `proxy=enhanced`, or `pdf_parse=true`. Nothing else moves the price, so screenshots, tag filters, `wait_for` and a mobile viewport are all included in the 1 credit (metered, 1-5 credits; the response `credits_used` is the real charge after refund).
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
 Fetches a public web page and returns clean content, metadata, and optional media in the unified WebPage schema.
 
@@ -362,7 +365,7 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 
 - `url` (required) - Public URL to fetch. · e.g. `https://example.com`
 - `formats` (optional, string) - Comma-separated output formats such as markdown,screenshot. · e.g. `markdown`
-- `only_main_content` (optional, boolean) - Strip nav, headers, footers and sidebars and keep the article body. Default true; send false when you need the whole page, including the chrome.
+- `only_main_content` (optional, boolean) - Strip nav, headers, footers and sidebars and keep the article body. Default true; send false when you need the whole page, including the chrome. A markdown-only scrape of a site the primary scraper cannot fetch is served by a second extractor, which returns the whole page.
 - `wait_for` (optional, integer) - Milliseconds to wait after load before capturing, for pages that render their content in JavaScript. Leave unset unless the page comes back empty or half-built.
 - `mobile` (optional, boolean) - Render in a mobile viewport with a mobile user agent. Use it when the site serves a different layout to phones.
 - `timeout` (optional, integer) - Hard cap on the page load in milliseconds, 1 to 30000. A page that exceeds it fails and is refunded rather than returning a partial capture.

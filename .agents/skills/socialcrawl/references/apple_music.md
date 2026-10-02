@@ -1,8 +1,8 @@
 # Apple Music
 
-4 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
+5 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**Credit costs:** 4 standard (1 credit) - the exact cost is in each endpoint heading below.
+**Credit costs:** 5 standard (1 credit) - the exact cost is in each endpoint heading below.
 
 Apple Music catalog metadata: search plus artist, album, and track detail. Catalog data only - no streaming counts, no playlists, no audio.
 
@@ -49,6 +49,25 @@ Returns artist metadata: id, name, artwork, and the Apple Music artist URL. Pass
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/apple_music/artist?url=https://music.apple.com/us/artist/taylor-swift/159260351" \
+  -H "x-api-key: $SOCIALCRAWL_API_KEY"
+```
+
+## GET /v1/apple_music/charts - 1 credit (standard)
+
+Get the Apple Music charts for a country
+
+**Cost** 1 credit (standard) · **Cache** 3600s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - One ranked chart per country and type with no second page. The chart is at most 100 deep; `limit` sets how many positions ship.
+
+Returns what a country is playing most on Apple Music right now: the Top Songs, Top Albums, Top Music Videos or Top Playlists chart, with no keyword in. Each item is a Post: `content.text` is the title, `author.username` the artist, `url` the Apple Music link and `content.thumbnail_url` the artwork. The chart position is on `ext.trend`: `rank` (1 is the top), `country_code`, `chart` and Apple's own `chart_title` and `updated_at`. `ext.apple_music` carries `kind`, `release_date`, `artist_id`, `artist_url`, `genres` and `content_advisory`. `published_at` is the release date at midnight UTC. Playlists have no artist or release date, so those are null. The item ids work with /v1/apple_music/track and /v1/apple_music/album for the full record. A country Apple Music does not publish a chart for is a free 400. Exact repeats within an hour are served from cache at 0 credits.
+
+**Query params**
+
+- `country` (optional, string) - Country as an ISO 3166-1 alpha-2 code, in any case (`us`, `DE`, `kr`). Apple Music publishes a chart for most countries where it is sold; one it does not is rejected with a free 400. `uk` is read as `gb`. Defaults to `us`. · e.g. `de`
+- `type` (optional, enum: songs | albums | music-videos | playlists) - Which chart: `songs` (the default), `albums`, `music-videos` or `playlists`. · e.g. `songs`
+- `limit` (optional, integer, 1-100) - How many chart positions to return, from the top, 1 to 100. Defaults to 50. · e.g. `10`
+
+```bash
+curl "https://www.socialcrawl.dev/v1/apple_music/charts" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 

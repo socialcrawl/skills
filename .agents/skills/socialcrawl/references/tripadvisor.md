@@ -2,7 +2,7 @@
 
 16 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**Credit costs:** 16 standard (1 credit) - the exact cost is in each endpoint heading below.
+**Credit costs:** 12 standard (1 credit), 4 custom (flat/metered) - the exact cost is in each endpoint heading below.
 
 **Latency:** Tripadvisor endpoints are task-polled upstream. Expect ~10 to 45s responses. Use a 60s timeout.
 
@@ -29,11 +29,12 @@ curl "https://www.socialcrawl.dev/v1/tripadvisor/attraction?url_path=Attraction_
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tripadvisor/attraction/reviews - 1 credit (standard)
+## GET /v1/tripadvisor/attraction/reviews - 1-5 credits (request-shaped)
 
 Get TripAdvisor reviews for an attraction
 
-**Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Upstream page size is 20; a deeper `depth` is served by an internal offset fan-out inside one request.
+**Cost** 1-5 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Upstream page size is 20; a deeper `depth` is served by an internal offset fan-out inside one request.
+**Pricing** 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 1-5 credits; the response `credits_used` is the real charge after refund).
 
 Returns a unified ReviewList of visitor reviews for a TripAdvisor attraction, keyed by its `url_path` (`entity_id` on every review). Each review carries the star rating, full text, title, reviewer profile with contribution count, attached photos, helpful-vote count, and the publish date. Get the `url_path` from /v1/tripadvisor/attractions. Note this lane carries no owner/management responses and no per-review permalink - both exist only on hotel and restaurant reviews. An attraction with no reviews returns 404 (auto-refunded).
 
@@ -42,6 +43,22 @@ Returns a unified ReviewList of visitor reviews for a TripAdvisor attraction, ke
 - `url_path` (required) - The TripAdvisor `url_path` of the attraction, or a full TripAdvisor attraction URL. · e.g. `Attraction_Review-g60763-d105127-Reviews-Central_Park-New_York_City_New_York.html`
 - `depth` (optional, integer) - Number of reviews to retrieve (default 20, max 40). · e.g. `20`
 - `language` (optional, string) - Review language code, e.g. 'en'.
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
+
+**Constraints**
+
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tripadvisor/attraction/reviews?url_path=Attraction_Review-g60763-d105127-Reviews-Central_Park-New_York_City_New_York.html" \
@@ -111,11 +128,12 @@ curl "https://www.socialcrawl.dev/v1/tripadvisor/cruise?url_path=Cruise_Review-d
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tripadvisor/cruise/reviews - 1 credit (standard)
+## GET /v1/tripadvisor/cruise/reviews - 1-5 credits (request-shaped)
 
 Get TripAdvisor reviews for a cruise ship
 
-**Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Upstream page size is 20; a deeper `depth` is served by an internal offset fan-out inside one request.
+**Cost** 1-5 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Upstream page size is 20; a deeper `depth` is served by an internal offset fan-out inside one request.
+**Pricing** 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 1-5 credits; the response `credits_used` is the real charge after refund).
 
 Returns a unified ReviewList of passenger reviews for a TripAdvisor cruise ship, keyed by its `url_path` (`entity_id` on every review). Each review carries the star rating, full text, title, reviewer profile with contribution count, attached photos, helpful-vote count, and the publish date. Get the `url_path` from /v1/tripadvisor/cruises. Note this lane carries no owner/management responses and no per-review permalink - both exist only on hotel and restaurant reviews. A ship with no reviews returns 404 (auto-refunded).
 
@@ -124,6 +142,22 @@ Returns a unified ReviewList of passenger reviews for a TripAdvisor cruise ship,
 - `url_path` (required) - The TripAdvisor cruise `url_path`, or a full TripAdvisor cruise URL. · e.g. `Cruise_Review-d15691642-Reviews-MSC_Seaside`
 - `depth` (optional, integer) - Number of reviews to retrieve (default 20, max 40). · e.g. `20`
 - `language` (optional, string) - Review language code, e.g. 'en'.
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
+
+**Constraints**
+
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tripadvisor/cruise/reviews?url_path=Cruise_Review-d15691642-Reviews-MSC_Seaside" \
@@ -253,11 +287,12 @@ curl "https://www.socialcrawl.dev/v1/tripadvisor/restaurant?url_path=Restaurant_
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tripadvisor/restaurant/reviews - 1 credit (standard)
+## GET /v1/tripadvisor/restaurant/reviews - 1-5 credits (request-shaped)
 
 Get TripAdvisor reviews for a restaurant
 
-**Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Upstream page size is 20; a deeper `depth` is served by an internal offset fan-out inside one request.
+**Cost** 1-5 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - Upstream page size is 20; a deeper `depth` is served by an internal offset fan-out inside one request.
+**Pricing** 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 1-5 credits; the response `credits_used` is the real charge after refund).
 
 Returns a unified ReviewList of diner reviews for a TripAdvisor restaurant, keyed by its `url_path` (`entity_id` on every review). Each review carries the star rating, full text, title, reviewer profile with contribution count, attached photos, owner/management `responses[]`, helpful-vote count, the original + translated language, and the publish date. Get the `url_path` from /v1/tripadvisor/restaurants. A restaurant with no reviews returns 404 (auto-refunded).
 
@@ -266,6 +301,22 @@ Returns a unified ReviewList of diner reviews for a TripAdvisor restaurant, keye
 - `url_path` (required) - The TripAdvisor `url_path` of the restaurant, or a full TripAdvisor restaurant URL. · e.g. `Restaurant_Review-g187147-d14039269-Reviews-Can_Alegria_Paris-Paris_Ile_de_France.html`
 - `depth` (optional, integer) - Number of reviews to retrieve (default 20, max 40). · e.g. `20`
 - `language` (optional, string) - Review language code, e.g. 'en'.
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
+
+**Constraints**
+
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tripadvisor/restaurant/reviews?url_path=Restaurant_Review-g187147-d14039269-Reviews-Can_Alegria_Paris-Paris_Ile_de_France.html" \
@@ -297,11 +348,12 @@ curl "https://www.socialcrawl.dev/v1/tripadvisor/restaurants?q=Paris" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tripadvisor/reviews - 1 credit (standard)
+## GET /v1/tripadvisor/reviews - 1-5 credits (request-shaped)
 
 Get TripAdvisor reviews for a place
 
-**Cost** 1 credit (standard) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
+**Cost** 1-5 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
+**Pricing** 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 1-5 credits; the response `credits_used` is the real charge after refund).
 **Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
 Returns a unified ReviewList of traveler reviews for a TripAdvisor place, keyed by its `url_path` (`entity_id` on every review). Each review carries the star rating, full text, title, reviewer profile, attached photos, owner/management `responses[]`, the original + translated language (TripAdvisor auto-translates: a `translated` flag marks it), and publish date. Get the `url_path` from /v1/tripadvisor/search. Filter by traveler rating, traveler type, or a keyword. The synchronous endpoint caps `depth` at 30 (deeper history is a future async surface); a place with no matching reviews returns 404 (auto-refunded). Read from a task-based upstream (first calls ~15-45s, then cached).
@@ -315,6 +367,22 @@ Returns a unified ReviewList of traveler reviews for a TripAdvisor place, keyed 
 - `visit_type` (optional, enum: families | couples | solo | business | friends) - Filter by traveler type: families | couples | solo | business | friends.
 - `search_reviews_keyword` (optional, string) - Only return reviews containing this keyword.
 - `translate` (optional, boolean) - Translate reviews to the place's domain language (default true). The `translated` flag + `original_language` are always returned.
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
+
+**Constraints**
+
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tripadvisor/reviews?url_path=Hotel_Review-g60763-d23462501-Reviews-Margaritaville_Times_Square-New_York_City_New_York.html" \

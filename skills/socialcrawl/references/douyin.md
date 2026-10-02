@@ -94,8 +94,8 @@ curl "https://www.socialcrawl.dev/v1/douyin/profile?url=https://www.douyin.com/u
 
 List a Douyin creator's videos
 
-**Cost** 5-125 credits (request-shaped) · **Cache** 900s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Upstream has no cursor. maxResultsPerQuery is a cap, probed 2026-09-08: limit=1 and limit=5 honoured, no page token in the schema or the body. Deeper reads raise limit, up to 50.
-**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the videos actually delivered, so a creator with 4 recent videos costs 20 credits however high `limit` was set. `recent_days` and `exclude_pinned` narrow the result set BEFORE billing settles, so they lower the charge as well as the noise (metered, 5-125 credits; the response `credits_used` is the real charge after refund).
+**Cost** 5-125 credits (request-shaped) · **Cache** 900s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Upstream has no cursor. maxResultsPerQuery is a cap, probed 2026-09-08: limit=1 and limit=5 honoured, no page token in the schema or the body. Deeper reads raise limit, up to 25.
+**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the videos actually delivered, so a creator with 4 recent videos costs 20 credits however high `limit` was set. `recent_days` and `exclude_pinned` narrow the result set BEFORE billing settles, so they lower the charge as well as the noise (metered, 5-125 credits; the response `credits_used` is the real charge after refund).
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 
 Returns a Douyin creator's recent videos with caption, likes, comments, shares, saves, hashtags, music and cover image, newest first. Narrow the window with recent_days, or drop pinned posts with exclude_pinned to read genuine recent activity. Douyin publishes no view counts, so post.engagement.views is null.
@@ -122,8 +122,8 @@ curl "https://www.socialcrawl.dev/v1/douyin/profile/posts?url=https://www.douyin
 
 Search Douyin videos
 
-**Cost** 5-125 credits (request-shaped) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Upstream has no cursor. maxResultsPerQuery is a cap, probed 2026-09-08: limit=1 and limit=5 honoured, no page token in the schema or the body. Deeper reads raise limit, up to 50.
-**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the rows actually delivered, so a narrow query that returns 3 videos costs 15 credits however high `limit` was set (metered, 5-125 credits; the response `credits_used` is the real charge after refund).
+**Cost** 5-125 credits (request-shaped) · **Cache** 120s (a hit costs 0 credits) · **Returns** PostList · **Pagination** single page - Upstream has no cursor. maxResultsPerQuery is a cap, probed 2026-09-08: limit=1 and limit=5 honoured, no page token in the schema or the body. Deeper reads raise limit, up to 25.
+**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the rows actually delivered, so a narrow query that returns 3 videos costs 15 credits however high `limit` was set (metered, 5-125 credits; the response `credits_used` is the real charge after refund).
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
@@ -147,7 +147,7 @@ curl "https://www.socialcrawl.dev/v1/douyin/search?query=美食" \
 Search Douyin creators
 
 **Cost** 5-125 credits (request-shaped) · **Cache** 120s (a hit costs 0 credits) · **Returns** AuthorList · **Pagination** cursor - `cursor`, page size `limit`
-**Pricing** 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the creators actually delivered (metered, 5-125 credits; the response `credits_used` is the real charge after refund).
+**Pricing** 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered (metered, 5-125 credits; the response `credits_used` is the real charge after refund).
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 
 Returns Douyin creators matching a keyword: nickname, Douyin ID, bio, follower count, total likes received, avatar, profile URL and verification label. Filter by follower band or by account type to shortlist creators for outreach. This lane paginates: pass the returned cursor to walk deeper.

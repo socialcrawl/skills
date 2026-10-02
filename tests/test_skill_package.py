@@ -35,7 +35,8 @@ class SkillPackageTests(unittest.TestCase):
         required_fragments = (
             "`POST /v1/prism/post-stats`",
             "1 to 5 credits per successful URL",
-            "100 Instagram or LinkedIn URLs",
+            # Instagram dropped to 2 per URL; LinkedIn is the 5-credit worst case.
+            "100 LinkedIn URLs hold 500 credits; 100 Instagram URLs hold 200",
             "500 credits",
             "`GET /v1/prism/ai-visibility`",
             "2 x prompts x runs x engines",

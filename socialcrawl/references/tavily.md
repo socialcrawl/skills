@@ -40,6 +40,7 @@ curl "https://www.socialcrawl.dev/v1/tavily/crawl?url=https://docs.tavily.com" \
 Extract clean content from one or more URLs
 
 **Cost** 1 credit (standard) · **Cache** 600s (a hit costs 0 credits) · **Returns** Analytics · **Pagination** none
+**Reliability** Multi-source: a primary provider with an automatic fallback. You are charged once no matter how many sources are tried.
 
 Pulls clean, AI-ready text out of one or more URLs via Tavily's extractor. Pass a single URL or a comma-separated list (max 20). Returns extracted content per URL alongside any URLs that failed extraction. Use `extract_depth=advanced` for harder pages (paywalls, JS-heavy SPAs).
 

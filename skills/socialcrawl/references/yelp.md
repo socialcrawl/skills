@@ -2,7 +2,7 @@
 
 5 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**Credit costs:** 4 standard (1 credit), 1 advanced (5) - the exact cost is in each endpoint heading below.
+**Credit costs:** 4 standard (1 credit), 1 custom (flat/metered) - the exact cost is in each endpoint heading below.
 
 Yelp local business data: business profiles by encid, reviews, business search in compact and full-card variants, and search suggestions. Canonical Place / Review schemas, so results line up with Google Business and Tripadvisor.
 
@@ -30,11 +30,12 @@ curl "https://www.socialcrawl.dev/v1/yelp/business/info?id=zj8Lq1T8KIC5zwFief15j
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/yelp/business/reviews - 5 credits (advanced)
+## GET /v1/yelp/business/reviews - 5-9 credits (request-shaped)
 
 Get Yelp reviews for a business
 
-**Cost** 5 credits (advanced) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** cursor - `cursor`
+**Cost** 5-9 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** cursor - `cursor`
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 5-9 credits; the response `credits_used` is the real charge after refund).
 
 Returns a unified ReviewList of customer reviews for a Yelp business, keyed by the same 22-character encid used on /v1/yelp/business/info. Each page has 10 reviews with cursor pagination, ISO timestamps, owner replies, photo URLs, language, and HELPFUL vote counts. Page 2 does not overlap page 1. A business that does not exist returns 404 (auto-refunded). A business with no reviews returns an empty page and is not billed.
 
@@ -43,10 +44,23 @@ Returns a unified ReviewList of customer reviews for a Yelp business, keyed by t
 - `id` (optional, string) - Yelp business encid, the 22-character opaque id (for example zj8Lq1T8KIC5zwFief15jg for Prince Street Pizza). Alias slugs such as prince-street-pizza-new-york-2 are not accepted on this surface: they come back as not found. · e.g. `zj8Lq1T8KIC5zwFief15jg`
 - `url` (optional, string) - Yelp business URL. Only URLs whose /biz/ segment is the 22-character encid resolve. Alias URLs such as https://www.yelp.com/biz/prince-street-pizza-new-york-2 come back as not found.
 - `cursor` (optional, string) - Opaque cursor from the previous page's next_cursor. Omit on page 1.
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
 
 **Constraints**
 
 - Provide at least one of `id`, `url`.
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/yelp/business/reviews?id=zj8Lq1T8KIC5zwFief15jg" \

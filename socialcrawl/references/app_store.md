@@ -2,7 +2,7 @@
 
 9 endpoints, all GET. Base URL `https://www.socialcrawl.dev`, auth header `x-api-key: $SOCIALCRAWL_API_KEY`.
 
-**Credit costs:** 4 standard (1 credit), 4 advanced (5), 1 premium (10) - the exact cost is in each endpoint heading below.
+**Credit costs:** 4 standard (1 credit), 3 advanced (5), 1 premium (10), 1 custom (flat/metered) - the exact cost is in each endpoint heading below.
 
 **Latency:** Most Apple App Store endpoints are task-polled upstream. Expect ~10 to 45s responses. Use a 60s timeout.
 
@@ -77,11 +77,12 @@ curl "https://www.socialcrawl.dev/v1/app_store/app-listings-search?title=photo e
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/app_store/app-reviews - 5 credits (advanced)
+## GET /v1/app_store/app-reviews - 5-9 credits (request-shaped)
 
 Get Apple App Store reviews for an app
 
-**Cost** 5 credits (advanced) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
+**Cost** 5-9 credits (request-shaped) · **Cache** 300s (a hit costs 0 credits) · **Returns** ReviewList · **Pagination** single page - DFS depth-based fan-out: page size is controlled by depth, one call.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. (metered, 5-9 credits; the response `credits_used` is the real charge after refund).
 
 Returns a unified ReviewList of Apple App Store user reviews for an app, keyed by its numeric `app_id` (on every review's `entity_id`). Each review carries the star rating, full text, review title, reviewer name, and publish date: on the SAME canonical `Review` shape used by Amazon, Google Shopping, and Trustpilot. Apple reviews have no avatar, helpful-vote count, or developer responses (those are null). `depth` returns reviews in batches of 50 (max 500; a 500-review pull takes around 40s). Apple's review feed cannot be filtered by star rating upstream, so `rating` is rejected here with a free 400 rather than silently returning the unfiltered feed: request a larger `depth` and filter on `review.rating.value`, or use /v1/google_play/app-reviews where the filter is real.
 
@@ -93,6 +94,22 @@ Returns a unified ReviewList of Apple App Store user reviews for an app, keyed b
 - `depth` (optional, integer) - Number of reviews to retrieve (default 50, batches of 50, max 500). Above 500 is clamped, not rejected. Apple's feed stops there; Google Play reaches 600. · e.g. `50`
 - `sort_by` (optional, enum: most_recent | most_helpful) - Review ordering: `most_recent` (default) or `most_helpful`. · e.g. `most_recent`
 - `rating` (optional, integer) - Not supported on this store: Apple's review feed cannot be filtered by star rating upstream, so this is rejected with a free 400 rather than silently returning the unfiltered feed. Filter on `review.rating.value` client-side, or use /v1/google_play/app-reviews.
+- `label` (optional, string) - Optional CSV of SocialCrawl labels to add to every review. Without this param every page already carries sentiment and issue, free; label= adds the labels you name to them (the defaults keep running). sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. judgments=off (or label=none) turns the default labels off. They read the review's title and text, never its stars. sentiment: how the reviewer feels, on five levels (level 0 to 4, score_0_1, confidence), plus rating_mismatch, true when the words clearly contradict the star rating (a glowing text under 1 star, a furious one under 5), null when the review has no rating. issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). incentivized: does the reviewer say they got the product free, discounted or rewarded for the review (p), and did the text carry a disclosure such as 'in exchange for my honest review', Vine or 체험단 (disclosed). injection flags text that addresses an AI system and tries to direct it (flagged, p); it never drops or rewrites a row. These are signals to read, never a verdict on a review or a reviewer. A review that could not be judged carries labels: null. Reviews already labelled for anyone are free, and so is a cached page. data.labels reports what was judged and billed.
+- `reports` (optional, string) - Required by label=reports, ignored otherwise. What to look for, in plain words, up to 300 characters, for example reports=the battery drains quickly or reports=배송이 늦음. Every review gains labels.reports.p, the probability that it says so, in any wording or language. Without it label=reports is skipped with the warning label_reports_needs_reports and is not billed.
+- `judgments` (optional, enum: on | off) - Optional, on (the default) or off. By default every row gains free SocialCrawl judgments (computed.labels, and computed.relevance on search endpoints), reported in data.labels (mode default) and data.relevance (origin default), each with a status (complete, partial or skipped) and pending: the rows still being judged when the page was sent, which carry null now and are filled on your next call or cached read. Default judgments never add credits, never change an existing field, and never drop or reorder a row. off returns the page exactly as before, with none of those keys. label=none does the same.
+- `dry_run` (optional, enum: 1) - Optional. When 1, return a cost preview for this labelled or relevance-filtered request without fetching the page or judging any row. data.estimate reports rows_expected, rows_cached, label_credits_min, label_credits_max and base_credits. 0 credits charged.
+- `label_evidence` (optional, enum: 1) - Optional, only with label=. When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. Absent or null when no single sentence shows it.
+- `fit` (optional, enum: goal) - Optional. When goal, keep the rows and fields needed for the goal you pass in goal= (plus any that are uncertain, and the first and last), and replace the rest with a stub. data.held_back lists the held ids and a recall id that re-reads the full page from cache at no extra charge. Without this param the page is unchanged.
+- `goal` (optional, string) - Required by fit=goal. What you are trying to do, in your own words, up to 300 characters.
+- `fit_tokens` (optional, integer) - Optional, only with fit=goal. Soft cap on how much of the page to keep, in tokens. Uncertain blocks and the first and last block are kept even if they exceed it.
+
+**Constraints**
+
+- `reports` is a no-op without `label` - sending it alone is a free 400.
+- `label_evidence` is a no-op without `label` - sending it alone is a free 400.
+- `goal` is a no-op without `fit` - sending it alone is a free 400.
+- `fit_tokens` is a no-op without `fit` - sending it alone is a free 400.
+- `label`: at most 5 comma-separated values; each value one of sentiment | issue | reports | incentivized | injection | none.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/app_store/app-reviews?app_id=324684580" \
