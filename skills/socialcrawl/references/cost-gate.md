@@ -1,12 +1,28 @@
 # Cost Gate
 
-Read this before every paid request. Endpoint headings are useful lookup labels, but a number in a heading can be a unit, floor, or upfront ceiling. Calculate the total from the exact query parameters or JSON body that will be sent.
+Read this for the full preflight (see the gate levels below). Endpoint headings are useful lookup labels, but a number in a heading can be a unit, floor, or upfront ceiling. Calculate the total from the exact query parameters or JSON body that will be sent.
 
 **Prices changed.** Many endpoints that used to cost one flat price now hold more when an opt-in parameter is set: `label=`, `relevant_to=`, `include=`, `limit=`, `max_pages=`, `scan_pages=`, `country=`, `urls=`. A plain call (none of those) costs what it always did. Never reuse a remembered flat price for a call that carries one of them; recompute it with the recipes below. The full rule for every metered endpoint is in [pricing.md](pricing.md#metered-and-custom-priced-endpoints).
 
+## Gate levels
+
+Scale the gate to the call:
+
+| Call | Gate |
+| --- | --- |
+| Flat price ≤ 5 credits, user asked for it | One line: `≈ N credits` |
+| Metered, multi-page, batch, monitor/cohort, or > 25 credits | Full preflight via `estimate.py` / `utility/estimate` |
+| Upfront hold (worst case) > 500 credits or over budget (the user's stated budget) | Ask before calling |
+
+Anything in between, or unsure of the price or params: quote first with the free `GET /v1/utility/estimate?id=<platform/resource>&<params>` (it ships with universal dry runs, so it is the capability check). Any reply except a 404 means a current server (a 5xx or network failure is no reply: retry the estimate): use its quote, and `dry_run=1` is then free on any endpoint before the real call (it validates, returns `data.estimate` and fetches nothing).
+
+A 404 or `ENDPOINT_NOT_FOUND` from `/v1/utility/estimate` means an older server: do **not** send `dry_run=1` (an older server ignores it and bills a normal call, except the labelled dry run in [api-overview.md](api-overview.md#labels-relevance-and-quality)). Quote with `scripts/estimate.py`, which falls back offline to `assets/endpoints.json`, or with the endpoint's **Pricing** line and the recipes on this page. Last resort: a dry run (on a server without `/v1/utility/estimate`) that returned rows was billed; report that charge.
+
+At every level, report `credits_used` after the call (see [After the response](#after-the-response)).
+
 ## Preflight format
 
-Show this compact gate before execution:
+For the full preflight, show this compact gate before execution:
 
 ```text
 Cost check
@@ -18,7 +34,7 @@ Settlement: what is charged and what is refunded
 Balance: current balance -> worst-case balance after this request
 ```
 
-Do not call a paid endpoint until you can fill every line. If the exact total cannot be known before execution, quote the upfront hold or safe maximum and say why the settled charge may be lower. If the user already asked to execute that exact request, show the gate and continue; do not add a redundant confirmation. Ask before widening the paid scope.
+Do not call a paid endpoint until you can fill every line. If the exact total cannot be known before execution, quote the upfront hold or safe maximum and say why the settled charge may be lower. If the user already asked to execute that exact request, show the gate and continue; do not add a redundant confirmation, except the Ask level: always ask. Ask before widening the paid scope.
 
 ## General rules
 
@@ -37,6 +53,7 @@ Do not call a paid endpoint until you can fill every line. If the exact total ca
 Use these freely to plan and check before spending:
 
 - `GET /v1/credits/balance` and `GET /v1/credits/transactions`.
+- `dry_run=1` on any endpoint (GET query or POST body), only on servers where `/v1/utility/estimate` exists (see [Gate levels](#gate-levels)): validates the exact request and returns `data.estimate` without fetching. `dry_run=0` or `false` is a real call.
 - Every `/v1/utility/*` endpoint, including `GET /v1/utility/plan?query=...` (the call plan for a job, with each step's credits) and `GET /v1/utility/endpoint?id=platform/resource` (parameters, pricing and the measured `quality` block).
 - `GET /v1/prism/lookup`, `GET /v1/prism/jobs`, `GET /v1/prism/jobs/{job_id}`.
 - `GET|DELETE /v1/web/jobs...`, web session management (`GET /v1/web/sessions`, `GET|DELETE /v1/web/sessions/{session_id}`, `POST /v1/web/sessions/{session_id}/execute`), and every management call on `/v1/monitors` and `/v1/web/monitors` (create, list, read, update, delete, run history). Creating a monitor is free; its runs are not.
@@ -52,7 +69,7 @@ Every metered price is one of these units. Find the unit in the endpoint's prici
 | per row / post / comment / reply / ad / hashtag returned | `limit x rate` (default `limit` when absent), plus any floor | `max(floor, rows returned x rate)`; 0 rows is 0 unless a floor applies |
 | per row filled (`include=` join) | `page + rows joinable x rate` | page + rows filled from a fresh lookup; cached and unfilled rows are free |
 | per creator looked up (`include=creator`) | `page + 30 x 2` | page + 2 per distinct creator looked up |
-| per started 25 rows judged (`label=`, `relevant_to=`) | `+ceil(lane row cap / 25)`, usually +4 | `ceil(fresh rows judged / 25)` |
+| per started 25 rows judged (`label=`, `relevant_to=`) | `+ceil(endpoint row cap / 25)`, usually +4 | `ceil(fresh rows judged / 25)` |
 | per URL / per profile / per item in a POST batch | sum of each item's rate | items that returned `ok` / `found` |
 | per 50-id chunk (YouTube batch) | `5 x ceil(ids / 50)` | same; refunded only when nothing resolves |
 | per platform (`search/multi`, `find-accounts`, `creator-card`, `handle-audit`) | sum over the platforms requested (see [Other metered formulas](#other-metered-formulas)) | `search/multi`: platforms whose page returned rows; `find-accounts`: searches that ran + platforms judged |
@@ -76,7 +93,7 @@ hold   = page price + ceil(row cap / 25) for each paid opt-in present (label, re
 settle = page price + ceil(rows newly judged / 25) for each opt-in
 ```
 
-Several paid label presets in one `label=` share one hold. The row cap is 100 on every lane except `tiktok/search` (120, so +5), `linkedin/search/posts` (200, so +8) and `search/multi` (200, so +8). Rows already judged earlier are free, a cached page is free, and a page where nothing could be judged refunds the whole extra. `judgments=off` (or `label=none`) turns the free defaults off.
+Several paid label presets in one `label=` share one hold. The row cap is 100 on every endpoint except `tiktok/search` (120, so +5), `linkedin/search/posts` (200, so +8) and `search/multi` (200, so +8). Rows already judged earlier are free, a cached page is free, and a page where nothing could be judged refunds the whole extra. `judgments=off` (or `label=none`) turns the free defaults off.
 
 Worked examples:
 
@@ -175,7 +192,7 @@ The largest class of cost surprise. These list endpoints accept an opt-in `inclu
 Preflight: `hold = base + (credits per row x rows joinable)`.
 Settlement: refunded to rows actually **filled**. Unfilled rows are refunded; rows served from the sibling's own cache are free; `credits_used` is the real charge and `data.hydration` itemises rows, cache hits, credits held and kept.
 
-Bound the spend with the row cap param where the lane offers one — on those lanes `limit` caps rows and credits together.
+Bound the spend with the row cap param where the endpoint offers one — on those endpoints `limit` caps rows and credits together.
 
 | Endpoint | Token | Plain | Hydrated ceiling | Row cap |
 |---|---|---|---|---|
@@ -215,7 +232,7 @@ Bound the spend with the row cap param where the lane offers one — on those la
 
 Three shapes to watch:
 
-- **`limit` is not a row cap** on `threads/user/posts`, `threads/search`, `instagram/search/reels`, `facebook/search/groups` and the four Facebook feed lanes — there the lane always holds its full window. Budget the ceiling.
+- **`limit` is not a row cap** on `threads/user/posts`, `threads/search`, `instagram/search/reels`, `facebook/search/groups` and the four Facebook feed endpoints — there the endpoint always holds its full window. Budget the ceiling.
 - **Default row caps are below the page** on `instagram/similar` (top 20, hold 25; `limit=80` for 85) and `instagram/search/profiles` (top 8, hold 17; `limit=12` for 25).
 - **YouTube is batch-priced**, never per row: 1 credit per distinct id capped at 5 per 50 ids. A 50-row page adds 5 per join. `shorts/trending` is the one list over 50 rows, so it is two chunks (10). Exact publish dates on YouTube lists are a free default join.
 

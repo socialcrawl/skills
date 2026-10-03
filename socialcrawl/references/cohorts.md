@@ -143,8 +143,8 @@ Body (JSON):
 - `keywords` (required, array of 1 to 20 strings, each 1 to 100 code points): duplicates are removed after normalization. Matching rules are under "How matching works".
 - `date_from` (required, RFC3339 with offset): start of the window, inclusive.
 - `date_to` (optional, RFC3339 with offset): end of the window, inclusive. With no `date_to`, the window runs to now.
-- `max_pages_per_identity` (required, integer, 1 to 20, no default): the page budget **per lane** of each member. This is the main lever on the ceiling. Lanes with no cursor always read exactly one page whatever you set here.
-- `max_items_per_identity` (required, integer, 1 to 1,000, no default): the cap on items **read** per lane of each member. It counts every item read, not only matches. Reaching it ends that lane as `partial`. It does not change the ceiling.
+- `max_pages_per_identity` (required, integer, 1 to 20, no default): the page budget **per endpoint** of each member. This is the main lever on the ceiling. Endpoints with no cursor always read exactly one page whatever you set here.
+- `max_items_per_identity` (required, integer, 1 to 1,000, no default): the cap on items **read** per endpoint of each member. It counts every item read, not only matches. Reaching it ends that endpoint as `partial`. It does not change the ceiling.
 - `max_credits` (required, integer, 1 to 1,000,000): your safety limit. If it is below the computed ceiling, the submission is rejected (see Pricing).
 - `platforms` (optional, array of 1 to 10 platform names): query only members on these platforms. Defaults to every platform present in the cohort. Naming a subset is the other way to cut the ceiling. A subset with no members in the cohort is a `400` ("no members on the requested platforms"). The same is true of an empty cohort.
 - `match` (optional, `"keywords"` | `"topics"` | `"both"`) and `topics` (optional): opt-in topic matching, see below. `keywords` stays required in every mode.
@@ -208,7 +208,7 @@ Statuses: `queued`, `running`, then one terminal state:
 Response `data`: `id`, `cohort_id`, `status`, `member_count`, `shard_count`, `completed_shard_count`, `failed_shard_count`, `result_count`, `max_credits`, `reserved_credits`, `actual_credits`, `refunded_credits`, and `progress`:
 `{ members_total, members_completed, shards_total, shards_completed, shards_failed, routes_planned, routes_completed, pages_succeeded, pages_failed, matches }`.
 
-`routes_planned` is the sum of lanes over the queried members, for example 2 per Instagram or YouTube member. `pages_failed` counts lanes that gave up with an upstream error. Retries that later succeeded are not counted.
+`routes_planned` is the sum of endpoints over the queried members, for example 2 per Instagram or YouTube member. `pages_failed` counts endpoints that gave up with an upstream error. Retries that later succeeded are not counted.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/cohort-queries/$QUERY_ID" \
@@ -227,7 +227,7 @@ Response `data`: `{ items: [...], coverage: [...], next_cursor }`. Keep paging u
 
 Each `items[]` row (one per matched post per member, deduplicated on member + platform + `content_id`):
 - `query_id`, `member_id`, `external_id` (yours, or `null`), `platform`.
-- `route`: the lane, e.g. `profile/posts` or `profile/reels`.
+- `route`: the endpoint, e.g. `profile/posts` or `profile/reels`.
 - `content_id`, `canonical_url` (or `null`), `published_at`, `retrieved_at`.
 - `text_excerpt`: the matched surface. This is the post text, and on YouTube and Twitch the title plus the description.
 - `matched_keywords`: the keywords that hit, in normalized form.
@@ -236,14 +236,14 @@ Each `items[]` row (one per matched post per member, deduplicated on member + pl
 Each `coverage[]` row covers one cohort member (one platform identity), whether or not it matched:
 - `query_id`, `member_id`, `external_id`, `platform`.
 - `status`, one of:
-  - `complete`: every lane reached `date_from` or the end of the feed.
-  - `partial`: a page budget, item budget, or fixed-window lane stopped short, or undated posts were dropped.
-  - `not_found`: the handle is dead, private, or empty on every lane. This costs 0.
-  - `failed`: a lane gave up on an upstream error.
+  - `complete`: every endpoint reached `date_from` or the end of the feed.
+  - `partial`: a page budget, item budget, or fixed-window endpoint stopped short, or undated posts were dropped.
+  - `not_found`: the handle is dead, private, or empty on every endpoint. This costs 0.
+  - `failed`: an endpoint gave up on an upstream error.
   - `unsupported`.
-- `window_complete`: `true` only when every lane provably covered the whole window. A dead handle is never `true`.
+- `window_complete`: `true` only when every endpoint provably covered the whole window. A dead handle is never `true`.
 - `pages`: successful pages read for this member.
-- `route_errors`: `[{ code: "COHORT_UPSTREAM_ERROR", route }]` per lane that failed.
+- `route_errors`: `[{ code: "COHORT_UPSTREAM_ERROR", route }]` per endpoint that failed.
 - `oldest_seen`: an in-window post timestamp from the last page read, or `null`. It is indicative only. Use `status` and `window_complete` to judge depth.
 
 ```bash
@@ -265,9 +265,9 @@ curl -X DELETE "https://www.socialcrawl.dev/v1/cohort-queries/$QUERY_ID" \
 
 ## How a query runs
 
-Each queried member is read through its platform's **lanes**. A lane is an existing registry endpoint, read page by page:
+Each queried member is read through its platform's **endpoints**: existing registry endpoints, each read page by page:
 
-| Platform | Lanes (registry endpoint) | Credits per page | Pages per lane |
+| Platform | Registry endpoints | Credits per page | Pages per endpoint |
 |----------|---------------------------|------------------|----------------|
 | bluesky | `bluesky/user/posts` | 1 | always 1 (no cursor) |
 | threads | `threads/user/posts` | 1 | always 1 (no cursor) |
@@ -280,16 +280,16 @@ Each queried member is read through its platform's **lanes**. A lane is an exist
 | instagram | `instagram/profile/posts` + `instagram/profile/reels` | 1 each | up to `max_pages_per_identity` each |
 | youtube | `youtube/channel/videos` + `youtube/channel/shorts` | 1 each | up to `max_pages_per_identity` each |
 
-Twitter DOES page (its `user/tweets` lane carries a cursor) and LinkedIn does NOT. That is the opposite of what the per-page price suggests. Get those two backwards and you either overquote by 5x or set `max_credits` below the real ceiling and get a `400`.
+Twitter DOES page (its `user/tweets` endpoint carries a cursor) and LinkedIn does NOT. That is the opposite of what the per-page price suggests. Get those two backwards and you either overquote by 5x or set `max_credits` below the real ceiling and get a `400`.
 
-A lane stops at the first of these. The resulting lane state feeds coverage:
+An endpoint stops at the first of these. The resulting endpoint state feeds coverage:
 - A page reaches posts older than `date_from`. The window is covered.
-- The feed ends. The window is covered, except on a no-cursor lane, which reads `partial` unless its single page already reached `date_from`.
-- `max_pages_per_identity` or `max_items_per_identity` is reached. The lane reads `partial`.
-- The first page is empty, or the upstream returns 404. The lane reads `not_found` and costs 0. A member is `not_found` only when every lane is, so an Instagram account with posts but no reels is still `complete`.
-- Any other 4xx, or 8 consecutive retryable failures (408, 429, 5xx) on one page. The lane reads `failed` and costs 0.
+- The feed ends. The window is covered, except on a no-cursor endpoint, which reads `partial` unless its single page already reached `date_from`.
+- `max_pages_per_identity` or `max_items_per_identity` is reached. The endpoint reads `partial`.
+- The first page is empty, or the upstream returns 404. The endpoint reads `not_found` and costs 0. A member is `not_found` only when every endpoint is, so an Instagram account with posts but no reels is still `complete`.
+- Any other 4xx, or 8 consecutive retryable failures (408, 429, 5xx) on one page. The endpoint reads `failed` and costs 0.
 
-Only posts that the source attributes to the supplied identity, and that fall inside `[date_from, date_to]`, are eligible. Twitter retweets (text starting `RT @`) and LinkedIn reshares or third-party feed items are excluded. A post with no date is dropped, and its lane cannot claim a complete window.
+Only posts that the source attributes to the supplied identity, and that fall inside `[date_from, date_to]`, are eligible. Twitter retweets (text starting `RT @`) and LinkedIn reshares or third-party feed items are excluded. A post with no date is dropped, and its endpoint cannot claim a complete window.
 
 ### How matching works
 
@@ -310,8 +310,8 @@ A query bills in two steps.
 **1. Hold at submission.** The ceiling is computed and deducted from your balance up front:
 
 ```
-ceiling = SUM over queried members, over that platform's lanes, of
-          (lane credits per page x (lane has a cursor ? max_pages_per_identity : 1))
+ceiling = SUM over queried members, over that platform's endpoints, of
+          (endpoint credits per page x (endpoint has a cursor ? max_pages_per_identity : 1))
 ```
 
 Per queried member, that works out to:
@@ -332,7 +332,7 @@ Per queried member, that works out to:
 - The hold also counts against the key's spend cap. `max_credits` is a safety limit, never permission to spend: the hold is always exactly the ceiling.
 
 **2. Charge as pages succeed, refund at the end.**
-- A lane charges its own per-page price for every successful upstream page, including the last page of a feed and a page whose items are cut by `max_items_per_identity`.
+- An endpoint charges its own per-page price for every successful upstream page, including the last page of a feed and a page whose items are cut by `max_items_per_identity`.
 - These cost nothing: a first page that is empty (dead or private handle), a 404, any other upstream error, a retried failure, a timeout, and pages never fetched because of cancellation.
 - On reaching a terminal state (`succeeded`, `failed`, `cancelled`, `expired`), the query charges what it actually used and refunds `reserved - actual` exactly once. The charge is clamped to the reservation, so it can never exceed it. The invariant is `actual_credits + refunded_credits == reserved_credits`, all three shown on the status endpoint.
 - Your usage ledger shows the hold as one deduction and the refund as one refund, both on endpoint `/v1/cohort-queries`.

@@ -15,7 +15,7 @@ Monitors are **not** registry endpoints. They live at `/v1/monitors/*`, use meth
 | What a run stores | the whole body in `result` | only the tracked numbers (`numbers`) + `deltas`; `result` is always `null` |
 | Alert / delta paths | dot paths into the stored body (supplier field names for single-platform endpoints) | must be one of `track.metrics` |
 | `webhook_format: "rows"` | not allowed | allowed |
-| `legs` on a run | the recipe's own `legs[]` (Prism composites), else `[]` | one entry naming the answering rung, `primary` or `fallback` |
+| `legs` on a run | the recipe's own `legs[]` (Prism composites), else `[]` | one entry naming the step that answered, `primary` or `fallback` |
 
 **Prefer `track`** whenever the goal is a number over time (followers, views, a sound's reel count). It reads unified paths (`author.followers`, `items[].post.engagement.views`, `total`), validates them at create for free, and never bills a run that recorded nothing.
 
@@ -187,10 +187,27 @@ A leaf that is missing or not a finite number is stored as `null`, never guessed
 `{ "metric": string (1-200), "op": enum, "value": number, "window"?: "1d" | "1w" }`
 
 - `op`: `gt`, `lt`, `gte`, `lte` (absolute threshold on this run's value); `abs_change_gt` (|cur - prev| > value), `pct_change_gt`, `pct_change_lt` (percent change vs prev, in percent, e.g. `10` = +10%; `-20` with `pct_change_lt` = dropped more than 20%).
+- `rows_new` (a special metric, `track` monitors only): `{ "metric": "rows_new", "op": "gt", "value": 0 }` fires when this run has at least one list row the previous comparable run did not (the count is in `to`). Only `gt` and `gte` are accepted (400 otherwise, free). It needs an `items[].` metric in `track.metrics` (to have rows to count) but is not itself listed there. The first run has no baseline, so it never fires then. "New" means absent from the previous successful run's stored rows (capped at `max_rows`, default 100), so a row that drops off and later returns counts as new again. On a sparse feed an empty-page run is refunded and is not a baseline, so the first run that holds rows has no baseline and stays silent: the first new post after a quiet period may not alert. Use a daily cadence or leave `max_rows` headroom. A legacy monitor (no `track`) cannot use it: 400.
 - Change ops compare against the **previous comparable run** (newest earlier `ok`/`partial` run with data). `window` is accepted and stored but **not used** by the evaluator today; it does not change which run is compared.
 - No prior run, a path that does not resolve to a finite number, or a 0 baseline for a `pct_*` op: the rule is skipped silently for that run (it never fires on a guess).
 - **Legacy monitor:** `metric` is a dot path into the stored body (`coverage`, not `result.coverage`). For a single-platform endpoint that body is the supplier's raw response, so field names are NOT the unified ones. Read `GET /timeseries` after the first run to see the exact keys, and copy one. With `suppress_webhook_unless_alert: true`, a typo makes the monitor silent forever.
-- **`track` monitor:** `metric` must be one of `track.metrics` (400 otherwise, free). An `items[].` rule is evaluated per row against that row's previous number and each fired alert carries `row_id`; new rows are skipped for change ops.
+- **`track` monitor:** `metric` must be one of `track.metrics`, or `rows_new` (400 otherwise, free). An `items[].` rule is evaluated per row against that row's previous number and each fired alert carries `row_id`; new rows are skipped for change ops.
+
+### Recipe: alert me on new posts or videos
+
+```json
+{
+  "recipe": "youtube/channel/videos",
+  "params": { "handle": "mkbhd", "since": "now-7d" },
+  "cadence": "weekly",
+  "webhook_url": "https://example.com/hooks/socialcrawl",
+  "track": { "metrics": ["items[].post.engagement.views"] },
+  "alert_rules": [{ "metric": "rows_new", "op": "gt", "value": 0 }],
+  "suppress_webhook_unless_alert": true
+}
+```
+
+The webhook is called only on a run that holds a row the previous run did not; the fired alert is `{ "metric": "rows_new", "op": "gt", "from": null, "to": 1, "delta": null, "pct_change": null }`, and `deltas.rows_new` lists the new row ids. A misspelling such as `new_rows` is rejected with a "Did you mean 'rows_new'" message.
 
 Fired alert object (in `alerts_fired` on the run and the webhook):
 
@@ -380,6 +397,6 @@ Monitors routes answer errors as `{ "error": { "type", "message" } }` (a body-va
 1. Pick the recipe and confirm its params with a normal `/v1` call first (that call costs credits; monitor create is free and also rejects bad params).
 2. Want numbers over time? Use `track`. Create returns 400 with "Did you mean" for a wrong path; fix and retry. Read `warnings[]`.
 3. Tell the user `estimated_cost_per_run` and `estimated_monthly_cost`, and that the first run is at `next_run_at` (daily = 24 h after create), not now.
-4. After the first slot, check `GET /runs?include=numbers` (or `include=result`): a `failed` run's `skip_reason` says why, and `legs` shows which rung answered.
+4. After the first slot, check `GET /runs?include=numbers` (or `include=result`): a `failed` run's `skip_reason` says why, and `legs` shows which step answered.
 5. Webhook users: store `webhook_secret` from the create response immediately; verify every delivery; de-dupe on `run_id`.
 6. To stop spending: `PATCH {"status":"paused"}` or `DELETE` (DELETE erases history; export first).

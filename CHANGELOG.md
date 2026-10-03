@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-03
+
+- **Built for agents first.** SKILL.md is now about 145 lines, down from 417. It loads `references/index.md` (one line per endpoint) and `references/errors.md` (every error code with what to do next) instead of carrying the tables itself.
+- **Every endpoint section is generated from one contract.** Each section now shows what the call returns (top fields with meaning and measured fill), how it pages (page size, how many items a page costs), the cost rule and its levers, the next call to make with the exact field to bind, and its errors. The async web jobs say they return a `job_id` and name the poll route.
+- **A scaled cost gate.** Cheap calls just state the price. Metered calls preflight a quote. Anything over 500 credits upfront, or over budget, is always confirmed. The quote uses the free `GET /v1/utility/estimate` when the server has it, and otherwise the bundled offline `scripts/estimate.py`. A dry run is only suggested once the server is known to answer it for free.
+- **Freshness by fingerprint.** SKILL.md carries the registry fingerprint. The check compares it with `GET /v1/utility/endpoints?fingerprint=1`, and falls back to comparing counts on servers that don't return one.
+- **New free helpers, used where the server has them:** `utility/find` (task in plain English or Korean → endpoint; act only when `uncertain` is false), `utility/resolve`, `utility/estimate`, `utility/explain-error`, `utility/recipes`, plus `fields=` on every call to shrink responses. On servers without them, the skill falls back to the bundled references.
+- **Bundled helpers.** `scripts/` (call, paginate, estimate, batch, CSV export) and `assets/` (the offline endpoint catalogue and TypeScript/Python types), with `references/codegen.md`.
+- 68 platforms / 645 endpoints.
+
 ## 2026-10-02
 
 - Re-synced the whole skill with the backend registry: **65 platforms / 575 endpoints -> 67 platforms / 631 endpoints**. Every platform reference, the pricing reference and the SKILL.md tables are regenerated.

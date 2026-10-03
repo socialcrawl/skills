@@ -30,6 +30,23 @@ REQUIRED_FILES = (
     # missing from the bundle entirely until 08/09/2026.
     "references/monitors.md",
     "references/cohorts.md",
+    # Generated with the tree from the codebase (src/docs/generate-skill-assets.ts):
+    # the helper scripts, the offline endpoint catalogue and the canonical types,
+    # plus the hand-written code-generation guide that points at them.
+    "references/codegen.md",
+    # The agent's entry points: the endpoint index (load first) and the error
+    # code table every retry decision reads.
+    "references/index.md",
+    "references/errors.md",
+    "scripts/sc.py",
+    "scripts/sclib.py",
+    "scripts/paginate.py",
+    "scripts/estimate.py",
+    "scripts/batch.py",
+    "scripts/to_csv.py",
+    "assets/endpoints.json",
+    "assets/socialcrawl-types.ts",
+    "assets/socialcrawl_types.py",
 )
 
 # The endpoints that can hold the most credits in one request, pinned by the
