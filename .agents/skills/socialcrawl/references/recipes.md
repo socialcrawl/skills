@@ -15,6 +15,7 @@ Task to cheapest call chain. Each recipe lists the calls in order (with the valu
 - [News coverage of a topic](#news-coverage-of-a-topic)
 - [Find creators in a niche](#find-creators-in-a-niche)
 - [Instagram creators from one country about a topic](#instagram-creators-from-one-country-about-a-topic)
+- [Instagram creators from one country on a small budget](#instagram-creators-from-one-country-on-a-small-budget)
 - [Vet a creator before a partnership](#vet-a-creator-before-a-partnership)
 - [One creator on every platform](#one-creator-on-every-platform)
 - [A creator's profile, recent posts and the comments on them](#a-creators-profile-recent-posts-and-the-comments-on-them)
@@ -393,7 +394,7 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 
 **Cost** for one page of reels with each creator looked up: 61 credits held up front (settles 1-61; the unused hold is refunded).
 
-**Cheaper** `search/creators` - Cross-platform creator search with min_followers, when the country does not matter.
+**Cheaper** `instagram/profile/about` - On a small budget, the instagram-creators-by-country-budget recipe: search with region= at the plain page price, then one instagram/profile/about call per candidate you keep, which returns both the follower count and the declared country.; `search/creators` - Cross-platform creator search with min_followers, when the country does not matter.
 
 **Pitfalls**
 
@@ -408,6 +409,7 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 |--------|----------|----------|------------|
 | Reels from creators who declare one market | `instagram/search/reels` | country= keeps only that market's creators (ES, MX, DE, BR, KR, FR) and fills followers | per page, plus per creator looked up |
 | Localised reel search without a guarantee | `instagram/search/reels` | region= adds the market to the query at the plain page price; creators may be from anywhere | per page |
+| Budget: region= reels, then check each candidate | `instagram/profile/about` | one call per shortlisted creator returns followers and declared country together (recipe instagram-creators-by-country-budget) | per page, plus flat per candidate checked |
 | Instagram profile search with declared country | `instagram/search/profiles` | include=about fills author.ext.country on up to twelve rows of a profile search | per page, plus per row filled |
 | TikTok creators by account region | `tiktok/search/users` | country= with a wide list of markets, when TikTok fits the brief | per in-country row returned |
 | Cross-platform creator discovery | `search/creators` | Ranked creators with min_followers, but no country filter | flat per call |
@@ -417,6 +419,46 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
 const reels = await sc("instagram/search/reels", { query: "matcha", country: "DE" });
+```
+
+## Instagram creators from one country on a small budget
+
+**When** "cheapest way to find German Instagram creators about matcha", "Instagram creators in one market on a small budget", "check each creator's country and followers myself"
+
+**Inputs**
+
+- `topic`: The topic, ideally as locals phrase it (e.g. `matcha`)
+- `country`: Market code for region=: ES, MX, DE, BR, KR or FR (e.g. `DE`)
+
+**Chain**
+
+1. `GET /v1/instagram/search/reels?query=<topic>&region=<country>` - region= localises the query at the plain page price and looks no creator up; it favours the market's creators but does not promise them, so the next step checks each one.
+2. `GET /v1/instagram/profile/about?handle=<reels.items[].post.author.username>` - once per row of `reels`. One call per distinct candidate returns both author.followers and author.ext.country; keep the creators whose country matches and whose followers clear your floor. Do not also call instagram/profile: this call already carries the follower count.
+
+**Cost** for one page of reels with each creator checked: 31 credits held up front (exact; the unused hold is refunded).
+
+| Step | Endpoint | Runs | Hold each | Hold total |
+|------|----------|------|-----------|------------|
+| reels | `instagram/search/reels` | 1 | 1 | 1 |
+| about | `instagram/profile/about` | 30 | 1 | 30 |
+
+**Deeper** `instagram/search/reels` - country= (the instagram-creators-by-country recipe) drops other markets for you and fills followers in the same call, at a higher price per creator.
+
+**Pitfalls**
+
+- region= supports ES, MX, DE, BR, KR and FR only; any other code is a free 400.
+- Two reels by one creator are one candidate: deduplicate post.author.username before the lookups, and look up only the creators you would keep.
+- author.ext.country is the country the creator declares, and is null when Instagram publishes none; treat a null as unknown, not as a match.
+
+**Code**
+
+```ts
+// sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
+const reels = await sc("instagram/search/reels", { query: "matcha", region: "DE" });
+const about = [];
+for (const row of reels.data.items.slice(0, 30)) {
+  about.push(await sc("instagram/profile/about", { handle: row.post.author.username }));
+}
 ```
 
 ## Vet a creator before a partnership

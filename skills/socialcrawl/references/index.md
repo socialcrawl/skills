@@ -140,6 +140,7 @@ Common jobs, each with the cheapest call chain, its cost for a stated size, and 
 | News coverage of a topic | [recipe](recipes.md#news-coverage-of-a-topic) |
 | Find creators in a niche | [recipe](recipes.md#find-creators-in-a-niche) |
 | Instagram creators from one country about a topic | [recipe](recipes.md#instagram-creators-from-one-country-about-a-topic) |
+| Instagram creators from one country on a small budget | [recipe](recipes.md#instagram-creators-from-one-country-on-a-small-budget) |
 | Vet a creator before a partnership | [recipe](recipes.md#vet-a-creator-before-a-partnership) |
 | One creator on every platform | [recipe](recipes.md#one-creator-on-every-platform) |
 | A creator's profile, recent posts and the comments on them | [recipe](recipes.md#a-creators-profile-recent-posts-and-the-comments-on-them) |

@@ -8,7 +8,8 @@ usage: to_csv.py [--archetype Comment] [--in rows.jsonl] [--out rows.csv] [--col
 Input is JSONL (what paginate.py and batch.py print), a JSON array of rows, or a whole API
 response (its data.items rows are used). With --archetype the columns are the canonical
 schema's core columns, in its order, from assets/endpoints.json, so the header never depends on which rows
-arrived; wrapped rows (`{"comment": {...}}`) are unwrapped. Without it the columns are the sorted
+arrived. Wrapped rows (`{"comment": {...}}`) are unwrapped, with or without --archetype
+(without it, when every row is a one-key object holding an object). Without it the columns are the sorted
 union of every row's dotted leaf paths. The schema's platform-specific `ext.*` columns are left
 out unless --all-ext. --columns overrides the list; --extra appends any leaf
 the schema does not declare (sorted). A --columns path may keep the wrapper key
@@ -82,6 +83,15 @@ def cell(value) -> str:
     return "'" + s if s.startswith(DANGEROUS) else s
 
 
+def wrapper_key(rows: list) -> str | None:
+    """The archetype wrapper (`comment` in `{"comment": {...}}`, what sc.py and paginate.py
+    print) when every row is a one-key object holding an object under the same key."""
+    keys = {next(iter(r)) for r in rows if isinstance(r, dict) and len(r) == 1 and isinstance(next(iter(r.values())), dict)}
+    if rows and len(keys) == 1 and all(isinstance(r, dict) and len(r) == 1 for r in rows):
+        return keys.pop()
+    return None
+
+
 def has_value(value) -> bool:
     return value is not None and value != ""
 
@@ -127,6 +137,10 @@ def main(argv=None) -> int:
         if row_key and isinstance(r, dict) and isinstance(r.get(row_key), dict):
             r = r[row_key]
         rows.append(r)
+    if not row_key:
+        row_key = wrapper_key(rows)
+        if row_key:
+            rows = [r[row_key] for r in rows]
 
     paths = list(columns or [])
     if args.columns and rows:

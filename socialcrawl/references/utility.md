@@ -232,7 +232,12 @@ Turn a job written in plain words ("track mentions of Acme on TikTok and Reddit"
 
 **Query params**
 
-- `query` (required) - The job in plain words, in any language. Up to 600 characters are read · e.g. `Combine @acme's TikTok profile with their recent videos and the comments on them`
+- `query` (optional, string) - The job in plain words, in any language. Up to 600 characters are read. Provide this or task · e.g. `Combine @acme's TikTok profile with their recent videos and the comments on them`
+- `task` (optional, string) - Alias for query (utility/find's name). Provide this or query
+
+**Constraints**
+
+- Provide at least one of `query`, `task`.
 
 **Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, recipe string, uncertain boolean, reason string, confidence number, ask array, cannot array, cannot_ids array, alternatives array, cheaper string, deeper null, catalog_recipe string}; `steps[]` {id string, method string, path string, missing array|string[], credits number, run string, curl string, depends_on string, params object}; `steps[].params` {handle string}; `steps[].binds` {url string}; `size` {description string} (+7 more).
 

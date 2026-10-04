@@ -65,7 +65,7 @@ Over the cap: `403 MONITOR_LIMIT_REACHED`, e.g. "Active-monitor limit reached (1
 
 Body (JSON). Unknown top-level keys are ignored; unknown keys inside `track` are a 400.
 
-**Validate and price without creating:** add `?dry_run=1` (or `"dry_run": 1` in the body) to create, PATCH or DELETE. It runs the same checks (same 400s), writes nothing and returns `{ valid, normalized_body, estimate }` with `estimated_monthly_cost`. Only where `GET /v1/utility/estimate?id=monitors` answers (a 404 there means an older server that ignores `dry_run` here and **creates the monitor**).
+**Validate and price without creating:** add `?dry_run=1` (or `"dry_run": 1` in the body) to create, PATCH or DELETE. It runs the same checks (same 400s), writes nothing and returns the usual envelope with `data: { valid, normalized_body, estimate }` (`estimate.estimated_monthly_cost`), 0 credits. Only where `GET /v1/utility/estimate?id=monitors` answers (a 404 there means an older server that ignores `dry_run` here and **creates the monitor**).
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
