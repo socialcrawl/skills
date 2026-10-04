@@ -39,7 +39,7 @@ Every cross-cutting parameter, once: the label presets for comments, posts and r
 
 - `param` (optional, string) - Return one capability only, by parameter name (for example label or relevance) · e.g. `relevance`
 
-**Response** `Analytics` object at `data`, `{ capabilities, count, filters, kind }` (inferred from a sample): `capabilities`, `count`, `filters.param`, `kind`.
+**Response** `Analytics` object at `data`, `{ kind, filters, count, capabilities }` (inferred from a sample): {kind string, count number}; `filters` {param string}; `capabilities[]` {param string, what string, cost string, values string[], endpoints string[]}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/capabilities" \
@@ -65,7 +65,7 @@ Search the developer docs and endpoint reference for a question and get the best
 
 - Provide at least one of `query`, `q`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `count`, `kind`, `query`, `results`, `version`.
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, query string, count number}; `results[]` {title string, url string, page_url string, snippet string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/docs-search" \
@@ -91,7 +91,7 @@ Complete usage guide for a single endpoint: every parameter with type, descripti
 
 - Provide at least one of `id`, `url`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `cache.note`, `cache.ttl_seconds`, `credits.billing_rules`, `credits.cost`, `credits.label`, `credits.pricing_notes`, `credits.tier`, `description` (+59 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, id string, path string, method string, platform string, resource string, summary string, description string, pagination null}; `credits` {cost number, label string, tier string, pricing_notes null, billing_rules string[]}; `params` {required array}; `params.one_of[]` {options string[], rule string}; `params.optional[]` {name string, type string, description string, example string, requires null}; `cache` {ttl_seconds number, note string}; `response` {archetype string} (+50 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/endpoint" \
@@ -114,7 +114,7 @@ Machine-readable catalog of every active SocialCrawl endpoint: path, method, pla
 - `method` (optional, enum: GET | POST | PATCH | DELETE) - Filter by HTTP method (GET, POST, PATCH or DELETE)
 - `fingerprint` (optional, boolean) - Set to 1 to return only the registry fingerprint (a hash of every endpoint's params, prices and contract facts) and the platform and endpoint counts, to check whether a bundled copy of the catalog is current
 
-**Response** `Analytics` object at `data` (inferred from a sample): `endpoints`, `filters.method`, `filters.platform`, `filters.search`, `kind`, `stats.endpoints`, `stats.platforms`, `stats.social_platforms` (+1 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, total number}; `stats` {platforms number, endpoints number, social_platforms number}; `filters` {platform null, search null, method null}; `endpoints[]` {id string, path string, method string, platform string, resource string, summary string, credits number, credits_label string, archetype string, required_params string[], one_of array, optional_params string[], paginated boolean, how_to_use string, docs_url string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/endpoints" \
@@ -142,7 +142,7 @@ Quote what a call will cost before you make it: the exact credits the API holds 
 
 - Provide at least one of `id`, `plan`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `cached_likely`, `expected_max`, `expected_min`, `formula`, `hold`, `id`, `kind`, `levers` (+9 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, id string, method string, valid boolean, hold number, expected_min number, expected_max number, unit string, pricing string, formula string, cached_likely boolean, notes string[], warnings array}; `levers[]` {param string, hold number, effect string}; `normalized_params` {url string, label string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/estimate" \
@@ -168,7 +168,7 @@ Paste a failed response (its status and body) and get back the fault in plain wo
 
 - Provide at least one of `body`, `status`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `corrected_request.changes`, `corrected_request.method`, `corrected_request.path`, `corrected_request.query.handle`, `corrected_request.url`, `doc_url`, `error_type`, `explanation` (+6 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, status number, fault string, error_type string, explanation string, fix_steps string[], retry boolean, doc_url string}; `corrected_request` {method string, path string, url string}; `corrected_request.query` {handle string}; `corrected_request.changes[]` {op string, from string, to string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/explain-error" \
@@ -194,7 +194,7 @@ Describe what you want in plain words, in any language ("last 200 comments on th
 
 - Provide at least one of `task`, `query`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `alternatives`, `confidence`, `kind`, `methodology_version`, `notes`, `platform`, `reason`, `results` (+3 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, methodology_version string, platform null, uncertain boolean, reason string, source string, confidence number, notes string[]}; `results[]` {id string, method string, path string, missing array, estimated_credits number, expected_min number, pricing string, confidence number, why string, source string}; `results[].params_filled` {url string}; `alternatives[]` {id string, method string, confidence number, source string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/find" \
@@ -215,7 +215,7 @@ The SocialCrawl context corpus for AI agents, served through the API: the same c
 - `platform` (optional, string) - Scope the context to one platform slug · e.g. `tiktok`
 - `format` (optional, enum: markdown | json) - markdown (default) returns the llms corpus text; json returns a structured context object
 
-**Response** `Analytics` object at `data` (inferred from a sample): `content`, `format`, `kind`, `links.llms_full_txt`, `links.llms_txt`, `links.openapi`, `links.quickstart`, `scope`.
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, format string, scope string, content string}; `links` {llms_txt string, llms_full_txt string, openapi string, quickstart string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/llms" \
@@ -234,7 +234,7 @@ Turn a job written in plain words ("track mentions of Acme on TikTok and Reddit"
 
 - `query` (required) - The job in plain words, in any language. Up to 600 characters are read · e.g. `Combine @acme's TikTok profile with their recent videos and the comments on them`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `alternatives`, `ask`, `cannot`, `cannot_ids`, `catalog_recipe`, `cheaper`, `confidence`, `deeper` (+14 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, recipe string, uncertain boolean, reason string, confidence number, ask array, cannot array, cannot_ids array, alternatives array, cheaper string, deeper null, catalog_recipe string}; `steps[]` {id string, method string, path string, missing array|string[], credits number, run string, curl string, depends_on string, params object}; `steps[].params` {handle string}; `steps[].binds` {url string}; `size` {description string} (+7 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/plan" \
@@ -254,7 +254,7 @@ Everything needed for a first successful API call in one response: authenticatio
 
 - `platform` (optional, string) - Tailor the first-call example and links to one platform slug · e.g. `tiktok`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `auth.get_key_url`, `auth.header`, `auth.type`, `base_url`, `billing.model`, `billing.rules`, `billing.tiers.advanced`, `billing.tiers.premium` (+37 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, name string, base_url string}; `auth` {type string, header string, get_key_url string}; `first_call` {description string, url string, curl string, how_to_use string}; `envelope.success` {success boolean, platform string, endpoint string, data string, credits_used number, credits_remaining number, request_id string, cached boolean}; `envelope.error` {success boolean, credits_used number, credits_remaining number}; `envelope.error.error` {type string, message string, status number, doc_url string} (+22 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/quickstart" \
@@ -273,7 +273,7 @@ The catalog of task recipes: common jobs (export a video's comments, vet a creat
 
 - `id` (optional, string) - One recipe id (export-tiktok-comments). Omit for the whole catalog · e.g. `export-tiktok-comments`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `count`, `kind`, `notes`, `recipes`, `version`.
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, count number}; `recipes[]` {id string, title string, when string[]}; `recipes[].inputs[]` {name string, description string, example string}; `recipes[].steps[]` {id string, endpoint string, method string, repeat string}; `recipes[].steps[].params` {url string, sort string, scan_pages string}; `recipes[].size` {description string, items number}; `recipes[].cost` {calls number, hold number, expected_min number, expected_max number, exact boolean, floor boolean, for_items number} (+2 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/recipes" \
@@ -298,7 +298,7 @@ Turn a pasted URL, @handle, platform:handle ("tiktok:charlidamelio") or bare id 
 - Provide at least one of `input`, `inputs`.
 - `inputs`: at most 100 comma-separated values.
 
-**Response** `Analytics` object at `data`, `{ count, kind, results, version }` (inferred from a sample): `count`, `kind`, `results`, `version`.
+**Response** `Analytics` object at `data`, `{ kind, version, count, results }` (inferred from a sample): {kind string, version number, count number}; `results[]` {input string, platform string, kind string, confidence string, warnings array}; `results[].canonical` {id string, url string}; `results[].endpoints[]` {id string, param string, credits number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/resolve" \

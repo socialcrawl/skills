@@ -51,7 +51,7 @@ Returns detailed information about a specific Google advertisement including ad 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google/ad" \
@@ -122,7 +122,7 @@ Returns reviews of a place aggregated from the Google reviews element, not only 
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.responses` | Owner/brand/management replies to the review, each `{id… |
 
-+16 more fields in the full schema. Never filled: `review.author.location`, `review.helpful_votes`, `review.language`, `review.title`, `review.verified`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++16 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {url, images, original_language, source, translated}; `review.author` {name, url, avatar_url, reviews_count}; `review.rating` {max, value}. Never filled: `review.author.location`, `review.helpful_votes`, `review.language`, `review.title`, `review.verified`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google/business/extended-reviews" \
@@ -161,7 +161,7 @@ Returns the full Google Business Profile (Maps / Knowledge Panel) for a local bu
 | `place.price_level` | Price band ("inexpensive" / "$$" / null) |
 | `place.reviews_count` | Number of ratings |
 
-+10 more fields in the full schema.
++10 more (types in the full schema): `place` {verified, address, categories, description, image_urls, latitude, longitude, phone}; `place.rating` {max, value}. Also in the sample: `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}; `place.ext` {place_id string}; `place.ext.rating_distribution` {1 number, 2 number, 3 number} (+2 more).
 
 **Next** `google/business/extended-reviews` (`cid` ← `data.place.id`) - Customer reviews of the business.
 
@@ -203,7 +203,7 @@ Returns the community Q&A on a Google Business Profile: each question and its an
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+7 more fields in the full schema. Never filled: `comment.author.verified`, `comment.engagement.likes`, `comment.flags.pinned`. Page-level: `data.comment_recency`, `data.dropped`.
++7 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name}; `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}; `comment.ext` {author_url}. Never filled: `comment.author.verified`, `comment.engagement.likes`, `comment.flags.pinned`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google/business/questions" \
@@ -241,7 +241,7 @@ Returns the owner-published posts (updates) on a Google Business Profile: text, 
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+6 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++6 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google/business/updates" \
@@ -285,7 +285,7 @@ Returns ads from a specific company/domain in the Google Ads Transparency Center
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+7 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
++7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google/company/ads" \
@@ -318,7 +318,7 @@ Returns full detail for a hotel by its hotel_identifier (from GET /v1/google/hot
 | `place.reviews_count` | Number of ratings |
 | `place.address` |  |
 
-+14 more fields in the full schema. Never filled: `place.price_level`, `place.verified`.
++14 more (types in the full schema): `place` {description, image_urls, latitude, longitude, phone}; `place.hotel` {amenities, check_in_time, check_out_time, prices, review_topics, stars, stars_description}; `place.rating` {max, value}. Never filled: `place.price_level`, `place.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google/hotels/info" \
@@ -353,7 +353,7 @@ Returns hotels for a query from Google Travel: name, star rating, review score, 
 | `place.image_urls` |  |
 | `place.latitude` |  |
 
-+10 more fields in the full schema. Never filled: `place.address`, `place.description`, `place.phone`, `place.price_level`, `place.url`, `place.verified`. Page-level: `data.dropped`.
++10 more (types in the full schema): `place` {longitude}; `place.hotel` {amenities, check_in_time, check_out_time, prices, review_topics, stars, stars_description}; `place.rating` {max, value}. Never filled: `place.address`, `place.description`, `place.phone`, `place.price_level`, `place.url`, `place.verified`. Page-level: `data.dropped`.
 
 **Next** `google/hotels/info` (`hotel_identifier` ← `data.items[].place.id`) - Get Google hotel detail.
 
@@ -375,7 +375,7 @@ Returns Google monthly search volume, cost per click, competition, and a 12-mont
 
 - `keywords` (required) - 1-20 comma-separated keywords (e.g. 'lip gloss,lip oil'). Each keyword may be up to 80 characters. Duplicates are ignored. More than 20 keywords, or a keyword over 80 characters, is rejected with a free 400 before the request is billed. · e.g. `lip gloss,lip oil`
 - `location` (optional, string) - Country as an ISO code ('US', 'GB', 'KR'), a full country name ('United Kingdom', 'South Korea') or a numeric location code ('2826'). Defaults to the United States. Volume is published for 94 countries; any other location is rejected with a free 400 naming the accepted forms. · e.g. `GB`
-- `language` (optional, string) - Language code ('en', 'de', 'ko') the keywords are searched in. Defaults to the country's primary language, so Germany is 'de' and Belgium is 'fr'. A language the country does not hold (Germany in English) is rejected with a free 400 listing the ones it does.
+- `language` (optional, string) - Language code ('en', 'de', 'ko') the keywords are searched in. Defaults to the first language listed for the country: Germany is 'de' and Belgium is 'fr', but Vietnam, Indonesia, India, Malaysia, Pakistan, the Philippines, Hong Kong and Singapore default to 'en', so pass their local language (e.g. 'vi', 'id', 'hi') explicitly. A language the country does not hold (Germany in English) is rejected with a free 400 listing the ones it does.
 
 **Constraints**
 
@@ -404,7 +404,7 @@ Returns Google search results for a query. Each result includes title, URL, and 
 - `date_posted` (optional, enum: last-hour | last-day | last-week | last-month | last-year) - Date posted
 - `page` (optional, integer) - Page number to retrieve
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ description, title, url }` (inferred from a sample): `description`, `title`, `url`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ title, url, description }` (inferred from a sample): {title string, url string, description string}.
 
 Page-level: `data.dropped`.
 

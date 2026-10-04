@@ -53,7 +53,7 @@ Runs reddit/search, expands the top N threads' comments in parallel (capped 15/t
 
 - `include`: at most 2 comma-separated values; each value one of subreddits | comments.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `coverage`, `legs`, `next_cursor`, `partial_failure`, `subreddits`, `threads`.
+**Response** `Analytics` object at `data` (inferred from a sample): `threads[].post` {id string, url string, published_at string}; `threads[].post.content` {text string, media_urls null, thumbnail_url null, duration_seconds null}; `threads[].post.author` {username string, display_name string, avatar_url null, verified null}; `threads[].post.engagement` {views null, likes number, comments number, shares null, saves null}; `threads[].post.flags` {nsfw boolean, spoiler boolean, pinned null, deleted boolean}; `threads[].post.ext` {subreddit string, title string, selftext string, upvote_ratio null, flair null} (+29 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/omni-search" \
@@ -84,7 +84,7 @@ Returns a single Reddit post from its URL, including the post BODY (selftext). `
 | `post.published_at` | 100% | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+20 more fields in the full schema. Never filled: `post.engagement.saves`.
++20 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes, shares, views}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair, selftext}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}; `post.content` {duration_seconds, media_urls} (+1 more). Never filled: `post.engagement.saves`.
 
 **Next** `reddit/post/comments` (`url` ← `data.post.url`) - The comment thread on the post. · `reddit/profile/posts` (`handle` ← `data.post.author.username`) - The author's other posts. · `reddit/profile` (`handle` ← `data.post.author.username`) - Get a Reddit user profile. · `prism/comments` (`url` ← `data.post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -121,7 +121,7 @@ Returns the full threaded comment tree for a Reddit post. Nested replies are aut
 | `comment.author.username` | 100% | Comment author username (null when tombstoned) |
 | `comment.parent_id` | 100% | Parent comment ID for nested replies, or null for… |
 
-+19 more fields in the full schema. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.truncated`.
++19 more (types in the full schema): `comment` {post_id}; `comment.author` {display_name, avatar_url, verified}; `comment.engagement` {likes, replies}; `comment.ext` {depth}; `computed` {labels_evidence, language}; `comment.flags` {deleted, pinned}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.truncated`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/post/comments" \
@@ -142,7 +142,7 @@ Returns the transcript for a Reddit video post or direct `v.redd.it` URL when Re
 - `url` (required) - Reddit post URL or direct v.redd.it video URL. · e.g. `https://www.reddit.com/r/youseeingthisshit/comments/1oiu9xm/football_nostalgiasaints_punter_head_coach_cant/`
 - `language` (optional, string) - 2-letter language code. Defaults to `en`.
 
-**Response** `Transcript` object at `data` (inferred from a sample): `caption_url`, `language`, `post_id`, `raw_vtt`, `transcript`, `transcriptNotAvailable`, `url`, `video_id`.
+**Response** `Transcript` object at `data` (inferred from a sample): {url string, post_id string, video_id string, caption_url string, language string, raw_vtt string, transcript string, transcriptNotAvailable boolean}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/post/transcript" \
@@ -173,7 +173,7 @@ Returns one Reddit account by username: the four-way karma split, the cake day, 
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+15 more fields in the full schema. Never filled: `author.following`, `author.posts_count`, `author.private`, `author.verified`.
++15 more (types in the full schema): `author` {followers, likes_count, joined_at}; `author.ext` {awardee_karma, banner_url, comment_karma, is_nsfw, post_karma, profile_title, trophy_count, social_links}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author.following`, `author.posts_count`, `author.private`, `author.verified`.
 
 **Next** `reddit/profile/posts` (`handle` ← `data.author.username`) - The author's other posts.
 
@@ -209,7 +209,7 @@ Returns the comments one Reddit account has written, newest first, read from the
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+10 more fields in the full schema. Never filled: `comment.author.avatar_url`, `comment.author.verified`, `comment.engagement.replies`, `comment.ext.is_edited`. Page-level: `data.comment_recency`, `data.dropped`.
++10 more (types in the full schema): `comment` {post_id}; `comment.author` {display_name}; `comment.engagement` {likes}; `comment.flags` {deleted, pinned}; `computed` {language}; `comment.ext` {controversiality, is_submitter, post_url, subreddit}. Never filled: `comment.author.avatar_url`, `comment.author.verified`, `comment.engagement.replies`, `comment.ext.is_edited`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/profile/comments" \
@@ -243,7 +243,7 @@ Returns the posts a Reddit account has submitted, newest first by default, up to
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+19 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++19 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes}; `post.ext` {upvote_ratio, content_language, subreddit, title, selftext, flair}; `post.flags` {nsfw, deleted}; `post.content` {thumbnail_url, media_urls, duration_seconds}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/profile/posts" \
@@ -281,7 +281,7 @@ Searches Reddit for posts matching a keyword query. Returns a list of matching p
 | `post.author.username` | 96% | Author username |
 | `post.engagement.comments` | 100% | Comment count. |
 
-+28 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
++28 more (types in the full schema): `post.engagement` {likes}; `post.ext` {subreddit, upvote_ratio, title, selftext}; `post.flags` {nsfw, spoiler}; `post.author` {display_name}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality} (+9 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/search" \
@@ -315,7 +315,7 @@ Searches Reddit's COMMENT index directly, so a phrase that only ever appears thr
 | `comment.url` | Direct URL to the comment on the source platform |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+16 more fields in the full schema. Never filled: `comment.flags.pinned`, `comment.parent_id`. Page-level: `data.comment_recency`, `data.dropped`, `data.switch_receipts`.
++16 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes}; `comment.ext` {content_language, post_author, post_comment_count, post_flair, post_published_at, post_score, post_title, post_url, subreddit, subreddit_subscribers}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.engagement` {replies null}; `comment.ext` {published_at_epoch number}. Never filled: `comment.flags.pinned`, `comment.parent_id`. Page-level: `data.comment_recency`, `data.dropped`, `data.switch_receipts`.
 
 **Next** `reddit/profile/comments` (`handle` ← `data.items[].comment.author.username`) - Read a Reddit account's own comment history, newest first, deeper than any search index reaches. Metered: 2 credits per comment returned, so try /v1/reddit/search/comments?query=author:name first. · `reddit/profile` (`handle` ← `data.items[].comment.author.username`) - Get a Reddit user profile.
 
@@ -351,7 +351,7 @@ Searches Reddit's media-scoped index: the posts a keyword search would return, f
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair, selftext}; `post.flags` {deleted, nsfw}. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `reddit/post` (`url` ← `data.items[].post.url`) - Full details and score for each post. · `reddit/post/comments` (`url` ← `data.items[].post.url`) - List Reddit post comments. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -394,7 +394,7 @@ Returns a list of posts from a subreddit. Each post includes the title, the post
 | `post.author.username` | 100% | Author username |
 | `post.author.display_name` | 100% | Author display name |
 
-+31 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++31 more (types in the full schema): `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {subreddit, upvote_ratio, title, flair}; `post.flags` {nsfw, spoiler}; `post.author` {avatar_url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention} (+12 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 **Next** `reddit/post/comments` (`url` ← `data.items[].post.url`) - List Reddit post comments. · `reddit/post` (`url` ← `data.items[].post.url`) - Get a Reddit post. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -432,7 +432,7 @@ Returns detailed information about a subreddit including the subscriber count at
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+16 more fields in the full schema.
++16 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {is_nsfw, language, rules_text, weekly_active_users, weekly_contributions}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/subreddit/details" \
@@ -469,7 +469,7 @@ Searches for posts within a specific subreddit. Returns matching posts with titl
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair}; `post.flags` {deleted, nsfw, spoiler} (+1 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`.
 
 **Next** `reddit/post/comments` (`url` ← `data.items[].post.url`) - The comment thread on each post. · `reddit/post` (`url` ← `data.items[].post.url`) - Get a Reddit post. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -506,7 +506,7 @@ Finds communities by topic. Every other Reddit endpoint on this API needs you to
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+7 more fields in the full schema. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.verified`. Page-level: `data.dropped`, `data.hydration`.
++7 more (types in the full schema): `author` {followers, joined_at}; `author.ext` {is_nsfw, language, rules_text, weekly_active_users, weekly_contributions}. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.verified`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/subreddits/search" \

@@ -29,7 +29,7 @@ Returns a technical on-page audit for one URL: title, meta, heading counts, on-p
 - `url` (required) - Absolute page URL to audit, including https://. · e.g. `https://www.socialcrawl.dev/`
 - `enable_javascript` (optional, boolean) - Set true to execute JavaScript while loading the page. Default false.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `broken_links`, `broken_resources`, `cache_control.cachable`, `cache_control.ttl`, `checks.canonical`, `checks.deprecated_html_tags`, `checks.duplicate_meta_tags`, `checks.duplicate_title_tag` (+141 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {resource_type string, status_code number, location null, url string}; `meta` {title string, charset number, follow boolean, generator null, description string, favicon string, meta_keywords string, canonical string, internal_links_count number, external_links_count number, inbound_links_count number, images_count number, images_size number, scripts_count number, scripts_size number, stylesheets_count number, stylesheets_size number, title_length number}; `meta.htags` {h3 string[], h1 string[], h2 string[]} (+130 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/on_page/page" \

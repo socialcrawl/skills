@@ -42,7 +42,7 @@ Returns full product detail for a Wayfair item: name, brand, manufacturer, curre
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.reviews_count` |  |
 
-+5 more fields in the full schema.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}.
 
 **Next** `wayfair/reviews` (`sku` ← `data.product.id`) - Get Wayfair product reviews.
 
@@ -81,7 +81,7 @@ Returns written customer reviews for a Wayfair product, 10 per page, each with t
 | `review.entity_id` | ID of the reviewed entity… |
 | `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+9 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++9 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review.author` {name, location}; `review` {images, language}; `review.rating` {value}. Also in the sample: `review` {url null, title null, helpful_votes null, verified boolean, source null, original_language null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/wayfair/reviews" \
@@ -120,7 +120,7 @@ Returns Wayfair products matching a keyword, 48 per page by default, each with i
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+7 more fields in the full schema. Page-level: `data.dropped`.
++7 more (types in the full schema): `product` {features, reviews_count}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}. Page-level: `data.dropped`.
 
 **Next** `wayfair/reviews` (`sku` ← `data.items[].product.id`) - Get Wayfair product reviews. · `wayfair/product` (`sku` ← `data.items[].product.id`) - Get a Wayfair product by SKU.
 

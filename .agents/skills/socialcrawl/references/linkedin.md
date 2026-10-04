@@ -106,7 +106,7 @@ Returns one LinkedIn Ad Library ad as a canonical Post: `content.text` (the ad c
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more fields in the full schema. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/ad" \
@@ -136,7 +136,7 @@ Searches the LinkedIn Ad Library for ads by company, keyword, or filters. Return
 
 - Provide at least one of `company`, `keyword`, `companyId`.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `adDuration`, `adType`, `advertiser`, `advertiserLinkedinPage`, `advertiserLogo`, `carouselImages`, `creativeType`, `cta` (+21 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, description string, headline string, poster string, targeting object, image string, video null, preRollVideo null, organicVideo null, preRollAdvertiser null, carouselImages array, url string, adType string, creativeType string, advertiser string, advertiserLinkedinPage string, advertiserLogo string, cta string, sponsoredMessageSender null, sponsoredMessageSenderAvatar null, sponsoredMessageButtons array, destinationUrl null, landingPage null, adDuration string, startDate null} (+4 more).
 
 Page-level: `data.dropped`.
 
@@ -169,7 +169,7 @@ Returns one Pulse article as a canonical Post: text, author, engagement, and pub
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+15 more fields in the full schema.
++15 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {published_at_precision}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/article" \
@@ -202,7 +202,7 @@ Returns comments on a Pulse article as a canonical CommentList: commenter identi
 | `comment.author.display_name` | Comment author display name |
 | `comment.engagement.replies` | Reply / child-comment count. |
 
-+9 more fields in the full schema. Page-level: `data.comment_recency`, `data.dropped`.
++9 more (types in the full schema): `comment.ext` {author_id, author_headline, is_edited, is_submitter, previous_replies_token, urn}; `comment.flags` {deleted, pinned}; `computed` {language}. Also in the sample: `comment` {url null, parent_id null, post_id string}; `comment.author` {avatar_url string, verified null}; `comment.engagement` {likes null}; `comment.ext` {reaction_counts array}. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/article/comments" \
@@ -235,7 +235,7 @@ Returns members who reacted to a Pulse article as a canonical AuthorList. The re
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+7 more fields in the full schema. Page-level: `data.dropped`.
++7 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `author.ext` {reaction_type, urn}. Page-level: `data.dropped`.
 
 **Next** `linkedin/profile` (`url` ← `data.items[].author.url`) - Get LinkedIn user profile.
 
@@ -268,7 +268,7 @@ Returns public information about a LinkedIn company page. Canonical fields carry
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+24 more fields in the full schema.
++24 more (types in the full schema): `author` {followers, verified, location, following, likes_count, posts_count, joined_at, private}; `author.ext` {employee_count, industries, locations, page_active, specialities, website, cover_url}; `computed` {content_category, engagement_rate, estimated_reach, language} (+5 more).
 
 **Next** `linkedin/company/posts` (`company_id` ← `data.author.id`) - The company page's latest posts. · `linkedin/company/jobs` (`company_id` ← `data.author.id`) - The company's open jobs. · `linkedin/company/also-viewed` (`company_id` ← `data.author.id`) - List company pages people also viewed. · `linkedin/company/employees-count` (`company_id` ← `data.author.id`) - Get a company's employee count, optionally by location.
 
@@ -301,7 +301,7 @@ List a company's affiliated/showcase pages, normalised to the SocialCrawl schema
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+2 more fields in the full schema. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`. Page-level: `data.dropped`.
++2 more (types in the full schema): `author` {followers}; `author.ext` {company_id}. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`. Page-level: `data.dropped`.
 
 **Next** `linkedin/company` (`url` ← `data.items[].author.url`) - Get LinkedIn company page with its full About tab.
 
@@ -339,7 +339,7 @@ Returns company pages LinkedIn shows as 'people also viewed' for a company, as a
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+6 more fields in the full schema. Page-level: `data.dropped`.
++6 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `author.ext` {company_id}. Page-level: `data.dropped`.
 
 **Next** `linkedin/company/employees-count` (`company_id` ← `data.items[].author.ext.company_id`) - Get a company's employee count, optionally by location. · `linkedin/company` (`url` ← `data.items[].author.url`) - Get LinkedIn company page with its full About tab.
 
@@ -372,7 +372,7 @@ Returns the LinkedIn company page that owns a public website domain, as the same
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+22 more fields in the full schema.
++22 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {employee_count, employee_count_range, founded_year, funding, hashtags, headquarters, industries, locations} (+3 more).
 
 **Next** `linkedin/company/people` (`company_id` ← `data.author.id`) - People who work at the company. · `linkedin/company/jobs` (`company_id` ← `data.author.id`) - The company's open jobs. · `linkedin/company/posts` (`company_id` ← `data.author.id`) - List LinkedIn company posts. · `linkedin/company/employees-count` (`company_id` ← `data.author.id`) - Get a company's employee count, optionally by location.
 
@@ -395,7 +395,7 @@ Returns how many LinkedIn members list the company as employer, optionally broke
 - `company_id` (required) - LinkedIn numeric company ID (from /v1/linkedin/company). · e.g. `1441`
 - `geocode` (optional, string) - Comma-separated location ids from /v1/linkedin/search/location.
 
-**Response** `Analytics` object at `data`, `{ byGroup, total }` (inferred from a sample): `byGroup.Current Function`, `byGroup.Field of Study`, `byGroup.Locations`, `byGroup.School`, `byGroup.Service categories`, `byGroup.Skill Explicit`, `total`.
+**Response** `Analytics` object at `data`, `{ byGroup, total }` (inferred from a sample): `byGroup.Current Function[]` {Engineering number, Information Technology number}; `byGroup.Field of Study[]` {Computer Science number, Computational Science number}; `byGroup.Locations[]` {United States number, California, United States number}; `byGroup.School[]` {University of California, Berkeley number, Stanford University number}; `byGroup.Service categories[]` {Consulting number, Marketing number}; `byGroup.Skill Explicit[]` {Python (Programming Language) number, Java number}; {total number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/employees-count" \
@@ -435,7 +435,7 @@ Returns `total`, the number of jobs the company currently has open on LinkedIn. 
 
 - `company_id` (required) - LinkedIn numeric company ID (from /v1/linkedin/company). · e.g. `1035`
 
-**Response** `Analytics` object at `data`, `{ total }` (inferred from a sample): `total`.
+**Response** `Analytics` object at `data`, `{ total }` (inferred from a sample): {total number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/job-count" \
@@ -473,7 +473,7 @@ List a company's job postings, normalised to the SocialCrawl schema.
 | `job.company.name` |  |
 | `job.company.url` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `job` {easy_apply, listed_at, location}; `job.company` {verified}; `job.ext` {is_promote}. Page-level: `data.dropped`.
 
 **Next** `linkedin/job/hiring-team` (`id` ← `data.items[].job.id`) - List the hiring team on a LinkedIn job. · `linkedin/job` (`id` ← `data.items[].job.id`) - Get LinkedIn job details.
 
@@ -510,7 +510,7 @@ Returns a paginated list of members who work at a company, with handle, headline
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+17 more fields in the full schema. Never filled: `author.likes_count`, `author.posts_count`. Page-level: `data.dropped`, `data.hydration`.
++17 more (types in the full schema): `author` {followers, following, location, verified, joined_at}; `author.ext` {followers_approximate, country, cover_url, is_creator, is_hiring, is_influencer, is_open_to_work, is_premium, is_top_voice, member_id, urn, website}. Never filled: `author.likes_count`, `author.posts_count`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/people" \
@@ -543,7 +543,7 @@ Returns recent posts from a LinkedIn company page as the same PostList shape as 
 | `post.author.display_name` | 100% | Author display name |
 | `post.engagement.comments` | 100% | Comment count. |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `post.engagement` {likes, shares}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls string[], thumbnail_url null, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null} (+10 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/posts" \
@@ -595,7 +595,7 @@ List posts in a LinkedIn group, normalised to the SocialCrawl schema.
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls string[], thumbnail_url null, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null} (+11 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/group/posts" \
@@ -627,7 +627,7 @@ Get LinkedIn job details, normalised to the SocialCrawl schema.
 | `job.url` |  |
 | `job.company.name` |  |
 
-+11 more fields in the full schema. Never filled: `job.experience_level`.
++11 more (types in the full schema): `job` {apply_url, description, easy_apply, employment_type, listed_at, location, remote}; `job.company` {verified}; `job.ext` {applicant_count, is_promote, skills}. Never filled: `job.experience_level`.
 
 **Next** `linkedin/job/hiring-team` (`id` ← `data.job.id`) - The people hiring for the job. · `linkedin/company` (`url` ← `data.job.company.url`) - The company page: size, industry and about. · `linkedin/company/also-viewed` (`company_id` ← `data.job.company.id`) - List company pages people also viewed. · `linkedin/company/jobs` (`company_id` ← `data.job.company.id`) - List a company's job postings.
 
@@ -665,7 +665,7 @@ Returns the members LinkedIn shows as the hiring team on a job posting, as a can
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified}; `author.ext` {followers_approximate, is_premium, is_top_voice, urn}. Page-level: `data.dropped`.
 
 **Next** `linkedin/profile` (`url` ← `data.items[].author.url`) - The person's profile: headline, location and current role. · `linkedin/profile/position-skills` (`url` ← `data.items[].author.url`) - List a member's positions with the skills on each role. · `linkedin/profile/all` (`url` ← `data.items[].author.url`) - Get a member's entire profile, counts included, in one call. · `linkedin/profile/complete` (`url` ← `data.items[].author.url`) - Get a member's profile, experience, education, skills and recommendations.
 
@@ -700,7 +700,7 @@ Returns detailed information about a specific LinkedIn post including the post t
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+10 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`.
++10 more (types in the full schema): `post.engagement` {comments, likes, shares}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}; `post.content` {duration_seconds}; `post.ext` {published_at_precision}. Also in the sample: `post` {url string}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {author_id string, post_type string, author_urn string}; `post.ext.reaction_counts[]` {count number, type string} (+5 more). Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post" \
@@ -734,7 +734,7 @@ Returns a paginated list of comments on a LinkedIn post, with commenter identity
 | `comment.author.display_name` | Comment author display name |
 | `comment.engagement.replies` | Reply / child-comment count. |
 
-+9 more fields in the full schema. Page-level: `data.comment_recency`, `data.dropped`.
++9 more (types in the full schema): `comment.ext` {author_id, author_headline, is_edited, is_submitter, previous_replies_token, urn}; `comment.flags` {deleted, pinned}; `computed` {language}. Also in the sample: `comment` {url null, parent_id null, post_id string}; `comment.author` {avatar_url null, verified null}; `comment.engagement` {likes null}; `comment.ext` {reaction_counts array}. Page-level: `data.comment_recency`, `data.dropped`.
 
 **Next** `linkedin/post/comments/replies` (`comment_id` ← `data.items[].comment.id`; carry `url`) - The replies under each comment, sent with the same post url.
 
@@ -769,7 +769,7 @@ Lists the replies under one LinkedIn comment, oldest first, each with its author
 | `comment.author.display_name` | Comment author display name |
 | `comment.engagement.replies` | Reply / child-comment count. |
 
-+9 more fields in the full schema. Page-level: `data.comment_recency`, `data.dropped`.
++9 more (types in the full schema): `comment.ext` {author_id, author_headline, is_edited, is_submitter, previous_replies_token, urn}; `comment.flags` {deleted, pinned}; `computed` {language}. Also in the sample: `comment` {url null, parent_id null, post_id string}; `comment.author` {avatar_url string, verified null}; `comment.engagement` {likes number}; `comment.ext.reaction_counts[]` {count number, type string}. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post/comments/replies" \
@@ -806,7 +806,7 @@ Lists the members who reacted to a LinkedIn post as a canonical AuthorList: name
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+19 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`.
++19 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, joined_at}; `author.ext` {country, cover_url, is_creator, is_hiring, is_influencer, is_open_to_work, is_premium, is_top_voice, member_id, reaction_type, urn, website}. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post/reactions" \
@@ -839,7 +839,7 @@ Lists the members and companies that reshared a LinkedIn post. Each row is one r
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post/reposts" \
@@ -861,7 +861,7 @@ Fetches the transcript from a LinkedIn post video when LinkedIn exposes one publ
 
 - `url` (required) - Full URL of the LinkedIn post to transcribe. · e.g. `https://www.linkedin.com/posts/gemini-35-flash-is-a-step-forward-for-google-ugcPost-7465082215316525056-MHBd/`
 
-**Response** `Transcript` object at `data`, `{ transcript, transcriptNotAvailable, url }` (inferred from a sample): `transcript`, `transcriptNotAvailable`, `url`.
+**Response** `Transcript` object at `data`, `{ url, transcript, transcriptNotAvailable }` (inferred from a sample): {url string, transcript string, transcriptNotAvailable boolean}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post/transcript" \
@@ -881,7 +881,7 @@ Returns one post packed with its comments. Prefer `/v1/linkedin/post` plus `/v1/
 
 - `url` (required) - Activity URL of the LinkedIn post. · e.g. `https://www.linkedin.com/feed/update/urn:li:activity:7501466755261820928`
 
-**Response** `Analytics` object at `data`, `{ comments, post }` (inferred from a sample): `comments`, `post.InterestCount`, `post.appreciationCount`, `post.article.link`, `post.article.newsletter`, `post.article.subtitle`, `post.article.title`, `post.author.firstName` (+26 more).
+**Response** `Analytics` object at `data`, `{ comments, post }` (inferred from a sample): `comments[]` {isPinned boolean, isEdited boolean, urn string, entityUrn string, createdAt number, createdAtString string, permalink string, text string}; `comments[].author` {firstName string, LastName string, urn string, id string, username string, linkedinUrl string, title string}; `comments[].totalSocialActivityCounts` {numComments number, likeCount number, appreciationCount number, empathyCount number, InterestCount number, praiseCount number, funnyCount number, maybeCount number, totalReactionCount number, numShares number} (+35 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post/with-comments" \
@@ -912,7 +912,7 @@ Returns a LinkedIn member's public profile as a canonical Author: `display_name`
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+23 more fields in the full schema.
++23 more (types in the full schema): `author` {followers, following, verified, location, likes_count, posts_count, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {cover_url, is_premium, is_top_voice, urn, country, is_creator, is_hiring} (+4 more).
 
 **Next** `linkedin/profile/posts` (`url` ← `data.author.url`) - The person's latest posts. · `linkedin/profile/complete` (`url` ← `data.author.url`) - The person's full profile in one call. · `linkedin/profile/articles` (`url` ← `data.author.url`) - List Pulse articles a LinkedIn member published. · `linkedin/profile/interests/companies` (`url` ← `data.author.url`) - List companies a member follows.
 
@@ -935,7 +935,7 @@ Returns LinkedIn's account-freshness panel for a member: `joined` (the month the
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
 
-**Response** `Analytics` object at `data`, `{ contact_information, joined, profile_photo }` (inferred from a sample): `contact_information`, `joined`, `profile_photo`.
+**Response** `Analytics` object at `data`, `{ joined, contact_information, profile_photo }` (inferred from a sample): {joined string, contact_information string, profile_photo string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/about" \
@@ -955,7 +955,7 @@ Returns the member's most recent public activity time. Pass the same profile URL
 
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/adamselipsky/`
 
-**Response** `Analytics` object at `data`, `{ date, recentActivity, timestamp, type }` (inferred from a sample): `date`, `recentActivity`, `timestamp`, `type`.
+**Response** `Analytics` object at `data`, `{ date, recentActivity, timestamp, type }` (inferred from a sample): {date string, recentActivity string, timestamp number, type string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/activity" \
@@ -981,7 +981,7 @@ Returns a LinkedIn member's ENTIRE public profile in a single call, every sectio
 
 - Provide at least one of `url`, `urls`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `about`, `author.avatar_url`, `author.bio`, `author.display_name`, `author.ext.country`, `author.ext.cover_url`, `author.ext.followers_approximate`, `author.ext.is_creator` (+154 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {id string, publicIdentifier string, linkedinUrl string, firstName string, lastName string, emails array, headline string, websites string[], openToWork boolean, hiring boolean, premium boolean, influencer boolean, memorialized boolean, creator boolean, objectUrn string, registeredAt string}; `location` {linkedinText string, countryCode string}; `location.parsed` {text string, countryCode string, regionCode null, country string, countryFull string, state string, city string} (+262 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/all" \
@@ -1013,7 +1013,7 @@ Returns the member's LinkedIn Pulse articles as a canonical PostList: `post.id`,
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more fields in the full schema. Page-level: `data.dropped`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
 
 **Next** `linkedin/article/comments` (`url` ← `data.items[].post.url`) - List comments on a LinkedIn Pulse article. · `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/article` (`url` ← `data.items[].post.url`) - Get a LinkedIn Pulse article.
 
@@ -1058,7 +1058,7 @@ List a member's comments, normalised to the SocialCrawl schema.
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `activity.num_comments`, `activity.num_likes`, `activity.num_shares`, `activity.reaction_counts`, `comment`, `created_at`, `is_edited`, `post.activity.num_comments` (+30 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {urn string, comment string, created_at string}; `activity` {num_likes number, num_comments number, num_shares null}; `activity.reaction_counts[]` {count number, type string}; `post` {id string, post_type string, text string}; `post.content` {images null, document null}; `post.content.video.thumbnail[]` {width number, height number, url string, expires_at number}; `post.content.video` {duration string, aspect_ratio string}; `post.content.video.streams[]` {url string, expires_at number, size number, width number, height number, bit_rate number} (+26 more).
 
 Page-level: `data.dropped`.
 
@@ -1080,7 +1080,7 @@ Returns a LinkedIn member's full background in one premium call, in place of `/v
 
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/ryanroslansky/`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `author.avatar_url`, `author.bio`, `author.display_name`, `author.ext.country`, `author.ext.cover_url`, `author.ext.is_creator`, `author.ext.is_hiring`, `author.ext.is_influencer` (+56 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {id number, urn string, username string, firstName string, lastName string, isTopVoice boolean, isCreator boolean, isPremium boolean, profilePicture string, summary string, headline string}; `profilePictures[]` {url string, width number, height number}; `backgroundImage[]` {width number, height number, url string}; `geo` {country string, city string, full string, countryCode string}; `languages[]` {name string, proficiency string}; `position[]` {companyId number, companyName string} (+137 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/complete" \
@@ -1100,7 +1100,7 @@ Returns the contact panel a member has made public: `websites[]`, `phone_numbers
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `address`, `first_name`, `last_name`, `phone_numbers`, `public_identifier`, `twitter`, `urn`, `websites` (+1 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {urn string, public_identifier string, first_name string, last_name string, websites string[], address null, wechat null, phone_numbers array, twitter array}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/contact" \
@@ -1122,7 +1122,7 @@ List a member's education history, normalised to the SocialCrawl schema.
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 - `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ date, id, school }` (inferred from a sample): `date`, `date.end`, `date.start`, `id`, `school`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ id, school, date }` (inferred from a sample): {id string, school string, date object}; `date` {start string, end string}.
 
 Page-level: `data.dropped`.
 
@@ -1146,7 +1146,7 @@ List a member's work experiences, normalised to the SocialCrawl schema.
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 - `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ company, date, title }` (inferred from a sample): `company.id`, `company.logo`, `company.name`, `company.url`, `date.end`, `date.start`, `title`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ title, date, company }` (inferred from a sample): {title string}; `date` {start string, end string}; `company` {id string, name string, url string}; `company.logo[]` {width number, height number, url string, expires_at number}.
 
 Page-level: `data.dropped`.
 
@@ -1175,7 +1175,7 @@ Fans out to the LinkedIn company profile and recent-posts endpoints in parallel 
 
 - `url` is required (it is optional in shape only - the request needs it).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.avg_engagement_rate`, `computed.avg_engagement_rate_by_followers`, `computed.cadence_window_days`, `computed.format_mix.image`, `computed.format_mix.text`, `computed.format_mix.video`, `computed.posts_per_week`, `computed.top_post.engagement_total` (+36 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `profile` {id string, username string, display_name string, avatar_url string, bio string, verified boolean, followers number, following null, posts_count null, likes_count null, url string, location string, private null, joined_at null}; `profile.ext` {website string, cover_url string, page_active boolean, employee_count number, founded_year null, specialities string[], industries string[]}; `profile.ext.employee_count_range` {start number, end null}; `profile.ext.headquarters` {country string, city string} (+65 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/full" \
@@ -1229,7 +1229,7 @@ Lists the image posts on a LinkedIn member's profile, normalised to the same Pos
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more fields in the full schema. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {published_at_precision, reaction_counts}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post` (`url` ← `data.items[].post.url`) - Get LinkedIn post details.
 
@@ -1253,7 +1253,7 @@ List companies a member follows, normalised to the SocialCrawl schema.
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 - `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `follower_count`, `id`, `logo`, `title`, `url`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, title string, follower_count number, url string}; `logo[]` {width number, height number, url string, expires_at number}.
 
 Page-level: `data.dropped`.
 
@@ -1298,7 +1298,7 @@ Returns the newsletters a member follows. Pass the same profile URL `/v1/linkedi
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `description`, `logo`, `name`, `publicationFrequency`, `publisher.firstName`, `publisher.fullName`, `publisher.lastName`, `publisher.profilePicture` (+4 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {publicationFrequency string, name string, url string, description string}; `publisher` {fullName string, url string, username string, firstName string, lastName string, urn string}; `logo[]` {url string, width number, height number}; `publisher.profilePicture[]` {url string, width number, height number}.
 
 Page-level: `data.dropped`.
 
@@ -1321,7 +1321,7 @@ Returns the school pages a member follows. Sibling of `/v1/linkedin/profile/inte
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `followerCount`, `id`, `logo`, `name`, `url`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id number, followerCount number, name string, url string}; `logo[]` {url string, width number, height number}.
 
 Page-level: `data.dropped`.
 
@@ -1343,7 +1343,7 @@ Returns the Top Voice profiles a member follows. Pass the same profile URL `/v1/
 
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/williamhgates/`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `firstName`, `fullName`, `headline`, `lastName`, `profilePicture`, `url`, `urn`, `username`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {urn string, username string, url string, firstName string, lastName string, fullName string, headline string}; `profilePicture[]` {url string, width number, height number}.
 
 Page-level: `data.dropped`.
 
@@ -1365,7 +1365,7 @@ Returns career positions together with the skills listed on each role. `/v1/link
 
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/tedgaubert/`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `companyId`, `companyLogo`, `companyName`, `companyURL`, `companyUsername`, `description`, `employmentType`, `end.day` (+10 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {companyId number, companyName string, companyUsername string, companyURL string, title string, location string, locationType string, description string, employmentType string, skills string[], linkedinHelpedGetJob boolean}; `companyLogo[]` {url string, width number, height number}; `start` {year number, month number, day number}; `end` {year number, month number, day number}.
 
 Page-level: `data.dropped`.
 
@@ -1398,7 +1398,7 @@ Returns the jobs a member is listed as having posted, as a canonical JobList: `j
 | `job.company.name` |  |
 | `job.company.url` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `job` {easy_apply, listed_at, location}; `job.company` {verified}; `job.ext` {is_promote}. Page-level: `data.dropped`.
 
 **Next** `linkedin/job/hiring-team` (`id` ← `data.items[].job.id`) - List the hiring team on a LinkedIn job. · `linkedin/job` (`id` ← `data.items[].job.id`) - Get LinkedIn job details. · `linkedin/company/insights` (`company_id` ← `data.items[].job.company.id`) - Get aggregate insights about a company's members.
 
@@ -1436,7 +1436,7 @@ List a LinkedIn member's recent posts, normalised to the SocialCrawl schema. The
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls null, thumbnail_url string, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null} (+13 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/posts" \
@@ -1470,7 +1470,7 @@ Returns a LinkedIn member's posts read from their own feed rather than from a pu
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more fields in the full schema. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {avatar_url null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {published_at_epoch number} (+1 more). Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post` (`url` ← `data.items[].post.url`) - Get LinkedIn post details.
 
@@ -1526,7 +1526,7 @@ List posts a LinkedIn member reacted to, normalised to the SocialCrawl schema.
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/reactions" \
@@ -1580,7 +1580,7 @@ Returns members LinkedIn groups with a given public profile, as a canonical Auth
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified}; `author.ext` {followers_approximate, is_premium, is_top_voice, urn}. Page-level: `data.dropped`.
 
 **Next** `linkedin/profile` (`url` ← `data.items[].author.url`) - The person's profile: headline, location and current role. · `linkedin/profile/position-skills` (`url` ← `data.items[].author.url`) - List a member's positions with the skills on each role. · `linkedin/profile/all` (`url` ← `data.items[].author.url`) - Get a member's entire profile, counts included, in one call. · `linkedin/profile/complete` (`url` ← `data.items[].author.url`) - Get a member's profile, experience, education, skills and recommendations.
 
@@ -1624,7 +1624,7 @@ Returns `follower_count` and `connection_count` for a member and nothing else. `
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 
-**Response** `Analytics` object at `data`, `{ connection_count, follower_count }` (inferred from a sample): `connection_count`, `follower_count`.
+**Response** `Analytics` object at `data`, `{ follower_count, connection_count }` (inferred from a sample): {follower_count number, connection_count number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/stats" \
@@ -1644,7 +1644,7 @@ Returns the LinkedIn company page of the member's current top position (the empl
 
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/adamselipsky/`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `Images.cover`, `Images.logo`, `backgroundCoverImages`, `callToAction.callToActionMessage`, `callToAction.displayText`, `callToAction.type`, `callToAction.url`, `callToAction.visible` (+23 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {id string, name string, universalName string, linkedinUrl string, tagline string, description string, type string, phone string, isClaimable boolean, staffCount number, headquarter null, locations null, industries string[], specialities array, website string, founded null}; `Images` {logo string, cover string}; `backgroundCoverImages[]` {url string, width number, height number}; `logos[]` {url string, width number, height number}; `callToAction` {type string} (+10 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/top-position" \
@@ -1676,7 +1676,7 @@ Lists the video posts on a LinkedIn member's profile, normalised to the same Pos
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {published_at_precision, reaction_counts}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post/reposts` (`url` ← `data.items[].post.url`) - List reposts of a LinkedIn post. · `linkedin/post/reactions` (`url` ← `data.items[].post.url`) - List reactors on a LinkedIn post.
 
@@ -1720,7 +1720,7 @@ Returns a LinkedIn member's profile, follower and connection counts, and recent 
 
 - `url` (required) - Full URL of the LinkedIn profile. · e.g. `https://www.linkedin.com/in/adamselipsky/`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `author.avatar_url`, `author.bio`, `author.display_name`, `author.ext.country`, `author.ext.cover_url`, `author.ext.is_creator`, `author.ext.is_hiring`, `author.ext.is_influencer` (+52 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {id number, urn string, username string, firstName string, lastName string, isTopVoice boolean, isCreator boolean, isPremium boolean, profilePicture string, summary string, headline string}; `profilePictures[]` {url string, width number, height number}; `backgroundImage[]` {width number, height number, url string}; `geo` {country string, city string, full string, countryCode string}; `educations[].start` {year number, month number, day number}; `educations[].end` {year number} (+149 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/with-posts" \
@@ -1756,7 +1756,7 @@ Returns company pages matching a keyword, as a canonical AuthorList: `username`,
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+6 more fields in the full schema. Page-level: `data.dropped`.
++6 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `author.ext` {company_id}. Page-level: `data.dropped`.
 
 **Next** `linkedin/company` (`url` ← `data.items[].author.url`) - The company page: size, industry and about. · `linkedin/company/posts` (`company_id` ← `data.items[].author.ext.company_id`) - List LinkedIn company posts. · `linkedin/company/also-viewed` (`company_id` ← `data.items[].author.ext.company_id`) - List company pages people also viewed. · `linkedin/company/employees-count` (`company_id` ← `data.items[].author.ext.company_id`) - Get a company's employee count, optionally by location.
 
@@ -1790,7 +1790,7 @@ Returns public posts tagged with a hashtag as a canonical PostList. Pass the tag
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more fields in the full schema. Page-level: `data.dropped`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post/reactions` (`url` ← `data.items[].post.url`) - List reactors on a LinkedIn post. · `linkedin/article` (`url` ← `data.items[].post.url`) - Get a LinkedIn Pulse article.
 
@@ -1812,7 +1812,7 @@ Resolve an industry name to a LinkedIn industry id, normalised to the SocialCraw
 
 - `query` (required) - Search keyword. · e.g. `Software`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ industry_id, name }` (inferred from a sample): `industry_id`, `name`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ name, industry_id }` (inferred from a sample): {name string, industry_id string}.
 
 Page-level: `data.dropped`.
 
@@ -1855,7 +1855,7 @@ Search LinkedIn jobs, normalised to the SocialCrawl schema.
 | `job.url` |  |
 | `job.company.name` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `job` {easy_apply, listed_at, location}; `job.company` {verified}; `job.ext` {is_promote}. Page-level: `data.dropped`.
 
 **Next** `linkedin/job` (`id` ← `data.items[].job.id`) - Full details for each job posting. · `linkedin/company` (`url` ← `data.items[].job.company.url`) - The company page: size, industry and about. · `linkedin/job/hiring-team` (`id` ← `data.items[].job.id`) - List the hiring team on a LinkedIn job. · `linkedin/company/jobs` (`company_id` ← `data.items[].job.company.id`) - List a company's job postings.
 
@@ -1877,7 +1877,7 @@ Resolve a location to a LinkedIn geocode id, normalised to the SocialCrawl schem
 
 - `query` (required) - Search keyword. · e.g. `London`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ geocode, location }` (inferred from a sample): `geocode`, `location`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ location, geocode }` (inferred from a sample): {location string, geocode string}.
 
 Page-level: `data.dropped`.
 
@@ -1925,7 +1925,7 @@ Searches LinkedIn members by name and B2B filters (title, current/past company, 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+19 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`.
++19 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, joined_at}; `author.ext` {followers_approximate, country, cover_url, is_creator, is_hiring, is_influencer, is_open_to_work, is_premium, is_top_voice, member_id, urn, website}. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/search/people" \
@@ -1956,7 +1956,7 @@ Returns members from a LinkedIn people-search URL as a canonical AuthorList. Pas
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Page-level: `data.dropped`.
++10 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified}; `author.ext` {followers_approximate, is_premium, is_top_voice, urn}. Page-level: `data.dropped`.
 
 **Next** `linkedin/profile` (`url` ← `data.items[].author.url`) - Get LinkedIn user profile. · `linkedin/profile/position-skills` (`url` ← `data.items[].author.url`) - List a member's positions with the skills on each role. · `linkedin/profile/top-position` (`url` ← `data.items[].author.url`) - Get the company page of a member's top position. · `linkedin/profile/all` (`url` ← `data.items[].author.url`) - Get a member's entire profile, counts included, in one call.
 
@@ -2008,7 +2008,7 @@ Finds public LinkedIn posts, feed updates, and Pulse articles via Google Search.
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+24 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++24 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes} (+5 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
 
 **Next** `linkedin/post` (`url` ← `data.items[].post.url`) - Full details and stats for each post. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - The comments on each post. · `linkedin/article/comments` (`url` ← `data.items[].post.url`) - List comments on a LinkedIn Pulse article. · `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments.
 
@@ -2031,7 +2031,7 @@ Search LinkedIn schools, normalised to the SocialCrawl schema.
 - `query` (required) - Search keyword. · e.g. `Stanford`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `id`, `location`, `logo`, `name`, `students`, `universal_name`, `url`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, name string, universal_name string, location string, students string, url string}; `logo[]` {width number, height number, url string, expires_at number}.
 
 Page-level: `data.dropped`.
 

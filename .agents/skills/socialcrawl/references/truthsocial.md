@@ -41,7 +41,7 @@ Returns detailed information about a specific Truth Social post including the te
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+14 more fields in the full schema.
++14 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
 
 **Next** `truthsocial/user/posts` (`handle` ← `data.post.author.username`) - List Truth Social user posts. · `truthsocial/profile` (`handle` ← `data.post.author.username`) - Get Truth Social user profile.
 
@@ -74,7 +74,7 @@ Returns public profile information for a Truth Social user including display nam
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more fields in the full schema.
++11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/truthsocial/profile" \
@@ -112,7 +112,7 @@ Returns a list of recent truths posted by a Truth Social user. Each truth includ
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+13 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++13 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `truthsocial/profile` (`handle` ← `data.items[].post.author.username`) - Get Truth Social user profile.
 

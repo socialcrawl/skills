@@ -42,7 +42,7 @@ Returns a single Bluesky post: record text, author info, embeds, replyCount, rep
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+8 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++8 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `bluesky/profile` (`handle` ← `data.post.author.username`) - Get a Bluesky profile.
 
@@ -75,7 +75,7 @@ Returns a Bluesky user's public profile: handle, displayName, avatar, descriptio
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-+7 more fields in the full schema. Never filled: `author.likes_count`.
++7 more (types in the full schema): `author` {following, posts_count, joined_at}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author.likes_count`.
 
 **Next** `bluesky/user/posts` (`handle` ← `data.author.username`) - List a Bluesky user's posts.
 
@@ -113,7 +113,7 @@ Searches public Bluesky posts by keyword and returns up to 100 posts in one page
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+8 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.author` {verified boolean}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/bluesky/search" \
@@ -149,7 +149,7 @@ Returns a feed of posts for a Bluesky user: uri, record text, author info, embed
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+8 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/bluesky/user/posts" \

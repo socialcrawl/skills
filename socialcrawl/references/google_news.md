@@ -47,7 +47,7 @@ Returns a unified NewsArticleList of the top Google News results for a keyword, 
 | `article.domain` | Host domain of the article |
 | `article.image_url` | Thumbnail image URL |
 
-+3 more fields in the full schema. Page-level: `data.dropped`.
++3 more (types in the full schema): `article` {rank, snippet, source}. Also in the sample: `article` {placement string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_news/search" \

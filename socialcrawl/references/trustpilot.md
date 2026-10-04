@@ -39,8 +39,9 @@ Searches Trustpilot for businesses (companies) matching a keyword. Returns a uni
 | `author.display_name` | Display name or full name |
 | `author.external_url` | Bio link / external website URL when surfaced by the… |
 | `author.posts_count` | Total number of posts / videos / tracks / episodes |
+| `author.url` | Direct URL to the profile page (seen in a sample response) |
 
-Page-level: `data.dropped`.
+Also in the sample: `author` {avatar_url null, bio null, verified null, followers null, following null, likes_count null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/trustpilot/business-search" \
@@ -75,7 +76,7 @@ Returns a unified ReviewList of customer reviews for a business on Trustpilot, k
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.verified` | Verified-purchase flag (Amazon; null elsewhere) |
 
-+15 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++15 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language}; `review.author` {name, url, avatar_url, location, reviews_count}; `review.rating` {max, value}. Also in the sample: `review` {helpful_votes null, source null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/trustpilot/reviews" \

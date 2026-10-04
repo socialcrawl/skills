@@ -47,7 +47,7 @@ Returns pins from a Pinterest board, up to 15 per page. Each pin includes its te
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+13 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++13 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/board" \
@@ -79,7 +79,7 @@ Returns one Pinterest pin: its text (the description, or the title when the desc
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+14 more fields in the full schema.
++14 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/pin" \
@@ -115,7 +115,7 @@ Searches Pinterest for pins matching a keyword. Each pin includes its permalink,
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+13 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++13 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/search" \
@@ -139,7 +139,7 @@ Returns what people in one market are searching for on Pinterest, with no keywor
 - `include` (optional, string) - Keep only terms containing one of these keywords, comma-separated (up to 10, e.g. nails,wedding).
 - `exclude` (optional, string) - Drop terms containing any of these keywords, comma-separated (up to 10, e.g. fall).
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `as_of`, `country`, `market`, `monthly_change`, `rank`, `search_index`, `seasonality`, `term` (+4 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {rank number, term string, country string, market string, type string, search_index number, weekly_change number, monthly_change number, yearly_change number, seasonality number, url string, as_of string}.
 
 Page-level: `data.dropped`.
 
@@ -160,7 +160,7 @@ Returns how many times each URL (up to 10 per request, comma-separated) has been
 
 - `urls` (required) - Comma-separated list of 1-10 absolute http(s):// URLs, passed to Pinterest verbatim. Variants (https vs http, with/without trailing slash, with/without query string) are counted as different URLs. · e.g. `https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/`
 
-**Response** `Analytics` rows at `data.items[]`, each `{ _pinterest, saves, url }` (inferred from a sample): `_pinterest.count`, `_pinterest.url`, `saves`, `url`.
+**Response** `Analytics` rows at `data.items[]`, each `{ url, saves, _pinterest }` (inferred from a sample): {url string, saves number}; `_pinterest` {url string, count number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/url-stats" \
@@ -192,7 +192,7 @@ Returns boards created by a Pinterest user. Each board includes title, descripti
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+11 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/user/boards" \

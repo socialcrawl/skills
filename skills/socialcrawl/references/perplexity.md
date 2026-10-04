@@ -26,7 +26,7 @@ Natural-language research over the live web powered by Perplexity Sonar. Returns
 
 - `query` (required) - Natural-language research prompt. Sonar autonomously searches the live web and grounds the response in real sources. No prompt-engineering required: phrase it as you would to a search engine or research assistant. · e.g. `What is the capital of France?`
 
-**Response** `Analytics` object at `data`, `{ answer, sources }` (inferred from a sample): `answer`, `sources`.
+**Response** `Analytics` object at `data`, `{ answer, sources }` (inferred from a sample): {answer string}; `sources[]` {url string, title string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/perplexity/research" \

@@ -48,7 +48,7 @@ Returns detailed information about a TikTok Shop product: full listing descripti
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+14 more fields in the full schema.
++14 more (types in the full schema): `product` {description, reviews_count, seller, specifications, variations}; `product.ext` {seller_id, sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product.ext.seller_reputation` {feedback_percentage number, feedback_count null, top_rated null, items_sold number, joined null} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktokshop/product" \
@@ -88,7 +88,7 @@ Returns reviews for a TikTok Shop product. Each review includes rating, text, au
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.verified` | Verified-purchase flag (Amazon; null elsewhere) |
 
-+15 more fields in the full schema. Never filled: `review.author.reviews_count`, `review.author.url`, `review.helpful_votes`, `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`, `review.url`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++15 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, images}; `review.author` {name, avatar_url, location}; `review.rating` {max, value}; `review.ext.tiktokshop` {is_incentivized_review, reviewer_id, sku_specification}. Never filled: `review.author.reviews_count`, `review.author.url`, `review.helpful_votes`, `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`, `review.url`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktokshop/product/reviews" \
@@ -122,7 +122,7 @@ Returns the products listed on one TikTok Shop storefront: title, images, canoni
 | `product.reviews_count` |  |
 | `product.seller` |  |
 
-+9 more fields in the full schema. Never filled: `product.availability`, `product.brand`, `product.description`. Page-level: `data.dropped`.
++9 more (types in the full schema): `product.ext` {seller_id, sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.description`. Page-level: `data.dropped`.
 
 **Next** `tiktokshop/product` (`url` ← `data.items[].product.url`) - Get TikTok Shop product details.
 
@@ -147,7 +147,7 @@ Runs one keyword through TikTok Shop search in each market you name and returns,
 - `regions` (optional, string) - Comma-separated markets, up to 8: US, GB, DE, FR, IT, ES, IE, ID, MY, MX, PH, SG, TH, VN, BR, JP. Default US. Each market costs one search page (1 credit) when it returns listings. · e.g. `US,GB,MY`
 - `top` (optional, integer, 1-20) - How many top listings by units to return per market, 1 to 20. Default 5.
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=tiktokshop/sales` serves the current contract.
+**Response** `Analytics` object at `data` (inferred from a sample): {query string, method string, methodology_version string, sales_status string, credits_charged number}; `regions[]` {region string, status string, http_status number, listings number, listings_with_sales number, units_sold number, estimated_sales number, currency string, credits number, request_id string}; `regions[].top_products[]` {id string, title string, url string, price number, units_sold number, estimated_sales number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktokshop/sales" \
@@ -180,7 +180,7 @@ Searches TikTok Shop across every storefront for products matching a keyword, in
 | `product.description` |  |
 | `product.reviews_count` |  |
 
-+9 more fields in the full schema. Never filled: `product.availability`, `product.brand`, `product.ext.sku_id`. Page-level: `data.dropped`.
++9 more (types in the full schema): `product` {seller}; `product.ext` {seller_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.ext.sku_id`. Page-level: `data.dropped`.
 
 **Next** `tiktokshop/product/reviews` (`url` ← `data.items[].product.url`) - Buyer reviews of each product. · `tiktokshop/product` (`url` ← `data.items[].product.url`) - Full details for each product.
 
@@ -215,7 +215,7 @@ Fetches products featured in a TikTok user's public showcase: the products a cre
 | `product.reviews_count` |  |
 | `product.ext.seller_id` |  |
 
-+8 more fields in the full schema. Never filled: `product.availability`, `product.brand`, `product.description`, `product.seller`. Page-level: `data.dropped`.
++8 more (types in the full schema): `product.ext` {sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `post` {id string, url string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds null}; `post.author` {username string, display_name null, avatar_url null, verified null}; `post.engagement` {views null} (+42 more). Never filled: `product.availability`, `product.brand`, `product.description`, `product.seller`. Page-level: `data.dropped`.
 
 **Next** `tiktokshop/product` (`url` ← `data.items[].product.url`) - Get TikTok Shop product details.
 

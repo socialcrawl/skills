@@ -41,7 +41,7 @@ Returns one public Telegram post by its t.me URL, including the text, publish ti
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+11 more fields in the full schema.
++11 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}.
 
 **Next** `telegram/profile/posts` (`handle` ← `data.post.author.username`) - List Telegram channel posts. · `telegram/profile` (`handle` ← `data.post.author.username`) - Get Telegram channel profile.
 
@@ -74,7 +74,7 @@ Returns a public Telegram channel or group profile including its display name, d
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+6 more fields in the full schema.
++6 more (types in the full schema): `author` {followers, verified}; `computed` {content_category, engagement_rate, estimated_reach, language}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/telegram/profile" \
@@ -106,7 +106,7 @@ Returns one page of recent public posts from a Telegram channel or group, newest
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+11 more fields in the full schema. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Also in the sample: `post.author` {avatar_url null, verified null}; `post.engagement` {comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
 
 **Next** `telegram/post` (`url` ← `data.items[].post.url`) - Get Telegram post.
 

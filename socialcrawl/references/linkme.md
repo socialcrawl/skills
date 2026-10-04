@@ -37,7 +37,7 @@ Returns data from a Linkme page including display name, bio, avatar, and list of
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-+6 more fields in the full schema. Never filled: `author._links`, `author.following`, `author.likes_count`, `author.url`.
++6 more (types in the full schema): `author` {posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author._links`, `author.following`, `author.likes_count`, `author.url`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkme/page" \

@@ -4,6 +4,7 @@
 usage: sc.py <platform/resource> [k=v ...] [--method M] [--body JSON|@file] [--no-idempotency]
 
   python3 scripts/sc.py tiktok/profile handle=stoolpresidente
+  python3 scripts/sc.py "finance/ticker-search keyword=NVIDIA"   (one quoted argument works too)
   python3 scripts/sc.py prism/post-stats 'urls=["https://www.youtube.com/watch?v=dQw4w9WgXcQ"]'
 
 The response body goes to stdout, `credits_used` to stderr. The key comes from
@@ -48,7 +49,47 @@ def build(endpoint_id: str, kv: dict, method: str | None, body_arg, catalogue):
     return verb, path, query, body
 
 
+USAGE = "usage: sc.py <platform/resource> [k=v ...] [--method M] [--body JSON|@file] (see --help)"
+# Characters a request line may not carry (http.client refuses them); whitespace splits first.
+BAD_ID_CHARS = re.compile(r"[\x00-\x20\x7f?#]")
+
+
+class UsageError(Exception):
+    pass
+
+
+def split_endpoint(endpoint: str, params: list[str]) -> tuple[str, list[str]]:
+    """`sc.py "finance/ticker-search keyword=NVIDIA"`: one quoted argument holding the id and
+    its params is split on whitespace, the same as passing them separately."""
+    parts = endpoint.split()
+    if not parts:
+        raise UsageError("missing <platform/resource>")
+    endpoint_id = sclib.normalize_id(parts[0])
+    if not endpoint_id or BAD_ID_CHARS.search(endpoint_id):
+        raise UsageError(f"not an endpoint id: {parts[0]!r} (expected platform/resource, e.g. tiktok/profile)")
+    return endpoint_id, parts[1:] + list(params)
+
+
+def read_body(arg: str):
+    try:
+        text = Path(arg[1:]).read_text(encoding="utf-8") if arg.startswith("@") else arg
+    except OSError as e:
+        raise UsageError(f"cannot read --body file {arg[1:]!r}: {e.strerror or e}")
+    try:
+        return json.loads(text)
+    except ValueError as e:
+        raise UsageError(f"--body is not valid JSON: {e}")
+
+
 def main(argv=None) -> int:
+    try:
+        return run(argv)
+    except UsageError as e:
+        print(f"sc.py: {e}\n{USAGE}", file=sys.stderr)
+        return sclib.EXIT_ERROR
+
+
+def run(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("endpoint", help="platform/resource, e.g. tiktok/profile")
     ap.add_argument("params", nargs="*", help="k=v query/body params")
@@ -57,15 +98,15 @@ def main(argv=None) -> int:
     ap.add_argument("--no-idempotency", action="store_true", help="do not send an Idempotency-Key (a non-GET is then not retried)")
     args = ap.parse_intermixed_args(argv)
 
-    body_arg = None
-    if args.body:
-        text = Path(args.body[1:]).read_text(encoding="utf-8") if args.body.startswith("@") else args.body
-        body_arg = json.loads(text)
-    kv = sclib.parse_kv(args.params)
-    endpoint_id = sclib.normalize_id(args.endpoint)
-    verb, path, query, body = build(
-        endpoint_id, kv, args.method.upper() if args.method else None, body_arg, sclib.load_catalogue()
-    )
+    body_arg = read_body(args.body) if args.body else None
+    endpoint_id, params = split_endpoint(args.endpoint, args.params)
+    try:
+        kv = sclib.parse_kv(params)
+        verb, path, query, body = build(
+            endpoint_id, kv, args.method.upper() if args.method else None, body_arg, sclib.load_catalogue()
+        )
+    except SystemExit as e:
+        raise UsageError(str(e.code))
     key = sclib.require_key()
     idem = None if args.no_idempotency else sclib.new_idempotency_key()
     # Without an Idempotency-Key a repeated non-GET could charge twice, so it is never retried.

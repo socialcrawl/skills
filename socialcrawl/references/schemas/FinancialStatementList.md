@@ -31,6 +31,9 @@ Every field the 1 field-mapped endpoints returning `FinancialStatementList` can 
 | `financial_statement.operating_expense_delta` | number\|null |  |
 | `financial_statement.period_end` | string\|number\|null | Fiscal period END, absolute UTC. NOTE: this is not a filing date. Point-in-time reconstruction and restatement detection are NOT supported on this surface |
 | `financial_statement.period_type` | string\|null | quarterly \| annual \| ttm |
+| `financial_statement.price_to_book` | number\|null | (seen in a sample response) |
+| `financial_statement.return_on_assets` | number\|null | (seen in a sample response) |
+| `financial_statement.return_on_capital` | number\|null | (seen in a sample response) |
 | `financial_statement.revenue` | number\|null |  |
 | `financial_statement.revenue_delta` | number\|null |  |
 | `financial_statement.shares_outstanding` | number\|null |  |

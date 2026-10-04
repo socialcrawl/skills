@@ -42,7 +42,7 @@ Returns detailed information about a specific Twitch clip including the title, v
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+14 more fields in the full schema.
++14 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitch/clip" \
@@ -73,7 +73,7 @@ Returns public profile information for a Twitch streamer including display name,
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more fields in the full schema.
++11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
 
 **Next** `twitch/user/videos` (`handle` ← `data.author.username`) - List a Twitch user's videos.
 
@@ -95,7 +95,7 @@ Returns the upcoming stream schedule for a Twitch user: each entry includes star
 
 - `handle` (required) - Twitch username. · e.g. `kaicenat`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `__typename`, `broadcastSettings.__typename`, `broadcastSettings.id`, `broadcastSettings.title`, `channel.__typename`, `channel.id`, `channel.schedule`, `id` (+7 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {id string, primaryColorHex string, stream null}; `lastBroadcast` {id string, startedAt string, __typename string}; `broadcastSettings` {id string, title string, __typename string}; `videos.edges[].node` {id string, title string, createdAt string, lengthSeconds number, viewCount number, previewThumbnailURL string, __typename string}; `videos.edges[].node.game` {id string, slug string, name string, __typename string}; `videos.edges[]` {__typename string}; `videos` {__typename string}; `channel` {id string, schedule null, __typename string} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitch/user/schedule" \
@@ -128,7 +128,7 @@ Fetches up to 100 videos for a Twitch user: id, slug, URL, embed URL, title, vie
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+10 more fields in the full schema. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitch/user/videos" \

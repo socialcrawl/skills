@@ -40,7 +40,7 @@ Returns public profile information for a Snapchat user including display name, B
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Never filled: `author.likes_count`.
++10 more (types in the full schema): `author` {followers, following, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author.likes_count`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/profile" \
@@ -72,7 +72,7 @@ Returns comments on a Snapchat Spotlight snap. Each comment includes text, displ
 | `comment.author.display_name` | Comment author display name |
 | `comment.engagement.likes` | Like / upvote count |
 
-+3 more fields in the full schema. Never filled: `comment.author.avatar_url`, `comment.author.username`, `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++3 more (types in the full schema): `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.avatar_url`, `comment.author.username`, `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/spotlight/comments" \

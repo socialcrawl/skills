@@ -35,7 +35,7 @@ Returns dated price observations per store for a Google Shopping product_id from
 - `product_id` (required) - Google Shopping product_id from GET /v1/google_shopping/product-search. · e.g. `catalogid:7310953537322941042,productid:2695666608789071335`
 - `country` (optional, string) - Country as an ISO code such as US (default US).
 
-**Response** `Analytics` object at `data`, `{ product_id }` (inferred from a sample): `product_id`.
+**Response** `Analytics` object at `data`, `{ product_id }` (inferred from a sample): {product_id string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_shopping/price-history" \
@@ -74,7 +74,7 @@ Returns the full detail for a single Google Shopping product: title, description
 | `product.description` |  |
 | `product.reviews_count` |  |
 
-+2 more fields in the full schema.
++2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {seller null, image_urls string[], availability null}; `product.price` {current null, original null, currency null}; `product.specifications[]` {group null, name string, value string}.
 
 **Next** `google_shopping/sellers` (`product_id` ← `data.product.id`) - Get Google Shopping sellers for a product. · `google_shopping/price-history` (`product_id` ← `data.product.id`) - Get Google Shopping price history for a product.
 
@@ -113,7 +113,7 @@ Searches Google Shopping for products matching a keyword. Returns a unified Prod
 | `product.reviews_count` |  |
 | `product.seller` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {brand null, image_urls string[], availability null}; `product.ext` {gid string, data_docid string}. Page-level: `data.dropped`.
 
 **Next** `google_shopping/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `google_shopping/sellers` (`product_id` ← `data.items[].product.id`) - The stores selling each product, with prices. · `google_shopping/price-history` (`product_id` ← `data.items[].product.id`) - Get Google Shopping price history for a product.
 
@@ -153,7 +153,7 @@ Returns a unified ReviewList for a Google Shopping product, aggregated across re
 | `review.entity_id` | ID of the reviewed entity… |
 | `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+10 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review` {title, url, source}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {helpful_votes null, verified null, language null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_shopping/reviews" \
@@ -192,7 +192,7 @@ Returns the list of sellers/offers for a single Google Shopping product: seller 
 | `seller.availability` |  |
 | `seller.domain` |  |
 
-+7 more fields in the full schema. Page-level: `data.dropped`.
++7 more (types in the full schema): `seller.price` {base, currency, shipping, tax, total}; `seller.rating` {average, count}. Also in the sample: `seller` {id string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_shopping/sellers" \

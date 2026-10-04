@@ -51,7 +51,7 @@ Returns the full canonical `App` record for one Google Play app keyed by its pac
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more).
 
 **Next** `google_play/app-reviews` (`app_id` ← `data.app.id`) - Get Google Play reviews for an app.
 
@@ -92,7 +92,7 @@ Returns a unified AppList for a Google Play store chart (top free, top paid, top
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema. Page-level: `data.dropped`.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
 
 **Next** `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Get full Google Play app details.
 
@@ -132,7 +132,7 @@ Searches a real-time, filterable Google Play listings database by app title (and
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema. Page-level: `data.dropped`.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
 
 **Next** `google_play/app-reviews` (`app_id` ← `data.items[].app.id`) - Get Google Play reviews for an app. · `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Get full Google Play app details.
 
@@ -172,7 +172,7 @@ Returns a unified ReviewList of Google Play user reviews for an app, keyed by it
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+10 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, avatar_url}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified null, source null, language null, original_language null, translated null}; `review.author` {url null, location null, reviews_count null} (+28 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_play/app-reviews" \
@@ -206,7 +206,7 @@ Returns a unified AppList of Google Play apps matching a keyword: title, icon, d
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema. Page-level: `data.dropped`.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
 
 **Next** `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Full details for each app. · `google_play/app-reviews` (`app_id` ← `data.items[].app.id`) - User reviews of each app.
 
@@ -224,7 +224,7 @@ Returns the list of Google Play app categories used by the `app_category` filter
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=google_play/categories` serves the current contract.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): each row a string.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_play/categories" \
@@ -239,7 +239,7 @@ Returns the languages (name + code) supported by the Google Play App Data endpoi
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` rows at `data.items[]`, each `{ language_code, language_name }` (inferred from a sample): `language_code`, `language_name`.
+**Response** `Analytics` rows at `data.items[]`, each `{ language_name, language_code }` (inferred from a sample): {language_name string, language_code string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_play/languages" \
@@ -258,7 +258,7 @@ Returns the Google Play storefronts (name + numeric location code + ISO country 
 
 - `location_type` (optional, enum: country | all) - `country` (default) returns the storefronts the `country` param accepts. `all` returns the full underlying geo tree, including cities, postal codes and neighbourhoods, which all resolve to their parent country. · e.g. `country`
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `country_iso_code`, `location_code`, `location_name`, `location_name_parent`, `location_type`.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {location_code number, location_name string, location_name_parent null, country_iso_code string, location_type string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_play/locations" \
@@ -279,7 +279,7 @@ Returns Google Play's search autocomplete suggestions for a keyword stem: the sa
 - `country` (optional, string) - ISO 3166-1 alpha-2 storefront country code (e.g. 'us', 'gb', 'kr'). Defaults to 'us'. Anything that is not alpha-2 is rejected with a free 400; an unrecognised alpha-2 code is forwarded, and Google Play answers it with its default storefront rather than an error, so check the code if results look wrong for the market. · e.g. `us`
 - `language` (optional, string) - ISO 639-1 language code. Defaults to 'en'. · e.g. `en`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ priority, term }` (inferred from a sample): `priority`, `term`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ term, priority }` (inferred from a sample): {term string, priority number}.
 
 Page-level: `data.dropped`.
 

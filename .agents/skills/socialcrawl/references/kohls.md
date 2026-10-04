@@ -28,7 +28,7 @@ Returns Kohl's website navigation tree: department nodes with child categories, 
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` object at `data`, `{ payload }` (inferred from a sample): `payload.categories`.
+**Response** `Analytics` object at `data`, `{ payload }` (inferred from a sample): `payload.categories[]` {ID string, name string, seoURL string, type string}; `payload.categories[].categories[]` {ID string, name string, seoURL string, type string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/kohls/categories" \
@@ -54,7 +54,7 @@ Returns buyer questions for a Kohl's product, 10 per page by default, each with 
 
 - Provide at least one of `product_id`, `url`.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `AdditionalFields`, `AdditionalFieldsOrder`, `AnswerIds`, `AuthorId`, `Badges`, `BadgesOrder`, `CID`, `CampaignId` (+31 more).
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {Id string, CID string, SourceClient string, LastModeratedTime string, LastModificationTime string, ProductId string, AuthorId string, ContentLocale string, TotalInappropriateFeedbackCount number, IsFeatured boolean, HasBestAnswer boolean, TotalAnswerCount number, QuestionSummary string, TotalFeedbackCount number, TotalNegativeFeedbackCount number, TotalPositiveFeedbackCount number, ModerationStatus string, SubmissionId string, SubmissionTime string, UserNickname string, TagDimensionsOrder array, Videos array, AdditionalFieldsOrder array, AnswerIds array|string[], InappropriateFeedbackList array} (+50 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/questions" \
@@ -94,7 +94,7 @@ Returns written customer reviews for a Kohl's product, 8 per page by default, ea
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+10 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, location}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/reviews" \
@@ -129,7 +129,7 @@ Returns one page of Kohl's products for a keyword, 12 per page by default, each 
 | `product.rating.average` |  |
 | `product.rating.count` |  |
 
-Page-level: `data.dropped`.
+Also in the sample: `product` {description null, seller null, brand null, availability string, reviews_count number}; `product.price` {current number, original number, currency string}; `product.variations[]` {id null, title string, url null, category string}; `product.ext.kohls` {colors string[], display_color string, sku string, coupon_eligible boolean, ship boolean}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/search" \
@@ -166,8 +166,9 @@ Returns Kohl's stores within a radius of a latitude,longitude pair, each with st
 | `place.url` | Website or canonical URL |
 | `place.latitude` |  |
 | `place.longitude` |  |
+| `place.category` | Primary category… (seen in a sample response) |
 
-Page-level: `data.dropped`.
+Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, phone null, verified null, description null, image_urls null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/stores" \

@@ -41,7 +41,7 @@ Returns full detail for a single eBay listing: title, brand, price, original pri
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {url string, image_urls null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {sold_count number, condition string, available_quantity number}; `product.ext.seller_reputation` {feedback_percentage number, feedback_count number, top_rated boolean, items_sold number, joined string, url string}; `product.ext.seller_reputation.detailed_ratings` {accurate_description number, reasonable_shipping_cost number} (+2 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/ebay/product" \
@@ -81,7 +81,7 @@ Returns eBay listings matching a keyword, 60 per page on an active search, each 
 | `product.reviews_count` |  |
 | `product.seller` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, brand null, availability null}; `product.ext` {sold_count number, condition string, buying_format string}; `product.ext.seller_reputation` {feedback_percentage number, feedback_count number, top_rated boolean, items_sold null, joined null, url null, detailed_ratings null}. Page-level: `data.dropped`.
 
 **Next** `ebay/product` (`product_id` ← `data.items[].product.id`) - Get an eBay listing by item id.
 

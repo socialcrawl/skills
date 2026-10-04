@@ -37,7 +37,7 @@ Returns Google Trends interest-over-time for up to 5 keywords in one call. Respo
 
 - `keywords`: at most 5 comma-separated values.
 
-**Response** `Analytics` object at `data`, `{ averages, series }` (inferred from a sample): `averages`, `series`.
+**Response** `Analytics` object at `data`, `{ series, averages }` (inferred from a sample): `series[]` {keyword string}; `series[].points[]` {date string, datetime string, value number, partial boolean}; `averages[]` {keyword string, value number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_trends/explore" \
@@ -64,7 +64,7 @@ Returns the related search queries for ONE keyword as `{ rising, top }`. `rising
 
 - `keyword`: at most 1 comma-separated values.
 
-**Response** `Analytics` object at `data`, `{ rising, top }` (inferred from a sample): `rising`, `top`.
+**Response** `Analytics` object at `data`, `{ rising, top }` (inferred from a sample): {rising array}; `top[]` {query string, value number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_trends/rising" \
@@ -89,7 +89,7 @@ Returns what people in one country or region are searching for right now, with n
 - `sort` (optional, enum: relevance | search_volume | recency | title) - relevance (Google's own order, the default), search_volume (largest first), recency (most recently started first), or title (A to Z).
 - `limit` (optional, integer, 1-500) - How many trends to return after filtering and sorting, 1 to 500. Defaults to 100.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `active`, `breakdown`, `categories`, `ended_at`, `increase_percent`, `news`, `rank`, `search_volume` (+2 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {rank number, title string, search_volume number, increase_percent number, started_at string, ended_at null, active boolean, categories string[], breakdown string[]}; `news[]` {title string, url string, source string, domain string, image_url null, published_at string}.
 
 Page-level: `data.dropped`.
 

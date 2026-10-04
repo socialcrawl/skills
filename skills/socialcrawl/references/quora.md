@@ -50,7 +50,7 @@ Returns Quora answers matching a keyword, including the answer text, author name
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+9 more fields in the full schema. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/answers" \
@@ -81,7 +81,7 @@ Returns one Quora question from its URL: title, body text, and published date. Q
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+4 more fields in the full schema.
++4 more (types in the full schema): `computed` {estimated_reach, language}; `post.engagement` {comments}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/post" \
@@ -115,7 +115,7 @@ Returns posts from Quora Spaces matching a keyword: URL, author, upvotes, commen
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+7 more fields in the full schema. Page-level: `data.dropped`.
++7 more (types in the full schema): `computed` {language}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Page-level: `data.dropped`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 
@@ -185,7 +185,7 @@ Returns Quora questions matching a keyword: title, URL, answer count, follower c
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+4 more fields in the full schema. Page-level: `data.dropped`.
++4 more (types in the full schema): `computed` {estimated_reach, language}; `post.engagement` {comments}; `post.flags` {deleted}. Page-level: `data.dropped`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 
@@ -210,7 +210,7 @@ Returns Quora Spaces matching a keyword: name, URL, description, member count, a
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `media.icon_url`, `metrics.followers`, `metrics.members`, `record_type`, `source_context.loaded_url`, `source_context.scraped_at`, `source_context.search_time_filter`, `source_context.search_type` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {record_type string, url string, title string, text string}; `source_context` {seed_type string, seed_value string, source_url string, loaded_url string, scraped_at string, search_type string, search_time_filter string}; `status` {has_results boolean}; `metrics` {followers number, members number}; `media` {icon_url string}; `space` {id string, tribe_id number, name string, url string, description string}; `space.metrics` {followers number, members number}; `space.media` {icon_url string}.
 
 Page-level: `data.dropped`.
 
@@ -235,7 +235,7 @@ Returns Quora topics matching a keyword: name, URL, follower count, and topic ph
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `flags.is_following`, `flags.is_sensitive`, `media.photo_url`, `metrics.followers`, `record_type`, `source_context.loaded_url`, `source_context.scraped_at`, `source_context.search_time_filter` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {record_type string, url string, title string}; `source_context` {seed_type string, seed_value string, source_url string, loaded_url string, scraped_at string, search_type string, search_time_filter string}; `status` {has_results boolean}; `metrics` {followers number}; `media` {photo_url string}; `flags` {is_following boolean, is_sensitive boolean}; `topic` {id string, tid number, name string, url string}; `topic.metrics` {followers number}; `topic.flags` {is_following boolean, is_sensitive boolean}; `topic.media` {photo_url string}.
 
 Page-level: `data.dropped`.
 

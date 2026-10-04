@@ -58,7 +58,7 @@ Returns a unified Place for one TripAdvisor attraction: name, editorial descript
 | `place.reviews_count` | Number of ratings |
 | `place.verified` | Claimed-business flag (Google is_claimed) |
 
-+6 more fields in the full schema.
++6 more (types in the full schema): `place` {categories, description, latitude, longitude, phone}; `place.rating` {value}. Also in the sample: `place` {url null, address string, image_urls string[]}; `place.rating` {max number}; `place.ext` {status string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/attraction" \
@@ -93,7 +93,7 @@ Returns a unified ReviewList of visitor reviews for a TripAdvisor attraction, ke
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+14 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++14 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, original_language}; `review.author` {name, url, avatar_url, reviews_count}; `review.rating` {value}. Also in the sample: `review.rating` {max number}; `review.author` {location null}; `review` {verified null, source null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/attraction/reviews" \
@@ -132,7 +132,7 @@ Searches TripAdvisor attractions, tours, museums, and activities in a destinatio
 | `place.reviews_count` | Number of ratings |
 | `place.categories` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {image_urls}; `place.rating` {value}. Also in the sample: `place.rating` {max number}; `place` {price_level null, address null, phone null, latitude null, longitude null, verified null, description null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/attractions" \
@@ -165,7 +165,7 @@ Type-ahead lookup for TripAdvisor destinations, hotels, restaurants, and attract
 | `place.description` |  |
 | `place.image_urls` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {latitude, longitude}. Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address null, phone null, verified null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/autocomplete" \
@@ -197,6 +197,8 @@ Returns a unified Place for one TripAdvisor cruise ship: name, description, pass
 | `place.reviews_count` | Number of ratings |
 | `place.description` |  |
 | `place.rating.value` |  |
+
+Also in the sample: `place` {url null, price_level null, address null, phone null, latitude null, longitude null, verified null, image_urls string[]}; `place.rating` {max number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/cruise" \
@@ -231,7 +233,7 @@ Returns a unified ReviewList of passenger reviews for a TripAdvisor cruise ship,
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+14 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++14 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, original_language}; `review.author` {name, url, avatar_url, reviews_count}; `review.rating` {value}. Also in the sample: `review.rating` {max number}; `review.author` {location null}; `review` {verified null, source null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/cruise/reviews" \
@@ -268,7 +270,7 @@ Searches TripAdvisor cruise sailings for a destination, with filters for departu
 | `place.reviews_count` | Number of ratings |
 | `place.address` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {image_urls}; `place.rating` {value}. Also in the sample: `place.rating` {max number}; `place` {price_level null, phone null, latitude null, longitude null, verified null, description null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/cruises" \
@@ -289,7 +291,7 @@ Returns the activity taxonomy TripAdvisor uses for a destination, with the numbe
 - `query` (required) - City, region, or destination, e.g. 'Bangkok'. · e.g. `Bangkok`
 - `currency` (optional, string) - Optional 3-letter currency code, e.g. 'USD'.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `count`, `name`, `primaryTaxonomyChipId`, `secondaryTaxonomyId`, `url`.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {name string, count number, primaryTaxonomyChipId number, secondaryTaxonomyId number, url string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/experience-types" \
@@ -322,7 +324,7 @@ Returns a unified Place for one TripAdvisor hotel: name, star rating, total revi
 | `place.reviews_count` | Number of ratings |
 | `place.verified` | Claimed-business flag (Google is_claimed) |
 
-+6 more fields in the full schema.
++6 more (types in the full schema): `place` {categories, description, latitude, longitude, phone}; `place.rating` {value}. Also in the sample: `place` {url null, address string, image_urls string[]}; `place.rating` {max number}; `place.hotel.amenities[]` {category null, name string, available boolean, hint null}; `place.ext` {status string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/hotel" \
@@ -361,7 +363,7 @@ Searches TripAdvisor hotels in a destination, with filters for nightly price ban
 | `place.reviews_count` | Number of ratings |
 | `place.categories` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {image_urls}; `place.rating` {value}. Also in the sample: `place.rating` {max null}; `place` {price_level null, address null, phone null, latitude null, longitude null, verified null, description null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/hotels" \
@@ -394,7 +396,7 @@ Resolves any TripAdvisor place URL - hotel, restaurant, or attraction - into a u
 | `place.reviews_count` | Number of ratings |
 | `place.verified` | Claimed-business flag (Google is_claimed) |
 
-+6 more fields in the full schema.
++6 more (types in the full schema): `place` {categories, description, latitude, longitude, phone}; `place.rating` {value}. Also in the sample: `place` {url null, address string, image_urls string[]}; `place.rating` {max number}; `place.hotel.amenities[]` {category null, name string, available boolean, hint null}; `place.ext` {status string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/place" \
@@ -427,7 +429,7 @@ Returns a unified Place for one TripAdvisor restaurant: name, star rating, total
 | `place.reviews_count` | Number of ratings |
 | `place.verified` | Claimed-business flag (Google is_claimed) |
 
-+6 more fields in the full schema.
++6 more (types in the full schema): `place` {categories, description, latitude, longitude, phone}; `place.rating` {value}. Also in the sample: `place` {url null, address string, image_urls string[]}; `place.rating` {max number}; `place.ext` {status string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/restaurant" \
@@ -462,7 +464,7 @@ Returns a unified ReviewList of diner reviews for a TripAdvisor restaurant, keye
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+14 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++14 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, original_language}; `review.author` {name, url, avatar_url, reviews_count}; `review.rating` {value}. Also in the sample: `review.rating` {max number}; `review.author` {location null}; `review` {verified null, source null, translated boolean} (+6 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/restaurant/reviews" \
@@ -501,7 +503,7 @@ Searches TripAdvisor restaurants in a destination, with filters for cuisine, mea
 | `place.reviews_count` | Number of ratings |
 | `place.categories` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {image_urls}; `place.rating` {value}. Also in the sample: `place.rating` {max number}; `place` {price_level null, address null, phone null, latitude null, longitude null, verified null, description null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/restaurants" \
@@ -540,7 +542,7 @@ Returns a unified ReviewList of traveler reviews for a TripAdvisor place, keyed 
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+16 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++16 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, original_language}; `review.author` {name, url, avatar_url, location, reviews_count}; `review.rating` {max, value}. Also in the sample: `review` {verified null, source null, translated boolean} (+5 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/reviews" \
@@ -574,7 +576,7 @@ Searches TripAdvisor for businesses and places (restaurants, hotels, attractions
 | `place.reviews_count` | Number of ratings |
 | `place.rating.max` |  |
 
-+1 more fields in the full schema. Page-level: `data.dropped`.
++1 more (types in the full schema): `place.rating` {value}. Also in the sample: `place` {url string, address null, phone null, latitude null, longitude null, verified null, description null, image_urls null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tripadvisor/search" \

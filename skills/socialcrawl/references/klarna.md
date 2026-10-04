@@ -45,7 +45,7 @@ Returns Klarna's browse taxonomy for a region: each node's id, display name, and
 
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 
-**Response** `Analytics` object at `data`, `{ categories }` (inferred from a sample): `categories`.
+**Response** `Analytics` object at `data`, `{ categories }` (inferred from a sample): `categories[]` {iconName string, ordinal number}; `categories[].hierarchy` {id string, name string, shortName string, path string}; `categories[].hierarchy.image` {path string, description string}; `categories[].hierarchy.categories[]` {id string, name string, originalName string, path string, externalUrl null, image object, children object[]}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/klarna/categories" \
@@ -65,7 +65,7 @@ Returns one Klarna category and its children. t1 (TV and Audio) returned Headpho
 - `category_id` (required) - Klarna category id, for example cl94 for Headphones or t1 for TV and Audio. Ids come from GET /v1/klarna/categories and from search rows as category.id. Required for GET /v1/klarna/product when you pass product_id instead of a shopping URL. · e.g. `t1`
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `categories`, `id`, `image.description`, `image.path`, `name`, `path`, `shortName`.
+**Response** `Analytics` object at `data` (inferred from a sample): {id string, name string, shortName string, path string}; `image` {path string, description string}; `categories[]` {id string, name string, originalName string, path string, externalUrl null, children array}; `categories[].image` {path string, description string}; `categories[].children[]` {id string, name string, originalName string, path string, externalUrl null, children array}; `categories[].children[].image` {path string, description string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/categories/children" \
@@ -103,7 +103,7 @@ Returns products in a Klarna category, 48 per page by default, each with product
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -127,7 +127,7 @@ Returns the facet groups you can pass as filter on GET /v1/klarna/category (bran
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 - `category_path_id` (optional, string) - Optional sub-category path id as keyID-valueID.
 
-**Response** `Analytics` object at `data`, `{ groups, id }` (inferred from a sample): `groups`, `id`.
+**Response** `Analytics` object at `data`, `{ id, groups }` (inferred from a sample): {id string}; `groups[]` {name string}; `groups[].filters[]` {name string, id string, unit string, type string, description string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/category/filters" \
@@ -149,7 +149,7 @@ Returns Klarna's buying-guide payload for a category: FAQ, shopping tips, and ed
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 - `size` (optional, integer, 1-20) - Number of guiding items, 1 to 20. Default 4.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `boards`, `faq.name`, `faq.questions`, `faq.title`, `order.DESKTOP`, `order.MOBILE`, `previewBoards`, `shoppingTips.description` (+4 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `order` {DESKTOP string[], MOBILE string[]}; `faq` {name string, title string}; `faq.questions[]` {question string, answer string}; `shoppingTips` {name string, title string, description null}; `shoppingTips.questions[]` {question string, answer string}; {boards array}; `sponsoredProducts[]` {type string}; `sponsoredProducts[].board.products[]` {id string, name string, url string, lowestPrice object, rating object, logoFileName string, image object, pricePerUnit null, condition string}; `sponsoredProducts[].board.merchant` {id string, name string}; `sponsoredProducts[].board.merchant.image` {id null} (+4 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/category/guide" \
@@ -170,7 +170,7 @@ Returns popular search keywords for a Klarna category, for example Marantz under
 - `category_id` (required) - Klarna category id, for example cl94 for Headphones or t1 for TV and Audio. Ids come from GET /v1/klarna/categories and from search rows as category.id. Required for GET /v1/klarna/product when you pass product_id instead of a shopping URL. · e.g. `t1`
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 
-**Response** `Analytics` object at `data`, `{ keywords }` (inferred from a sample): `keywords`.
+**Response** `Analytics` object at `data`, `{ keywords }` (inferred from a sample): `keywords[]` {name string, url string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/category/keywords" \
@@ -208,7 +208,7 @@ Returns one Klarna shopping product: title, description, brand, rating, review c
 | `product.description` |  |
 | `product.reviews_count` |  |
 
-+2 more fields in the full schema.
++2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {seller string, image_urls null, availability null}; `product.price` {current null, original null, currency null}.
 
 **Next** `klarna/reviews` (`product_id` ← `data.product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.product.id`) - Get Klarna review totals and score distributions. · `klarna/product/offers` (`product_id` ← `data.product.id`) - List merchant offers for a Klarna product.
 
@@ -243,7 +243,7 @@ Returns two Klarna products side by side: title, brand, rating, lowest price, an
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -283,7 +283,7 @@ Returns the merchant offers Klarna compared for one product, each with seller na
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+1 more fields in the full schema. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.price` {current}. Also in the sample: `product` {description null, brand string, image_urls null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, requested_id string}. Page-level: `data.dropped`.
 
 **Next** `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/price-history` (`product_id` ← `data.items[].product.id`) - Get Klarna price history for a product.
 
@@ -312,7 +312,7 @@ Returns historical merchant prices for a product: lowest, highest, currency, per
 
 - Provide at least one of `product_id`, `url`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `currencyCode`, `highest`, `history`, `lowest`, `merchants`, `productId`.
+**Response** `Analytics` object at `data` (inferred from a sample): {productId string, lowest number, highest number, currencyCode string}; `history[]` {merchantId string, merchantName string, offerId string, timestamp string, timestampEpoch string, price number}; `merchants[]` {id number, name string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/product/price-history" \
@@ -353,7 +353,7 @@ Returns written user reviews aggregated across merchants, 10 per page by default
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+12 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++12 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, source}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {verified boolean, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/reviews" \
@@ -379,7 +379,7 @@ Returns the review summary for a product: average score, user and professional c
 
 - Provide at least one of `product_id`, `url`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `klarnaReviews.pageRequest`, `klarnaReviews.reviews`, `proReviewCount`, `proReviews.pageRequest.hasNext`, `proReviews.pageRequest.limit`, `proReviews.pageRequest.nextBatchId`, `proReviews.pageRequest.section`, `proReviews.pageRequest.type` (+12 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {score number, scoreCount number, proReviewCount number, userReviewCount number, userScoreDistribution number[], proScoreDistribution number[]}; `userReviews.reviews[]` {date string, lang string, country string, source string, domain string, score number, scoreMax number, extract string, author string, product string, type string, logo string, logoWidth number, logoHeight number, icon string, iconWidth number, iconHeight number, votesUp number, votesDown number} (+41 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/reviews/overview" \
@@ -420,7 +420,7 @@ Returns professional and expert reviews for a Klarna product, 10 per page, each 
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+12 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++12 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, source}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {verified boolean, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/reviews/pro" \
@@ -452,7 +452,7 @@ Returns Klarna shopping products matching a keyword, 20 per call, each with prod
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/pro` (`product_id` ← `data.items[].product.id`) - Get Klarna professional reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL.
 
@@ -475,7 +475,7 @@ Returns Klarna search autocomplete: matching products plus category and feature 
 - `query` (required) - Partial search query to autocomplete, for example headphone. · e.g. `headphone`
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `categoryName`, `condition`, `id`, `image.description`, `image.id`, `image.path`, `image.url`, `lowestPrice.amount` (+5 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, name string, url string, categoryName string, outOfStock boolean, condition string, type string}; `lowestPrice` {amount string, currency string}; `image` {id string, url null, path string, description string}.
 
 Page-level: `data.dropped`.
 
@@ -498,7 +498,7 @@ Returns the facet groups for one Klarna store (brands and other filters). Feed v
 - `id` (required) - Klarna store UUID, the last segment of storeKrn: 09f4d635-0452-4f63-9455-c45420d95669 for Walmart US. Ids come back on every row of GET /v1/klarna/stores. · e.g. `09f4d635-0452-4f63-9455-c45420d95669`
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 
-**Response** `Analytics` object at `data`, `{ facets }` (inferred from a sample): `facets.BRAND.facet.categoryId`, `facets.BRAND.facet.countGroups`, `facets.BRAND.facet.counts`, `facets.BRAND.facet.facetType`, `facets.BRAND.facet.id`, `facets.BRAND.facet.name`, `facets.BRAND.facet.rankedCounts`, `facets.BRAND.facet.type` (+35 more).
+**Response** `Analytics` object at `data`, `{ facets }` (inferred from a sample): `facets.PRICE.facet` {categoryId null, maximum number, minimum number, rangeType string, id string, name string, unit string, type string}; `facets.PRICE.facet.counts[]` {from number, to number, count number}; `facets.PRICE.facet.groups[]` {name null, from string, to string, count number}; `facets.CATEGORY.facet` {categoryId null}; `facets.CATEGORY.facet.counts[]` {key string, optionId null, count number, optionValue string, optionImage null}; `facets.CATEGORY.facet.rankedCounts[]` {key string, optionId null, count number, optionValue string} (+49 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/store/filters" \
@@ -534,7 +534,7 @@ Returns products sold by one Klarna retailer, 25 per page by default. Pagination
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -569,8 +569,11 @@ Returns Klarna's retailer directory, 24 per page, each with store UUID, display 
 | `seller.name` | Seller name |
 | `seller.id` |  |
 | `seller.url` |  |
+| `seller.condition` | Item condition… (seen in a sample response) |
+| `seller.annotation` | (seen in a sample response) |
+| `seller.availability` | (seen in a sample response) |
 
-Page-level: `data.dropped`.
+Also in the sample: `seller` {domain null}; `seller.price` {base null, tax null, shipping null, total null, currency null}; `seller.rating` {average null, count null}. Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/klarna/stores" \

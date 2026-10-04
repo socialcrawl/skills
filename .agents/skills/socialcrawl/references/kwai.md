@@ -41,7 +41,7 @@ Returns public Kwai post details: caption, video and cover URLs, view/like/comme
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+15 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++15 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `kwai/user/posts` (`handle` ← `data.post.author.username`) - List a Kwai user's posts. · `kwai/profile` (`handle` ← `data.post.author.username`) - Get a Kwai user profile.
 
@@ -78,7 +78,7 @@ Returns public profile data for a Kwai user: username, bio, avatar, verification
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Never filled: `author.joined_at`.
++10 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author.joined_at`.
 
 **Next** `kwai/user/posts` (`handle` ← `data.author.username`) - List a Kwai user's posts.
 
@@ -118,7 +118,7 @@ Returns a paginated list of public Kwai posts for a user: captions, media URLs, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+15 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++15 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kwai/user/posts" \

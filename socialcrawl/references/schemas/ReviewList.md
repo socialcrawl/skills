@@ -16,6 +16,24 @@ Every field the 22 field-mapped endpoints returning `ReviewList` can carry, with
 | `review.author.reviews_count` | number\|null | (on some endpoints only when the fallback source serves) |
 | `review.author.url` | string\|null |  |
 | `review.entity_id` | string\|null | ID of the reviewed entity (e.g. the Amazon ASIN) |
+| `review.ext.appdata.entity_id` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.helpful_count` | unknown\|null | (seen in a sample response) |
+| `review.ext.appdata.id` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.position` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.rank_absolute` | number\|null | (seen in a sample response) |
+| `review.ext.appdata.rank_group` | number\|null | (seen in a sample response) |
+| `review.ext.appdata.rating.rating_max` | number\|null | (seen in a sample response) |
+| `review.ext.appdata.rating.rating_type` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.rating.value` | number\|null | (seen in a sample response) |
+| `review.ext.appdata.rating.votes_count` | unknown\|null | (seen in a sample response) |
+| `review.ext.appdata.responses` | array\|null | (seen in a sample response) |
+| `review.ext.appdata.review_text` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.timestamp` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.title` | unknown\|string\|null | (seen in a sample response) |
+| `review.ext.appdata.type` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.user_profile.profile_image_url` | string\|unknown\|null | (seen in a sample response) |
+| `review.ext.appdata.user_profile.profile_name` | string\|null | (seen in a sample response) |
+| `review.ext.appdata.version` | string\|null | (seen in a sample response) |
 | `review.ext.tiktokshop.is_incentivized_review` | unknown\|null |  |
 | `review.ext.tiktokshop.reviewer_id` | unknown\|null |  |
 | `review.ext.tiktokshop.sku_specification` | unknown\|null |  |

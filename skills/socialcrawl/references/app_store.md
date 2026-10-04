@@ -51,7 +51,7 @@ Returns the full canonical `App` record for one Apple App Store app keyed by its
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more).
 
 **Next** `app_store/app-reviews` (`app_id` ← `data.app.id`) - Get Apple App Store reviews for an app.
 
@@ -92,7 +92,7 @@ Returns a unified AppList for an Apple App Store chart (top free, top paid, top 
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema. Page-level: `data.dropped`.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
 
 **Next** `app_store/app-reviews` (`app_id` ← `data.items[].app.id`) - Get Apple App Store reviews for an app. · `app_store/app-info` (`app_id` ← `data.items[].app.id`) - Get full Apple App Store app details.
 
@@ -132,7 +132,7 @@ Searches a real-time, filterable Apple App Store listings database by app title 
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema. Page-level: `data.dropped`.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
 
 **Next** `app_store/app-reviews` (`app_id` ← `data.items[].app.id`) - Get Apple App Store reviews for an app. · `app_store/app-info` (`app_id` ← `data.items[].app.id`) - Get full Apple App Store app details.
 
@@ -172,7 +172,7 @@ Returns a unified ReviewList of Apple App Store user reviews for an app, keyed b
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+10 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, avatar_url}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified null, source null, language null, original_language null, translated null}; `review.author` {url null, location null, reviews_count null} (+18 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/app_store/app-reviews" \
@@ -206,7 +206,7 @@ Returns a unified AppList of Apple App Store apps matching a keyword: title, ico
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more fields in the full schema. Page-level: `data.dropped`.
++23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
 
 **Next** `app_store/app-info` (`app_id` ← `data.items[].app.id`) - Full details for each app. · `app_store/app-reviews` (`app_id` ← `data.items[].app.id`) - User reviews of each app.
 
@@ -224,7 +224,7 @@ Returns the list of Apple App Store app categories used by the `app_category` fi
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=app_store/categories` serves the current contract.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): each row a string.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/app_store/categories" \
@@ -239,7 +239,7 @@ Returns the languages (name + code) supported by the Apple App Store App Data en
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` rows at `data.items[]`, each `{ language_code, language_name }` (inferred from a sample): `language_code`, `language_name`.
+**Response** `Analytics` rows at `data.items[]`, each `{ language_name, language_code }` (inferred from a sample): {language_name string, language_code string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/app_store/languages" \
@@ -258,7 +258,7 @@ Returns the Apple App Store storefronts (name + numeric location code + ISO coun
 
 - `location_type` (optional, enum: country | all) - `country` (default) returns the storefronts the `country` param accepts. `all` returns the full underlying geo tree, including cities, postal codes and neighbourhoods, which all resolve to their parent country. · e.g. `country`
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `country_iso_code`, `location_code`, `location_name`, `location_name_parent`, `location_type`.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {location_code number, location_name string, location_name_parent null, country_iso_code string, location_type string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/app_store/locations" \
@@ -278,7 +278,7 @@ Returns Apple's App Store search autocomplete ('search hints') for a keyword ste
 - `query` (required) - Partial search keyword to autocomplete (e.g. 'reverse'). · e.g. `reverse`
 - `country` (optional, string) - ISO 3166-1 alpha-2 storefront country code (e.g. 'us', 'gb', 'kr'; the United Kingdom is 'gb', not 'uk'). Defaults to 'us'. A code that is not an App Store storefront is rejected with a free 400 rather than silently answered with US suggestions. · e.g. `us`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ priority, term }` (inferred from a sample): `priority`, `term`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ term, priority }` (inferred from a sample): {term string, priority number}.
 
 Page-level: `data.dropped`.
 

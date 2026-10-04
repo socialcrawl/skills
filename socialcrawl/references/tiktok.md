@@ -80,7 +80,7 @@ Returns one ad from the TikTok Ad Library: creative video, title, advertiser Tik
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+22 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++22 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext.ad` {audit_status, brand_name, country_code, image_urls, landing_page, last_shown_date} (+3 more). Never filled: `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/adlibrary/ad" \
@@ -120,7 +120,7 @@ Returns ads from the TikTok Ad Library (the EU Commercial Content Library) match
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+22 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++22 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}; `post.ext.ad` {audit_status, brand_name, country_code, estimated_audience, image_urls, landing_page, last_shown_date, objectives, profile_web_link} (+3 more). Never filled: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -162,7 +162,7 @@ Returns TikTok's own leaderboard of top-performing ads for a market and time win
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+24 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Page-level: `data.dropped`.
++24 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes}; `post.flags` {deleted}; `post.ext.ad` {ad_format, cost_score, country_code, ctr, industry, is_spark_ad, landing_page_url, language, like_tier, objective} (+5 more). Never filled: `post.author.avatar_url`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Page-level: `data.dropped`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -195,7 +195,7 @@ Returns the public videos inside a TikTok collection. Each video includes captio
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id}; `post.flags` {deleted}. Also in the sample: `post.ext` {published_at_epoch number}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -241,7 +241,7 @@ Resolves a single TikTok comment to a live comment object (current like count, r
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+10 more fields in the full schema.
++10 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {published_at_epoch}; `comment.flags` {deleted, pinned}; `computed` {language}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/comment" \
@@ -274,7 +274,7 @@ Returns public videos created with a TikTok effect, with full engagement counts 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted, pinned}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -307,7 +307,7 @@ Looks up TikTok effects (the camera filters creators apply to a video) by id, up
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Never filled: `post.author.username`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}; `post.ext` {description, video_count}. Also in the sample: `post.ext` {published_at_epoch number}. Never filled: `post.author.username`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/effects" \
@@ -343,7 +343,7 @@ Returns TikTok's own record for a hashtag: its display name, its description whe
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+7 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.published_at`.
++7 more (types in the full schema): `computed` {language}; `post.author` {verified}; `post.content` {thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}; `post.ext` {description, video_count}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/hashtag" \
@@ -377,7 +377,7 @@ Returns the hashtags TikTok itself ranks as trending in a market over the last 7
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+13 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views` (+4 more). Page-level: `data.dropped`.
++13 more (types in the full schema): `computed` {language}; `post.flags` {deleted}; `post.ext.trend` {boards, country_code, industry, industry_id, industry_label, period_days, popularity_curve, posts, rank, top_creators, views}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views` (+4 more). Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktok/hashtags/popular" \
@@ -409,7 +409,7 @@ Returns public videos tagged at a TikTok place, twenty per page, with full engag
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 
-+19 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++19 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count}; `post.flags` {deleted, pinned}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/song` (`clipId` ← `data.items[].post.ext.music_id`) - Get TikTok song details. · `tiktok/profile/full` (`handle` ← `data.items[].post.author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -449,7 +449,7 @@ Returns the videos inside one of a creator's profile playlists, in playlist orde
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -486,7 +486,7 @@ Returns detailed information about a specific TikTok video including view count,
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 
-+18 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++18 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `tiktok/profile` (`handle` ← `data.post.author.username`) - The creator's profile: followers, likes and bio. · `tiktok/song/videos` (`clipId` ← `data.post.ext.music_id`) - Other videos that use the same sound. · `tiktok/profile/videos` (`handle` ← `data.post.author.username`) - List TikTok user videos. · `tiktok/song` (`clipId` ← `data.post.ext.music_id`) - Get TikTok song details.
 
@@ -525,7 +525,7 @@ Returns a list of comments on a specific TikTok video. Each comment includes the
 | `comment.post_id` | 100% | ID of the post this comment belongs to |
 | `comment.author.avatar_url` | 100% | URL to comment author profile picture |
 
-+16 more fields in the full schema. Never filled: `comment.parent_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.scan`.
++16 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {pinned, deleted}; `computed` {labels_evidence, language}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.parent_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.scan`.
 
 **Next** `tiktok/video/comment/replies` (`comment_id` ← `data.items[].comment.id`; carry `url`) - The replies under each comment, sent with the same video url.
 
@@ -556,7 +556,7 @@ Returns the transcript of a TikTok video. Supports auto-generated captions and A
 
 - `brand` is a no-op without `moments` - sending it alone is a free 400.
 
-**Response** `Transcript` object at `data`, `{ id, transcript, url }` (inferred from a sample): `id`, `transcript`, `url`.
+**Response** `Transcript` object at `data`, `{ id, url, transcript }` (inferred from a sample): {id string, url string, transcript string}.
 
 Page-level: `data.moments`.
 
@@ -594,7 +594,7 @@ Returns public profile information for a TikTok user: follower count, following 
 | `author.display_name` | 100% | Display name or full name |
 | `author.followers` | 100% | Follower or subscriber count as an integer. |
 
-+13 more fields in the full schema.
++13 more (types in the full schema): `author` {following, likes_count, posts_count, verified, private, url, joined_at}; `author.ext` {bio_link, business_category}; `computed` {content_category, engagement_rate, estimated_reach, language}. Also in the sample: `author` {location string}.
 
 **Next** `tiktok/profile/videos` (`handle` ← `data.author.username`) - List TikTok user videos. · `tiktok/user/followers` (`handle` ← `data.author.username`) - List TikTok user followers. · `tiktok/user/following` (`handle` ← `data.author.username`) - List TikTok user following.
 
@@ -624,7 +624,7 @@ Fans out to the TikTok profile and recent-posts endpoints in parallel and return
 
 - Provide at least one of `handle`, `user_id`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.avg_engagement_rate`, `computed.avg_engagement_rate_by_followers`, `computed.cadence_window_days`, `computed.format_mix.video`, `computed.posts_per_week`, `computed.top_post.engagement_total`, `computed.top_post.url`, `legs` (+18 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `profile` {id string, username string, display_name string, avatar_url string, bio string, verified boolean, followers number, following number, posts_count number, likes_count number, url string, private boolean, joined_at null, location string}; `profile.ext` {business_category string, bio_link string}; `posts[].post` {id string, url string}; `posts[].post.content` {text string, media_urls string, thumbnail_url string, duration_seconds number}; `posts[].post.author` {username string, display_name string, avatar_url string} (+34 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/profile/full" \
@@ -660,7 +660,7 @@ Returns the playlists a TikTok creator has published on their profile, each with
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 | `computed.language` | ISO 639-1 language code detected from the post text. |
 
-+3 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw` (+4 more). Page-level: `data.dropped`.
++3 more (types in the full schema): `post.author` {verified}; `post.flags` {deleted}; `post.ext` {video_count}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw` (+4 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/profile/playlists" \
@@ -691,7 +691,7 @@ Returns the ISO 3166-1 alpha-2 region code for a public TikTok profile (e.g. `US
 | `author.bio` | Profile biography or description (only when the fallback source serves) |
 | `author.display_name` | Display name or full name (only when the fallback source serves) |
 
-+13 more fields in the full schema.
++13 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {bio_link, business_category}.
 
 **Next** `tiktok/profile/videos` (`handle` ← `data.author.username`) - List TikTok user videos.
 
@@ -737,7 +737,7 @@ Returns a paginated list of recent public videos posted by a TikTok user. Each v
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+28 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.format_buckets`, `data.held_back`, `data.labels`.
++28 more (types in the full schema): `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {pinned}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language} (+9 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.format_buckets`, `data.held_back`, `data.labels`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/post/comments` (`url` ← `data.items[].post.url`) - List TikTok post comments. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -780,7 +780,7 @@ Searches TikTok for videos matching a keyword query. Returns a list of matching 
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+30 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
++30 more (types in the full schema): `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id, region}; `post.flags` {pinned}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence} (+11 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 **Next** `tiktok/post/comments` (`url` ← `data.items[].post.url`) - The comments on each video. · `tiktok/profile` (`handle` ← `data.items[].post.author.username`) - The creator's profile: followers, likes and bio. · `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -818,7 +818,7 @@ Searches TikTok for videos under a specific hashtag. Returns matching videos wit
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 
-+26 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
++26 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes} (+7 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/profile` (`handle` ← `data.items[].post.author.username`) - The creator's profile: followers, likes and bio. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/profile/videos` (`handle` ← `data.items[].post.author.username`) - List TikTok user videos.
 
@@ -855,7 +855,7 @@ Searches TikTok's sound catalogue by keyword and returns up to thirty matching s
 | `post.url` | Direct URL to the post on the source platform |
 | `post.author.username` | Author username |
 
-+11 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext` {video_count}. Also in the sample: `post.ext` {published_at_epoch number}; `post.ext.dsp_ids` {apple_music string, amazon string, spotify string}. Never filled: `post.author.avatar_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/song/videos` (`clipId` ← `data.items[].post.ext.music_id`) - Other videos that use the same sound.
 
@@ -878,7 +878,7 @@ Returns TikTok's search autocomplete suggestions for a partial query, the same t
 - `query` (required) - Partial search query to autocomplete. · e.g. `dogs`
 - `region` (optional, string) - ISO 3166-1 alpha-2 country code to localize suggestions.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ language, position, score, text }` (inferred from a sample): `language`, `position`, `score`, `text`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ text, position, language, score }` (inferred from a sample): {text string, position number, language string, score number}.
 
 Page-level: `data.dropped`.
 
@@ -918,7 +918,7 @@ Returns the top-ranked videos for a keyword query on TikTok. Rows are posts only
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 
-+21 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.walk`.
++21 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, region} (+2 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.walk`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/profile/videos` (`handle` ← `data.items[].post.author.username`) - List TikTok user videos. · `tiktok/song/videos` (`clipId` ← `data.items[].post.ext.music_id`) - List TikTok videos using a song.
 
@@ -957,7 +957,7 @@ Searches TikTok for user accounts matching a query, 30 per page. Each row carrie
 | `author.bio` | Profile biography or description (with `include=profile`) |
 | `author.display_name` | Display name or full name |
 
-+9 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`.
++9 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, private}; `author.ext` {bio_link, business_category}. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `tiktok/profile/videos` (`handle` ← `data.items[].author.username`) - The account's latest videos. · `tiktok/profile` (`handle` ← `data.items[].author.username`) - The creator's profile: followers, likes and bio. · `tiktok/user/followers` (`handle` ← `data.items[].author.username`) - List TikTok user followers. · `tiktok/profile/full` (`handle` ← `data.items[].author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -991,7 +991,7 @@ Returns TikTok accounts similar to a given creator: the related accounts TikTok 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+7 more fields in the full schema. Never filled: `author.location`. Page-level: `data.dropped`.
++7 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}. Never filled: `author.location`. Page-level: `data.dropped`.
 
 **Next** `tiktok/profile/videos` (`handle` ← `data.items[].author.username`) - List TikTok user videos. · `tiktok/profile/full` (`handle` ← `data.items[].author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -1024,7 +1024,7 @@ Returns details about a specific TikTok sound/song including title, artist, dura
 | `post.url` | Direct URL to the post on the source platform (only when the fallback source serves) |
 | `post.author.username` | Author username (only when the fallback source serves) |
 
-+12 more fields in the full schema. Never filled: `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++12 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `tiktok/song/videos` (`clipId` ← `data.post.ext.music_id`) - List TikTok videos using a song.
 
@@ -1063,7 +1063,7 @@ Returns videos that use a specific TikTok sound/song. Each video includes engage
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.adoption`, `data.dropped`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, music_id}; `post.flags` {deleted, pinned}. Also in the sample: `post.ext` {published_at_epoch number}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.adoption`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/song/videos" \
@@ -1096,7 +1096,7 @@ Returns a page of popular TikTok videos for a country, with view, like, comment,
 | `post.id` | 100% | Platform-specific post ID… |
 | `post.published_at` | 100% | Post creation timestamp as an ISO 8601 UTC string. |
 
-+20 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, region, content_language}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/song` (`clipId` ← `data.items[].post.ext.music_id`) - Get TikTok song details. · `tiktok/profile` (`handle` ← `data.items[].post.author.username`) - Get TikTok user profile.
 
@@ -1118,7 +1118,7 @@ Returns audience geography for a TikTok creator: audienceLocations ranks the top
 
 - `handle` (required) - TikTok username without the @ symbol · e.g. `charlidamelio`
 
-**Response** `Audience` object at `data`, `{ audienceAges, audienceGenders, audienceLocations, audienceStates }` (inferred from a sample): `audienceAges`, `audienceGenders`, `audienceLocations`, `audienceStates`.
+**Response** `Audience` object at `data`, `{ audienceLocations, audienceAges, audienceGenders, audienceStates }` (inferred from a sample): `audienceLocations[]` {country string, countryCode string, count number, percentage string}; `audienceAges[]` {key string, percentage number}; `audienceGenders[]` {key string, percentage number}; `audienceStates[]` {state string, count number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/user/audience" \
@@ -1156,7 +1156,7 @@ Returns a list of followers for a TikTok user. Each follower includes username, 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+8 more fields in the full schema. Page-level: `data.dropped`.
++8 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, joined_at, private}. Page-level: `data.dropped`.
 
 **Next** `tiktok/profile` (`handle` ← `data.items[].author.username`) - The creator's profile: followers, likes and bio. · `tiktok/profile/full` (`handle` ← `data.items[].author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -1196,7 +1196,7 @@ Returns a list of accounts that a TikTok user is following. Each account include
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+8 more fields in the full schema. Page-level: `data.dropped`.
++8 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, joined_at, private}. Page-level: `data.dropped`.
 
 **Next** `tiktok/profile` (`handle` ← `data.items[].author.username`) - The creator's profile: followers, likes and bio. · `tiktok/profile/full` (`handle` ← `data.items[].author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -1235,7 +1235,7 @@ Returns the videos a given TikTok account has liked, newest first, thirty per pa
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more fields in the full schema. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted, pinned}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -1257,7 +1257,7 @@ Returns the current live-stream state for a TikTok user: `is_live`, and when the
 
 - `handle` (required) - TikTok username without the @ symbol · e.g. `charlidamelio`
 
-**Response** `Analytics` object at `data`, `{ is_live, liveRoom, liveRoomUserInfo }` (inferred from a sample): `is_live`, `liveRoom.coverUrl`, `liveRoom.gameTagId`, `liveRoom.hevcStreamData.pull_data.options.default_preview_quality.icon_type`, `liveRoom.hevcStreamData.pull_data.options.default_preview_quality.level`, `liveRoom.hevcStreamData.pull_data.options.default_preview_quality.name`, `liveRoom.hevcStreamData.pull_data.options.default_preview_quality.resolution`, `liveRoom.hevcStreamData.pull_data.options.default_preview_quality.sdk_key` (+67 more).
+**Response** `Analytics` object at `data`, `{ is_live, liveRoom, liveRoomUserInfo }` (inferred from a sample): {is_live boolean}; `liveRoom` {coverUrl string, squareCoverImg string, title string, startTime number, status number, liveSubOnly number, liveRoomMode number, gameTagId number}; `liveRoom.paidEvent` {event_id number, paid_type number}; `liveRoom.liveRoomStats` {enterCount number, userCount number}; `liveRoom.streamData.pull_data.options.default_preview_quality` {icon_type number, level number, name string, resolution string, sdk_key string, v_codec string}; `liveRoom.streamData.pull_data.options.default_quality` {icon_type number, level number, name string, resolution string, sdk_key string, v_codec string} (+50 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/user/live" \
@@ -1293,7 +1293,7 @@ Fetches replies to a specific TikTok comment by its ID. Returns an array of comm
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+17 more fields in the full schema. Never filled: `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++17 more (types in the full schema): `computed` {labels_evidence, language}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted, pinned}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/video/comment/replies" \
@@ -1304,7 +1304,7 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/video/comment/replies" \
 
 ## GET /v1/tiktok/video/screen-text - 5 credits (advanced)
 
-Extracts the text shown ON the video itself: the overlay captions creators put on screen, which the regular caption and transcript never carry. Two layers are merged: native text-sticker data (present when the creator used TikTok's built-in text tool) and AI OCR of the video's cover frame, which also catches text burned in with editors like CapCut that no data provider returns. `texts` is the deduplicated union in reading order; `native_texts` and `ocr_texts` expose each layer separately and `source` says which layers produced data. A video with no on-screen text returns an empty `texts` array (that is a real answer, not an error). Costs 5 credits; auto-refunds when the video lookup or the whole extraction fails.
+Extracts the text shown ON a TikTok post itself: the overlay captions creators put on screen, which the regular caption and transcript never carry. Two layers are merged: native text-sticker data (present when the creator used TikTok's built-in text tool) and AI OCR of the post's images, which also catches text burned in with editors like CapCut that no data provider returns. What the OCR layer reads depends on the post. On a video, the cover frame only, so text that appears later in the video is not read. On a photo post (pass its `/photo/` link), every slide in order, up to the first 10; a longer photo post is read to slide 10 and the response carries a warning giving its full slide count. `texts` is the deduplicated union in reading order; `native_texts` and `ocr_texts` expose each layer separately and `source` says which layers produced data. On a photo post, `images` lists each slide read with its own `texts` and its 0-based `index`, so you know which slide said what. A post with no on-screen text returns an empty `texts` array (that is a real answer, not an error). Costs 5 credits for a video or a photo post of any length; auto-refunds when the post lookup or the whole extraction fails.
 
 **Use when** you want it for the on-screen overlay text; the caption lives on post and the spoken words on post/transcript.
 **Cost** cache 600 s
@@ -1312,9 +1312,9 @@ Extracts the text shown ON the video itself: the overlay captions creators put o
 
 **Query params**
 
-- `url` (required) - Full URL of the TikTok video · e.g. `https://www.tiktok.com/@stoolpresidente/video/7499229683859426602`
+- `url` (required) - Full URL of the TikTok video or photo post (a `/video/` or `/photo/` link) · e.g. `https://www.tiktok.com/@stoolpresidente/video/7499229683859426602`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `frame`, `native_texts`, `ocr_texts`, `source`, `texts`, `url`, `video_id`.
+**Response** `Analytics` object at `data` (inferred from a sample): {video_id string, url string, texts string[], native_texts string[], ocr_texts string[], source string, media_type string, frame string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/video/screen-text" \
@@ -1349,7 +1349,7 @@ Returns the videos TikTok itself ranks at the top of its Top Videos board for a 
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more fields in the full schema. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.ext` {author_followers, author_id}; `post.flags` {deleted}; `post.ext.trend` {content_tags, country_code, engagement_rate, order_by, organic_views, period_days, period_views, rank} (+1 more). Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/post/comments` (`url` ← `data.items[].post.url`) - List TikTok post comments. · `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/profile/videos` (`handle` ← `data.items[].post.author.username`) - List TikTok user videos.
 

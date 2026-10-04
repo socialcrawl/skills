@@ -28,7 +28,7 @@ Returns Target's top-level browse taxonomy: each node's id, display name, parent
 **Cost** cache 1800 s
 **Paging** single page - The upstream returns the COMPLETE top-level taxonomy in one call (29 of 29 nodes, verified live 2026-07-27) and exposes no page parameter.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `name`, `node_id`, `parent_id`, `seo_data.canonical_url`, `seo_data.image_path`, `seo_data.seo_h1`, `type`.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `seo_data` {canonical_url string, seo_h1 string, image_path string}; {type string, name string, parent_id string, node_id string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/target/categories" \
@@ -59,7 +59,7 @@ Returns products listed in a Target category, 24 per page, each with title, bran
 | `product.price.current` |  |
 | `product.price.original` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, image_urls string[], availability null, reviews_count null, features string[]}; `product.price` {currency string}. Page-level: `data.dropped`.
 
 **Next** `target/product` (`tcin` ← `data.items[].product.id`) - Full details for each product. · `target/reviews` (`tcin` ← `data.items[].product.id`) - Get Target product reviews.
 
@@ -92,7 +92,7 @@ Returns full product detail for a Target item: title, brand, description, highli
 | `product.description` |  |
 | `product.reviews_count` |  |
 
-+4 more fields in the full schema.
++4 more (types in the full schema): `product.price` {current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, image_urls string[], availability string, features string[]}; `product.price` {currency string}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.rating_distribution` {star_1 number, star_2 number, star_3 number, star_4 number, star_5 number}.
 
 **Next** `target/reviews` (`tcin` ← `data.product.id`) - Get Target product reviews.
 
@@ -128,7 +128,7 @@ Returns written customer reviews for a Target product, 10 per page, each with th
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+11 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++11 more (types in the full schema): `review` {verified, title, images}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review` {url null, source null, language null, original_language null}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/target/reviews" \
@@ -155,8 +155,11 @@ Returns Target stores near a ZIP code, city, or state, each with its store id, n
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
 | `place.phone` |  |
+| `place.url` | Website or canonical URL (seen in a sample response) |
+| `place.category` | Primary category… (seen in a sample response) |
+| `place.price_level` | Price band ("inexpensive" / "$$" / null) (seen in a sample response) |
 
-Page-level: `data.dropped`.
+Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, address string, latitude null, longitude null, verified null, description null, image_urls null}; `place.ext` {distance number, status string, timezone string}; `place.ext.hours[]` {date string, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/target/stores" \

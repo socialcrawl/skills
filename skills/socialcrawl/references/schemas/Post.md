@@ -55,6 +55,7 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.ad.title` | unknown\|null |  |
 | `post.ext.ad.video_hd_url` | unknown\|null |  |
 | `post.ext.ad.video_sd_url` | unknown\|null |  |
+| `post.ext.all_media_urls` | array\|null | (seen in a sample response) |
 | `post.ext.amazon_shop_curations` | array\|null |  |
 | `post.ext.amazon_shop_lists` | array\|null |  |
 | `post.ext.amazon_shop_socials` | array\|null |  |
@@ -65,12 +66,19 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.apple_music.release_info` | unknown\|null |  |
 | `post.ext.apple_music.track_count` | unknown\|null |  |
 | `post.ext.apple_music.track_number` | unknown\|null |  |
+| `post.ext.article.source` | string\|null | (seen in a sample response) |
+| `post.ext.article.title` | string\|null | (seen in a sample response) |
+| `post.ext.article.url` | string\|null | (seen in a sample response) |
 | `post.ext.author_followers` | number\|null | The creator's follower count as embedded in the search payload itself, when the search source happens to carry one. On `instagram/search/reels` it is null on a plain call, because Instagram stopped sending follower counts in its search payload in August 2026; send `include=creator` (or `country`) and it is filled from the creator's profile, 2 credits per creator looked up. It stays null when that lookup does not resolve. |
 | `post.ext.author_following` | number\|null |  |
+| `post.ext.author_headline` | string\|null | (seen in a sample response) |
 | `post.ext.author_id` | string\|null | The creator's platform-native numeric user id. On TikTok search and list items, pass to `/v1/tiktok/profile?user_id=` for the creator's current follower count (survives username changes). On `instagram/search/reels` items it is present on every row from every serving source, accepted by `/v1/instagram/basic-profile?userId=`. On Facebook it appears when the upstream exposed a numeric actor id and no real handle. (on some endpoints only when the fallback source serves) |
 | `post.ext.author_posts_count` | number\|null |  |
+| `post.ext.author_type` | string\|null | (seen in a sample response) |
+| `post.ext.author_urn` | string\|null | (seen in a sample response) |
 | `post.ext.categoryTitle` | string\|null | (only when the fallback source serves) |
 | `post.ext.channel_id` | string\|null |  |
+| `post.ext.coauthors` | array\|null | Instagram collaborative posts (the native "Collab" feature). The full list of co-author accounts on the post, as `{ id, username, full_name, is_verified, profile_pic_url }`. A collab post has ONE producer and appears in every co-author's grid, so `post.author` is whichever account created it, which is not necessarily the profile you queried. The complete set of accounts on a post is `post.author.username` plus every `username` in this array. An empty array means Instagram reports the post as NOT a collab; the field is absent on surfaces that carry no co-author signal, including `/v1/instagram/post` (its web source ships the field permanently empty, so use `/v1/instagram/post/stats` for a single post). (seen in a sample response) |
 | `post.ext.commerce.attributes` | unknown\|null |  |
 | `post.ext.commerce.availability_text` | unknown\|null |  |
 | `post.ext.commerce.category_id` | unknown\|null |  |
@@ -122,10 +130,18 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.hasPaidProductPlacement` | boolean\|null | (only when the fallback source serves) |
 | `post.ext.ig_play_count` | number\|null | Instagram-only play count (`ig_play_count`). Since mid-July 2026 Instagram's headline play count (`engagement.views`) no longer includes Facebook crosspost views and equals this value; it is surfaced explicitly so you can tell the Instagram-only figure apart and detect any future re-divergence. For combined Instagram + Facebook reach, also fetch the Facebook crosspost via `/v1/facebook/post`. Present on `/v1/instagram/post/stats` and, since the August 2026 views fix, on `/v1/instagram/post` for video posts. (on some endpoints only when the fallback source serves) |
 | `post.ext.ip_location` | string\|null |  |
+| `post.ext.media_type` | string\|null | (seen in a sample response) |
 | `post.ext.music_id` | string\|null | TikTok music/clip id (exact string): pass to `/v1/tiktok/song/videos?clipId=` to find videos using the same sound |
+| `post.ext.music.artist` | string\|null | (seen in a sample response) |
+| `post.ext.music.id` | string\|null | (seen in a sample response) |
+| `post.ext.music.is_original` | boolean\|null | (seen in a sample response) |
+| `post.ext.music.track_title` | string\|null | (seen in a sample response) |
+| `post.ext.post_type` | string\|null | (seen in a sample response) |
+| `post.ext.published_at_epoch` | number\|null | Raw Unix epoch for `published_at` (seconds, or milliseconds when the upstream sent millis). Present only when the upstream sent a numeric epoch that was normalised to the ISO 8601 `published_at` string. Kept for one deprecation cycle for integrations pinned to the numeric form. (seen in a sample response) |
 | `post.ext.published_at_precision` | string\|null |  |
 | `post.ext.quote_count` | number\|null |  |
-| `post.ext.reaction_counts` | array |  |
+| `post.ext.reaction_counts` | array\|null |  |
+| `post.ext.remix_count` | number\|null | (seen in a sample response) |
 | `post.ext.repost_count` | number\|null | (on some endpoints only when the fallback source serves) |
 | `post.ext.reshare_count` | number\|null |  |
 | `post.ext.selftext` | string\|null |  |
@@ -137,7 +153,9 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.upvote_ratio` | number\|null | Reddit only: the share of a post's votes that are upvotes, as a fraction from 0 to 1 and usually close to 1 (six live rows measured 1, 1, 1, 0.86, 0.75, 1). Fractional despite the integer type this schema emits for every numeric leaf, the same caveat as `author.ext.average_rating`. Populated on `/v1/reddit/search` rows whose source carries it, and null everywhere else on Reddit including `/v1/reddit/post` and `/v1/reddit/subreddit`. |
 | `post.ext.video_count` | number\|null |  |
 | `post.flags.deleted` | boolean | Whether the post is tombstoned (always present) |
+| `post.flags.nsfw` | boolean\|null | NSFW flag (null when platform does not surface) (seen in a sample response) |
 | `post.flags.pinned` | boolean\|null | Pinned-to-profile flag (null when platform does not surface) |
+| `post.flags.spoiler` | boolean\|null | Spoiler flag (null when platform does not surface) (seen in a sample response) |
 | `post.id` | string | Platform-specific post ID (always a string; numeric upstream IDs are stringified) |
 | `post.published_at` | string\|number\|null | Post creation timestamp as an ISO 8601 UTC string. When the upstream sent a Unix epoch it is converted here and the raw epoch is preserved under `post.ext.published_at_epoch` for one deprecation cycle. (on some endpoints only when the fallback source serves) |
 | `post.url` | string\|null | Direct URL to the post on the source platform (on some endpoints only when the fallback source serves) |

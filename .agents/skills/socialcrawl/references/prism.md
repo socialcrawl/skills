@@ -180,7 +180,7 @@ One call returns a topic-clustered, sentiment-classified review report across Go
 
 - Provide at least one of `google_play_id`, `app_store_id`, `query`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `apps.app_store.categories`, `apps.app_store.category`, `apps.app_store.description`, `apps.app_store.developer.address`, `apps.app_store.developer.email`, `apps.app_store.developer.id`, `apps.app_store.developer.name`, `apps.app_store.developer.url` (+143 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `reviews.google_play[]` {id string, entity_id string, url null, title null, text string, helpful_votes null, verified null, source null, language null, original_language null, translated null, images null, responses null, published_at string}; `reviews.google_play[].rating` {value number, max number}; `reviews.google_play[].author` {name string, avatar_url string, url null, location null, reviews_count null}; `reviews.google_play[].ext.appdata` {type string, rank_group number, rank_absolute number, position string} (+211 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/app-reviews" \
@@ -234,7 +234,7 @@ Pass platform (tiktok, instagram or youtube) and handle. The response is the lan
 - `handle` (required) - Creator handle, with or without @. · e.g. `charlidamelio`
 - `posts` (optional, integer) - How many recent posts to open comments for. 1 to 5. Default 5. · e.g. `5`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `audience.countries`, `audience.n`, `comment_language.abstained`, `comment_language.judged_by.choice`, `comment_language.judged_by.script`, `comment_language.n`, `comment_language.policy_version`, `comment_language.shares.ar.abstained` (+66 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {platform string, handle string, posts_opened number}; `comment_language` {policy_version string, n number, abstained number}; `comment_language.judged_by` {script number, choice number}; `comment_language.shares.en` {n number, counted number, abstained number, share number, low number, high number, policy_version string, too_few boolean}; `comment_language.shares.en.receipts[]` {id string, text string}; `comment_language.shares.es` {n number, counted number, abstained number, share number, low number, high number}; `comment_language.shares.es.receipts[]` {id string} (+59 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/audience-language" \
@@ -259,7 +259,7 @@ Samples each creator's recent videos and their commenters, then computes a deter
 - `videos_per_creator` (optional, integer) - Recent videos sampled per creator (1-10, default 5): caps the commenter pull.
 - `depth` (optional, string) - Set `deep` to widen the shared-fan enrichment sample.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.a_only_count`, `computed.a_set_size`, `computed.b_only_count`, `computed.b_set_size`, `computed.confidence`, `computed.jaccard`, `computed.methodology_version`, `computed.overlap_count` (+11 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `creators.a` {handle string, videos_sampled number, commenters string[]}; `creators.b` {handle string, videos_sampled number, commenters string[]}; {shared_sample array, coverage number, partial_failure boolean}; `computed` {overlap_count number, jaccard number, a_only_count number, b_only_count number, a_set_size number, b_set_size number, shared_sample_size number, confidence string, methodology_version string}; `legs[]` {endpoint string, status number, credits_used number, latency_ms number, error null, creator string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/audience-overlap" \
@@ -337,7 +337,7 @@ Pass a creator post URL and the brief: `points` (CSV of required talking points)
 - `require_disclosure` (optional, enum: 1) - Set 1 when a paid-partnership disclosure such as #ad or 광고 is required to pass.
 - `brand` (optional, string) - Optional brand name used when judging talking points about a product.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `disclosed`, `forbidden_hits`, `legs`, `no_transcript`, `points`, `url`, `verdict`.
+**Response** `Analytics` object at `data` (inferred from a sample): {url string, forbidden_hits array, disclosed boolean, no_transcript boolean, verdict string}; `points[]` {point string, level number, quote null}; `legs[]` {endpoint string, status number, credits_used number, latency_ms number, error string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/brief-check" \
@@ -472,7 +472,7 @@ Looks up a single handle across multiple platforms in parallel and returns one u
 - `verify` (optional, boolean) - Send `true` to add an `identity` block that says whether each found profile is the same person or organisation as the anchor profile, not only that the handle exists there. Each platform gets a verdict with `level` (`same`, `possible`, `different`, or `uncertain` when the answer is not confident), a `score`, a `confidence` and the `evidence` behind it (`cross_link`, `bio_consistent`, `fan_or_parody`, `website_match`). A `null` verdict means that profile was not judged, not that it is different. `identity.verified_on` lists the anchor plus every `same` platform. Public profile text only, no image comparison. Same price; adds well under a second.
 - `anchor` (optional, enum: tiktok | instagram | youtube | twitter | threads | bluesky | truthsocial) - With `verify=true`, the platform whose profile you already trust; every other found profile is compared against it. Omit it and the anchor is the platform-verified profile with the largest audience. If the chosen platform has no card in the response the anchor is picked automatically and `_warnings` says so.
 
-**Response** `Analytics` object at `data`, `{ cards, found_on, legs, totals }` (inferred from a sample): `cards.instagram.avatar_url`, `cards.instagram.bio`, `cards.instagram.display_name`, `cards.instagram.ext.business_category`, `cards.instagram.followers`, `cards.instagram.following`, `cards.instagram.id`, `cards.instagram.joined_at` (+71 more).
+**Response** `Analytics` object at `data`, `{ cards, found_on, totals, legs }` (inferred from a sample): `cards.tiktok` {id string, username string, display_name string, avatar_url string, bio string, verified boolean, followers number, following number, posts_count number, likes_count number, url string, private boolean, joined_at null, location string}; `cards.tiktok.ext` {business_category string, bio_link string}; `cards.instagram` {id string, username string, display_name string, avatar_url string, bio string, verified boolean, followers number, following number, posts_count number} (+58 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/creator-card" \
@@ -546,7 +546,7 @@ Stage 1 computes a 7-day-rolling z-score on content_analysis daily phrase-trends
 - `date_to` (optional, string) - The day being evaluated (YYYY-MM-DD). Defaults to today.
 - `brand_description` (optional, string) - Optional one-line description of the brand, used to tell it apart from other things with the same name.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `alert_level`, `baseline_window.baseline_negative_share`, `baseline_window.days`, `baseline_window.from`, `baseline_window.group`, `baseline_window.rolling_mean_volume`, `baseline_window.rolling_std_volume`, `baseline_window.to` (+11 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {alert_level string, z_volume number, z_negative_share number, negative_delta number, breached boolean}; `baseline_window` {from string, to string, days number, group string, rolling_mean_volume number, rolling_std_volume number, today_volume number, today_negative_share number, baseline_negative_share number}; `daily_series[]` {date string, volume number, negative_share number}; `computed` {methodology_version string, sensitivity number, escalated boolean}; `legs[]` {endpoint string, status number, credits_used number, latency_ms number, error null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/crisis-radar" \
@@ -599,7 +599,7 @@ Fans out a GitHub repo/dossier, a Hacker News search+comment pull, a Reddit sear
 - `date_from` (optional, string) - Optional window start (YYYY-MM-DD) applied to the time-bounded legs.
 - `date_to` (optional, string) - Optional window end (YYYY-MM-DD).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `blogs`, `computed.echo_top_domains`, `computed.echo_volume`, `computed.hn_attention`, `computed.methodology_version`, `computed.open_issues`, `computed.pulse`, `computed.reddit_attention` (+43 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `dossier.info` {id number, full_name string, description string, language string, stars number, forks number, open_issues number, watchers number, created_at string, pushed_at string, homepage string, topics string[]}; `dossier` {readme string}; `dossier.releases[]` {tag string, name string, date string, body string}; `dossier.top_issues.top_feature_request` {title string, reactions number, comments number, url string}; `dossier.top_issues.top_complaint` {title string, reactions number, comments number, url string} (+146 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/devtool-pulse" \
@@ -700,7 +700,7 @@ Runs the existing account searches for `name` on each platform (`instagram/searc
 - `website` (optional, string) - Optional official website or domain (e.g. ogilvy.com). A platform-verified account linking to it is taken as the match without judging. · e.g. `ogilvy.com`
 - `candidates` (optional, integer, 1-5) - Accounts judged per platform, 1 to 5 (default 5), taken from the top of each search.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `automated_decision`, `context.employer`, `context.location`, `context.website`, `coverage`, `identity_methodology_version`, `legs`, `methodology_version` (+5 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {name string, type string, automated_decision boolean, notice string}; `context` {employer null, location null, website string}; `platforms[]` {platform string, status string}; `platforms[].candidates[]` {rank number, handle string, display_name string, url string, followers number, verified boolean, bio_excerpt string, choice_probability number}; `platforms[].match` {handle null, level string, confidence number, basis string}; `platforms[].match.evidence` {website_match null, cross_link null, bio_consistent null, fan_or_parody null} (+9 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/find-accounts" \
@@ -722,7 +722,7 @@ Pass platform (youtube, tiktok, or instagram) and handle. The response files eac
 - `platform` (required) - youtube, tiktok, or instagram. · e.g. `youtube`
 - `handle` (required) - The creator's handle, without @. · e.g. `joshuaweissman`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `abstained`, `baseline.metric`, `baseline.reason`, `baseline.rows_used`, `buckets`, `creator.handle`, `creator.platform`, `policy_version`.
+**Response** `Analytics` object at `data` (inferred from a sample): `creator` {platform string, handle string}; `baseline` {metric string, rows_used number, reason null}; {policy_version string, abstained number}; `buckets[]` {hook string, n number, creators number, median_ratio number, too_few boolean}; `buckets[].receipts[]` {id string, text string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/format-lift" \
@@ -765,7 +765,7 @@ Decide whether to pull a handle before paying for a full collection. Score model
 - `score_with_domain_relevance` is 0.7 x `score` + 0.3 x `domain_relevance.score`, and `verdict_with_domain_relevance` applies the same thresholds to it. `score`, `verdict`, the five base components, their weights and `evidence_fingerprint` never read the subject.
 - `domain_relevance` is null with a `_warnings` entry when fewer than 3 posts could be judged (`domain_relevance_insufficient_sample`) or the judging step did not answer (`domain_relevance_unavailable`). It is a judged estimate to review, not a measurement. Without `relevant_to` none of these fields is present.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `available_weight`, `best_platforms`, `component_availability.activity`, `component_availability.audience`, `component_availability.content_richness`, `component_availability.engagement`, `component_availability.presence`, `component_coverage.activity` (+92 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {handle string, verdict string, score null, score_status string, score_version string, evidence_fingerprint string, computed_at string, evaluated_platforms string[], skipped_platforms array, stale_platforms array}; `evidence_as_of` {oldest string, newest string}; `confidence` {tier string, reason string}; `score_components` {presence null, audience null, engagement null, activity null, content_richness null}; `component_availability` {presence boolean, audience boolean, engagement boolean, activity boolean, content_richness boolean}; `component_coverage` {presence string} (+79 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/handle-audit" \
@@ -788,7 +788,7 @@ Given `goal`, each step picks the next read-only operation (search TikTok, searc
 - `budget` (optional, integer, 1-200) - Credits held up front for the walk (1-200, default 40). Unused credits are refunded. · e.g. `40`
 - `max_steps` (optional, integer, 1-12) - Most steps the walk may take (1-12, default 8).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `credits_used`, `legs`, `results`, `stopped_because`, `trail`.
+**Response** `Analytics` object at `data` (inferred from a sample): `trail[]` {step number, op string, target null, confidence number, credits number, rows_found number, result_summary string}; {results array, stopped_because string, credits_used number, legs array}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/investigate" \
@@ -909,7 +909,7 @@ Runs a Hacker News search, digs the top threads' comments, and pulls the dev-blo
 - `date_to` (optional, string) - Window end (YYYY-MM-DD).
 - `include` (optional, string) - CSV subset toggling the comments/blogs/dossier legs.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `blogs`, `computed.echo_top_domains`, `computed.echo_volume`, `computed.hn_total_comments`, `computed.hn_total_points`, `computed.landed`, `computed.methodology_version`, `computed.top_thread.comments` (+30 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `stories[].post` {id string, url string, published_at string}; `stories[].post.content` {text string, media_urls string, thumbnail_url null, duration_seconds null}; `stories[].post.author` {username string, display_name null, avatar_url null, verified null}; `stories[].post.engagement` {views null, likes number, comments number, shares null, saves null}; `stories[].post.flags` {nsfw null, spoiler null, pinned null, deleted boolean}; `stories[].comments.items[]` {comment object, computed object}; `stories[].comments` {total number}; `blogs[]` {url string, domain string} (+106 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/launch-echo" \
@@ -956,7 +956,7 @@ Sniffs the platform + endpoint from a URL and returns that endpoint's unified da
 - `url` (required) - Absolute http(s) URL of a single post, video, product or repo. Profile, channel and storefront URLs are NOT accepted: use that platform's own `/profile` endpoint for those. · e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
 - `include` (optional, string) - CSV of optional flags to forward verbatim to the resolved endpoint (e.g. `trim`). Each member must be an optional param of that endpoint.
 
-**Response** `Analytics` object at `data`, `{ computed, legs, post, resolved }` (inferred from a sample): `computed.content_category`, `computed.engagement_rate`, `computed.estimated_reach`, `computed.language`, `legs`, `post.author.avatar_url`, `post.author.display_name`, `post.author.username` (+35 more).
+**Response** `Analytics` object at `data`, `{ resolved, post, computed, legs }` (inferred from a sample): `resolved` {platform string, endpoint string, archetype string}; `resolved.params` {url string}; `post` {id string, url string, published_at string}; `post.content` {text string, media_urls null, thumbnail_url string, duration_seconds number}; `post.author` {username null, display_name string, avatar_url null, verified null}; `post.engagement` {views number, likes number, comments number, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null, deleted boolean}; `post.ext` {content_type string} (+22 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/lookup" \
@@ -986,7 +986,7 @@ Pass handle (the @ is optional), or url (a link or a link prefix), or name on it
 
 - Provide at least one of `handle`, `url`, `name`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `dropped_unverified.reddit`, `dropped_unverified.twitter`, `first_seen`, `handle`, `include_self`, `legs`, `mentions`, `mode` (+5 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {mode string, handle string, url null, name null, since null, include_self boolean, first_seen null, warnings array}; `mentions[]` {platform string, id string, url string, author string, published_at string, text string, match_kind string, matched_url null}; `dropped_unverified` {twitter number, reddit number}; `not_covered[]` {platform string, reason string}; `legs[]` {endpoint string, status number, credits_used number, latency_ms number, error null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/mentions" \
@@ -1033,7 +1033,7 @@ Bulk stats refresh for verification loops (clipper payouts). POST a JSON body wi
 - `urls` (required) - JSON array of 1-100 absolute http(s) post URLs (mixed platforms allowed). · e.g. `["https://www.youtube.com/watch?v=dQw4w9WgXcQ"]`
 - `include` (optional, string) - CSV subset of views,likes,comments,shares,saves,reposts to trim each row's engagement block.
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=prism/post-stats` serves the current contract.
+**Response** `Analytics` object at `data`, `{ results, summary, legs }` (inferred from a sample): `results[]` {url string, platform string, status string, id string, shortcode null, cost number, fetched_at string}; `results[].engagement` {views number, likes number, comments number, shares number, saves number, reposts null}; `summary` {total number, ok number, not_found number, unsupported number, error number, deferred number, coverage number, credits_charged number, credits_refunded number}; `legs[]` {endpoint string, status number, credits_used number} (+2 more).
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/prism/post-stats" \
@@ -1197,7 +1197,7 @@ Pass country_code (an ISO code Google Trends covers, such as DE). The board is c
 - `period` (optional, enum: 7 | 30) - 7 (default) or 30. The window of TikTok's hashtag board. Google Trending Now is always read over its longest window, 7 days.
 - `limit` (optional, integer, 1-10) - Rows per section, 1 to 10. Default 10.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `breakout_posts`, `country`, `generated_at`, `period_days`, `policy_version`, `rising_hashtags`, `rising_searches`, `rising_sounds` (+2 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {country string, period_days number, generated_at string, policy_version string, rising_sounds array}; `breakout_posts[]` {id string, url string, author string, author_id string, region string, views number, published_at string, vs_creator number, author_median_views number, author_posts_compared number, music_id string}; `rising_hashtags[]` {rank number, tag string, url string, posts number, window_views number, growth_ratio null, from_zero boolean, rising boolean}; `rising_hashtags[].first_seen_in_window` {date string} (+14 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/trend-board" \
@@ -1222,7 +1222,7 @@ Fetches a Truth Social profile + recent posts, drills the top posts for full det
 - `include` (optional, string) - CSV subset of posts,news to trim which legs run.
 - `cursor` (optional, string) - Opaque pagination cursor for the posts leg.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `account.author.avatar_url`, `account.author.bio`, `account.author.display_name`, `account.author.followers`, `account.author.following`, `account.author.id`, `account.author.joined_at`, `account.author.likes_count` (+30 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `account.author` {id string, username string, display_name string, avatar_url string, bio null, verified boolean, followers number, following number, posts_count number, likes_count null, url string, private boolean, joined_at string}; `account.computed` {engagement_rate null, language null, content_category null, estimated_reach null}; `posts[].post` {id string, url string}; `posts[].post.content` {text string, media_urls null, thumbnail_url null, duration_seconds null}; `posts[].post.author` {username string, display_name string} (+127 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/truthsocial-pulse" \
@@ -1248,7 +1248,7 @@ Fans out the video detail, comments, an optional transcript (10cr, never charged
 - `app_demand` (optional, boolean) - Optional. 1 reads the caption first, then the comments, and returns data.app_demand: late when the caption already names an app, otherwise the count of comments that want an app they do not have, the count that name one, and that ratio. The ratio is withheld unless the comments support it. A low-confidence comment is not counted. No extra credits.
 - `claim` (optional, string) - Optional sentence. When set, data.sense_check says whether the comments support it, contradict it, or say nothing. A confidence under the cut, or one high-confidence contradiction, withholds the sentence. No extra credits.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `comments.items`, `comments.next_cursor`, `comments.total`, `coverage`, `legs`, `partial_failure`, `video.computed.content_category`, `video.computed.engagement_rate` (+36 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `video.post` {id string, url string, published_at string}; `video.post.content` {text string, media_urls null, thumbnail_url string, duration_seconds number}; `video.post.author` {username null, display_name string, avatar_url null, verified null}; `video.post.engagement` {views number, likes number, comments number, shares null, saves null}; `video.post.flags` {nsfw null, spoiler null, pinned null, deleted boolean}; `video.post.ext` {content_type string, tags string[], categoryId string, categoryTitle string, topicCategories string[]} (+44 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/video-intel" \
@@ -1271,7 +1271,7 @@ Fetches a handle's recent posts from four microblogs in parallel, time-merges th
 - `cursor` (optional, string) - Opaque composite cursor from a prior response's `next_cursor`. X/Twitter pages; Truth Social pages on `next_max_id`; a mangled token is a 400 at 0 credits.
 - `include` (optional, string) - CSV subset of posts_by_platform,merged_timeline,computed to trim the payload (posts_by_platform is always returned).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.cross_post_rate`, `computed.platform_presence.bluesky`, `computed.platform_presence.threads`, `computed.platform_presence.truthsocial`, `computed.platform_presence.twitter`, `computed.tone_by_platform.threads`, `computed.tone_by_platform.twitter`, `computed.tone_distribution.threads.combative` (+26 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `posts_by_platform.twitter[].post` {id string, url string, published_at string}; `posts_by_platform.twitter[].post.content` {text string, media_urls string, thumbnail_url string, duration_seconds number}; `posts_by_platform.twitter[].post.author` {username string, display_name string, avatar_url string, verified boolean}; `posts_by_platform.twitter[].post.engagement` {views number, likes number, comments number, shares number, saves number}; `posts_by_platform.twitter[].post.flags` {nsfw boolean, spoiler null, pinned boolean, deleted boolean}; `posts_by_platform.twitter[].post.ext` {author_followers number, author_following number, author_posts_count number, content_language string, quote_count number} (+100 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/prism/voice" \

@@ -50,7 +50,7 @@ Returns a directory of politicians with at least one STOCK Act disclosure: first
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 50.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ first_name, last_name, party, state }` (inferred from a sample): `first_name`, `last_name`, `party`, `state`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ first_name, last_name, party, state }` (inferred from a sample): {first_name string, last_name string, party string, state string}.
 
 Page-level: `data.dropped`.
 
@@ -71,7 +71,7 @@ Returns aggregated STOCK Act stats for one politician by last name: party, state
 
 - `handle` (required) - Politician last name, case-insensitive. Example: Pelosi. · e.g. `Pelosi`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `avg_reporting_gap`, `avg_value`, `buy_count`, `earliest_trade_date`, `first_name`, `last_name`, `latest_trade_date`, `party` (+6 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {first_name string, last_name string, party string, state string, total_trades number, buy_count number, sell_count number, total_value number, avg_value number, avg_reporting_gap number, latest_trade_date string, earliest_trade_date string}; `top_tickers[]` {ticker string, issuer_name string, count number}; `top_sectors[]` {sector string, count number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/us_congress_trades/politician" \
@@ -96,7 +96,7 @@ Returns every STOCK Act disclosure for one politician, keyed by last name. Same 
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `chamber`, `comment`, `filing_date`, `issuer_country`, `issuer_id`, `issuer_name`, `issuer_sector`, `issuer_ticker` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment string, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
 Page-level: `data.dropped`.
 
@@ -121,7 +121,7 @@ Returns STOCK Act disclosures filed by members from one US state. Pass the two-l
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `chamber`, `comment`, `filing_date`, `issuer_country`, `issuer_id`, `issuer_name`, `issuer_sector`, `issuer_ticker` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price null, size null, ownership string, chamber string, comment null, reporting_gap number, issuer_name string, issuer_ticker null, issuer_sector null, issuer_country null, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
 Page-level: `data.dropped`.
 
@@ -139,7 +139,7 @@ Returns high-level STOCK Act coverage: total trades, total politicians, earliest
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` object at `data` (inferred from a sample): `earliest_trade_date`, `last_updated`, `latest_trade_date`, `total_politicians`, `total_trades`.
+**Response** `Analytics` object at `data` (inferred from a sample): {total_trades number, total_politicians number, earliest_trade_date string, latest_trade_date string, last_updated string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats" \
@@ -160,7 +160,7 @@ Returns buy vs sell counts, disclosed value, and the ratio, with optional party 
 - `party` (optional, enum: democrat | republican) - democrat or republican. · e.g. `democrat`
 - `sector` (optional, string) - Issuer sector slug, for example information-technology.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `buy_sell_ratio`, `by_party`, `by_sector`, `period_days`, `total_buys`, `total_sells`, `total_value_bought`, `total_value_sold`.
+**Response** `Analytics` object at `data` (inferred from a sample): {period_days number, total_buys number, total_sells number, buy_sell_ratio number, total_value_bought number, total_value_sold number}; `by_party[]` {party string, buys number, sells number, ratio number}; `by_sector[]` {sector string, buys number, sells number, ratio number}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/buy-sell" \
@@ -180,7 +180,7 @@ Returns companies ranked by disclosed congressional trade count, including Treas
 
 - `limit` (optional, integer, 1-50) - How many issuers to return, 1 to 50. Default 10. · e.g. `10`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ count, issuer }` (inferred from a sample): `count`, `issuer`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ issuer, count }` (inferred from a sample): {issuer string, count number}.
 
 Page-level: `data.dropped`.
 
@@ -198,7 +198,7 @@ Returns total disclosed trades grouped by party (democrat, republican, other).
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** single page - Party totals are one dump (3 rows live). There is no page or cursor param.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ party, trade_count }` (inferred from a sample): `party`, `trade_count`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ party, trade_count }` (inferred from a sample): {party string, trade_count number}.
 
 Page-level: `data.dropped`.
 
@@ -220,7 +220,7 @@ Returns politicians ranked by disclosed trade count, with party.
 
 - `limit` (optional, integer, 1-50) - How many politicians to return, 1 to 50. Default 10. · e.g. `10`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ count, name, party }` (inferred from a sample): `count`, `name`, `party`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ name, party, count }` (inferred from a sample): {name string, party string, count number}.
 
 Page-level: `data.dropped`.
 
@@ -244,7 +244,7 @@ Returns politicians ranked by average days between the trade date and the public
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `avg_gap`, `max_gap`, `name`, `party`, `state`, `trade_count`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {name string, party string, state string, avg_gap number, max_gap number, trade_count number}.
 
 Page-level: `data.dropped`.
 
@@ -262,7 +262,7 @@ Returns disclosed-trade counts grouped by issuer sector (information-technology,
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** single page - Sector totals are one dump (11 rows live). There is no page or cursor param.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ sector, trade_count }` (inferred from a sample): `sector`, `trade_count`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ sector, trade_count }` (inferred from a sample): {sector string, trade_count number}.
 
 Page-level: `data.dropped`.
 
@@ -285,7 +285,7 @@ Returns stock tickers ranked by disclosed congressional trade count, with buy vs
 - `tx_type` (optional, enum: buy | sell) - buy or sell. Omit for both. · e.g. `buy`
 - `limit` (optional, integer, 1-50) - How many tickers to return, 1 to 50. Default 10.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `buy_count`, `count`, `issuer_name`, `sell_count`, `ticker`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {ticker string, issuer_name string, count number, buy_count number, sell_count number}.
 
 Page-level: `data.dropped`.
 
@@ -308,7 +308,7 @@ Returns tickers whose recent disclosed-trade count is well above their historica
 - `days` (optional, integer, 1-365) - Recent window in days, 1 to 365. Default 30. · e.g. `30`
 - `limit` (optional, integer, 1-50) - How many tickers to return, 1 to 50. Default 10.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `historical_avg`, `issuer_name`, `politicians`, `recent_trades`, `spike_ratio`, `ticker`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {ticker string, issuer_name string, recent_trades number, historical_avg number, spike_ratio number, politicians string[]}.
 
 Page-level: `data.dropped`.
 
@@ -331,7 +331,7 @@ Returns disclosed trade counts, buy vs sell, and total value grouped by day, wee
 - `days` (optional, integer, 7-3650) - Lookback in days, 7 to 3650. Default 365. · e.g. `90`
 - `period` (optional, enum: day | week | month) - day, week (default), or month. · e.g. `week`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `buy_count`, `period_start`, `sell_count`, `total_value`, `trade_count`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {period_start string, trade_count number, buy_count number, sell_count number, total_value number}.
 
 Page-level: `data.dropped`.
 
@@ -352,7 +352,7 @@ Returns aggregated STOCK Act stats for one stock: trade count, buy vs sell, disc
 
 - `keyword` (required) - Stock ticker. AAPL or AAPL:US. · e.g. `AAPL`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `avg_value`, `buy_count`, `buy_sell_ratio`, `earliest_trade_date`, `issuer_name`, `latest_trade_date`, `sell_count`, `ticker` (+4 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {ticker string, issuer_name string, total_trades number, buy_count number, sell_count number, buy_sell_ratio number, total_value number, avg_value number, unique_politicians number, latest_trade_date string, earliest_trade_date string}; `top_politicians[]` {name string, party string, count number, buy_count number, sell_count number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/us_congress_trades/ticker" \
@@ -380,7 +380,7 @@ Returns STOCK Act disclosures for one stock. Filter by chamber, party, transacti
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `chamber`, `comment`, `filing_date`, `issuer_country`, `issuer_id`, `issuer_name`, `issuer_sector`, `issuer_ticker` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment string, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
 Page-level: `data.dropped`.
 
@@ -414,7 +414,7 @@ Returns STOCK Act disclosures across the House and Senate. Filter by ticker (AAP
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `chamber`, `comment`, `filing_date`, `issuer_country`, `issuer_id`, `issuer_name`, `issuer_sector`, `issuer_ticker` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment string, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
 Page-level: `data.dropped`.
 
@@ -437,7 +437,7 @@ Returns STOCK Act disclosures published in the last 48 hours, newest first. Same
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 50. · e.g. `20`
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `chamber`, `comment`, `filing_date`, `issuer_country`, `issuer_id`, `issuer_name`, `issuer_sector`, `issuer_ticker` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment null, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
 Page-level: `data.dropped`.
 
@@ -460,7 +460,7 @@ Returns STOCK Act disclosures published in the last 7 days, newest first. Same r
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 50. · e.g. `20`
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `chamber`, `comment`, `filing_date`, `issuer_country`, `issuer_id`, `issuer_name`, `issuer_sector`, `issuer_ticker` (+15 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment null, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
 Page-level: `data.dropped`.
 

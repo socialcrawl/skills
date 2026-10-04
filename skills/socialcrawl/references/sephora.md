@@ -52,6 +52,13 @@ Returns store-level stock for one Sephora sku near a coordinate. Each store has 
 | Field | Meaning |
 |---|---|
 | `product.id` | Platform product ID… |
+| `product.title` | Product title (seen in a sample response) |
+| `product.url` | Direct URL to the product page (seen in a sample response) |
+| `product.availability` | Stock/availability string when surfaced (seen in a sample response) |
+| `product.brand` | Brand name (cleaned). (seen in a sample response) |
+| `product.image_urls` | Primary image URL, or an array of image URLs for products… (seen in a sample response) |
+
+Also in the sample: `product` {description null, seller null, reviews_count null}; `product.price` {current null, original null, currency null}; `product.rating` {average null, count null}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/availability" \
@@ -89,7 +96,7 @@ Returns products from one Sephora brand, 60 per page, each with product id, titl
 | `product.price.current` |  |
 | `product.rating.average` |  |
 
-+1 more fields in the full schema. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count null}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`.
 
 **Next** `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews. · `sephora/product` (`product_id` ← `data.items[].product.id`) - Get a Sephora product by id or URL.
 
@@ -107,7 +114,7 @@ Returns Sephora's brand directory: each brand's id, short name, and canonical UR
 **Cost** cache 1800 s
 **Paging** single page - The upstream returns the complete brand directory in one call (372 brands, verified live 2026-09-02) and exposes no page parameter.
 
-**Response** `Analytics` rows at `data.items[]`, each `{ brandId, shortName, targetUrl }` (inferred from a sample): `brandId`, `shortName`, `targetUrl`.
+**Response** `Analytics` rows at `data.items[]`, each `{ brandId, shortName, targetUrl }` (inferred from a sample): {brandId string, shortName string, targetUrl string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/sephora/brands" \
@@ -122,7 +129,7 @@ Returns Sephora's root browse taxonomy: each node's id, display name, and canoni
 **Cost** cache 1800 s
 **Paging** single page - The upstream returns the complete root taxonomy in one call (13 of 13 nodes, verified live 2026-09-02) and exposes no page parameter.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `categoryId`, `displayName`, `hasChildCategories`, `hasDropdownMenu`, `selectedThumbImage`, `targetUrl`, `thumbImage`.
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {categoryId string, displayName string, hasChildCategories boolean, hasDropdownMenu boolean, selectedThumbImage string, targetUrl string, thumbImage string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/sephora/categories" \
@@ -157,7 +164,7 @@ Returns products in a Sephora category, 60 per page, each with product id, title
 | `product.price.current` |  |
 | `product.rating.average` |  |
 
-+1 more fields in the full schema. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count number}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`.
 
 **Next** `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews. · `sephora/product` (`product_id` ← `data.items[].product.id`) - Get a Sephora product by id or URL.
 
@@ -179,7 +186,7 @@ Returns one Sephora category: id, display name, SEO copy, and child categories. 
 
 - `id` (required) - Sephora category id, for example cat1100057. Ids come from GET /v1/sephora/categories. · e.g. `cat1100057`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `categoryId`, `childCategories`, `displayName`, `enableNoindexMetaTag`, `hasChildCategories`, `seoMetaDescription`, `seoName`, `seoTitle` (+1 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {categoryId string, displayName string, hasChildCategories boolean, enableNoindexMetaTag boolean, seoMetaDescription string, seoName string, seoTitle string, targetUrl string}; `childCategories[]` {categoryId string, displayName string, hasChildCategories boolean, targetUrl string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/category/data" \
@@ -217,7 +224,7 @@ Returns one Sephora US product: title, brand, description, list price, rating, r
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+3 more fields in the full schema.
++3 more (types in the full schema): `product.price` {current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability string, reviews_count number}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string, size string, ingredients string, loves_count number}.
 
 **Next** `sephora/reviews` (`product_id` ← `data.product.id`) - Get Sephora product reviews.
 
@@ -261,7 +268,7 @@ Returns written customer reviews for a Sephora product, 10 per page by default, 
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+9 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++9 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, location}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/reviews" \
@@ -300,7 +307,7 @@ Returns Sephora US products matching a keyword, 60 per page by default, each wit
 | `product.price.current` |  |
 | `product.rating.average` |  |
 
-+1 more fields in the full schema. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count number}; `product.price` {original number, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`.
 
 **Next** `sephora/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews.
 
@@ -323,7 +330,7 @@ Returns Sephora search autocomplete suggestions for a partial query, the same te
 - `query` (required) - Partial search query to autocomplete, for example moistur. · e.g. `moistur`
 - `language` (optional, enum: en-US | en-CA | fr-CA) - Copy locale: en-US (default), en-CA, or fr-CA.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ term }` (inferred from a sample): `term`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ term }` (inferred from a sample): {term string}.
 
 Page-level: `data.dropped`.
 
@@ -355,8 +362,9 @@ Returns Sephora stores near a latitude,longitude pair, each with store id, name,
 | `place.latitude` |  |
 | `place.longitude` |  |
 | `place.phone` |  |
+| `place.url` | Website or canonical URL (seen in a sample response) |
 
-Page-level: `data.dropped`.
+Also in the sample: `place` {category string, reviews_count null, price_level null, address string, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext` {distance number, timezone string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/stores" \

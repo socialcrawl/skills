@@ -25,7 +25,7 @@
 
 ## GET /v1/finance/fundamentals - 1 credit (standard)
 
-Returns reported fundamentals for one US-listed company from its SEC filings: revenue, cost of goods sold, gross profit, inventory, the change in inventory since the previous period, and accounts payable, newest period first. Each row carries `period_end`, the fiscal year and period, the SEC form and the original filing date. Quarterly rows use the three-month figures; the fourth quarter is never filed on its own, so it is computed as the fiscal year minus the three reported quarters and listed in the row's `derived_fields`. `concepts_used` names the US GAAP concept that fed each field, because companies tag the same line differently (a retailer may report cost of goods sold under one concept, a software company cost of revenue under another). A figure the company does not report is null, never 0: a company with no inventory line returns null inventory. Values are USD, as filed; a restated figure replaces the original. Covers companies that file US GAAP statements with the SEC; foreign filers on IFRS and unlisted companies return not found.
+Returns reported fundamentals for one US-listed company from its SEC filings: revenue, cost of goods sold, gross profit, inventory, the change in inventory since the previous period, and accounts payable, newest period first. Each row carries `period_end`, the fiscal year and period, the SEC form and the original filing date. The fiscal year and period come from the company's own fiscal calendar: a quarter belongs to the fiscal year that contains it, and a year carries the number the company gave it in that year's annual report. No two rows share a fiscal year and period, and a period that cannot be placed has null labels. Quarterly rows use the quarter's own figures, including 16-week first quarters; the fourth quarter is rarely filed on its own, so it is computed as the fiscal year minus the first nine months, with every figure taken from the same filings so a later restatement of the year is not pushed into Q4, and listed in the row's `derived_fields`. `concepts_used` names the US GAAP concept that fed each field, because companies tag the same line differently: a retailer may report cost of goods sold under one concept and a software company cost of revenue under another, some companies report payables only as one accounts payable and accrued liabilities line, and a LIFO retailer that reports FIFO cost and the LIFO reserve as separate lines gets inventory as their difference, listed as computed. Gross profit is the company's reported figure when it equals revenue minus cost of goods sold, otherwise that difference. A cost line the company tags in quarterly reports but never in its annual report is not used as cost of goods sold, so cost of goods sold and gross profit stay null instead of showing a misleading margin. A figure the company does not report is null, never 0: a company with no inventory line returns null inventory. Values are USD, as filed; a restated figure replaces the original. Covers companies that file US GAAP statements with the SEC. Foreign filers on IFRS, companies whose latest US GAAP period ended more than two years ago, and unlisted companies return not found, and the credits are refunded.
 
 **Use when** you want to track a public company's inventory, cost of goods sold and payables over time from SEC filings; use statements for the full income, balance sheet and cash flow line items.
 **Cost** cache 21600 s
@@ -35,9 +35,9 @@ Returns reported fundamentals for one US-listed company from its SEC filings: re
 
 - `keyword` (required) - Company ticker, case-insensitive. A bare symbol ('TGT') or the 'TICKER:EXCHANGE' form; the exchange suffix is ignored. Share classes work as 'BRK.B' or 'BRK-B'. · e.g. `TGT`
 - `period` (optional, enum: quarterly | annual) - Reporting period: quarterly or annual. Defaults to quarterly. · e.g. `quarterly`
-- `limit` (optional, integer, 1-40) - Number of most recent periods to return, 1 to 40. Defaults to 8. · e.g. `8`
+- `limit` (optional, integer, 1-40) - Number of most recent periods to return, a whole number from 1 to 40. Defaults to 8. A value outside that range is rejected with a 400 and the credits are refunded. · e.g. `8`
 
-**Response** `Analytics`. Fields not published yet - call once with a small limit; `/v1/utility/endpoint?id=finance/fundamentals` serves the current contract.
+**Response** `Analytics` object at `data` (inferred from a sample): `company` {symbol string, cik string, name string}; {period_type string, currency string}; `periods[]` {period_end string, fiscal_year number, fiscal_period string, form string, filed string, revenue number, cost_of_goods_sold number, gross_profit number, inventory number, inventory_change number, accounts_payable number, derived_fields string[]}; `concepts_used` {revenue string[], cost_of_goods_sold string[], gross_profit string[], inventory string[], accounts_payable string[]}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/fundamentals" \
@@ -71,7 +71,7 @@ Returns daily OHLCV bars for one instrument across an explicit date range, as a 
 | `bar.date` | Session date, absolute UTC ISO-8601 |
 | `bar.dividend` | Cash dividend per share going ex on this date; null on an… |
 
-+7 more fields in the full schema.
++7 more (types in the full schema): `bar` {high, interval, low, open, split_ratio, symbol, volume}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/history" \
@@ -105,7 +105,7 @@ Returns a unified QuoteList snapshot of the global markets overview: the major r
 | `quote.type` | Instrument class: stock \| etf \| index \| crypto \| forex \|… |
 | `quote.url` |  |
 
-Page-level: `data.dropped`.
+Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}; `quote.ext` {section string}. Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/finance/markets" \
@@ -136,7 +136,7 @@ Returns recent news articles for one financial instrument as a unified NewsArtic
 | `article.placement` | Source list: "news_search" or "top_stories" |
 | `article.rank` | Result rank (news_search items only; null on top_stories) |
 
-+1 more fields in the full schema. Page-level: `data.dropped`.
++1 more (types in the full schema): `article` {source}. Also in the sample: `article` {domain string, snippet null, image_url string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/news" \
@@ -168,7 +168,7 @@ Returns one expiry's option chain as a flat unified OptionContractList: calls an
 | `option_contract.open_interest` | Contracts outstanding |
 | `option_contract.strike` | Strike price |
 
-+12 more fields in the full schema.
++12 more (types in the full schema): `option_contract` {symbol, type, ask, bid, change, contract_size, contract_symbol, currency, last_price, last_trade_date, percent_change, volume}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/options" \
@@ -201,6 +201,8 @@ Returns ONE rich, unified Quote for a financial instrument keyed by its `keyword
 | `quote.type` | Instrument class: stock \| etf \| index \| crypto \| forex \|… |
 | `quote.url` |  |
 
+Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}; `quote.graph[]` {timestamp string, value number, volume number}; `quote.financials.quarterly[]` {type string, timestamp string, revenue number} (+88 more).
+
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/quote" \
   --data-urlencode "keyword=GOOGL:NASDAQ" \
@@ -231,7 +233,7 @@ Returns income-statement, balance-sheet and cash-flow line items per reporting p
 | `financial_statement.statement` | income \| balance_sheet \| cash_flow \| combined |
 | `financial_statement.cash_and_short_term_investments` |  |
 
-+31 more fields in the full schema.
++31 more (types in the full schema): `financial_statement` {cash_and_short_term_investments_delta, cash_from_financing, cash_from_financing_delta, cash_from_investing, cash_from_investing_delta, cash_from_operations, cash_from_operations_delta, earnings_per_share, earnings_per_share_delta, ebitda, ebitda_delta, effective_tax_rate, free_cash_flow, free_cash_flow_delta, net_change_in_cash, net_change_in_cash_delta, net_income, net_income_delta, net_profit_margin} (+12 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/statements" \
@@ -265,7 +267,7 @@ Searches Google Finance for financial instruments matching a name and returns a 
 | `quote.type` | Instrument class: stock \| etf \| index \| crypto \| forex \|… |
 | `quote.url` |  |
 
-Page-level: `data.dropped`.
+Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/ticker-search" \

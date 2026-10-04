@@ -37,7 +37,7 @@ Returns data from a Pillar page including display name, bio, avatar, and list of
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+1 more fields in the full schema. Never filled: `author.avatar_url`, `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.username`, `author.verified`.
++1 more (types in the full schema): `computed` {language}. Never filled: `author.avatar_url`, `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.username`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pillar/page" \

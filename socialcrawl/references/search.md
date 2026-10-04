@@ -45,7 +45,7 @@ Fans a niche query across TikTok user search, Threads user search, and Instagram
 
 - `relevance` is a no-op without `brief` - sending it alone is a free 400.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `account_kinds.judged`, `account_kinds.methodology_version`, `account_kinds.status`, `account_kinds.unjudged`, `computed.follower_distribution.p50`, `computed.follower_distribution.p90`, `computed.platform_spread.instagram`, `computed.platform_spread.tiktok` (+14 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `creators[].author` {id string, username string, display_name string, bio null, followers number, verified boolean, avatar_url string, url string}; `creators[]` {sources string[], relevance number, follower_rank number, verified boolean, rrf_score number}; `creators[].account` {account_kind string, account_kind_confidence number, named_person number}; `creators_by_source.tiktok[]` {id string, username string, display_name string, bio null, followers number, verified boolean, avatar_url string, url string}; `creators_by_source` {threads array} (+30 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/search/creators" \
@@ -76,7 +76,7 @@ Fans out a single query across Reddit, X (ai-search), YouTube, TikTok, Instagram
 - `judgments` (optional, enum: on | off) - Optional. on (default) or off. On, every result also carries data.items[i].computed.stance (see include) and data.items[i].computed.relevance ({ score 0 to 1, on_topic, entity }), with data.relevance counting the off-topic results and listing their ids. Nothing is dropped or reordered and the price does not change. off returns the response without these blocks.
 - `switch_from` (optional, string) - Optional brand. data.switch_receipts lists results where the author says they personally left that brand, with the verbatim text, the reason, where they went, and the link. There is no percentage. Rows that are not a switch stay in items. Included in the flat 20 credits.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `candidate_id`, `cluster_id`, `computed.relevance.entity`, `computed.relevance.on_topic`, `computed.relevance.score`, `computed.stance.confidence`, `computed.stance.label`, `computed.stance.probabilities.negative` (+22 more).
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {candidate_id string, item_id string, source string, title string, url string, snippet string, subquery_labels string[], local_relevance number, freshness number, engagement number, source_quality number, rrf_score number, sources string[]}; `native_ranks` {primary:reddit number}; `source_items[]` {item_id string, source string, title string, body string, url string, author string, published_at string, date_confidence string, relevance_hint number}; `source_items[].engagement` {score number, num_comments number} (+39 more).
 
 Page-level: `data.switch_receipts`.
 
@@ -110,7 +110,7 @@ Fans your topic across Reddit, Hacker News, and Korean forums, RRF-fuses + clust
 
 - `relevance_threshold` is a no-op without `relevance` - sending it alone is a free 400.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `cluster_id`, `computed.relevance.on_topic`, `computed.relevance.p`, `computed.relevance.sense`, `computed.stance.confidence`, `computed.stance.label`, `container`, `enrichable` (+35 more).
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {title string, url string, source string, container string, enrichable boolean}; `post` {item_id string, source string, title string, body string, url string, author string, published_at string, date_confidence string, relevance_hint number, why_relevant string, snippet string}; `post.engagement` {score number, num_comments number}; `post.metadata` {enrichable boolean}; `post.metadata.top_comments[]` {score number, excerpt string, truncated boolean, author string, url string, date string} (+28 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/search/forums" \
@@ -155,7 +155,7 @@ Runs the same query on several platforms' native search endpoints at once and re
 - `linkedin.content_type` (optional, enum: videos | photos | jobs | live_videos | documents | collaborative_articles) - LinkedIn only. Sent to /v1/linkedin/search/posts as `content_type`, exactly as that endpoint takes it. One of: videos, photos, jobs, live_videos, documents, collaborative_articles.
 - **Shared controls** `label` (sponsored | mention | intent | niche | quality | injection; paid: mention, quality, injection) · `exclude` · `label_evidence` · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
 
-**Response** `Analytics` rows at `data.items[]`, each `{ computed, platform, post }` (inferred from a sample): `computed.content_category`, `computed.engagement_rate`, `computed.estimated_reach`, `computed.labels`, `computed.labels.intent.buyer`, `computed.labels.intent.confidence`, `computed.labels.intent.fits_offer`, `computed.labels.intent.label` (+41 more).
+**Response** `Analytics` rows at `data.items[]`, each `{ platform, post, computed }` (inferred from a sample): {platform string}; `post` {id string, url string, published_at string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds number}; `post.author` {username string, display_name string, avatar_url string, verified boolean}; `post.engagement` {views number, likes number, comments number, shares number, saves number}; `post.flags` {nsfw null, spoiler null, pinned boolean, deleted boolean}; `post.ext` {music_id string, author_id string, author_followers number, download_count number} (+24 more).
 
 Page-level: `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
 
@@ -190,7 +190,7 @@ Plans your query into search angles, localizes each angle into the language of e
 - `group` (optional, enum: stories) - Optional. stories groups the articles that report the same event across editions, outlets and languages into data.stories[] ({ id, head_id, member_ids, size, outlets, outlet_count, countries, languages, first_seen, last_seen, judged }), where every id is an article's canonical_url (or url). items[] and its order are unchanged. data.story_grouping reports how many articles were judged and what it cost. An article that could not be judged is its own story with judged: false; if grouping is unavailable, stories is null and data._warnings says stories_unavailable. JSON responses only (ignored on the event stream). Grouping is on by default now (see judgments); group=stories asks for it explicitly with a longer time budget. Free.
 - `judgments` (optional, enum: on | off) - Optional. on (default) or off. On, JSON responses also carry data.stories and data.story_grouping (see group), grouped under a short time budget; when grouping does not finish in time, stories is null and data._warnings says stories_pending (stories_unavailable when it failed). items[], their order and the price are unchanged. off returns the response without them.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `angle_id`, `canonical_url`, `country_code`, `domain`, `effective_query`, `id`, `image_url`, `language_code` (+9 more).
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {id string, title string, url string, canonical_url string, source_name string, domain string, snippet null, image_url string, published_at string, rank number, placement string, country_code string, language_code string, angle_id string, effective_query string, query_source string, legs_returned string[]}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/search/news" \

@@ -53,7 +53,7 @@ Returns products listed in a Walmart category, up to 100 per call, with title, p
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+9 more fields in the full schema. Page-level: `data.dropped`.
++9 more (types in the full schema): `product` {description, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`.
 
 **Next** `walmart/reviews` (`product_id` ← `data.items[].product.id`) - Get Walmart product reviews. · `walmart/product` (`product_id` ← `data.items[].product.id`) - Get a Walmart product by id. · `walmart/offers` (`product_id` ← `data.items[].product.id`) - Get every seller offering a Walmart product.
 
@@ -87,7 +87,7 @@ Returns the marketplace offers for a Walmart item: seller name and id, price, cu
 | `seller.annotation` |  |
 | `seller.availability` |  |
 
-+4 more fields in the full schema. Page-level: `data.dropped`.
++4 more (types in the full schema): `seller.price` {base, currency, shipping, total}. Also in the sample: `seller` {domain null}; `seller.price` {tax null}; `seller.rating` {average null, count null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/walmart/offers" \
@@ -119,7 +119,7 @@ Returns full product detail for a Walmart item: title, brand, model, UPC, both d
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+11 more fields in the full schema.
++11 more (types in the full schema): `product` {description, seller, specifications, variations}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}.
 
 **Next** `walmart/reviews` (`product_id` ← `data.product.id`) - Get Walmart product reviews. · `walmart/offers` (`product_id` ← `data.product.id`) - Get every seller offering a Walmart product.
 
@@ -159,7 +159,7 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+8 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++8 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/walmart/reviews" \
@@ -199,7 +199,7 @@ Returns Walmart search results for a keyword: title, product id, URL, image, pri
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+9 more fields in the full schema. Page-level: `data.dropped`.
++9 more (types in the full schema): `product` {description, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`.
 
 **Next** `walmart/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `walmart/reviews` (`product_id` ← `data.items[].product.id`) - Customer reviews of each product. · `walmart/offers` (`product_id` ← `data.items[].product.id`) - Get every seller offering a Walmart product.
 

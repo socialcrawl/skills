@@ -10,6 +10,7 @@ Every field the 3 field-mapped endpoints returning `WebPage` can carry, with pat
 | `page.content.markdown` | string\|null | Markdown body. |
 | `page.content.raw_html` | string\|null | Raw HTML body. |
 | `page.content.summary` | string\|null | Generated summary. |
+| `page.description` | string\|null | (seen in a sample response) |
 | `page.extraction` | unknown\|null | Structured extraction result when requested. |
 | `page.fetch.cache_state` | string\|null | Upstream cache state when reported. |
 | `page.fetch.cached_at` | string\|null | Upstream cache timestamp when reported. |
@@ -21,7 +22,12 @@ Every field the 3 field-mapped endpoints returning `WebPage` can carry, with pat
 | `page.media.screenshot_url` | string\|null | Screenshot URL when requested. |
 | `page.media.video_url` | string\|null | Video URL. |
 | `page.page_count` | number\|null |  |
+| `page.page_state.confidence` | number\|null | (seen in a sample response) |
+| `page.page_state.skipped_judge` | boolean\|null | (seen in a sample response) |
+| `page.page_state.value` | string\|null | (seen in a sample response) |
 | `page.scrape_id` | string\|null | Opaque scrape identifier for follow-up interactions. |
+| `page.source_type` | string\|null | (seen in a sample response) |
 | `page.status_code` | number\|null | HTTP status code observed while fetching the page. |
+| `page.title` | string\|null | (seen in a sample response) |
 | `page.total_page_count` | number\|null |  |
 | `page.url` | string | Requested URL. |

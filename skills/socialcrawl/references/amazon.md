@@ -47,7 +47,7 @@ Returns ranked Amazon Best Seller listings for a category: ASIN, title, price, r
 | `product.price.currency` |  |
 | `product.price.current` |  |
 
-+2 more fields in the full schema. Never filled: `product.availability`, `product.brand`, `product.description`, `product.price.original`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.description`, `product.price.original`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
 
 **Next** `amazon/reviews` (`asin` ← `data.items[].product.id`) - Get Amazon product reviews. · `amazon/product` (`asin` ← `data.items[].product.id`) - Get an Amazon product by ASIN. · `amazon/sellers` (`asin` ← `data.items[].product.id`) - Get Amazon sellers and offers for a product.
 
@@ -80,7 +80,7 @@ Returns Amazon deals currently on the deals page: title, deal price, list price,
 | `product.price.currency` |  |
 | `product.price.current` |  |
 
-+1 more fields in the full schema. Never filled: `product.availability`, `product.brand`, `product.description`, `product.rating.average`, `product.rating.count`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.price` {original}. Never filled: `product.availability`, `product.brand`, `product.description`, `product.rating.average`, `product.rating.count`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
 
 **Next** `amazon/product` (`asin` ← `data.items[].product.id`) - Full details for each product. · `amazon/reviews` (`asin` ← `data.items[].product.id`) - Get Amazon product reviews. · `amazon/sellers` (`asin` ← `data.items[].product.id`) - Get Amazon sellers and offers for a product.
 
@@ -113,7 +113,7 @@ Returns full product detail for an Amazon ASIN: title, brand, description, price
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+8 more fields in the full schema. Never filled: `product.reviews_count`, `product.seller`.
++9 more (types in the full schema): `product` {description, specifications, variations}; `product.ext` {bought_past_month}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.reviews_count`, `product.seller`.
 
 **Next** `amazon/reviews` (`asin` ← `data.product.id`) - Customer reviews of the product. · `amazon/sellers` (`asin` ← `data.product.id`) - Get Amazon sellers and offers for a product.
 
@@ -125,7 +125,7 @@ curl -G "https://www.socialcrawl.dev/v1/amazon/product" \
 
 ## GET /v1/amazon/product-search - 1 credit (standard)
 
-Returns organic Amazon search results for a keyword: title, price, list price, rating, image, and ASIN per product. Where Amazon shows its monthly purchase badge, `product.ext.bought_past_month_label` carries Amazon's text ("9K+ bought in past month") and `product.ext.bought_past_month` its lower bound as a number (9000); both are null when the row shows no badge, and the number is null on a badge with no count ("New on Amazon in past month"). Multiply it by `price.current` per `country` for an estimate of monthly spend by marketplace. Results reflect the chosen marketplace (default United States). Sponsored placements and related searches are excluded in v1. Paginate with the universal cursor parameter; pass depth instead if you need a single large page.
+Returns organic Amazon search results for a keyword: title, price, list price, rating, image, and ASIN per product. Where Amazon shows its monthly purchase badge, `product.ext.bought_past_month_label` carries Amazon's text in the marketplace's own language ("9K+ bought in past month", "2000+ Mal im letzten Monat gekauft") and `product.ext.bought_past_month` its LOWER BOUND as an integer (9000; a badge reading "2000+" means at least 2000, not exactly 2000). Parsed for US, GB, CA, AU, IN, DE, FR, IT, ES, MX, NL, BR and JP. Both are null when the row shows no badge, and the number is null on a badge with no count ("New on Amazon in past month") or in a wording we have not parsed (the label is still returned as-is). Calls served from the secondary source, or made with `depth`, carry the number without a label. Multiply it by `price.current` per `country` for an estimate of monthly spend by marketplace. Results reflect the chosen marketplace (default United States). Sponsored placements and related searches are excluded in v1. Paginate with the universal cursor parameter; pass depth instead if you need a single large page.
 
 **Use when** you have a keyword and need to find products or their ASINs, then call the product endpoint for full detail.
 **Cost** cache 120 s · multi-source (billed once)
@@ -149,7 +149,7 @@ Returns organic Amazon search results for a keyword: title, price, list price, r
 | `product.brand` | Brand name (cleaned). (only when the fallback source serves) |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+9 more fields in the full schema. Never filled: `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
++10 more (types in the full schema): `product` {description, specifications, variations}; `product.ext` {bought_past_month, bought_past_month_label}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
 
 **Next** `amazon/reviews` (`asin` ← `data.items[].product.id`) - Customer reviews of each product. · `amazon/product` (`asin` ← `data.items[].product.id`) - Get an Amazon product by ASIN. · `amazon/sellers` (`asin` ← `data.items[].product.id`) - Get Amazon sellers and offers for a product.
 
@@ -185,7 +185,7 @@ Returns the customer reviews shown on an Amazon product page (by ASIN), typicall
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+16 more fields in the full schema. Never filled: `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++16 more (types in the full schema): `review` {verified, title, url, images}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name, url, avatar_url, location, reviews_count}; `review.rating` {max, value}. Never filled: `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/amazon/reviews" \
@@ -249,7 +249,7 @@ Returns every seller offering a given Amazon ASIN: seller name, price, rating, a
 | `seller.annotation` |  |
 | `seller.price.base` |  |
 
-+4 more fields in the full schema. Never filled: `seller.availability`, `seller.domain`, `seller.price.shipping`, `seller.price.tax`. Page-level: `data.dropped`.
++4 more (types in the full schema): `seller.price` {currency, total}; `seller.rating` {average, count}. Never filled: `seller.availability`, `seller.domain`, `seller.price.shipping`, `seller.price.tax`. Page-level: `data.dropped`.
 
 **Next** `amazon/seller` (`seller_id` ← `data.items[].seller.id`) - Each seller's profile and rating.
 
@@ -282,7 +282,7 @@ Returns product listings from an Amazon shop or storefront page including produc
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+11 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++11 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext` {amazon_shop_curations, amazon_shop_lists, amazon_shop_socials, amazon_shop_trending_picks}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/amazon/shop" \

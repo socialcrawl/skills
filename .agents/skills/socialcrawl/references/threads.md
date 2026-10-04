@@ -45,7 +45,7 @@ Returns detailed information about a specific Threads post including the text co
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+17 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.engagement.saves`.
++17 more (types in the full schema): `post.author` {verified}; `post.engagement` {likes, views, comments, shares}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted, pinned}; `post.ext` {quote_count, reshare_count, topic_tag, topic_tag_id}. Also in the sample: `post` {url string}; `post.flags` {nsfw null} (+2 more). Never filled: `post.content.duration_seconds`, `post.engagement.saves`.
 
 **Next** `threads/profile` (`handle` ← `data.post.author.username`) - The author's profile: followers and bio. · `threads/user/posts` (`handle` ← `data.post.author.username`) - List Threads user posts.
 
@@ -81,7 +81,7 @@ Returns the replies on a Threads post. By default you get the window Threads bun
 | `comment.author.avatar_url` | 100% | URL to comment author profile picture |
 | `comment.author.verified` | 100% | Whether the comment author is verified |
 
-+8 more fields in the full schema. Never filled: `comment.parent_id`. Page-level: `data.comment_recency`, `data.dropped`.
++8 more (types in the full schema): `comment.engagement` {likes, replies}; `comment.flags` {pinned, deleted}; `comment.author` {display_name}; `comment` {url, post_id}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.parent_id`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/threads/post/comments" \
@@ -112,7 +112,7 @@ Returns public profile information for a Threads user including follower count, 
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+12 more fields in the full schema.
++12 more (types in the full schema): `author` {followers, verified, private, following, likes_count, posts_count, joined_at}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {bio_link}.
 
 **Next** `threads/user/posts` (`handle` ← `data.author.username`) - The account's latest posts.
 
@@ -154,7 +154,7 @@ Searches Threads for posts matching a keyword query. Returns a list of matching 
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+25 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.relevance`, `data.walk`.
++25 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes, shares}; `post.content` {media_urls}; `post.ext` {quote_count, reshare_count, topic_tag, topic_tag_id}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention} (+6 more). Never filled: `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.relevance`, `data.walk`.
 
 **Next** `threads/post/comments` (`url` ← `data.items[].post.url`) - The replies to each post. · `threads/post` (`url` ← `data.items[].post.url`) - Get Threads post details.
 
@@ -191,7 +191,7 @@ Searches Threads for user accounts matching a query. Returns up to about 10 matc
 | `author.bio` | Profile biography or description (with `include=profile`) |
 | `author.display_name` | Display name or full name |
 
-+4 more fields in the full schema. Never filled: `author.following`, `author.joined_at`, `author.likes_count`, `author.location`, `author.posts_count`. Page-level: `data.dropped`, `data.hydration`.
++4 more (types in the full schema): `author` {followers, verified, private}; `author.ext` {bio_link}. Never filled: `author.following`, `author.joined_at`, `author.likes_count`, `author.location`, `author.posts_count`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `threads/user/posts` (`handle` ← `data.items[].author.username`) - List Threads user posts. · `threads/profile` (`handle` ← `data.items[].author.username`) - Get Threads user profile.
 
@@ -229,7 +229,7 @@ Returns the most recent posts from a Threads user. By default you get the window
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+18 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
++18 more (types in the full schema): `post.author` {verified, display_name}; `post.engagement` {comments, likes, shares, views}; `post.content` {media_urls}; `post.ext` {quote_count, reshare_count, topic_tag, topic_tag_id}; `computed` {content_category, engagement_rate, estimated_reach, language, vs_creator}; `post.flags` {deleted, pinned}. Also in the sample: `post.ext` {published_at_epoch number}. Never filled: `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
 
 **Next** `threads/post/comments` (`url` ← `data.items[].post.url`) - The replies to each post. · `threads/post` (`url` ← `data.items[].post.url`) - Get Threads post details.
 

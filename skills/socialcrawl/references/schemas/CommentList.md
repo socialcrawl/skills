@@ -32,13 +32,19 @@ Every field the 24 field-mapped endpoints returning `CommentList` can carry, wit
 | `comment.ext.post_score` | number\|null |  |
 | `comment.ext.post_title` | string\|null |  |
 | `comment.ext.post_url` | string\|null |  |
+| `comment.ext.preview_replies` | array\|null | (seen in a sample response) |
 | `comment.ext.previous_replies_token` | string\|null |  |
+| `comment.ext.published_at_epoch` | number\|null | Raw Unix epoch for `published_at` (present only when the upstream sent a numeric epoch that was normalised to the ISO 8601 string). (seen in a sample response) |
 | `comment.ext.quote_count` | number\|null | How many quote-posts this comment has, when the source reports it. On X a reply is a tweet, so this is the same figure `post.ext.quote_count` carries on tweet endpoints. |
+| `comment.ext.reaction_counts` | array\|null | (seen in a sample response) |
 | `comment.ext.replies_token` | string\|null | YouTube reply continuation token: pass to `/v1/youtube/video/comment/replies?continuationToken=` (only when the fallback source serves) |
 | `comment.ext.saves` | number\|null | Bookmark / save count for this comment, when the source reports it. On X this is `legacy.bookmark_count`. |
 | `comment.ext.subreddit` | string\|null |  |
 | `comment.ext.subreddit_subscribers` | number\|null |  |
+| `comment.ext.text_original` | string\|null | (seen in a sample response) |
+| `comment.ext.updated_at` | string\|null | (seen in a sample response) |
 | `comment.ext.urn` | string\|null |  |
+| `comment.ext.viewer_rating` | string\|null | (seen in a sample response) |
 | `comment.ext.views` | number\|null | View count for this comment, when the source reports it. On X a reply is a tweet and the count is public on posts from ~2022 onward. |
 | `comment.flags.deleted` | boolean | Whether the comment is tombstoned (always present, even when false) |
 | `comment.flags.pinned` | boolean\|null | Pinned flag (null when platform does not surface) (on some endpoints only when the fallback source serves) |
@@ -46,6 +52,7 @@ Every field the 24 field-mapped endpoints returning `CommentList` can carry, wit
 | `comment.parent_id` | string\|null | Parent comment ID for nested replies, or null for top-level comments |
 | `comment.post_id` | string\|null | ID of the post this comment belongs to |
 | `comment.published_at` | string\|number\|null | Comment creation timestamp as an ISO 8601 UTC string. When the upstream sent a Unix epoch it is converted here and the raw epoch is preserved under `comment.ext.published_at_epoch` for one deprecation cycle. |
+| `comment.replies` | array\|null | Nested reply tree: array of child comments, each itself a full Comment object with its own `replies`. Populated on threaded platforms (Reddit); absent on flat-comment platforms, which thread only via `parent_id`. (seen in a sample response) |
 | `comment.text` | string\|null | Comment body. Tombstone sentinels ([deleted] / [removed]) are collapsed to null upstream: customers never see them. |
 | `comment.url` | string\|null | Direct URL to the comment on the source platform |
 | `computed.labels_evidence` | object\|null | When 1, every labelled row also carries computed.labels_evidence.<preset> = { quote, sentence_index }: the sentence in the row that most clearly shows the label, copied verbatim. (with `label_evidence=1`) |

@@ -48,7 +48,7 @@ Returns full metadata for an issue or PR (title, body, author, labels, state, re
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more fields in the full schema.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.engagement` {comments, likes}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/issue" \
@@ -82,7 +82,7 @@ Returns comments under `data.items[]`: each entry includes `id`, `user.login`, `
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+4 more fields in the full schema. Page-level: `data.comment_recency`, `data.dropped`.
++4 more (types in the full schema): `comment.author` {avatar_url}; `comment.engagement` {likes}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment` {parent_id null}; `comment.author` {display_name null, verified null}; `comment.engagement` {replies null}; `comment.flags` {pinned null}. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/issue/comments" \
@@ -113,7 +113,7 @@ Returns public profile information for a GitHub user (login, name, avatar, bio, 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more fields in the full schema.
++11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
 
 **Next** `github/profile/repos` (`handle` ← `data.author.username`) - The account's repositories.
 
@@ -151,7 +151,7 @@ Returns the public repositories owned by the user under `data.items[]`: each ent
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more fields in the full schema. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/profile/repos" \
@@ -182,7 +182,7 @@ Returns repository metadata (full_name, description, stars, forks, open issues, 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more fields in the full schema.
++11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo" \
@@ -202,7 +202,7 @@ Composite endpoint: fetches repo metadata, README excerpt, latest 3 releases, to
 
 - `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
 
-**Response** `Analytics` object at `data`, `{ info, readme, releases, top_issues }` (inferred from a sample): `info.created_at`, `info.description`, `info.forks`, `info.full_name`, `info.homepage`, `info.id`, `info.language`, `info.open_issues` (+8 more).
+**Response** `Analytics` object at `data`, `{ info, readme, releases, top_issues }` (inferred from a sample): `info` {id number, full_name string, description string, language string, stars number, forks number, open_issues number, watchers number, created_at string, pushed_at string, homepage string, topics string[]}; {readme string}; `releases[]` {tag string, name string, date string, body string}; `top_issues` {top_feature_request null, top_complaint null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/dossier" \
@@ -241,7 +241,7 @@ Returns issues for the repository under `data.items[]`. NOTE: GitHub treats pull
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+7 more fields in the full schema. Page-level: `data.dropped`.
++7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {type string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/issues" \
@@ -272,7 +272,7 @@ Returns the repository's README in raw form (the file contents, not base64-wrapp
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+3 more fields in the full schema.
++3 more (types in the full schema): `computed` {language}; `post.content` {media_urls}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/readme" \
@@ -305,7 +305,7 @@ Returns the most recent releases for the repository under `data.items[]`: each e
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+6 more fields in the full schema. Page-level: `data.dropped`.
++6 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {likes}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/releases" \
@@ -364,7 +364,7 @@ Searches issues and PRs across all of GitHub via the `/search/issues` endpoint. 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+7 more fields in the full schema. Never filled: `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.ext` {type string}. Never filled: `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/search" \
@@ -385,7 +385,7 @@ Composite endpoint: combines a `/search/issues` PR-velocity query (total + merge
 - `handle` (required) - GitHub username. · e.g. `octocat`
 - `depth` (optional, enum: quick | default | deep) - `quick`, `default`, or `deep`. Defaults to `default`. Trades off upstream calls vs. dossier richness.
 
-**Response** `Analytics` object at `data`, `{ contributed_repos, own_repos, velocity }` (inferred from a sample): `contributed_repos`, `own_repos`, `velocity.active_repo_count`, `velocity.merge_rate_percent`, `velocity.merged_prs`, `velocity.open_prs`, `velocity.total_prs`, `velocity.username`.
+**Response** `Analytics` object at `data`, `{ velocity, contributed_repos, own_repos }` (inferred from a sample): `velocity` {username string, total_prs number, merged_prs number, open_prs number, merge_rate_percent number, active_repo_count number}; {contributed_repos array}; `own_repos[]` {full_name string, stars number, forks number, open_issues number, description string, language null, readme_excerpt string, top_feature_request null, top_complaint null, latest_release null}; `own_repos[].latest_release` {tag string, name string, date string, body string}; `own_repos[].top_feature_request` {title string, reactions number, comments number, url string} (+4 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/user/profile-velocity" \

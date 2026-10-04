@@ -40,7 +40,7 @@ Returns public profile information for a Hacker News user (id, username, bio (`a
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+3 more fields in the full schema.
++3 more (types in the full schema): `computed` {estimated_reach, language}; `author` {joined_at}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hackernews/profile" \
@@ -77,7 +77,7 @@ Searches Hacker News stories, comments, and front-page items via the Algolia HN 
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+14 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++14 more (types in the full schema): `computed` {estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.content` {thumbnail_url null, duration_seconds null}; `post.author` {display_name null, avatar_url null} (+7 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
 
 **Next** `hackernews/story/comments` (`id` ← `data.items[].post.id`) - The comment thread on each story. · `hackernews/story` (`id` ← `data.items[].post.id`) - Get a Hacker News story.
 
@@ -110,7 +110,7 @@ Returns story metadata for a single HN item mapped to the unified Post schema: t
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+6 more fields in the full schema.
++6 more (types in the full schema): `computed` {estimated_reach, language}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.flags` {deleted}.
 
 **Next** `hackernews/story/comments` (`id` ← `data.post.id`) - The comment thread on the story. · `hackernews/profile` (`handle` ← `data.post.author.username`) - Get a Hacker News user profile.
 
@@ -143,7 +143,7 @@ Returns the whole comment tree for a story under `data.items[]`, in the unified 
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+3 more fields in the full schema. Page-level: `data.comment_recency`, `data.dropped`.
++3 more (types in the full schema): `comment.engagement` {likes}; `comment.flags` {deleted}; `computed` {language}. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hackernews/story/comments" \

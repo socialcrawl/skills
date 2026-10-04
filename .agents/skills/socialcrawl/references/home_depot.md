@@ -48,7 +48,7 @@ Returns full product detail for a Home Depot item: title, brand, model number, U
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.description` |  |
 
-+10 more fields in the full schema.
++10 more (types in the full schema): `product` {features, reviews_count}; `product.ext` {model_number, sku_id, upc}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+2 more).
 
 **Next** `home_depot/reviews` (`item_id` ← `data.product.id`) - Get Home Depot product reviews.
 
@@ -83,7 +83,7 @@ Returns the ten most relevant written customer reviews for a Home Depot product,
 | `review.entity_id` | ID of the reviewed entity… |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+11 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++11 more (types in the full schema): `review` {verified, title, language}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name, location}; `review.rating` {value}. Also in the sample: `review` {url null, source null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/home_depot/reviews" \
@@ -116,7 +116,7 @@ Returns Home Depot products matching a keyword, 24 per page, each with its item 
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.reviews_count` |  |
 
-+9 more fields in the full schema. Page-level: `data.dropped`.
++9 more (types in the full schema): `product.ext` {availability_type, department, model_number, sku_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+5 more). Page-level: `data.dropped`.
 
 **Next** `home_depot/product` (`item_id` ← `data.items[].product.id`) - Full details for each product. · `home_depot/reviews` (`item_id` ← `data.items[].product.id`) - Get Home Depot product reviews.
 
@@ -149,7 +149,7 @@ Returns Home Depot stores near a US ZIP code, each with its store id, name, full
 | `place.latitude` |  |
 | `place.longitude` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `place` {phone}; `place.ext` {distance_miles, pro_desk_phone, store_hours, tool_rental_phone}. Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, verified null, description null, image_urls null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/home_depot/stores" \

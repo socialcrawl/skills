@@ -73,7 +73,7 @@ Returns one ad from the Facebook Ad Library. Video creatives land in `content.me
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+33 more fields in the full schema. Never filled: `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++33 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}; `post.ext.ad` {caption, title, categories, cta_text, cta_type, currency, display_format, end_date_iso, eu_reach_breakdown, eu_total_reach, is_active} (+14 more). Never filled: `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/adlibrary/ad" \
@@ -145,7 +145,7 @@ Returns ads from one company or page in the Facebook Ad Library, ordered by impr
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+34 more fields in the full schema. Never filled: `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++34 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}; `post.ext.ad` {caption, title, categories, cta_text, cta_type, currency, display_format, end_date_iso, eu_reach_breakdown, eu_total_reach, is_active} (+15 more). Never filled: `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/adlibrary/company/ads" \
@@ -175,7 +175,7 @@ Searches the Facebook Ad Library for ads matching a keyword. Returns matching ad
 - `cursor` (optional, string) - Cursor to paginate through results
 - `trim` (optional, boolean) - Set to true for a trimmed down version of the response
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `ad_archive_id`, `ad_id`, `categories`, `collation_count`, `collation_id`, `contains_digital_created_media`, `contains_sensitive_content`, `currency` (+63 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {ad_archive_id string, collation_count number, collation_id string, is_active boolean, page_id string, page_is_deleted boolean}; `snapshot.branded_content` {page_id string, page_is_deleted boolean, page_profile_uri string, page_name string}; `snapshot` {page_id string, page_is_deleted boolean, page_profile_uri string, root_reshared_post null, byline null, disclaimer_label null, page_name string, page_profile_picture_url string, event null, caption string, cta_text string, cards array, cta_type string, display_format string}; `snapshot.body` {text string} (+67 more).
 
 Page-level: `data.dropped`.
 
@@ -244,7 +244,7 @@ Fetches full metadata for a Facebook event. The canonical Post leaves carry the 
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+28 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++28 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext.event` {address, attendance_count, category, city, description, duration_text, end_timestamp, going_count, host_context_text, hosts, interested_count, is_canceled} (+9 more). Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/event/details" \
@@ -279,7 +279,7 @@ Returns the events listed under a Facebook city or region Events explore page. *
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+26 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++26 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext.event` {address, attendance_count, category, city, description, duration_text, going_count, host_context_text, hosts, interested_count, is_canceled, is_online} (+7 more). Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/events" \
@@ -300,7 +300,7 @@ Searches the public Facebook Events directory for events matching a keyword. For
 - `query` (required) - Event name or keyword to search for. · e.g. `dogs`
 - `cursor` (optional, string) - Cursor returned by the previous response for pagination.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `cover_photo.eventImage.uri`, `day_time_sentence`, `event_kind`, `event_place.__isNode`, `event_place.__typename`, `event_place.contextual_name`, `event_place.id`, `event_place.name` (+13 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, name string, type string, url string, day_time_sentence string, is_online boolean, is_past boolean, event_url string, event_kind string, start_timestamp number}; `event_place` {__typename string, name string, contextual_name string, __isNode string, id string}; `ticketing_context_row` {price_range_text null}; `cover_photo.eventImage` {uri string}; `social_context` {text string, interested_count number, going_count number, went_count null}.
 
 Page-level: `data.dropped`.
 
@@ -338,7 +338,7 @@ Returns a Facebook group's public record: name, description, member count, priva
 | `author.followers` | Follower or subscriber count as an integer. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more fields in the full schema. Never filled: `author.avatar_url`, `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.username`, `author.verified`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `author` {joined_at}; `author.ext.group` {about_info, activity, administrator_count, administrators, categories, history_summary, member_count_text, moderator_count, moderators, privacy_description, privacy_label, rules, visibility_description, visibility_label}. Never filled: `author.avatar_url`, `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.username`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/group" \
@@ -376,7 +376,7 @@ Returns posts from a public Facebook group, newest first. Each post carries the 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+11 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Also in the sample: `post.ext` {author_id string, published_at_epoch number, feedback_id string}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `facebook/post/comments` (`url` ← `data.items[].post.url`) - List Facebook post comments. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -414,7 +414,7 @@ Fetches a single Facebook Marketplace listing. The canonical Post leaves carry t
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+30 more fields in the full schema. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++30 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls}; `post.flags` {deleted}; `post.ext.commerce` {attributes, availability_text, category_id, currency, delivery_types, description, is_buy_now_enabled, is_hidden, is_live, is_pending, is_shipping_offered, is_sold} (+11 more). Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/marketplace/item" \
@@ -434,7 +434,7 @@ Searches Facebook Marketplace locations and cities, returning lat/lng coordinate
 
 - `query` (required) - Location search query (city or area name). · e.g. `Los Angeles`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `city`, `latitude`, `longitude`, `multi_line_address`, `name`, `page_id`, `postal_code`, `subtitle`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {name string, subtitle string, multi_line_address array, page_id string, latitude number, longitude number, city string, postal_code string}.
 
 Page-level: `data.dropped`.
 
@@ -468,7 +468,7 @@ Searches Facebook Marketplace listings by keyword + lat/lng with price, conditio
 - `availability` (optional, enum: available | sold | all) - Filter by listing status: `available`, `sold`, or `all`.
 - `cursor` (optional, string) - Opaque pagination cursor returned by the previous response: forward as-is.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `category_id`, `creation_time`, `custom_subtitles`, `delivery_types`, `id`, `is_hidden`, `is_live`, `is_pending` (+18 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, url string, title string, creation_time string, listing_date_text string, mileage null, custom_subtitles array, strikethrough_price null, category_id string, is_hidden boolean, is_live boolean, is_pending boolean, is_sold boolean, is_viewer_seller boolean, delivery_types string[], story_type string}; `price` {formatted_amount string, amount_with_offset_in_currency number, amount number}; `location` {city string, state string, display_name string, city_page_id string}; `primary_photo` {id string, url string} (+1 more).
 
 Page-level: `data.dropped`.
 
@@ -505,7 +505,7 @@ Returns detailed information about a specific Facebook post: the post text, like
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+15 more fields in the full schema.
++15 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/post" \
@@ -541,7 +541,7 @@ Returns the reply thread for a single Facebook comment. Both `feedback_id` and `
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 | `comment.author.avatar_url` | URL to comment author profile picture |
 
-+15 more fields in the full schema. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++15 more (types in the full schema): `comment.author` {display_name}; `comment.engagement` {likes, replies}; `comment.ext` {expansion_token, feedback_id}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}; `computed` {language}. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/post/comment/replies" \
@@ -581,7 +581,7 @@ Returns a list of comments on a specific Facebook post. Each comment includes th
 | `comment.author.avatar_url` | 100% | URL to comment author profile picture |
 | `comment.author.display_name` | 100% | Comment author display name |
 
-+15 more fields in the full schema. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++15 more (types in the full schema): `comment.engagement` {likes, replies}; `comment.ext` {expansion_token, feedback_id}; `computed` {labels_evidence, language}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Also in the sample: `comment.ext` {reaction_counts null}. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/post/comments" \
@@ -601,7 +601,7 @@ Returns the transcript of a Facebook video post. Supports auto-generated caption
 
 - `url` (required) - Full URL of the Facebook video post · e.g. `https://www.facebook.com/Meta/videos/a-slightly-life-changing-story/1459847961114516/`
 
-**Response** `Transcript` object at `data`, `{ post_id, transcript }` (inferred from a sample): `post_id`, `transcript`.
+**Response** `Transcript` object at `data`, `{ post_id, transcript }` (inferred from a sample): {post_id string, transcript string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/post/transcript" \
@@ -633,7 +633,7 @@ Returns a unified Facebook Author profile with page ID, display name, profile UR
 | `author.display_name` | 100% | Display name or full name |
 | `author.followers` | 100% | Follower or subscriber count as an integer. |
 
-+24 more fields in the full schema. Never filled: `author.following`, `author.posts_count`, `author.username`.
++24 more (types in the full schema): `author.ext` {followers_approximate, ad_library_page_id, ad_library_status, business_category, cover_url, links, page_active, rating, rating_count, talking_about_count, website}; `author` {joined_at, likes_count, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language} (+5 more). Never filled: `author.following`, `author.posts_count`, `author.username`.
 
 **Next** `facebook/profile/posts` (`url` ← `data.author.url`) - The page's latest posts.
 
@@ -669,7 +669,7 @@ Returns upcoming and past events for a public Facebook page. Each row carries th
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+27 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++27 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext.event` {address, attendance_count, category, city, description, duration_text, going_count, host_context_text, hosts, interested_count, is_canceled} (+8 more). Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/profile/events" \
@@ -696,7 +696,7 @@ Fans out to the Facebook profile and recent-posts endpoints in parallel and retu
 
 - `url` is required (it is optional in shape only - the request needs it).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.avg_engagement_rate`, `computed.avg_engagement_rate_by_followers`, `computed.cadence_window_days`, `computed.format_mix.video`, `computed.posts_per_week`, `computed.top_post.engagement_total`, `computed.top_post.url`, `legs` (+31 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `profile` {id string, username string, display_name string, avatar_url string, bio string, verified null, followers number, following null, posts_count null, likes_count number, url string, private null, joined_at string}; `profile.ext` {public_email null, public_phone null, business_category string, website string, cover_url string, page_active boolean, address null, price_range null, rating string, rating_count number, talking_about_count number, business_hours null} (+45 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/profile/full" \
@@ -731,7 +731,7 @@ Returns Facebook page or profile photos as unified Post items. Each item include
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+11 more fields in the full schema. Never filled: `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++11 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {author_id}; `post.flags` {deleted}. Never filled: `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/profile/photos" \
@@ -772,7 +772,7 @@ Returns a list of recent posts from a Facebook page or profile. Each post includ
 | `post.author.display_name` | 100% | Author display name |
 | `post.content.media_urls` | 100% | URL(s) of the primary media. |
 
-+14 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.saves`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
++14 more (types in the full schema): `post.engagement` {comments, likes, shares, views}; `post.ext` {reaction_counts}; `computed` {content_category, engagement_rate, estimated_reach, language, vs_creator}; `post.content` {duration_seconds, thumbnail_url}; `post.flags` {deleted}; `post.author` {username}. Also in the sample: `post.ext` {author_id string, published_at_epoch number, feedback_id string}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.saves`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
 
 **Next** `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -808,7 +808,7 @@ Returns Facebook page or profile reels as unified Post items. Each item includes
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+13 more fields in the full schema. Never filled: `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++13 more (types in the full schema): `post.author` {verified, username}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {views}; `post.ext.music` {id, track_title}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}. Also in the sample: `post.ext` {author_id string, feedback_id string}. Never filled: `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `facebook/post/transcript` (`url` ← `data.items[].post.url`) - Get Facebook video transcript.
 
@@ -833,7 +833,7 @@ Returns a Facebook page or profile's reels with EXACT per-reel engagement merged
 - `cursor` (optional, string) - Cursor from a prior response's next_cursor to page deeper.
 - `limit` (optional, integer) - Return up to this many reels in one call (1-50). The endpoint pages the underlying list server-side until it has collected this many (or runs out), and bills per upstream page consumed (5 credits/page of 10). If the walk hits the internal time budget first, the response carries `_warnings: ["walk_deadline_reached"]`, unfetched pages are refunded, and `next_cursor` resumes where it stopped. Omit for a single page.
 
-**Response** `Analytics` rows at `data.items[]`, each `{ computed, post }` (inferred from a sample): `computed.content_category`, `computed.engagement_rate`, `computed.estimated_reach`, `computed.language`, `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified` (+21 more).
+**Response** `Analytics` rows at `data.items[]`, each `{ post, computed }` (inferred from a sample): `post` {id string, url string, published_at string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds number}; `post.author` {username null, display_name string, avatar_url string, verified boolean}; `post.engagement` {views number, likes number, comments number, shares number, saves null}; `post.flags` {nsfw null, spoiler null, pinned null, deleted boolean}; `post.ext` {author_id string, feedback_id string, engagement_source string}; `post.ext.music` {id string, track_title string} (+4 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/profile/reels/full" \
@@ -868,7 +868,7 @@ Finds public Facebook groups by keyword, so you can pick the groups to read befo
 | `author.followers` | Follower or subscriber count as an integer. (with `include=details`) |
 | `author.ext.search_hit.title` |  |
 
-+9 more fields in the full schema. Never filled: `author.avatar_url`, `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.username`, `author.verified`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.relevance`.
++9 more (types in the full schema): `computed` {relevance}; `author.ext.group` {id, activity, privacy_label, visibility_label}; `author` {joined_at}; `author.ext.search_hit` {evidence_url, match, snippet}. Never filled: `author.avatar_url`, `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.username`, `author.verified`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.relevance`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/facebook/search/groups" \
@@ -974,7 +974,7 @@ Searches public Facebook posts by keyword and returns unified Post items: text, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+17 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
++17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.ext` {author_id string, published_at_epoch number} (+2 more). Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 **Next** `facebook/post/comments` (`url` ← `data.items[].post.url`) - List Facebook post comments. · `facebook/post` (`url` ← `data.items[].post.url`) - Get Facebook post details. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -1012,7 +1012,7 @@ Searches public Facebook videos and reels by keyword and returns unified Post it
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+6 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Page-level: `data.dropped`.
++6 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.ext` {author_id string}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Page-level: `data.dropped`.
 
 **Next** `facebook/post` (`url` ← `data.items[].post.url`) - Get Facebook post details.
 

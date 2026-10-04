@@ -8,6 +8,15 @@ Every field the 9 field-mapped endpoints returning `Place` can carry, with paths
 | `place.categories` | array\|null |  |
 | `place.category` | string\|null | Primary category (e.g. "Coffee shop", "Hotel") |
 | `place.description` | string\|null |  |
+| `place.ext.hours` | array\|null | (seen in a sample response) |
+| `place.ext.place_id` | string\|null | (seen in a sample response) |
+| `place.ext.rating_distribution.1` | number\|null | (seen in a sample response) |
+| `place.ext.rating_distribution.2` | number\|null | (seen in a sample response) |
+| `place.ext.rating_distribution.3` | number\|null | (seen in a sample response) |
+| `place.ext.rating_distribution.4` | number\|null | (seen in a sample response) |
+| `place.ext.rating_distribution.5` | number\|null | (seen in a sample response) |
+| `place.ext.status` | string\|null | (seen in a sample response) |
+| `place.ext.timezone` | string\|null | (seen in a sample response) |
 | `place.hotel.amenities` | array\|null |  |
 | `place.hotel.check_in_time` | string\|null |  |
 | `place.hotel.check_out_time` | string\|null |  |

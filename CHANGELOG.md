@@ -1,6 +1,13 @@
 # Changelog
 
-## 2026-10-03
+## 2026-10-04
+
+- **Fast path first.** The SKILL.md workflow now starts with the free `GET /v1/utility/find?task=` (and `utility/plan?query=` for multi-step jobs). When `uncertain` is false the agent calls `results[0]` directly. The bundled files are the fallback for offline use, a 404 from an older server, or an uncertain answer.
+- **Common jobs table.** SKILL.md has a 12-row "job → first call" table: comments to CSV, creators, reviews across retailers, stock price and news, YouTube transcript, alerts (monitors, validated and priced first with `dry_run=1` where the server supports it), stats for post URLs, Naver, profiles, scraping, brand mentions, multi-platform search. It is generated from the registry recipes.
+- **Helpers block.** SKILL.md now shows one-liners for every bundled script: `sc.py`, `paginate.py`, `to_csv.py`, `batch.py` and `estimate.py`.
+- **Greppable index.** `references/index.md` ends with one keyword line per endpoint, so `grep -i transcript` (or `stats`, `alert`, `naver`, ...) lands on the right endpoint.
+- **Response shapes without a test call.** A section built from a sample now lists every leaf, up to 25, with its JSON type, grouped by object (`transcript[]` {text string, offset number, ...}). Field-map sections name the fields their table leaves out (`review.rating` {max, value}) and any extra fields the sample carries (`quote.price` {current number, ...}).
+
 
 - **Built for agents first.** SKILL.md is now about 145 lines, down from 417. It loads `references/index.md` (one line per endpoint) and `references/errors.md` (every error code with what to do next) instead of carrying the tables itself.
 - **Every endpoint section is generated from one contract.** Each section now shows what the call returns (top fields with meaning and measured fill), how it pages (page size, how many items a page costs), the cost rule and its levers, the next call to make with the exact field to bind, and its errors. The async web jobs say they return a `job_id` and name the poll route.

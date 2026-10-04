@@ -8,10 +8,13 @@ Every field the 15 field-mapped endpoints returning `PlaceList` can carry, with 
 | `place.categories` | array\|null |  |
 | `place.category` | string\|null | Primary category (e.g. "Coffee shop", "Hotel") |
 | `place.description` | string\|null |  |
+| `place.ext.distance` | number\|null | (seen in a sample response) |
 | `place.ext.distance_miles` | unknown\|null |  |
+| `place.ext.hours` | array\|null | (seen in a sample response) |
 | `place.ext.pro_desk_phone` | unknown\|null |  |
 | `place.ext.status` | string\|null |  |
 | `place.ext.store_hours` | unknown\|null |  |
+| `place.ext.timezone` | string\|null | (seen in a sample response) |
 | `place.ext.tool_rental_phone` | unknown\|null |  |
 | `place.hotel.amenities` | array\|null |  |
 | `place.hotel.check_in_time` | string\|null |  |
@@ -31,3 +34,4 @@ Every field the 15 field-mapped endpoints returning `PlaceList` can carry, with 
 | `place.rating.value` | number\|null |  |
 | `place.reviews_count` | number\|null | Number of ratings |
 | `place.url` | string\|null | Website or canonical URL |
+| `place.verified` | boolean\|null | Claimed-business flag (Google is_claimed) (seen in a sample response) |

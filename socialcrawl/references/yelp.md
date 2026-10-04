@@ -48,7 +48,7 @@ Returns a unified Place for one Yelp business: name, alias URL, unrounded star r
 | `place.address` |  |
 | `place.latitude` |  |
 
-+2 more fields in the full schema.
++2 more (types in the full schema): `place` {longitude}; `place.rating` {value}. Also in the sample: `place` {url string, category string, phone null, verified null, description null, image_urls string[], categories string[]}; `place.rating` {max number}; `place.ext` {timezone string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}.
 
 **Next** `yelp/business/reviews` (`id` ← `data.place.id`) - Get Yelp reviews for a business.
 
@@ -89,7 +89,7 @@ Returns a unified ReviewList of customer reviews for a Yelp business, keyed by t
 | `review.entity_id` | ID of the reviewed entity… |
 | `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+10 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review.author` {name, avatar_url, location, reviews_count}; `review` {language}; `review.rating` {value}. Also in the sample: `review` {url string, title null, helpful_votes number, verified null, source null, original_language null, translated null}; `review.rating` {max number}; `review.author` {url string} (+6 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/yelp/business/reviews" \
@@ -124,7 +124,7 @@ Searches Yelp businesses by term and location. Returns a unified PlaceList: name
 | `place.address` |  |
 | `place.latitude` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {longitude}; `place.rating` {value}. Page-level: `data.dropped`.
 
 **Next** `yelp/business/reviews` (`id` ← `data.items[].place.id`) - Get Yelp reviews for a business. · `yelp/business/info` (`id` ← `data.items[].place.id`) - Get a Yelp business by encid.
 
@@ -162,7 +162,7 @@ Same search as GET /v1/yelp/search, on the full-search path that is documented t
 | `place.address` |  |
 | `place.latitude` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `place` {longitude}; `place.rating` {value}. Page-level: `data.dropped`.
 
 **Next** `yelp/business/reviews` (`id` ← `data.items[].place.id`) - Customer reviews of each business. · `yelp/business/info` (`id` ← `data.items[].place.id`) - Get a Yelp business by encid.
 
@@ -186,7 +186,7 @@ Returns Yelp typeahead rows for a query in a location: category, common, chain, 
 - `query` (required) - Search term as typed on Yelp, for example Pizza or coffee. · e.g. `Pizza`
 - `location` (required) - City or full location string, for example New York, NY or San Francisco, CA, United States. Required with query. · e.g. `New York, NY`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `__typename`, `ajaxData`, `isBookmarked`, `isTypeahead`, `nameParam`, `numCheckins`, `query`, `redirectUrl` (+8 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {title string, subtitle null, type string, numCheckins null, isBookmarked null, isTypeahead boolean, nameParam string, redirectUrl string, ajaxData null, query string, refinements null, __typename string}; `thumbnail` {type null, key null, color null, __typename string}.
 
 Page-level: `data.dropped`.
 

@@ -77,7 +77,7 @@ Returns reels that use a specific audio track on Instagram. Each reel includes e
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+14 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.is_trending`, `data.sound`.
++14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.flags` {deleted, pinned}. Also in the sample: `post.ext` {media_type string, audio_cluster_id string, published_at_epoch number, coauthors array}; `post.ext.coauthors[]` {id string} (+4 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.is_trending`, `data.sound`.
 
 **Next** `instagram/post/stats` (`url` ← `data.items[].post.url`) - Get Instagram post stats including the share count.
 
@@ -110,7 +110,7 @@ Returns basic public profile info for an Instagram user by user ID including use
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Never filled: `author.likes_count`, `author.posts_count`.
++10 more (types in the full schema): `author` {followers, following, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {business_category, hd_avatar_url}. Never filled: `author.likes_count`, `author.posts_count`.
 
 **Next** `instagram/following` (`handle` ← `data.author.username`) - List Instagram following. · `instagram/profile/about` (`handle` ← `data.author.username`) - Get Instagram account transparency details.
 
@@ -150,7 +150,7 @@ Resolves a single Instagram comment to a live comment object (current like count
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+9 more fields in the full schema.
++9 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted, pinned}; `computed` {language}. Also in the sample: `comment.ext.lookup` {found_via string, pages_fetched number, comments_scanned number, sort_basis string, position_hint string, post_comment_count number}; `lookup` {found_via string, pages_fetched number, comments_scanned number, sort_basis string} (+2 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/instagram/comment" \
@@ -169,7 +169,7 @@ Returns computed engagement statistics for an Instagram account based on its rec
 
 - `handle` (required) - Instagram username without the @ symbol. · e.g. `mrbeast`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `comments`, `engagement_rate_percentages`, `followers`, `id_user`, `is_private`, `likes`, `posts_details`, `recent_posts` (+2 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {engagement_rate_percentages number, recent_posts number, followers number, comments number, likes number, recent_posts_explanation string, id_user string, username string, is_private boolean}; `posts_details[]` {likes number, comments number, taken_at number, datetime string, hours_since_post number, time_ago string, likes_per_hour number, comments_per_hour number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/engagement" \
@@ -280,7 +280,7 @@ Returns the items within a specific Instagram story highlight including media UR
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+9 more fields in the full schema. Never filled: `post.content.text`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.ext` {media_type string, published_at_epoch number, coauthors array}. Never filled: `post.content.text`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/instagram/highlight/detail" \
@@ -315,7 +315,7 @@ Returns a list of story highlight collections for an Instagram user including hi
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+5 more fields in the full schema. Never filled: `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at` (+1 more). Page-level: `data.dropped`.
++5 more (types in the full schema): `computed` {language}; `post.author` {avatar_url}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Never filled: `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at` (+1 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/highlights" \
@@ -348,7 +348,7 @@ Returns the posts tagged at an Instagram location, newest first, about 60 per pa
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+13 more fields in the full schema. Never filled: `post.author.display_name`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++13 more (types in the full schema): `post.author` {verified}; `post.content` {media_urls, duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted, pinned}. Also in the sample: `post.ext` {media_type string, carousel_count number, published_at_epoch number, coauthors array}. Never filled: `post.author.display_name`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `instagram/media/screen-text` (`url` ← `data.items[].post.url`) - Get Instagram post on-screen text. · `instagram/post/stats` (`url` ← `data.items[].post.url`) - Get Instagram post stats including the share count. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -371,7 +371,7 @@ Reads the text shown on an Instagram post's images: the headlines, list items, c
 
 - `url` (required) - Full URL of the Instagram post, reel or video (a `/p/`, `/reel/`, `/reels/` or `/tv/` link) · e.g. `https://www.instagram.com/p/DdEqEl5Dl-S/`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `frame`, `images`, `media_type`, `post_id`, `shortcode`, `slide_count`, `source`, `texts` (+2 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {post_id string, shortcode string, url string, media_type string, texts string[], source string, frame null, slide_count number, warnings string[]}; `images[]` {index number, image_url string, texts string[]|array}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/media/screen-text" \
@@ -391,7 +391,7 @@ Returns an AI-generated transcript of the spoken words in an Instagram video or 
 
 - `url` (required) - Full URL of the Instagram video or reel (a `/reel/`, `/p/` or `/tv/` link to a video post). Photo posts have no audio to transcribe. · e.g. `https://www.instagram.com/reel/DHsD6HGqJhp/`
 
-**Response** `Transcript` object at `data`, `{ transcripts }` (inferred from a sample): `transcripts`.
+**Response** `Transcript` object at `data`, `{ transcripts }` (inferred from a sample): `transcripts[]` {id string, shortcode string, text string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/media/transcript" \
@@ -440,7 +440,7 @@ Returns detailed information about a specific Instagram post including view coun
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+18 more fields in the full schema. Never filled: `post.ext.video_view_count`.
++18 more (types in the full schema): `post.author` {verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, views, saves, shares}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.ext` {ig_play_count, repost_count}; `post.flags` {deleted, pinned}. Also in the sample: `post.flags` {nsfw null} (+8 more). Never filled: `post.ext.video_view_count`.
 
 **Next** `instagram/post/comments` (`url` ← `data.post.url`) - The comments on the post. · `instagram/profile` (`handle` ← `data.post.author.username`) - The author's profile: followers, bio and counts. · `instagram/profile/posts` (`handle` ← `data.post.author.username`) - List Instagram user posts. · `instagram/profile/about` (`handle` ← `data.post.author.username`) - Get Instagram account transparency details.
 
@@ -477,7 +477,7 @@ Returns replies under one Instagram comment. Each reply includes text, like coun
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+16 more fields in the full schema. Never filled: `comment.author.display_name`, `comment.flags.pinned`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++16 more (types in the full schema): `comment` {post_id}; `computed` {labels_evidence, language}; `comment.author` {avatar_url, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Never filled: `comment.author.display_name`, `comment.flags.pinned`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/post/comment/replies" \
@@ -515,7 +515,7 @@ Returns a list of comments on an Instagram post, ranked by the platform's own po
 | `comment.author.avatar_url` | 100% | URL to comment author profile picture |
 | `comment.author.verified` | 100% | Whether the comment author is verified |
 
-+16 more fields in the full schema. Never filled: `comment.flags.pinned`, `comment.parent_id`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.scan`.
++16 more (types in the full schema): `comment.engagement` {likes, replies}; `comment` {url, post_id}; `computed` {labels_evidence, language}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}; `comment.author` {display_name}. Never filled: `comment.flags.pinned`, `comment.parent_id`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.scan`.
 
 **Next** `instagram/post/comment/replies` (`comment_id` ← `data.items[].comment.id`; carry `url`) - The replies under each comment, sent with the same post url. · `instagram/profile` (`handle` ← `data.items[].comment.author.username`) - The author's profile: followers, bio and counts.
 
@@ -585,7 +585,7 @@ Returns full engagement stats for a single Instagram post or reel: likes, commen
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more fields in the full schema. Page-level: `data.hydration`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, ig_play_count, repost_count}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null} (+6 more). Page-level: `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/post/stats" \
@@ -618,7 +618,7 @@ Returns public profile information for an Instagram user including the exact int
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+12 more fields in the full schema. Never filled: `author.joined_at`, `author.likes_count`.
++12 more (types in the full schema): `author` {followers, following, verified, private, posts_count}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {contact_email, hd_avatar_url, business_category}. Also in the sample: `author` {last_post_at string}. Never filled: `author.joined_at`, `author.likes_count`.
 
 **Next** `instagram/profile/posts` (`handle` ← `data.author.username`) - The account's latest posts. · `instagram/highlights` (`user_id` ← `data.author.id`) - The account's story highlights. · `instagram/stories` (`handle` ← `data.author.username`) - The account's current stories. · `instagram/profile/posts/full` (`handle` ← `data.author.username`) - Instagram posts with views, likes, comments, and per-post share counts where available, in one call.
 
@@ -651,7 +651,7 @@ Returns the data behind Instagram's "About this account" panel for a public acco
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-+14 more fields in the full schema. Never filled: `author.joined_at`, `author.likes_count`.
++14 more (types in the full schema): `author` {following, posts_count, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {account_created, business_category, country, hd_avatar_url, public_email, public_phone}. Also in the sample: `author` {url string}. Never filled: `author.joined_at`, `author.likes_count`.
 
 **Next** `instagram/profile/posts` (`handle` ← `data.author.username`) - List Instagram user posts. · `instagram/profile/reels` (`user_id` ← `data.author.id`) - List Instagram user reels. · `instagram/profile/posts/full` (`handle` ← `data.author.username`) - Instagram posts with views, likes, comments, and per-post share counts where available, in one call. · `instagram/profile/full` (`handle` ← `data.author.username`) - Instagram profile, recent posts, and computed analytics in one call.
 
@@ -680,7 +680,7 @@ Fans out to the Instagram profile and recent-posts endpoints in parallel and ret
 
 - `handle` is required (it is optional in shape only - the request needs it).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.avg_engagement_rate`, `computed.avg_engagement_rate_by_followers`, `computed.cadence_window_days`, `computed.format_mix.image`, `computed.format_mix.video`, `computed.posts_per_week`, `computed.top_post.engagement_total`, `computed.top_post.url` (+18 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `profile` {id string, username string, display_name string, avatar_url string, bio string, verified boolean, followers number, following number, posts_count number, likes_count null, url string, private boolean, joined_at null, last_post_at string}; `profile.ext` {business_category null}; `posts[].post` {id string, url string}; `posts[].post.content` {text string, media_urls string[], thumbnail_url null, duration_seconds null}; `posts[].post.author` {username string, display_name string, avatar_url string, verified boolean} (+35 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/profile/full" \
@@ -718,7 +718,7 @@ Returns the public posts on an Instagram profile, newest first. Paging the curso
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+24 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`.
++24 more (types in the full schema): `post.author` {display_name, verified}; `post.content` {media_urls, duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention, niche, quality, sponsored} (+5 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`.
 
 **Next** `instagram/post/comments` (`url` ← `data.items[].post.url`) - The comments on each post. · `instagram/post` (`url` ← `data.items[].post.url`) - Full details and stats for each post. · `instagram/post/stats` (`url` ← `data.items[].post.url`) - Current like, comment and view counts for each post. · `instagram/media/screen-text` (`url` ← `data.items[].post.url`) - Get Instagram post on-screen text.
 
@@ -748,7 +748,7 @@ Returns a creator's recent posts with views, likes, comments, and the per-post s
 
 - Provide at least one of `handle`, `user_id`.
 
-**Response** `Analytics` rows at `data.items[]`, each `{ computed, post }` (inferred from a sample): `computed.content_category`, `computed.engagement_rate`, `computed.estimated_reach`, `computed.language`, `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified` (+21 more).
+**Response** `Analytics` rows at `data.items[]`, each `{ post, computed }` (inferred from a sample): `post` {id string, url string, published_at string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds number}; `post.author` {username string, display_name string, avatar_url string, verified boolean}; `post.engagement` {views number, likes number, comments number, shares number, saves null}; `post.flags` {nsfw null, spoiler null, pinned boolean, deleted boolean}; `post.ext` {author_id string, media_type string, published_at_epoch number, coauthors array, shares_source string} (+4 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/profile/posts/full" \
@@ -792,7 +792,7 @@ Returns a list of reels posted by an Instagram user. Each reel includes view cou
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+24 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`.
++24 more (types in the full schema): `post.author` {display_name, verified}; `post.content` {duration_seconds, media_urls}; `post.engagement` {comments, likes, views}; `post.ext` {music_id}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention, niche, quality, sponsored} (+5 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`.
 
 **Next** `instagram/post/stats` (`url` ← `data.items[].post.url`) - Get Instagram post stats including the share count. · `instagram/audio/reels` (`audio_id` ← `data.items[].post.ext.music_id`; needs `include=audio` on this call) - List Instagram reels using an audio track.
 
@@ -822,7 +822,7 @@ Returns a creator's recent reels with views, likes, comments, and the per-reel s
 
 - Provide at least one of `handle`, `user_id`.
 
-**Response** `Analytics` rows at `data.items[]`, each `{ computed, post }` (inferred from a sample): `computed.content_category`, `computed.engagement_rate`, `computed.estimated_reach`, `computed.language`, `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified` (+22 more).
+**Response** `Analytics` rows at `data.items[]`, each `{ post, computed }` (inferred from a sample): `post` {id string, url string, published_at string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds number}; `post.author` {username string, display_name string, avatar_url string, verified boolean}; `post.engagement` {views number, likes number, comments number, shares number, saves null}; `post.flags` {nsfw null, spoiler null, pinned boolean, deleted boolean}; `post.ext` {author_id string, media_type string, remix_count number, published_at_epoch number, coauthors array} (+5 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/profile/reels/full" \
@@ -849,7 +849,7 @@ Fetches trending reels from Instagram's public reels page. Instagram returns a s
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+10 more fields in the full schema. Never filled: `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `instagram/post/stats` (`url` ← `data.items[].post.url`) - Get Instagram post stats including the share count.
 
@@ -870,7 +870,7 @@ Returns mixed Instagram search matches for a query: accounts, hashtags, and plac
 
 - `query` (required) - Search keyword as typed in Instagram's search box. · e.g. `nike`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `hashtags`, `keywords`, `places`, `query`, `rank_token`, `users`.
+**Response** `Analytics` object at `data` (inferred from a sample): {query string, keywords array, rank_token string}; `users[]` {position number, id string, username string, full_name string, is_verified boolean, profile_pic_url string}; `hashtags[]` {position number, id string, name string, media_count number, search_result_subtitle null}; `places[]` {position number, id string, name string, title string, subtitle string, facebook_places_id string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/search" \
@@ -905,7 +905,7 @@ Returns recent public Instagram posts for a hashtag from Instagram's native hash
 | `post.published_at` | 100% | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+15 more fields in the full schema. Never filled: `post.author.display_name`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.walk`.
++15 more (types in the full schema): `post.author` {verified}; `post.content` {media_urls, duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.ext` {author_followers, author_id}; `post.flags` {deleted, pinned}. Also in the sample: `post.ext` {media_type string, published_at_epoch number, coauthors array}. Never filled: `post.author.display_name`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.walk`.
 
 **Next** `instagram/profile` (`handle` ← `data.items[].post.author.username`) - The author's profile: followers, bio and counts. · `instagram/post/comments` (`url` ← `data.items[].post.url`) - List Instagram post comments. · `instagram/post` (`url` ← `data.items[].post.url`) - Get Instagram post details. · `instagram/media/transcript` (`url` ← `data.items[].post.url`) - Get Instagram media transcript.
 
@@ -927,7 +927,7 @@ Searches Instagram locations by keyword. Returns matching places, each with loca
 
 - `query` (required) - Search keyword or phrase to find Instagram locations. · e.g. `Paris`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ location, subtitle, title }` (inferred from a sample): `location.address`, `location.city`, `location.external_source`, `location.facebook_places_id`, `location.has_viewer_saved`, `location.lat`, `location.lng`, `location.name` (+4 more).
+**Response** `SearchResult` rows at `data.items[]`, each `{ location, title, subtitle }` (inferred from a sample): `location` {pk number, facebook_places_id number, external_source string, name string, address string, city null, has_viewer_saved boolean, short_name string, lng number, lat number}; {title string, subtitle string}.
 
 Page-level: `data.dropped`.
 
@@ -950,7 +950,7 @@ Searches Instagram's audio (music) library by keyword. Returns matching tracks, 
 - `query` (required) - Search keyword or phrase to find Instagram audio tracks. · e.g. `beyonce`
 - `cursor` (optional, string) - Pagination cursor. Use the `next_cursor` from the previous response to fetch the next page.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ metadata, track }` (inferred from a sample): `metadata.allow_media_creation_with_music`, `metadata.is_bookmarked`, `metadata.is_trending_in_clips`, `track.allows_saving`, `track.audio_asset_id`, `track.audio_cluster_id`, `track.cover_artwork_thumbnail_uri`, `track.cover_artwork_uri` (+19 more).
+**Response** `SearchResult` rows at `data.items[]`, each `{ metadata, track }` (inferred from a sample): `metadata` {allow_media_creation_with_music boolean, is_bookmarked boolean, is_trending_in_clips boolean}; `track` {allows_saving boolean, audio_asset_id string, audio_cluster_id string, cover_artwork_thumbnail_uri string, cover_artwork_uri string, dark_message null, display_artist string, duration_in_ms number, fast_start_progressive_download_url string, has_lyrics boolean, highlight_start_times_in_ms number[], id string, is_eligible_for_audio_effects boolean, is_eligible_for_vinyl_sticker boolean, is_explicit boolean, licensed_music_subtype string, progressive_download_url string, reactive_audio_download_url null, sanitized_title null, song_monetization_info string, subtitle string, title string} (+2 more).
 
 Page-level: `data.dropped`.
 
@@ -987,7 +987,7 @@ Returns popular Instagram posts matching a keyword. Each post includes caption, 
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. (with `include=engagement`) (only when the fallback source serves) |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more fields in the full schema. Never filled: `post.engagement.saves`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares, views}; `post.ext` {author_id, ig_play_count}; `post.flags` {deleted}. Never filled: `post.engagement.saves`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `instagram/post` (`url` ← `data.items[].post.url`) - Get Instagram post details. · `instagram/post/stats` (`url` ← `data.items[].post.url`) - Get Instagram post stats including the share count. · `instagram/profile` (`handle` ← `data.items[].post.author.username`) - Get Instagram user profile. · `instagram/profile/full` (`handle` ← `data.items[].post.author.username`) - Instagram profile, recent posts, and computed analytics in one call.
 
@@ -1025,7 +1025,7 @@ Searches Google for public Instagram results matching a keyword or phrase, then 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+9 more fields in the full schema. Never filled: `author.likes_count`. Page-level: `data.dropped`, `data.hydration`.
++9 more (types in the full schema): `author` {external_url, followers, following, posts_count, verified}; `author.ext` {account_created, country, public_email, public_phone}. Never filled: `author.likes_count`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `instagram/profile` (`handle` ← `data.items[].author.username`) - The author's profile: followers, bio and counts. · `instagram/profile/posts` (`handle` ← `data.items[].author.username`) - The account's latest posts. · `instagram/profile/reels/full` (`handle` ← `data.items[].author.username`) - Instagram reels with views, likes, comments, and per-reel share counts where available, in one call. · `instagram/profile/posts/full` (`handle` ← `data.items[].author.username`) - Instagram posts with views, likes, comments, and per-post share counts where available, in one call.
 
@@ -1066,7 +1066,7 @@ Searches Instagram for reels matching a keyword query. Returns matching reels wi
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.verified` | 100% | Whether the author account is verified |
 
-+29 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.country`, `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.region`, `data.relevance`, `data.walk`.
++29 more (types in the full schema): `post.content` {duration_seconds, media_urls}; `post.engagement` {comments, views, likes}; `post.ext` {author_id}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality, sponsored} (+10 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.country`, `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.region`, `data.relevance`, `data.walk`.
 
 **Next** `instagram/profile` (`handle` ← `data.items[].post.author.username`) - The author's profile: followers, bio and counts. · `instagram/profile/full` (`handle` ← `data.items[].post.author.username`) - Instagram profile, recent posts, and computed analytics in one call.
 
@@ -1107,7 +1107,7 @@ Returns a list of Instagram accounts similar to a given user: the related accoun
 | `author.bio` | Profile biography or description (with `include=profile`) |
 | `author.display_name` | Display name or full name |
 
-+5 more fields in the full schema. Never filled: `author.likes_count`. Page-level: `data.dropped`, `data.hydration`.
++5 more (types in the full schema): `author` {followers, following, posts_count, verified, private}. Never filled: `author.likes_count`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `instagram/profile` (`handle` ← `data.items[].author.username`) - Get Instagram user profile. · `instagram/engagement` (`handle` ← `data.items[].author.username`) - Get Instagram engagement statistics. · `instagram/profile/full` (`handle` ← `data.items[].author.username`) - Instagram profile, recent posts, and computed analytics in one call.
 
@@ -1146,7 +1146,7 @@ Returns the active stories currently in a user's story tray. Each story includes
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+9 more fields in the full schema. Never filled: `post.content.text`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.ext` {media_type string, published_at_epoch number, coauthors array}. Never filled: `post.content.text`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/instagram/stories" \
@@ -1212,7 +1212,7 @@ Returns a paginated list of the posts that tag an Instagram user. Each post incl
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+14 more fields in the full schema. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.flags` {deleted, pinned}. Also in the sample: `post.flags` {likes_hidden boolean}; `post.ext` {media_type string, published_at_epoch number, coauthors array}. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `instagram/profile` (`handle` ← `data.items[].post.author.username`) - The author's profile: followers, bio and counts. · `instagram/post/comments` (`url` ← `data.items[].post.url`) - List Instagram post comments. · `instagram/post` (`url` ← `data.items[].post.url`) - Get Instagram post details. · `instagram/media/screen-text` (`url` ← `data.items[].post.url`) - Get Instagram post on-screen text.
 

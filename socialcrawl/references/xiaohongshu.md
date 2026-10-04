@@ -44,7 +44,7 @@ Returns one Xiaohongshu note from its URL or note id: full body, images or video
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.author.username` | Author username |
 
-+16 more fields in the full schema. Never filled: `post.author.verified`, `post.engagement.views`.
++16 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted}; `post.ext` {title, ip_location}. Never filled: `post.author.verified`, `post.engagement.views`.
 
 **Next** `xiaohongshu/post/comments` (`url` ← `data.post.url`) - Get Xiaohongshu note comments. · `xiaohongshu/profile/posts` (`id` ← `data.post.ext.author_id`) - List a Xiaohongshu creator's notes. · `xiaohongshu/profile` (`id` ← `data.post.ext.author_id`) - Get a Xiaohongshu creator.
 
@@ -82,7 +82,7 @@ Returns top level comments on a Xiaohongshu note: text, commenter, likes, reply 
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+9 more fields in the full schema. Never filled: `comment.author.verified`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++9 more (types in the full schema): `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_id, ip_location}; `comment.flags` {deleted, pinned}; `computed` {language}. Never filled: `comment.author.verified`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/xiaohongshu/post/comments" \
@@ -118,7 +118,7 @@ Returns one Xiaohongshu creator: display name, RedNote id (author.username), bio
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more fields in the full schema. Never filled: `author.joined_at`, `author.private`.
++11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {collects_received, country}. Never filled: `author.joined_at`, `author.private`.
 
 **Next** `xiaohongshu/profile/posts` (`url` ← `data.author.url`) - List a Xiaohongshu creator's notes.
 
@@ -160,7 +160,7 @@ Returns a Xiaohongshu creator's notes, newest first. Each row has a title, a sho
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.author.username` | Author username |
 
-+16 more fields in the full schema. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`.
++16 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted, pinned}; `post.ext` {title}. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `xiaohongshu/post` (`url` ← `data.items[].post.url`) - Get a Xiaohongshu note. · `xiaohongshu/profile` (`id` ← `data.items[].post.ext.author_id`) - Get a Xiaohongshu creator.
 
@@ -200,7 +200,7 @@ Returns Xiaohongshu notes matching a keyword. Each row has a title, a short summ
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.author.username` | Author username |
 
-+16 more fields in the full schema. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`.
++16 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted, pinned}; `post.ext` {title}. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `xiaohongshu/post` (`url` ← `data.items[].post.url`) - Full details and stats for each note. · `xiaohongshu/profile/posts` (`id` ← `data.items[].post.ext.author_id`) - List a Xiaohongshu creator's notes. · `xiaohongshu/profile` (`id` ← `data.items[].post.ext.author_id`) - Get a Xiaohongshu creator.
 
@@ -224,7 +224,7 @@ Returns the live Xiaohongshu hot search board: ranked topics with a hot value. T
 
 - `limit` (optional, integer, 1-20) - Topics to return, 1 to 20. Default 10. Each topic costs 5 credits and you are charged only for topics returned.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ hot_value, rank, title }` (inferred from a sample): `hot_value`, `rank`, `title`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ rank, title, hot_value }` (inferred from a sample): {rank number, title string, hot_value number}.
 
 Page-level: `data.dropped`.
 

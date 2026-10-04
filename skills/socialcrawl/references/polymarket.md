@@ -27,7 +27,7 @@ Server-side fan-out over the Gamma API: expands the topic into up to 6 search qu
 - `query` (required) - The research topic: free-text natural language (e.g. 'last 30 days bitcoin halving', 'kanye west tour'). Framing prefixes like 'last N days' and 'what are people saying about' are stripped automatically before expansion. · e.g. `trump 2028 election`
 - `limit` (optional, integer) - Max results per result type on each fan-out call (events / markets / profiles). Bounds the response size. Defaults to 10.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `active`, `archived`, `automaticallyActive`, `closed`, `commentCount`, `competitive`, `createdAt`, `creationDate` (+37 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, ticker string, slug string, title string, description string, resolutionSource string, startDate string, creationDate string, endDate string, image string, icon string, active boolean, closed boolean, archived boolean, new boolean, featured boolean, restricted boolean, liquidity number, volume number, openInterest number, sortBy string, createdAt string, updatedAt string, competitive number, enableOrderBook boolean} (+122 more).
 
 Page-level: `data.dropped`.
 

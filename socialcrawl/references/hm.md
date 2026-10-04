@@ -29,7 +29,7 @@ Returns H&M's website navigation tree: department nodes with child categories, h
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` object at `data`, `{ menuItems, serviceItems, siteStructure }` (inferred from a sample): `menuItems`, `serviceItems.links`, `serviceItems.numberOfVisibleServiceItems`, `siteStructure`.
+**Response** `Analytics` object at `data`, `{ menuItems, serviceItems, siteStructure }` (inferred from a sample): `menuItems[]` {nodeId string, nodeName string, parentNodeId string, departmentImage string, trackingLabel string, trackingData string, inActive boolean, hideWebNav boolean, skipMenu boolean, href string}; `menuItems[].children[]` {nodeId string, nodeName string, parentNodeId string, trackingLabel string, trackingData string, inActive boolean, hideWebNav boolean, skipMenu boolean, group number, href string, children[] object}; `serviceItems` {numberOfVisibleServiceItems number}; `serviceItems.links[]` {nodeId string, nodeName string, href string} (+23 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/hm/categories" \
@@ -44,7 +44,7 @@ Returns H&M's market list grouped by region, each country with its two-letter lo
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` object at `data`, `{ backgroundImage, regions }` (inferred from a sample): `backgroundImage`, `regions`.
+**Response** `Analytics` object at `data`, `{ backgroundImage, regions }` (inferred from a sample): {backgroundImage string}; `regions[]` {name string}; `regions[].countries[]` {name string, locale string, languages[] object, isTransactional boolean, hasLabel boolean}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/hm/countries" \
@@ -64,7 +64,7 @@ Returns the manufacturing countries, supplier names, factory names, addresses, a
 - `product_id` (required) - H&M product id, the digits in a product page URL: www2.hm.com/en_us/productpage.0963662139.html is product id 0963662139. Product ids also come back on every row of GET /v1/hm/search. · e.g. `0963662139`
 - `language` (optional, string) - Catalogue locale as language_region, for example en_us, en_gb, de_de, fr_fr. Omit for the US catalogue. This is not the two-letter locale from GET /v1/hm/countries.
 
-**Response** `Analytics` object at `data`, `{ countries, responseStatusCode }` (inferred from a sample): `countries`, `responseStatusCode`.
+**Response** `Analytics` object at `data`, `{ responseStatusCode, countries }` (inferred from a sample): {responseStatusCode string}; `countries[]` {id string, name string}; `countries[].suppliers[]` {id string, name string, factories[] object}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hm/product/suppliers" \
@@ -98,8 +98,9 @@ Returns one page of H&M products for a keyword, 36 per page by default, each wit
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.availability` | Stock/availability string when surfaced (seen in a sample response) |
 
-Page-level: `data.dropped`.
+Also in the sample: `product` {description null, seller string, reviews_count null}; `product.price` {current number, original null, currency string}; `product.rating` {average null, count null}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.hm` {color string, category_code string, sizes string[], new_arrival boolean}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hm/search" \
@@ -120,7 +121,7 @@ Returns H&M search autocomplete suggestions for a partial query, the same terms 
 - `query` (required) - Partial search query to autocomplete, for example tshirt. · e.g. `tshirt`
 - `language` (optional, string) - Catalogue locale as language_region, for example en_us, en_gb, de_de, fr_fr. Omit for the US catalogue. This is not the two-letter locale from GET /v1/hm/countries.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ query }` (inferred from a sample): `query`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ query }` (inferred from a sample): {query string}.
 
 Page-level: `data.dropped`.
 
@@ -154,7 +155,7 @@ Returns every H&M store in a market: store code, name, full address, phone, coor
 | `place.phone` |  |
 | `place.ext.status` |  |
 
-Page-level: `data.dropped`.
+Also in the sample: `place` {url null, category null, reviews_count null, price_level null, address string, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hm/stores" \

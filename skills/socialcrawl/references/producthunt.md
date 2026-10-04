@@ -41,7 +41,7 @@ Returns the launches Product Hunt is currently featuring, roughly 50 of them, ea
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+6 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
++6 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.flags` {deleted}; `post.ext` {title, updated_at}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/producthunt/launches" \

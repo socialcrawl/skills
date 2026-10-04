@@ -76,7 +76,7 @@ Returns public channel information for a YouTube channel including subscriber co
 | `author.display_name` | 100% | Display name or full name |
 | `author.followers` | 100% | Follower or subscriber count as an integer. |
 
-+16 more fields in the full schema. Never filled: `author.likes_count`.
++16 more (types in the full schema): `author` {posts_count, joined_at, url, following, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {contact_email, bannerExternalUrl, keywords, links, website, public_email}. Also in the sample: `author.ext` {country string, followers_approximate boolean, total_views number} (+8 more). Never filled: `author.likes_count`.
 
 **Next** `youtube/channel/videos` (`channelId` ← `data.author.id`) - The channel's latest videos. · `youtube/channel/playlists` (`channelId` ← `data.author.id`) - The channel's playlists. · `youtube/channel/community-posts` (`channelId` ← `data.author.id`) - List a YouTube channel's community posts.
 
@@ -116,7 +116,7 @@ Returns the contact email a YouTube channel publishes, including the address beh
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+13 more fields in the full schema. Never filled: `author.following`, `author.likes_count`, `author.private`.
++13 more (types in the full schema): `author` {followers, posts_count, verified, joined_at}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {contact_email, country, keywords, links, public_email}. Never filled: `author.following`, `author.likes_count`, `author.private`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/channel/about" \
@@ -153,7 +153,7 @@ Fetches community posts from a YouTube channel's Posts tab (post ID, URL, conten
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {likes}; `post.flags` {deleted}; `post.ext` {channel_id}. Also in the sample: `post.ext` {published_label string, published_precision string}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/channel/community-posts" \
@@ -194,7 +194,7 @@ Fetches live streams and past streams from a YouTube channel's Live tab (title, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+13 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++13 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.ext` {author_followers, channel_id}; `post.flags` {deleted}. Also in the sample: `post.ext` {content_type string}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `youtube/video` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `youtube/video/thumbnails` (`url` ← `data.items[].post.url`) - Get a YouTube video's thumbnail files.
 
@@ -233,7 +233,7 @@ Fetches playlists from a YouTube channel's Playlists tab (playlist ID, title, th
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+5 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned` (+2 more). Page-level: `data.dropped`.
++5 more (types in the full schema): `computed` {estimated_reach, language}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext` {video_count}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned` (+2 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/channel/playlists" \
@@ -274,7 +274,7 @@ Returns a list of YouTube Shorts published by a channel, read from the channel's
 | `post.content.duration_seconds` | 100% | Video/clip duration in seconds (null for non-video posts) |
 | `post.content.thumbnail_url` | 100% | URL to thumbnail image |
 
-+16 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
++16 more (types in the full schema): `post.engagement` {comments, likes, views}; `post.ext` {categoryTitle, description, author_followers, channel_id}; `post.author` {username, avatar_url, display_name}; `computed` {content_category, engagement_rate, estimated_reach, language, vs_creator}; `post.flags` {deleted}. Also in the sample: `post.ext` {content_type string}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
 
 **Next** `youtube/video/thumbnails` (`url` ← `data.items[].post.url`) - Get a YouTube video's thumbnail files. · `youtube/channel/videos` (`channelId` ← `data.items[].post.ext.channel_id`; needs `include=channel` on this call) - List YouTube channel videos.
 
@@ -320,7 +320,7 @@ Returns a list of recent videos published by a YouTube channel. Each video inclu
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+16 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
++16 more (types in the full schema): `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {likes, views, comments}; `post.ext` {channel_id, categoryTitle, description, author_followers}; `computed` {content_category, engagement_rate, estimated_reach, language, vs_creator}; `post.flags` {deleted}. Also in the sample: `post.ext` {content_type string}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.hydration`.
 
 **Next** `youtube/video` (`url` ← `data.items[].post.url`) - Get YouTube video details. · `youtube/channel/shorts` (`channelId` ← `data.items[].post.ext.channel_id`) - List YouTube channel shorts.
 
@@ -359,7 +359,7 @@ Fetches full details for up to 1000 YouTube channels by id in a single POST requ
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+4 more fields in the full schema. Never filled: `author.following`, `author.likes_count`, `author.private`, `author.verified`. Page-level: `data.dropped`.
++4 more (types in the full schema): `author` {followers, posts_count, joined_at}; `author.ext` {public_email}. Never filled: `author.following`, `author.likes_count`, `author.private`, `author.verified`. Page-level: `data.dropped`.
 
 **Next** `youtube/channel/videos` (`channelId` ← `data.items[].author.id`) - List YouTube channel videos. · `youtube/channel/playlists` (`channelId` ← `data.items[].author.id`) - List a YouTube channel's playlists. · `youtube/channel/community-posts` (`channelId` ← `data.items[].author.id`) - List a YouTube channel's community posts. · `youtube/channel/about` (`channelId` ← `data.items[].author.id`) - Get a YouTube channel's contact email and country. Try the 1-credit youtube/channel first: it already carries the email for some channels, and you are charged here only when an address is returned. A first read of an address behind the View email address button can take up to 5 minutes, so set your HTTP timeout to at least 300s; on a 503, retry after the Retry-After seconds.
 
@@ -393,7 +393,7 @@ Returns details of a YouTube community post including text content, like count, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {likes}; `post.flags` {deleted}; `post.ext` {channel_id}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/community-post" \
@@ -432,7 +432,7 @@ Returns the videos in a YouTube playlist in playlist order: video id, title, thu
 | `post.author.username` | Author username (with `include=channel`) |
 | `computed.content_category` | Keyword-classified content category… |
 
-+13 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`.
++13 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.ext` {author_followers, channel_id}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null}; `post.author` {verified null}; `post.engagement` {shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+9 more). Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `youtube/channel` (`channelId` ← `data.items[].post.ext.channel_id`; needs `include=engagement` on this call) - Get YouTube channel info.
 
@@ -473,7 +473,7 @@ Returns the videos in a YouTube playlist in playlist order (video id, title, thu
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`.
++12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.ext` {author_followers, channel_id}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.content` {media_urls null}; `post.author` {verified null}; `post.engagement` {shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+9 more). Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/playlist/items" \
@@ -502,7 +502,7 @@ Fans out to the YouTube profile and recent-posts endpoints in parallel and retur
 
 - Provide at least one of `handle`, `channelId`, `url`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.avg_engagement_rate`, `computed.avg_engagement_rate_by_followers`, `computed.cadence_window_days`, `computed.format_mix.video`, `computed.posts_per_week`, `computed.top_post.engagement_total`, `computed.top_post.url`, `legs` (+29 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `profile` {id string, username string, display_name string, avatar_url string, bio string, verified null, followers number, following null, posts_count number, likes_count null, url string, private null, joined_at string}; `profile.ext` {country string, public_email null, followers_approximate boolean, keywords string, total_views number, joined_at_timestamp string, topicCategories string[], bannerExternalUrl string, madeForKids boolean, hiddenSubscriberCount boolean}; `profile.ext.related_playlists` {likes string, uploads string} (+44 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/profile/full" \
@@ -548,7 +548,7 @@ Searches YouTube by keyword. Returns matching videos, shorts, and live streams (
 | `post.author.username` | 93% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+22 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.relevance`, `data.walk`.
++22 more (types in the full schema): `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.ext` {channel_id, author_followers}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.flags` {deleted} (+3 more). Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.relevance`, `data.walk`.
 
 **Next** `youtube/video` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `youtube/channel` (`channelId` ← `data.items[].post.ext.channel_id`) - The channel behind each video: subscribers and description. · `youtube/video/comments` (`url` ← `data.items[].post.url`) - List YouTube video comments. · `youtube/video/sponsors` (`url` ← `data.items[].post.url`) - Detect sponsors of a YouTube video.
 
@@ -606,7 +606,7 @@ Searches YouTube videos with the full filter set: sort `order`, `duration`, live
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`, `data.walk`.
++12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.ext` {author_followers, channel_id}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.content` {media_urls null}; `post.author` {verified null}; `post.engagement` {shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+2 more). Page-level: `data.dropped`, `data.hydration`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/search/advanced" \
@@ -647,7 +647,7 @@ Searches YouTube for videos under a specific hashtag. Returns matching videos wi
 | `computed.content_category` |  | Keyword-classified content category… |
 | `computed.engagement_rate` |  | Computed engagement rate (0..1). |
 
-+14 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`, `data.walk`.
++14 more (types in the full schema): `computed` {estimated_reach, language}; `post.ext` {author_followers, channel_id, description}; `post.flags` {deleted}; `post` {published_at}; `post.author` {username, avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes}. Also in the sample: `post.ext` {content_type string, published_label string}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`, `data.walk`.
 
 **Next** `youtube/video` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `youtube/video/comments` (`url` ← `data.items[].post.url`) - The comments on each video. · `youtube/video/files` (`url` ← `data.items[].post.url`) - Get a YouTube video's video file streams. · `youtube/video/thumbnails` (`url` ← `data.items[].post.url`) - Get a YouTube video's thumbnail files.
 
@@ -670,7 +670,9 @@ Returns YouTube's search autocomplete suggestions for a partial query: the same 
 - `query` (required) - Partial search query to autocomplete. · e.g. `lofi`
 - `region` (optional, string) - ISO 3166-1 alpha-2 country code to localize suggestions.
 
-**Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=youtube/search/suggestions` serves the current contract.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): each row a string.
+
+Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/search/suggestions" \
@@ -702,7 +704,7 @@ Returns currently trending YouTube Shorts with view counts, like counts, channel
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.ext` {author_followers, channel_id, categoryTitle, description, tags}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `youtube/video` (`url` ← `data.items[].post.url`) - Get YouTube video details. · `youtube/video/thumbnails` (`url` ← `data.items[].post.url`) - Get a YouTube video's thumbnail files. · `youtube/channel` (`channelId` ← `data.items[].post.ext.channel_id`) - Get YouTube channel info.
 
@@ -761,7 +763,7 @@ Returns detailed information about a specific YouTube video including title, vie
 | `post.content.duration_seconds` | 100% | Video/clip duration in seconds (null for non-video posts) |
 | `post.content.thumbnail_url` | 100% | URL to thumbnail image |
 
-+18 more fields in the full schema.
++18 more (types in the full schema): `post.engagement` {comments, likes, views, saves, shares}; `post.ext` {channel_id, categoryTitle, description, hasPaidProductPlacement, tags}; `post.author` {username, avatar_url, verified}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}.
 
 **Next** `youtube/channel` (`channelId` ← `data.post.ext.channel_id`) - Get YouTube channel info.
 
@@ -784,7 +786,7 @@ Returns the downloadable audio stream files for a YouTube video: each with a dir
 
 - `url` (required) - Full URL of the YouTube video. · e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
 
-**Response** `MediaList` rows at `data.items[]` (inferred from a sample): `approxDurationMs`, `audioChannels`, `audioQuality`, `audioSampleRate`, `averageBitrate`, `bitrate`, `contentLength`, `highReplication` (+16 more).
+**Response** `MediaList` rows at `data.items[]` (inferred from a sample): {itag number, url string, mimeType string, bitrate number, lastModified string, contentLength string, quality string, projectionType string, averageBitrate number, audioQuality string, approxDurationMs string, audioSampleRate string, audioChannels number, loudnessDb number, trackAbsoluteLoudnessLkfs number, qualityOrdinal string, parsedLastModified string, lengthSeconds string, parsedContentLength string, highReplication boolean}; `initRange` {start string, end string}; `indexRange` {start string, end string}.
 
 Page-level: `data.dropped`.
 
@@ -821,7 +823,7 @@ Fetches replies to a specific comment on a YouTube video. Each reply includes te
 | `comment.post_id` | ID of the post this comment belongs to |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 
-+16 more fields in the full schema. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++16 more (types in the full schema): `comment.author` {avatar_url, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}; `computed` {language}; `comment.ext` {author_channel_id, author_url}. Also in the sample: `comment` {url null, parent_id string}; `comment.author` {display_name string} (+4 more). Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/video/comment/replies" \
@@ -860,7 +862,7 @@ Returns a list of comments on a specific YouTube video. Each comment includes th
 | `comment.post_id` | 100% | ID of the post this comment belongs to |
 | `comment.author.avatar_url` | 100% | URL to comment author profile picture |
 
-+17 more fields in the full schema. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++17 more (types in the full schema): `comment.engagement` {likes, replies}; `comment.ext` {author_url, replies_token, author_channel_id}; `computed` {labels_evidence, language}; `comment.author` {verified}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Also in the sample: `comment` {url null, parent_id null} (+20 more). Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/video/comments" \
@@ -881,7 +883,7 @@ Returns the downloadable video stream files for a YouTube video: each with a dir
 
 - `url` (required) - Full URL of the YouTube video. · e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
 
-**Response** `MediaList` rows at `data.items[]` (inferred from a sample): `approxDurationMs`, `audioChannels`, `audioQuality`, `audioSampleRate`, `averageBitrate`, `bitrate`, `colorInfo.matrixCoefficients`, `colorInfo.primaries` (+20 more).
+**Response** `MediaList` rows at `data.items[]` (inferred from a sample): {itag number, url string, mimeType string, bitrate number, width number, height number, lastModified string, quality string, fps number, qualityLabel string, projectionType string, audioQuality string, approxDurationMs string, audioSampleRate string, audioChannels number, qualityOrdinal string, parsedLastModified string, lengthSeconds string, parsedContentLength string, contentLength string, averageBitrate number}; `initRange` {start string, end string}; `indexRange` {start string, end string} (+3 more).
 
 Page-level: `data.dropped`.
 
@@ -904,7 +906,7 @@ Checks a YouTube video for the paid-promotion disclosure and infers likely spons
 - `url` (required) - Full URL of the YouTube video or short · e.g. `https://www.youtube.com/watch?v=AVO0ifle-OU`
 - `language` (optional, string) - 2 letter language code used for transcript lookup, ie 'en', 'es', 'fr' etc.
 
-**Response** `Analytics` object at `data`, `{ sponsorDetection, suspectedSponsors, video }` (inferred from a sample): `sponsorDetection.methods`, `sponsorDetection.note`, `sponsorDetection.status`, `sponsorDetection.transcriptAvailable`, `sponsorDetection.transcriptChecked`, `suspectedSponsors`, `video.channel.handle`, `video.channel.id` (+7 more).
+**Response** `Analytics` object at `data`, `{ video, suspectedSponsors, sponsorDetection }` (inferred from a sample): `video` {id string, url string, title string, isPaidPromotion boolean}; `video.channel` {id string, url string, handle string, title string, thumbnail string}; `suspectedSponsors[]` {name string, website string, confidence string}; `suspectedSponsors[].evidence[]` {source string, text string}; `sponsorDetection` {status string, methods string[], transcriptChecked boolean, transcriptAvailable boolean, note string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/youtube/video/sponsors" \
@@ -926,7 +928,7 @@ Returns the downloadable subtitle/caption track files for a YouTube video: each 
 - `url` (required) - Full URL of the YouTube video. · e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
 - `format` (optional, string) - Subtitle file format filter (e.g. srt, vtt, ttml, json3, srv1).
 
-**Response** `MediaList` rows at `data.items[]`, each `{ format, languageCode, languageName, url }` (inferred from a sample): `format`, `languageCode`, `languageName`, `url`.
+**Response** `MediaList` rows at `data.items[]`, each `{ languageName, languageCode, format, url }` (inferred from a sample): {languageName string, languageCode string, format string, url string}.
 
 Page-level: `data.dropped`.
 
@@ -949,7 +951,7 @@ Returns the thumbnail image files for a YouTube video at every available size: e
 
 - `url` (required) - Full URL of the YouTube video. · e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
 
-**Response** `MediaList` rows at `data.items[]` (inferred from a sample): `format`, `height`, `id`, `ratio`, `url`, `width`.
+**Response** `MediaList` rows at `data.items[]` (inferred from a sample): {id string, width number, height number, format string, ratio string, url string}.
 
 Page-level: `data.dropped`.
 
@@ -979,7 +981,7 @@ Returns the transcript of a YouTube video as timestamped segments: each with tex
 
 - `brand` is a no-op without `moments` - sending it alone is a free 400.
 
-**Response** `Transcript` object at `data`, `{ transcript }` (inferred from a sample): `transcript`.
+**Response** `Transcript` object at `data`, `{ transcript }` (inferred from a sample): `transcript[]` {text string, duration number, offset number, lang string, wordCount number, speechRate number}.
 
 Page-level: `data.moments`.
 
@@ -1018,7 +1020,7 @@ Fetches full details for up to 1000 YouTube videos by id in a single POST reques
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+9 more fields in the full schema. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.flags` {deleted}; `post.ext` {channel_id}. Page-level: `data.dropped`.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/youtube/videos" \
@@ -1056,7 +1058,7 @@ Returns the most popular (trending) YouTube videos for a region and category (ti
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more fields in the full schema. Page-level: `data.dropped`, `data.hydration`.
++12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, views}; `post.ext` {author_followers, channel_id}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.content` {media_urls null}; `post.author` {verified null}; `post.engagement` {shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+13 more). Page-level: `data.dropped`, `data.hydration`.
 
 **Next** `youtube/channel` (`channelId` ← `data.items[].post.ext.channel_id`) - Get YouTube channel info.
 

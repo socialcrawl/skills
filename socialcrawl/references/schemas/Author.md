@@ -46,6 +46,7 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.hashtags` | array\|null |  |
 | `author.ext.hd_avatar_url` | string\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.headquarters` | object\|null |  |
+| `author.ext.hiddenSubscriberCount` | boolean\|null | (seen in a sample response) |
 | `author.ext.industries` | array\|null |  |
 | `author.ext.is_creator` | boolean\|null |  |
 | `author.ext.is_hiring` | boolean\|null |  |
@@ -55,10 +56,12 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.is_premium` | boolean\|null | (only when the fallback source serves) |
 | `author.ext.is_top_voice` | boolean\|null | (only when the fallback source serves) |
 | `author.ext.join_policy` | string\|null |  |
+| `author.ext.joined_at_timestamp` | string\|null | (seen in a sample response) |
 | `author.ext.keywords` | string\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.language` | string\|null | (only when the fallback source serves) |
 | `author.ext.links` | array\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.locations` | array\|null |  |
+| `author.ext.madeForKids` | boolean\|null | (seen in a sample response) |
 | `author.ext.member_id` | string\|null |  |
 | `author.ext.monthly_listeners` | number\|null |  |
 | `author.ext.page_active` | boolean\|null |  |
@@ -69,13 +72,19 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.public_phone` | string\|null |  |
 | `author.ext.rating` | string\|null |  |
 | `author.ext.rating_count` | number\|null |  |
+| `author.ext.related_playlists.likes` | string\|null | (seen in a sample response) |
+| `author.ext.related_playlists.uploads` | string\|null | (seen in a sample response) |
 | `author.ext.rules` | array\|null |  |
 | `author.ext.rules_text` | string\|null |  |
 | `author.ext.social_links` | array\|null |  |
 | `author.ext.specialities` | array\|null |  |
 | `author.ext.talking_about_count` | number\|null |  |
+| `author.ext.topic_ids` | array\|null | (seen in a sample response) |
+| `author.ext.topicCategories` | array\|null | (seen in a sample response) |
 | `author.ext.total_ratings` | number\|null | Spotify podcasts only: how many listeners have rated the show. Cumulative over the show's whole run, so it reflects longevity as well as size, and it is NOT an audience count (Spotify publishes no play, download, subscriber or follower count for a podcast) |
+| `author.ext.total_views` | number\|null | (seen in a sample response) |
 | `author.ext.trophy_count` | number\|null |  |
+| `author.ext.unsubscribed_trailer` | string\|null | (seen in a sample response) |
 | `author.ext.urn` | string\|null | (only when the fallback source serves) |
 | `author.ext.website` | string\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.weekly_active_users` | number\|null |  |
@@ -85,6 +94,7 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.following` | number\|null | Number of accounts followed (on some endpoints only when the fallback source serves) |
 | `author.id` | string | Platform-specific user ID (always a string; platform-specific prefixes like `did:`, `spotify:artist:`, `t2_` are stripped) |
 | `author.joined_at` | string\|null | (on some endpoints only when the fallback source serves) |
+| `author.last_post_at` | string\|null | (seen in a sample response) |
 | `author.likes_count` | number\|null | Total likes received across the author's content (when surfaced) (on some endpoints only when the fallback source serves) |
 | `author.location` | string\|null | ISO region code (e.g. `US`) or freeform location string when surfaced (on some endpoints only when the fallback source serves) |
 | `author.posts_count` | number\|null | Total number of posts / videos / tracks / episodes (on some endpoints only when the fallback source serves) |

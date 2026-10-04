@@ -50,7 +50,7 @@ Returns one Etsy listing: title, description, price, currency, images, shop name
 | `product.description` |  |
 | `product.seller` |  |
 
-+2 more fields in the full schema.
++2 more (types in the full schema): `product.price` {currency, current}. Also in the sample: `product` {brand null, availability string, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, available_quantity number}; `product.ext.etsy` {favorites number, is_bestseller boolean, is_top_rated boolean, materials string[], taxonomy_path string, when_made string, user_id string}.
 
 **Next** `etsy/product/similar` (`product_id` ← `data.product.id`) - Get listings similar to an Etsy product.
 
@@ -91,7 +91,7 @@ Returns listings Etsy considers similar to a given product, typically around 12 
 | `product.reviews_count` |  |
 | `product.seller` |  |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, brand null, availability string}; `product.ext` {seller_id string, available_quantity number}; `product.ext.etsy` {is_handmade boolean}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/etsy/product/similar" \
@@ -111,7 +111,7 @@ Returns Etsy's search autocomplete suggestions for a partial query, the same ter
 
 - `query` (required) - Partial search query to autocomplete, for example leather. · e.g. `leather`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ categories, query, search_type_names, search_types }` (inferred from a sample): `categories`, `query`, `search_type_names`, `search_types`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ query, search_types, search_type_names, categories }` (inferred from a sample): {query string, search_types array, search_type_names array, categories array}.
 
 Page-level: `data.dropped`.
 
@@ -153,7 +153,7 @@ Returns one page of listings from an Etsy shop, 36 per page, each with listing i
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string}. Page-level: `data.dropped`.
 
 **Next** `etsy/product` (`product_id` ← `data.items[].product.id`) - Get an Etsy listing by id or URL.
 

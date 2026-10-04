@@ -49,7 +49,7 @@ Returns one Bing-aggregated job: title, company, location, employment type, desc
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/bing" \
@@ -91,7 +91,7 @@ Returns aggregated job listings from Bing matching a keyword and location, with 
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema. Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/bing/search" \
@@ -123,7 +123,7 @@ Returns one Indeed job: title, company, location, description, and apply URL. Us
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/indeed" \
@@ -166,7 +166,7 @@ Returns Indeed job listings matching a keyword, country, and optional city, sort
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema. Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/indeed/search" \
@@ -198,7 +198,7 @@ Returns one LinkedIn job: title, company, location, employment type, seniority, 
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url string, verified null} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/linkedin" \
@@ -218,7 +218,7 @@ Returns LinkedIn companies and schools matching a name, each with a display name
 
 - `query` (required) - Company or school name. · e.g. `google`
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ displayName, id }` (inferred from a sample): `displayName`, `id`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ displayName, id }` (inferred from a sample): {displayName string, id string}.
 
 Page-level: `data.dropped`.
 
@@ -263,7 +263,7 @@ Returns LinkedIn job listings matching a keyword and optional location, date, em
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema. Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url string, verified null} (+1 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/linkedin/search" \
@@ -284,7 +284,7 @@ Returns min, max, mean, and median pay for a job title in a country, broken out 
 - `query` (required) - Job title, preferably one returned by salary/titles. · e.g. `software engineer`
 - `country_code` (required) - ISO 3166-1 alpha-2 country code. · e.g. `us`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `country`, `countryCode`, `currency`, `dailySalary.max`, `dailySalary.mean`, `dailySalary.median`, `dailySalary.min`, `hourlySalary.max` (+16 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {country string, countryCode string, currency string, lastUpdatedTimestamp number}; `dailySalary` {max number, mean number, median number, min number}; `hourlySalary` {max number, mean number, median number, min number}; `monthlySalary` {max number, mean number, median number, min number}; `weeklySalary` {max number, mean number, median number, min number}; `yearlySalary` {max number, mean number, median number, min number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/salary" \
@@ -306,7 +306,7 @@ Returns known job titles matching a query in a country, each with a listing coun
 - `query` (required) - Partial job title (for example programming, nurse). · e.g. `software`
 - `country_code` (required) - ISO 3166-1 alpha-2 country code. · e.g. `us`
 
-**Response** `Analytics` object at `data`, `{ jobTitles }` (inferred from a sample): `jobTitles`.
+**Response** `Analytics` object at `data`, `{ jobTitles }` (inferred from a sample): `jobTitles[]` {count number, jobTitle string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/salary/titles" \
@@ -338,7 +338,7 @@ Returns one Xing job: title, company, location, employment type, remote option, 
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/xing" \
@@ -381,7 +381,7 @@ Returns Xing job listings matching a keyword, with optional German-language loca
 | `job.apply_url` |  |
 | `job.description` |  |
 
-+16 more fields in the full schema. Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/xing/search" \

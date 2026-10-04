@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import os
 import random
+import ssl
+import subprocess
 import sys
 import time
 import urllib.error
@@ -231,21 +233,177 @@ class _KeepKeyOnSameHost(urllib.request.HTTPRedirectHandler):
         return new
 
 
-_OPENER = urllib.request.build_opener(_KeepKeyOnSameHost)
+# --------------------------------------------------------------------------- TLS
+#
+# Some Pythons ship without CA certificates (python.org builds on macOS until
+# "Install Certificates.command" runs), so the default context fails to verify
+# while curl works. Verification is never turned off: each fallback is another
+# CA source, tried in this order, and the first that verifies is kept:
+#   1. the default context   2. certifi, if importable
+#   3. the first existing system CA bundle   4. curl (its own trust store)
+
+CA_BUNDLES = (
+    "/etc/ssl/cert.pem",
+    "/etc/ssl/certs/ca-certificates.crt",
+    "/etc/pki/tls/certs/ca-bundle.crt",
+    "/usr/local/etc/openssl/cert.pem",
+    "/opt/homebrew/etc/openssl@3/cert.pem",
+)
+TLS_HELP = (
+    "TLS certificates are missing for this Python. Run 'Install Certificates.command' "
+    "from your Python folder, or set SSL_CERT_FILE=/etc/ssl/cert.pem"
+)
+CURL = "curl"
+# curl exit codes that mean TLS (not the network) failed: 35 connect, 51/60 peer cert, 77 CA file.
+CURL_TLS_EXITS = (35, 51, 53, 54, 58, 59, 60, 77, 80, 83, 90, 91)
+
+_TLS_CHOICE: list = []  # [context] once one verified, or ["curl"]
+
+
+def _reset_tls() -> None:
+    _TLS_CHOICE.clear()
+
+
+def _certifi_cafile() -> str | None:
+    try:
+        import certifi  # optional; never required
+    except ImportError:
+        return None
+    try:
+        return certifi.where()
+    except Exception:
+        return None
+
+
+def _system_cafile() -> str | None:
+    env = os.environ.get("SSL_CERT_FILE")
+    for path in ((env,) if env else ()) + tuple(CA_BUNDLES):
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _tls_candidates():
+    """Verifying contexts in fallback order, built lazily (a CA file is only read when needed)."""
+    yield lambda: ssl.create_default_context()
+    for find in (_certifi_cafile, _system_cafile):
+        cafile = find()
+        if cafile:
+            yield lambda cafile=cafile: ssl.create_default_context(cafile=cafile)
+
+
+_PLAIN_OPENER = urllib.request.build_opener(_KeepKeyOnSameHost)
+
+
+def _https_open(req, ctx, timeout):
+    opener = urllib.request.build_opener(_KeepKeyOnSameHost, urllib.request.HTTPSHandler(context=ctx))
+    return opener.open(req, timeout=timeout)
+
+
+def _is_cert_failure(e: BaseException) -> bool:
+    reason = getattr(e, "reason", e)
+    return isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason)
+
+
+def _error(code: str, message: str, retryable: bool) -> Response:
+    body = {"success": False, "error": {"type": code, "message": message, "status": 0, "retryable": retryable}}
+    return Response(0, {}, body, json.dumps(body))
+
+
+def _curl_quote(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n").replace("\r", "\\r") + '"'
+
+
+def _parse_curl(out: bytes):
+    status, hdrs, rest = 0, {}, out
+    while rest.startswith(b"HTTP/"):
+        head, sep, tail = rest.partition(b"\r\n\r\n")
+        if not sep:
+            head, sep, tail = rest.partition(b"\n\n")
+        lines = head.decode("iso-8859-1").splitlines()
+        try:
+            status = int(lines[0].split()[1])
+        except (IndexError, ValueError):
+            status = 0
+        hdrs = {}
+        for line in lines[1:]:
+            k, _, v = line.partition(":")
+            if k.strip():
+                hdrs[k.strip()] = v.strip()
+        rest = tail
+    return status, hdrs, rest.decode("utf-8", "replace")
+
+
+def _curl_once(method: str, url: str, headers: dict, data: bytes | None):
+    """The last resort: curl with the same method, headers and body. Everything, the key
+    included, goes in a config read from stdin (`--config -`), never in argv where other
+    users could see it. No --location: a redirect must not carry the key to another host."""
+    cfg = [f"url = {_curl_quote(url)}", f"request = {_curl_quote(method)}", "silent", "show-error",
+           'dump-header = "-"', f"max-time = {TIMEOUT_S}"]
+    cfg += [f"header = {_curl_quote(f'{k}: {v}')}" for k, v in headers.items()]
+    if data is not None:
+        cfg.append(f"data-binary = {_curl_quote(data.decode('utf-8'))}")
+    try:
+        proc = subprocess.run([CURL, "--config", "-"], input="\n".join(cfg).encode("utf-8"),
+                              capture_output=True, timeout=TIMEOUT_S + 5)
+    except subprocess.TimeoutExpired:
+        return 28
+    except (OSError, subprocess.SubprocessError):
+        return None  # no curl: nothing left to try
+    if proc.returncode in CURL_TLS_EXITS:
+        return None
+    if proc.returncode != 0 or not proc.stdout.startswith(b"HTTP/"):
+        return proc.returncode or 1
+    return _parse_curl(proc.stdout)
+
+
+def _send(req, method: str, url: str, headers: dict, data: bytes | None):
+    """(status, headers, raw) over the first verifying TLS source; a Response on failure."""
+    if urllib.parse.urlsplit(url).scheme != "https":
+        with _PLAIN_OPENER.open(req, timeout=TIMEOUT_S) as r:
+            return r.status, dict(r.headers), r.read().decode("utf-8", "replace")
+    if not _TLS_CHOICE:
+        candidates = _tls_candidates()
+    elif _TLS_CHOICE[0] == CURL:
+        candidates = ()
+    else:
+        candidates = (lambda c=_TLS_CHOICE[0]: c,)
+    for make in candidates:
+        ctx = make()
+        try:
+            with _https_open(req, ctx, TIMEOUT_S) as r:
+                result = r.status, dict(r.headers), r.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError:
+            _TLS_CHOICE[:] = [ctx]
+            raise
+        except urllib.error.URLError as e:
+            if not _is_cert_failure(e):
+                raise
+            continue
+        _TLS_CHOICE[:] = [ctx]
+        return result
+    got = _curl_once(method, url, headers, data)
+    if isinstance(got, tuple):
+        _TLS_CHOICE[:] = [CURL]
+        return got
+    if isinstance(got, int):
+        return _error("NETWORK_ERROR", f"request failed: curl exit {got}", True)
+    return _error("TLS_CERTIFICATES_MISSING", TLS_HELP, False)
 
 
 def _once(method: str, url: str, headers: dict, data: bytes | None) -> Response:
     req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
-        with _OPENER.open(req, timeout=TIMEOUT_S) as r:
-            status, hdrs, raw = r.status, dict(r.headers), r.read().decode("utf-8", "replace")
+        sent = _send(req, method, url, headers, data)
     except urllib.error.HTTPError as e:
-        status, hdrs, raw = e.code, dict(e.headers), e.read().decode("utf-8", "replace")
-    except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+        sent = e.code, dict(e.headers), e.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, ValueError) as e:
         # Never include the request (headers carry the key) in the message.
         reason = getattr(e, "reason", e)
-        body = {"success": False, "error": {"type": "NETWORK_ERROR", "message": f"request failed: {reason}", "status": 0, "retryable": True}}
-        return Response(0, {}, body, json.dumps(body))
+        return _error("NETWORK_ERROR", f"request failed: {reason}", True)
+    if isinstance(sent, Response):
+        return sent
+    status, hdrs, raw = sent
     try:
         body = json.loads(raw) if raw else None
     except ValueError:

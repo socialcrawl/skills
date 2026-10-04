@@ -48,7 +48,7 @@ Returns album metadata: title, artist, artwork, track count, and the Apple Music
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {artist_url, kind, release_info, track_count}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/album" \
@@ -84,7 +84,7 @@ Returns artist metadata: id, name, artwork, and the Apple Music artist URL. Pass
 | `author.display_name` | Display name or full name |
 | `computed.content_category` | Keyword-classified content category… |
 
-+3 more fields in the full schema. Never filled: `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++3 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}. Never filled: `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/artist" \
@@ -117,7 +117,7 @@ Returns what a country is playing most on Apple Music right now: the Top Songs, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+17 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {artist_id, artist_url, content_advisory, genres, kind, release_date}; `post.ext.trend` {chart, chart_title, country_code, rank, updated_at}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/apple_music/charts" \
@@ -137,7 +137,7 @@ Returns Apple Music search results for a query. Pass `type` to restrict the resu
 - `query` (required) - Search query. · e.g. `taylor swift`
 - `type` (optional, string) - Optional result kind such as song, album, or artist. · e.g. `song`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `album`, `artist_name`, `artwork.bgColor`, `artwork.height`, `artwork.textColor1`, `artwork.textColor2`, `artwork.textColor3`, `artwork.textColor4` (+13 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, kind string, title string, subtitle string, album null, url string, duration_ms null, track_number null, disc_number null, artist_name string, explicit boolean, preview_url null, track_count null}; `artwork` {url string, width number, height number, bgColor string, textColor1 string, textColor2 string, textColor3 string, textColor4 string}.
 
 Page-level: `data.dropped`.
 
@@ -175,7 +175,7 @@ Returns track metadata: title, artist, duration, preview audio URL, and the Appl
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {explicit, kind, track_number}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/track" \

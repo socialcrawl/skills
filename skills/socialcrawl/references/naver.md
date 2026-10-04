@@ -39,7 +39,7 @@ Returns `data.adult` as `"1"` when Naver classifies the search term as adult-onl
 
 - `query` (required) - The search term to classify (UTF-8). Required. · e.g. `성인영화`
 
-**Response** `Analytics` object at `data`, `{ adult }` (inferred from a sample): `adult`.
+**Response** `Analytics` object at `data`, `{ adult }` (inferred from a sample): {adult string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/adult" \
@@ -49,7 +49,7 @@ curl -G "https://www.socialcrawl.dev/v1/naver/adult" \
 
 ## GET /v1/naver/blog/search - 1 credit (standard)
 
-Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns ranked posts under `data.items[]` with `title`, `link`, `description` (both HTML-tagged with `<b>` around matched keywords), `bloggername`, `bloggerlink`, and a day-precision `published_at` (ISO-8601 UTC, from Naver's YYYYMMDD `postdate`).
+Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns ranked posts as PostList rows: `post.ext.title` (the post title, `<b>` highlight tags stripped and HTML entities decoded), `post.content.text` (the snippet), `post.author.display_name` (blogger name), `post.author.url`, and `post.published_at`. Naver sends only a calendar date (YYYYMMDD `postdate`), so `published_at` has DAY precision: it is rendered as midnight UTC (`T00:00:00.000Z`), which is a placeholder, not the real publish time. Treat only the date part as meaningful.
 
 **Use when** you want it for long form Korean blog writing, which is where most Korean product reviews and how to guides live.
 **Cost** cache 120 s
@@ -73,7 +73,7 @@ Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns r
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+5 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
++6 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name, url}; `post.flags` {deleted}; `post.ext` {title}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/blog/search" \
@@ -99,7 +99,7 @@ Fans a single query across Naver News, Blog, Café (community), 지식iN (Q&A), 
 - `include` (optional, string) - Set to `digest` for an LLM English digest with translated quotes.
 - `cursor` (optional, string) - Opaque pagination token from a prior response's next_cursor.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.digest`, `computed.shop_price_range`, `computed.top_blogs`, `computed.volume_by_corpus.blog`, `computed.volume_by_corpus.kin`, `computed.volume_by_corpus.news`, `corpora.blog.items`, `corpora.blog.next_start` (+11 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `corpora.news.items[].post` {id string, url string, content object, author object, engagement object, flags object, published_at string}; `corpora.news.items[].computed` {engagement_rate null, language string, content_category string, estimated_reach null}; `corpora.news` {total number, next_start number}; `corpora.blog.items[].post` {id string, url string, content object, author object, engagement object, flags object, published_at string}; `corpora.blog.items[].computed` {engagement_rate null, language string, content_category string, estimated_reach null}; `corpora.blog` {total number} (+23 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/brief" \
@@ -109,7 +109,7 @@ curl -G "https://www.socialcrawl.dev/v1/naver/brief" \
 
 ## GET /v1/naver/cafearticle/search - 1 credit (standard)
 
-Searches cafe.naver.com. Korea's largest user-community platform (analog of Reddit subreddits / Discord servers). Returns cafe posts under `data.items[]` with `title`, `link`, `description`, `cafename`, and `cafeurl`. Many cafes are member-gated; the `link` URL works only if the caller has joined the cafe (Naver returns a teaser otherwise).
+Searches cafe.naver.com. Korea's largest user-community platform (analog of Reddit subreddits / Discord servers). Returns cafe posts as PostList rows: `post.ext.title` (tags stripped, entities decoded), `post.url`, `post.content.text` (snippet), `post.author.display_name` (cafe name), and `post.author.url`. No publish date is available. Many cafes are member-gated; the `link` URL works only if the caller has joined the cafe (Naver returns a teaser otherwise).
 
 **Use when** you want it for Korean community discussion; many cafes are members only, so a link may show only a teaser.
 **Cost** cache 120 s
@@ -133,7 +133,7 @@ Searches cafe.naver.com. Korea's largest user-community platform (analog of Redd
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+4 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`.
++5 more (types in the full schema): `computed` {language}; `post.author` {display_name, url}; `post.flags` {deleted}; `post.ext` {title}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/cafearticle/search" \
@@ -156,7 +156,7 @@ Searches terms.naver.com. Naver Knowledge Encyclopedia, a curated reference corp
 - `start` (optional, integer) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` returns 400.
 - `sort` (optional, string) - Sort order. Accepted values: (sort ignored). Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ description, link, thumbnail, title }` (inferred from a sample): `description`, `link`, `thumbnail`, `title`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ title, link, description, thumbnail }` (inferred from a sample): {title string, link string, description string, thumbnail string}.
 
 Page-level: `data.dropped`.
 
@@ -178,7 +178,7 @@ Returns Naver's suggested correction for a mistyped Korean query under `data.err
 
 - `query` (required) - The possibly-mistyped search term (UTF-8). Required. · e.g. `네이볘`
 
-**Response** `Analytics` object at `data`, `{ errata }` (inferred from a sample): `errata`.
+**Response** `Analytics` object at `data`, `{ errata }` (inferred from a sample): {errata string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/errata" \
@@ -213,7 +213,7 @@ Searches Naver Image: image search across crawled Korean web. Returns images und
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+4 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`.
++4 more (types in the full schema): `computed` {language}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/image/search" \
@@ -236,7 +236,7 @@ Searches kin.naver.com. Korea's dominant Q&A community (analog of StackOverflow 
 - `start` (optional, integer) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` returns 400.
 - `sort` (optional, enum: sim | date | point) - Sort order. Accepted values: sim|date|point. Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ description, link, title }` (inferred from a sample): `description`, `link`, `title`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ title, link, description }` (inferred from a sample): {title string, link string, description string}.
 
 Page-level: `data.dropped`.
 
@@ -260,7 +260,7 @@ Searches map.naver.com places. Korean business / point-of-interest catalog. Retu
 - `display` (optional, integer) - Number of places to return. This corpus caps at 5 and **defaults to 1**, so omitting it returns a single place. Values above 5 are silently clamped by Naver rather than rejected. · e.g. `5`
 - `sort` (optional, enum: random | comment) - Sort order. Accepted values: random|comment (display max 5, start max 1). Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `address`, `category`, `description`, `link`, `mapx`, `mapy`, `roadAddress`, `telephone` (+1 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {title string, link string, category string, description string, telephone string, address string, roadAddress string, mapx string, mapy string}.
 
 Page-level: `data.dropped`.
 
@@ -272,7 +272,7 @@ curl -G "https://www.socialcrawl.dev/v1/naver/local/search" \
 
 ## GET /v1/naver/news/search - 1 credit (standard)
 
-Searches news.naver.com: aggregated Korean news from licensed publishers. Returns articles under `data.items[]` with `title`, `originallink` (publisher URL), `link` (naver-hosted URL), `description`, and `pubDate` (RFC 1123).
+Searches news.naver.com: aggregated Korean news from licensed publishers. Returns articles as PostList rows: `post.ext.title` (tags stripped, entities decoded), `post.url` (publisher URL), `post.content.text` (snippet), and `post.published_at`.
 
 **Use when** you want it for Korean press coverage; for news in other markets and languages use google_news/search instead.
 **Cost** cache 120 s
@@ -296,7 +296,7 @@ Searches news.naver.com: aggregated Korean news from licensed publishers. Return
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+3 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
++4 more (types in the full schema): `computed` {estimated_reach, language}; `post.flags` {deleted}; `post.ext` {title}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/news/search" \
@@ -328,7 +328,7 @@ Returns a relative search-interest time series for a group of Korean keywords fr
 - `keywords`: at most 20 comma-separated values.
 - `ages`: each value one of 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11.
 
-**Response** `Analytics` object at `data`, `{ endDate, results, startDate, timeUnit }` (inferred from a sample): `endDate`, `results`, `startDate`, `timeUnit`.
+**Response** `Analytics` object at `data`, `{ startDate, endDate, timeUnit, results }` (inferred from a sample): {startDate string, endDate string, timeUnit string}; `results[]` {title string, keywords string[]}; `results[].data[]` {period string, ratio number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/search-trend" \
@@ -360,7 +360,7 @@ Returns a relative click-share time series for up to 3 Naver Shopping categories
 - `category_code`: at most 3 comma-separated values.
 - `ages`: each value one of 10 | 20 | 30 | 40 | 50 | 60.
 
-**Response** `Analytics` object at `data`, `{ endDate, results, startDate, timeUnit }` (inferred from a sample): `endDate`, `results`, `startDate`, `timeUnit`.
+**Response** `Analytics` object at `data`, `{ startDate, endDate, timeUnit, results }` (inferred from a sample): {startDate string, endDate string, timeUnit string}; `results[]` {title string, category string[]}; `results[].data[]` {period string, ratio number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/shopping-insight/category" \
@@ -394,7 +394,7 @@ Returns a relative click-share time series for up to 5 search keywords WITHIN on
 - `keyword`: at most 5 comma-separated values.
 - `ages`: each value one of 10 | 20 | 30 | 40 | 50 | 60.
 
-**Response** `Analytics` object at `data`, `{ endDate, results, startDate, timeUnit }` (inferred from a sample): `endDate`, `results`, `startDate`, `timeUnit`.
+**Response** `Analytics` object at `data`, `{ startDate, endDate, timeUnit, results }` (inferred from a sample): {startDate string, endDate string, timeUnit string}; `results[]` {title string, keyword string[]}; `results[].data[]` {period string, ratio number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/shopping-insight/keyword" \
@@ -418,7 +418,7 @@ Searches Naver web index: general Korean web search (analog of Google web search
 - `start` (optional, integer) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` returns 400.
 - `sort` (optional, string) - Sort order. Accepted values: (sort ignored). Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ description, link, title }` (inferred from a sample): `description`, `link`, `title`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ title, link, description }` (inferred from a sample): {title string, link string, description string}.
 
 Page-level: `data.dropped`.
 

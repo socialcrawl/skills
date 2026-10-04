@@ -46,7 +46,7 @@ Natural-language search over X (Twitter) powered by xAI's Grok 4.3 model with th
 - `from_date` (optional, string) - ISO 8601 start date (YYYY-MM-DD). Limits the search window to posts on or after this date.
 - `to_date` (optional, string) - ISO 8601 end date (YYYY-MM-DD). Limits the search window to posts on or before this date.
 
-**Response** `Analytics` object at `data`, `{ answer, sources, tool_calls_count }` (inferred from a sample): `answer`, `sources`, `tool_calls_count`.
+**Response** `Analytics` object at `data`, `{ answer, sources, tool_calls_count }` (inferred from a sample): {answer string, tool_calls_count number}; `sources[]` {url string, title string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/ai-search" \
@@ -77,7 +77,7 @@ Returns information about a Twitter/X community: the name, description, member c
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.verified`.
++10 more (types in the full schema): `author` {followers, joined_at}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {creator_username, is_nsfw, join_policy, rules}. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.private`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/community" \
@@ -108,7 +108,7 @@ Returns the most recent tweets posted inside a Twitter/X community, each with th
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more fields in the full schema. Never filled: `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {content_language, quote_count}; `post.flags` {deleted, nsfw}. Never filled: `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/community/tweets" \
@@ -139,7 +139,7 @@ Returns public profile information for a Twitter/X user including follower count
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+12 more fields in the full schema. Never filled: `author.likes_count`.
++12 more (types in the full schema): `author` {followers, following, posts_count, verified, joined_at, private}; `author.ext` {cover_url, bio_link}; `computed` {content_category, engagement_rate, estimated_reach, language}. Also in the sample: `author` {location null}. Never filled: `author.likes_count`.
 
 **Next** `twitter/user/tweets` (`handle` ← `data.author.username`) - The account's latest posts. · `twitter/user/media` (`handle` ← `data.author.username`) - The account's latest photo and video posts. · `twitter/user/followers` (`handle` ← `data.author.username`) - List Twitter user followers. · `twitter/user/following` (`handle` ← `data.author.username`) - List Twitter user following.
 
@@ -168,7 +168,7 @@ Fans out to the X (Twitter) profile and recent-posts endpoints in parallel and r
 
 - `handle` is required (it is optional in shape only - the request needs it).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `computed.avg_engagement_rate`, `computed.avg_engagement_rate_by_followers`, `computed.cadence_window_days`, `computed.format_mix.image`, `computed.format_mix.text`, `computed.posts_per_week`, `computed.top_post.engagement_total`, `computed.top_post.url` (+19 more).
+**Response** `Analytics` object at `data` (inferred from a sample): `profile` {id string, username string, display_name string, avatar_url string, bio string, verified boolean, followers number, following number, posts_count number, likes_count null, url string, location string, private boolean, joined_at string}; `profile.ext` {cover_url string, bio_link string}; `posts[].post` {id string, url string}; `posts[].post.content` {text string, media_urls string, thumbnail_url string, duration_seconds null}; `posts[].post.author` {username string, display_name string, avatar_url string} (+36 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/profile/full" \
@@ -204,7 +204,7 @@ Searches X (Twitter) for tweets matching a keyword or phrase, each result with t
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+29 more fields in the full schema. Never filled: `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.switch_receipts`, `data.walk`.
++29 more (types in the full schema): `post.author` {verified}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, content_language, author_following, author_posts_count, quote_count}; `post.flags` {nsfw}; `post.content` {media_urls, thumbnail_url, duration_seconds}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach} (+10 more). Never filled: `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.switch_receipts`, `data.walk`.
 
 **Next** `twitter/profile` (`handle` ← `data.items[].post.author.username`) - The author's profile: followers, bio and counts. · `twitter/tweet/replies` (`url` ← `data.items[].post.url`) - List Twitter tweet replies. · `twitter/tweet` (`url` ← `data.items[].post.url`) - Get Twitter tweet details. · `twitter/profile/full` (`handle` ← `data.items[].post.author.username`) - X (Twitter) profile, recent posts, and computed analytics in one call.
 
@@ -238,7 +238,7 @@ Searches X (Twitter) for user accounts matching a name, handle, or keyword. Each
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+8 more fields in the full schema. Never filled: `author.likes_count`. Page-level: `data.dropped`.
++8 more (types in the full schema): `author` {followers, following, location, posts_count, verified, private}; `author.ext` {bio_link, cover_url}. Also in the sample: `author` {joined_at string}. Never filled: `author.likes_count`. Page-level: `data.dropped`.
 
 **Next** `twitter/user/tweets` (`handle` ← `data.items[].author.username`) - List Twitter user tweets. · `twitter/user/media` (`handle` ← `data.items[].author.username`) - List Twitter user media tweets. · `twitter/user/followers` (`handle` ← `data.items[].author.username`) - List Twitter user followers. · `twitter/profile` (`handle` ← `data.items[].author.username`) - Get Twitter user profile.
 
@@ -272,7 +272,7 @@ Returns detailed information about a specific tweet including the full text, lik
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+20 more fields in the full schema.
++20 more (types in the full schema): `post.author` {verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, content_language, author_following, author_posts_count, quote_count}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/tweet" \
@@ -306,7 +306,7 @@ Returns the replies to a specific tweet, each with the reply text, author info, 
 | `comment.parent_id` | 100% | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | 100% | ID of the post this comment belongs to |
 
-+24 more fields in the full schema. Never filled: `comment.flags.pinned`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
++24 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_followers, author_following, author_posts_count, quote_count, saves, views, content_language}; `comment` {url}; `computed` {labels_evidence}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent} (+5 more). Never filled: `comment.flags.pinned`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/tweet/replies" \
@@ -338,7 +338,7 @@ Returns the accounts that retweeted a specific tweet. Each account includes the 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+6 more fields in the full schema. Never filled: `author.likes_count`, `author.verified`. Page-level: `data.dropped`.
++6 more (types in the full schema): `author` {followers, following, location, posts_count, private}; `author.ext` {cover_url}. Also in the sample: `author` {joined_at string}. Never filled: `author.likes_count`, `author.verified`. Page-level: `data.dropped`.
 
 **Next** `twitter/profile` (`handle` ← `data.items[].author.username`) - Get Twitter user profile. · `twitter/profile/full` (`handle` ← `data.items[].author.username`) - X (Twitter) profile, recent posts, and computed analytics in one call.
 
@@ -360,7 +360,7 @@ Returns the spoken words from a video attached to a tweet, auto-generated captio
 
 - `url` (required) - Full URL of the tweet containing a video · e.g. `https://x.com/TheoVon/status/1916982720317821050`
 
-**Response** `Transcript` object at `data`, `{ transcript }` (inferred from a sample): `transcript`.
+**Response** `Transcript` object at `data`, `{ transcript }` (inferred from a sample): {transcript string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitter/tweet/transcript" \
@@ -392,7 +392,7 @@ Returns the accounts following a Twitter/X user. Each follower includes the user
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+6 more fields in the full schema. Never filled: `author.likes_count`, `author.verified`. Page-level: `data.dropped`.
++6 more (types in the full schema): `author` {followers, following, location, posts_count, private}; `author.ext` {cover_url}. Also in the sample: `author` {joined_at string}. Never filled: `author.likes_count`, `author.verified`. Page-level: `data.dropped`.
 
 **Next** `twitter/profile` (`handle` ← `data.items[].author.username`) - Get Twitter user profile. · `twitter/profile/full` (`handle` ← `data.items[].author.username`) - X (Twitter) profile, recent posts, and computed analytics in one call.
 
@@ -426,7 +426,7 @@ Returns the accounts a Twitter/X user follows. Each account includes the usernam
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+6 more fields in the full schema. Never filled: `author.likes_count`, `author.verified`. Page-level: `data.dropped`.
++6 more (types in the full schema): `author` {followers, following, location, posts_count, private}; `author.ext` {cover_url}. Also in the sample: `author` {joined_at string}. Never filled: `author.likes_count`, `author.verified`. Page-level: `data.dropped`.
 
 **Next** `twitter/user/tweets` (`handle` ← `data.items[].author.username`) - List Twitter user tweets. · `twitter/profile` (`handle` ← `data.items[].author.username`) - Get Twitter user profile. · `twitter/profile/full` (`handle` ← `data.items[].author.username`) - X (Twitter) profile, recent posts, and computed analytics in one call.
 
@@ -460,7 +460,7 @@ Returns the tweets on a Twitter/X account's Media tab: only the tweets carrying 
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+18 more fields in the full schema. Never filled: `post.author.verified`, `post.engagement.saves`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++18 more (types in the full schema): `post.content` {media_urls, thumbnail_url, duration_seconds}; `post.engagement` {comments, likes, shares}; `post.ext` {author_followers, content_language, author_following, author_posts_count, quote_count}; `post.flags` {nsfw, deleted}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, language}. Also in the sample: `post.ext` {all_media_urls null}. Never filled: `post.author.verified`, `post.engagement.saves`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `twitter/tweet` (`url` ← `data.items[].post.url`) - Get Twitter tweet details.
 
@@ -472,7 +472,7 @@ curl -G "https://www.socialcrawl.dev/v1/twitter/user/media" \
 
 ## GET /v1/twitter/user/tweets - 1-5 credits (request-shaped)
 
-Returns the most recent tweets posted by a Twitter/X user in descending chronological order, each with the full text, like count, retweet count, reply count, bookmark count, view count, media attachments, and creation timestamp. Retweets and self-threaded replies are included, matching the account's Posts tab; a pinned tweet is flagged via `post.flags.pinned` and sorts by its own publish date. A post carrying more than one photo lists every URL in `post.ext.all_media_urls`, while `post.content.media_urls` holds the first; `post.ext.quote_count` is how many times the post was quote-tweeted. Page size is set by the source, typically around 20 tweets. Deeper history is a cursor walk: send `pagination.next_cursor` back as `cursor` and repeat until `pagination.has_more` is false; each page costs 1 credit.
+Returns the most recent tweets posted by a Twitter/X user in descending chronological order, each with the full text, like count, retweet count, reply count, bookmark count, view count, media attachments, and creation timestamp. Retweets and self-threaded replies are included, matching the account's Posts tab; a pinned tweet is flagged via `post.flags.pinned` and sorts by its own publish date. A post carrying more than one photo lists every URL in `post.ext.all_media_urls`, while `post.content.media_urls` holds the first; `post.ext.quote_count` is how many times the post was quote-tweeted. Page size is set by the source, typically around 20 tweets. Deeper history is a cursor walk: send `pagination.next_cursor` back as `cursor` and repeat until `pagination.has_more` is false; each page costs 1 credit. When the latest tweets cannot be fetched, the call fails with 502 `UPSTREAM_ERROR` and the credit is refunded; it is never answered with an older or popularity-ranked set of tweets.
 
 **Use when** you want to read a timeline: pages come newest first, retweets and self-threads included, and you can page deeper by sending pagination.next_cursor back as cursor.
 **Cost** price moves with `label` · cache 600 s · multi-source (billed once)
@@ -497,7 +497,7 @@ Returns the most recent tweets posted by a Twitter/X user in descending chronolo
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+29 more fields in the full schema. Never filled: `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++29 more (types in the full schema): `post.author` {verified}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, content_language, author_following, author_posts_count, quote_count}; `post.flags` {nsfw}; `post.content` {media_urls, thumbnail_url}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence} (+10 more). Never filled: `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 **Next** `twitter/tweet` (`url` ← `data.items[].post.url`) - Get Twitter tweet details.
 

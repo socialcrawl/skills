@@ -51,7 +51,7 @@ Returns the reply thread under one Douyin comment: text, replier, like count, IP
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+8 more fields in the full schema. Never filled: `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++8 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/douyin/comment/replies" \
@@ -83,7 +83,7 @@ Returns one Douyin video from its URL or aweme ID: caption, creator, likes, comm
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+17 more fields in the full schema. Never filled: `post.engagement.views`.
++17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted}. Never filled: `post.engagement.views`.
 
 **Next** `douyin/post/comments` (`url` ← `data.post.url`) - The comments on the video.
 
@@ -119,7 +119,7 @@ Returns top-level comments on a Douyin video: text, commenter, like count, reply
 | `comment.author.avatar_url` | URL to comment author profile picture |
 | `comment.author.display_name` | Comment author display name |
 
-+6 more fields in the full schema. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++6 more (types in the full schema): `comment.author` {verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/douyin/post/comments" \
@@ -156,7 +156,7 @@ Returns one Douyin creator: nickname, Douyin ID, bio, avatar, follower and follo
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more fields in the full schema. Never filled: `author.joined_at`, `author.private`.
++10 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {country}. Never filled: `author.joined_at`, `author.private`.
 
 **Next** `douyin/profile/posts` (`handle` ← `data.author.username`) - List a Douyin creator's videos.
 
@@ -200,7 +200,7 @@ Returns a Douyin creator's recent videos with caption, likes, comments, shares, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more fields in the full schema. Never filled: `post.engagement.views`. Page-level: `data.dropped`.
++19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted, pinned}. Never filled: `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `douyin/post/comments` (`url` ← `data.items[].post.url`) - Get Douyin video comments. · `douyin/post` (`url` ← `data.items[].post.url`) - Get a Douyin video.
 
@@ -239,7 +239,7 @@ Returns Douyin videos matching a keyword: caption, creator, likes, comments, sha
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more fields in the full schema. Never filled: `post.engagement.views`. Page-level: `data.dropped`.
++19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted, pinned}. Never filled: `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `douyin/post/comments` (`url` ← `data.items[].post.url`) - Get Douyin video comments. · `douyin/post` (`url` ← `data.items[].post.url`) - Get a Douyin video.
 
@@ -278,7 +278,7 @@ Returns Douyin creators matching a keyword: nickname, Douyin ID, bio, follower c
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+5 more fields in the full schema. Page-level: `data.dropped`.
++5 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}. Page-level: `data.dropped`.
 
 **Next** `douyin/profile` (`handle` ← `data.items[].author.username`) - Get a Douyin creator profile.
 
@@ -297,7 +297,7 @@ Returns the live Douyin hot-search board (抖音热搜): roughly 50 trending top
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** single page - The hot-search board is a fixed ranked list of roughly 50 topics with no pagination of any kind. Probed 2026-09-08: the upstream row cap is inert and the full board returns every time.
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `event_time`, `hot_value`, `rank`, `video_count`, `view_count`, `word`.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {rank number, word string, hot_value number, view_count number, video_count number, event_time string}.
 
 Page-level: `data.dropped`.
 

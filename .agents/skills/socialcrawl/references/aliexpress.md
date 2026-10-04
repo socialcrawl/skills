@@ -32,7 +32,7 @@ Returns the AliExpress category tree: parent and subcategory ids and names. Use 
 **Cost** cache 1800 s
 **Paging** single page - The category tree is a single dump (563 rows live). There is no page or cursor param.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ category_id, category_name, parent_category_id }` (inferred from a sample): `category_id`, `category_name`, `parent_category_id`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ category_name, category_id, parent_category_id }` (inferred from a sample): {category_name string, category_id number, parent_category_id number}.
 
 Page-level: `data.dropped`.
 
@@ -72,7 +72,7 @@ Returns one AliExpress product: title, sale price, original price, currency, sho
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string}.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.product.id`) - Get AliExpress product reviews. · `aliexpress/product/similar` (`product_id` ← `data.product.id`) - Get similar AliExpress products.
 
@@ -105,7 +105,7 @@ Returns shipping fee, origin country, and min/max delivery days for one product 
 
 - Provide at least one of `product_id`, `url`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `delivery_days`, `max_delivery_days`, `min_delivery_days`, `ship_from_country`, `shipping_fee`.
+**Response** `Analytics` object at `data` (inferred from a sample): {shipping_fee string, delivery_days string, max_delivery_days string, ship_from_country string, min_delivery_days string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/aliexpress/product/shipping" \
@@ -150,7 +150,7 @@ Returns products similar to a source product id, or to a keyword if no product i
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, positive_rate string, shop_url string}. Page-level: `data.dropped`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL.
 
@@ -168,7 +168,7 @@ Returns currently featured promotion names and product counts. Pass promo_name t
 **Cost** cache 1800 s
 **Paging** single page - The featured-promo name list is a single dump (138 rows live). There is no page or cursor param.
 
-**Response** `SearchResult` rows at `data.items[]`, each `{ product_num, promo_desc, promo_name }` (inferred from a sample): `product_num`, `promo_desc`, `promo_name`.
+**Response** `SearchResult` rows at `data.items[]`, each `{ promo_name, promo_desc, product_num }` (inferred from a sample): {promo_name string, promo_desc string, product_num number}.
 
 Page-level: `data.dropped`.
 
@@ -213,7 +213,7 @@ Returns written customer reviews for an AliExpress product, 20 per page, each wi
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 | `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+7 more fields in the full schema. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++7 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review.author` {name, location}; `review.rating` {value}. Also in the sample: `review` {entity_id null, url null, title null, verified null, source null, language null, original_language string, translated boolean}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/aliexpress/reviews" \
@@ -255,7 +255,7 @@ Returns AliExpress products matching a keyword, 10 per page by default (max 50).
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string}. Page-level: `data.dropped`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL. · `aliexpress/product/similar` (`product_id` ← `data.items[].product.id`) - Get similar AliExpress products.
 
@@ -298,7 +298,7 @@ Returns currently hot AliExpress products, optionally filtered by keyword or cat
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string, positive_rate string}. Page-level: `data.dropped`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL. · `aliexpress/product/similar` (`product_id` ← `data.items[].product.id`) - Get similar AliExpress products.
 
@@ -338,7 +338,7 @@ Returns products in a named AliExpress promotion. Promotion names come from GET 
 | `product.seller` |  |
 | `product.price.currency` |  |
 
-+2 more fields in the full schema. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, positive_rate string, shop_url string}. Page-level: `data.dropped`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL. · `aliexpress/product/similar` (`product_id` ← `data.items[].product.id`) - Get similar AliExpress products.
 

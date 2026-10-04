@@ -54,7 +54,7 @@ Runs a model-neutral browser agent task and returns a SocialCrawl async job id (
 - `prompt` (required) - Task instruction. · e.g. `Find the pricing page.`
 - `model` (optional, enum: spark-1-mini | spark-1-pro) - Agent model: spark-1-mini or spark-1-pro. · e.g. `spark-1-mini`
 
-**Response** `WebPage` async job: this call returns `job_id`; poll `GET /v1/web/jobs/{job_id}` for status, and the result comes back there once it completes. Job envelope (inferred from a sample): `created_at`, `credits_charged`, `credits_hold`, `error`, `expires_at`, `invalid_urls`, `job_id`, `kind` (+6 more).
+**Response** `WebPage` async job: this call returns `job_id`; poll `GET /v1/web/jobs/{job_id}` for status, and the result comes back there once it completes. Job envelope (inferred from a sample): {job_id string, kind string, resource string, status string, progress null, invalid_urls null, result_ref null, result null, error null, credits_hold number, credits_charged number, created_at string, updated_at string, expires_at string}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/agent" \
@@ -93,7 +93,7 @@ Starts an async batch scrape job for multiple URLs and returns a SocialCrawl job
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+18 more fields in the full schema.
++18 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, source_type, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: {job_id string} (+13 more).
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/batch-scrape" \
@@ -136,7 +136,7 @@ Starts an async crawl job and returns a SocialCrawl job id (job_...). Poll or ca
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+17 more fields in the full schema.
++17 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: {job_id string, kind string} (+12 more).
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/crawl" \
@@ -179,7 +179,7 @@ Fetches one web page and returns structured extraction output under the WebPage 
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.status_code` | HTTP status code observed while fetching the page. |
 
-+15 more fields in the full schema.
++15 more (types in the full schema): `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}; `page` {answer, change_tracking, highlights, page_count, total_page_count}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/extract" \
@@ -202,7 +202,7 @@ Lists async crawl, batch scrape, and agent jobs for the API key.
 - `limit` (optional, integer) - Page size, capped at 100. · e.g. `20`
 - `cursor` (optional, string) - Previous response cursor.
 
-**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): `created_at`, `credits_charged`, `credits_hold`, `error`, `expires_at`, `invalid_urls`, `job_id`, `kind` (+7 more).
+**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {job_id string, kind string, resource string, status string, invalid_urls null, result_ref string, result null, error null, credits_hold number, credits_charged number, created_at string, updated_at string, expires_at string}; `progress` {completed number, total number}.
 
 Page-level: `data.dropped`.
 
@@ -224,7 +224,7 @@ Returns the current status, billing settlement, progress, and any available resu
 
 - `job_id` (required) - Job id (job_...) returned by POST /v1/web/crawl, POST /v1/web/batch-scrape, or POST /v1/web/agent as data.job_id. · e.g. `job_9f3k2n8d1`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `created_at`, `credits_charged`, `credits_hold`, `error`, `expires_at`, `invalid_urls`, `job_id`, `kind` (+7 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {job_id string, kind string, resource string, status string, invalid_urls null, result_ref string, result null, error null, credits_hold number, credits_charged number, created_at string, updated_at string, expires_at string}; `progress` {completed number, total number}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/jobs/job_9f3k2n8d1" \
@@ -244,7 +244,7 @@ Cancels one async web job of any kind (crawl, batch scrape, or agent), closes th
 
 - `job_id` (required) - Job id (job_...) returned by POST /v1/web/crawl, POST /v1/web/batch-scrape, or POST /v1/web/agent as data.job_id. · e.g. `job_9f3k2n8d1`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `created_at`, `credits_charged`, `credits_hold`, `error`, `expires_at`, `invalid_urls`, `job_id`, `kind` (+7 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {job_id string, kind string, resource string, status string, invalid_urls null, result_ref null, result null, error null, credits_hold number, credits_charged number, created_at string, updated_at string, expires_at string}; `progress` {completed number, total number}.
 
 ```bash
 curl -X DELETE "https://www.socialcrawl.dev/v1/web/jobs/job_9f3k2n8d1" \
@@ -281,7 +281,7 @@ Discovers URLs for a public site and returns them as a normalized WebPageList.
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+17 more fields in the full schema. Page-level: `data.dropped`, `data.judged_urls`, `data.skipped_urls`.
++17 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Page-level: `data.dropped`, `data.judged_urls`, `data.skipped_urls`.
 
 **Next** `web/scrape` (`url` ← `data.items[].page.url`) - The full content of each page.
 
@@ -305,7 +305,7 @@ Lists web monitors created by the current API key.
 - `cursor` (optional, string) - Pagination cursor.
 - `limit` (optional, integer) - Page size. · e.g. `20`
 
-**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): `cadence_minutes`, `consecutive_failures`, `created_at`, `credits_booked`, `last_check_at`, `mode`, `monitor_id`, `next_check_at` (+4 more).
+**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {monitor_id string, url string, mode string, status string, cadence_minutes number, credits_booked number, consecutive_failures number, last_check_at string, next_check_at string, created_at string, updated_at string}; `params` {url string}.
 
 Page-level: `data.dropped`.
 
@@ -339,7 +339,7 @@ Creates an upstream-backed monitor. Creation is free; every scheduled check bill
 - `retention_days` (optional, integer) - How long to keep each check's captured result, 1 to 365 days. Older checks are dropped.
 - `judge_enabled` (optional, boolean) - Run the LLM judge over each check so you are notified on meaningful changes rather than every byte-level diff. Defaults on, except on a search monitor with no goal.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `cadence_minutes`, `consecutive_failures`, `created_at`, `credits_booked`, `last_check_at`, `mode`, `monitor_id`, `next_check_at` (+5 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {monitor_id string, url string, mode string, status string, cadence_minutes number, credits_booked number, consecutive_failures number, last_check_at null, next_check_at string, created_at string, updated_at string}; `params` {url string, name string}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/monitors" \
@@ -361,7 +361,7 @@ Returns configuration, cadence, status, and billing metadata for one web monitor
 
 - `monitor_id` (required) - Monitor id (wm_...) returned by POST /v1/web/monitors as data.monitor_id. · e.g. `wm_5d1p8s3k7`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `cadence_minutes`, `consecutive_failures`, `created_at`, `credits_booked`, `last_check_at`, `mode`, `monitor_id`, `next_check_at` (+4 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {monitor_id string, url string, mode string, status string, cadence_minutes number, credits_booked number, consecutive_failures number, last_check_at string, next_check_at string, created_at string, updated_at string}; `params` {url string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/monitors/wm_5d1p8s3k7" \
@@ -389,7 +389,7 @@ Updates one web monitor's status or cadence while preserving its check history a
 - `schedule_cron` (optional, string) - New cron schedule. Mutually exclusive with schedule_text.
 - `timezone` (optional, string) - IANA timezone the new schedule is interpreted in, e.g. 'Europe/London'. Defaults to UTC.
 
-**Response** `Analytics` object at `data` (inferred from a sample): `cadence_minutes`, `consecutive_failures`, `created_at`, `credits_booked`, `last_check_at`, `mode`, `monitor_id`, `next_check_at` (+4 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {monitor_id string, url string, mode string, status string, cadence_minutes number, credits_booked number, consecutive_failures number, last_check_at string, next_check_at string, created_at string, updated_at string}; `params` {url string}.
 
 ```bash
 curl -X PATCH "https://www.socialcrawl.dev/v1/web/monitors/wm_5d1p8s3k7" \
@@ -411,7 +411,7 @@ Deletes one web monitor, stops future scheduled checks, and keeps historical che
 
 - `monitor_id` (required) - Monitor id (wm_...) returned by POST /v1/web/monitors as data.monitor_id. · e.g. `wm_5d1p8s3k7`
 
-**Response** `Analytics` object at `data` (inferred from a sample): `cadence_minutes`, `consecutive_failures`, `created_at`, `credits_booked`, `last_check_at`, `mode`, `monitor_id`, `next_check_at` (+4 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {monitor_id string, url string, mode string, status string, cadence_minutes number, credits_booked number, consecutive_failures number, last_check_at string, next_check_at string, created_at string, updated_at string}; `params` {url string}.
 
 ```bash
 curl -X DELETE "https://www.socialcrawl.dev/v1/web/monitors/wm_5d1p8s3k7" \
@@ -435,7 +435,7 @@ Lists checks recorded for one monitor.
 
 - `limit` (optional, integer) - How many checks to return, newest first. Page size, capped at 100.
 
-**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): `check_id`, `checked_at`, `created_at`, `credits_charged`, `error`, `result`, `status`.
+**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {check_id string, status string, credits_charged number, result null, error null, checked_at string, created_at string}.
 
 Page-level: `data.dropped`.
 
@@ -468,9 +468,9 @@ Uploads a document through multipart/form-data and returns parsed web-style cont
 | `page.fetched_at` | Fetch timestamp when reported. |
 | `page.final_url` | Final resolved URL after redirects. |
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
-| `page.status_code` | HTTP status code observed while fetching the page. |
+| `page.title` | (seen in a sample response) |
 
-+15 more fields in the full schema.
++16 more (types in the full schema): `page` {status_code, answer, change_tracking, highlights, page_count, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: `page` {description null, source_type null}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/parse" \
@@ -516,7 +516,7 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.status_code` | HTTP status code observed while fetching the page. |
 
-+15 more fields in the full schema.
++15 more (types in the full schema): `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}; `page` {answer, change_tracking, highlights, page_count, total_page_count}. Also in the sample: `page.page_state` {value string, confidence number, skipped_judge boolean}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/scrape" \
@@ -558,7 +558,7 @@ Searches web, news, and image sources and returns a single normalized list of we
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+18 more fields in the full schema. Page-level: `data.dropped`.
++18 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, source_type, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Page-level: `data.dropped`.
 
 **Next** `web/scrape` (`url` ← `data.items[].page.url`) - The full content of each page.
 
@@ -581,7 +581,7 @@ Lists sessions created by the current API key.
 
 - `limit` (optional, integer) - Page size. · e.g. `20`
 
-**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): `closed_at`, `created_at`, `credits_billed`, `credits_hold`, `expires_at`, `kind`, `session_id`, `status` (+2 more).
+**Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {session_id string, kind string, status string, ttl_seconds number, credits_hold number, credits_billed number, expires_at string, closed_at null, created_at string, updated_at string}.
 
 Page-level: `data.dropped`.
 
@@ -607,7 +607,7 @@ Creates a short-lived browser session for follow-up interactions.
 - `activity_ttl_seconds` (optional, integer) - Idle timeout in seconds: the session closes this long after the last interaction, even if ttl_seconds has not elapsed. Closing early settles the hold down, so it lowers the bill.
 - `stream_web_view` (optional, boolean) - Return a live view URL in the response so a human can watch the session drive the page.
 
-**Response** `WebPage` object at `data` (inferred from a sample): `closed_at`, `created_at`, `credits_billed`, `credits_hold`, `expires_at`, `kind`, `session_id`, `status` (+2 more).
+**Response** `WebPage` object at `data` (inferred from a sample): {session_id string, kind string, status string, ttl_seconds number, credits_hold number, credits_billed number, expires_at string, closed_at null, created_at string, updated_at string}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/sessions" \
@@ -629,7 +629,7 @@ Returns status, expiry, billing hold, and settlement metadata for one interactiv
 
 - `session_id` (required) - Session id (ws_...) returned by POST /v1/web/sessions as data.session_id. · e.g. `ws_3g7x1v5m2`
 
-**Response** `WebPage` object at `data` (inferred from a sample): `closed_at`, `created_at`, `credits_billed`, `credits_hold`, `expires_at`, `kind`, `session_id`, `status` (+2 more).
+**Response** `WebPage` object at `data` (inferred from a sample): {session_id string, kind string, status string, ttl_seconds number, credits_hold number, credits_billed number, expires_at string, closed_at null, created_at string, updated_at string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/sessions/ws_3g7x1v5m2" \
@@ -649,7 +649,7 @@ Closes one interactive web session and settles any held credits that have not al
 
 - `session_id` (required) - Session id (ws_...) returned by POST /v1/web/sessions as data.session_id. · e.g. `ws_3g7x1v5m2`
 
-**Response** `WebPage` object at `data` (inferred from a sample): `closed_at`, `created_at`, `credits_billed`, `credits_hold`, `expires_at`, `kind`, `session_id`, `status` (+2 more).
+**Response** `WebPage` object at `data` (inferred from a sample): {session_id string, kind string, status string, ttl_seconds number, credits_hold number, credits_billed number, expires_at string, closed_at string, created_at string, updated_at string}.
 
 ```bash
 curl -X DELETE "https://www.socialcrawl.dev/v1/web/sessions/ws_3g7x1v5m2" \
@@ -674,7 +674,7 @@ Runs code in an existing browser session and returns the execution result.
 - `language` (optional, enum: node | python | bash) - Execution language: node, python, or bash. · e.g. `node`
 - `timeout` (optional, integer) - Execution timeout in seconds, from 1 to 40 (default 30). Larger values are capped at 40 so the call always returns inside the request window; a script still running at the cap returns a 504 UPSTREAM_ERROR envelope. Split longer work across several calls to the same session.
 
-**Response** `WebPage` object at `data` (inferred from a sample): `exitCode`, `killed`, `result`, `stderr`, `stdout`, `success`.
+**Response** `WebPage` object at `data` (inferred from a sample): {success boolean, stdout string, stderr string, result null, exitCode number, killed boolean}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/sessions/ws_3g7x1v5m2/execute" \

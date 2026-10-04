@@ -47,7 +47,7 @@ Returns album metadata: artists, release date, cover art, copyright info, tracks
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+6 more fields in the full schema. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++6 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {thumbnail_url}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/album" \
@@ -83,7 +83,7 @@ Returns artist metadata: id, name, followers, genres, and related artists. Pass 
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-+5 more fields in the full schema. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++5 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {monthly_listeners}. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/artist" \
@@ -119,7 +119,7 @@ Returns podcast metadata. Spotify calls podcasts `shows` internally, so Spotify 
 | `author.display_name` | Display name or full name |
 | `computed.content_category` | Keyword-classified content category… |
 
-+5 more fields in the full schema. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++5 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `author.ext` {average_rating, total_ratings}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/podcast" \
@@ -156,7 +156,7 @@ Returns episodes for a Spotify podcast. Pass the `cursor` from the previous resp
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+8 more fields in the full schema. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post` {url string}. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/podcast/episodes" \
@@ -176,7 +176,7 @@ Searches Spotify playlists matching a query. Note (DR-MS-09): the upstream curre
 
 - `query` (required) - Search query. · e.g. `my first million`
 
-**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): `__typename`, `attributes`, `description`, `format`, `id`, `images`, `name`, `ownerV2.__typename` (+71 more).
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, __typename string, attributes array, description string, format string, name string, uri string}; `images[].extractedColors.colorDark` {hex string, isFallback boolean}; `images[].sources[]` {height number, url string, width number}; `ownerV2` {__typename string}; `ownerV2.data` {__typename string, name string, uri string, username string}; `ownerV2.data.avatar.sources[]` {height number, url string, width number}; `visualIdentity.squareCoverImage` {__typename string}; `visualIdentity.squareCoverImage.extractedColorSet.encoreBaseSetTextColor` {alpha number, blue number, green number, red number} (+60 more).
 
 Page-level: `data.dropped`.
 
@@ -214,7 +214,7 @@ Returns track metadata: artists, album info, duration, playability, and sharing 
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+8 more fields in the full schema. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++8 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/track" \

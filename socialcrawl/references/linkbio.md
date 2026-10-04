@@ -37,7 +37,7 @@ Returns data from a Linkbio page including display name, bio, avatar, and list o
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+2 more fields in the full schema. Never filled: `author.avatar_url`, `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
++2 more (types in the full schema): `computed` {estimated_reach, language}. Never filled: `author.avatar_url`, `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkbio/page" \

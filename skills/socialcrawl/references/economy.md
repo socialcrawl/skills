@@ -20,7 +20,7 @@
 
 ## GET /v1/economy/consumer-spend - 1 credit (standard)
 
-Returns annual household final consumption expenditure per country and spending category, from Eurostat, the statistical office of the European Union. Categories are the twelve top-level COICOP divisions (food, housing, transport, restaurants_hotels and so on) plus `total`. Pick a unit: `eur_millions` for the size of the market, `eur_per_capita` to compare countries of different size, or `share_of_total` for the percentage of all household spending. Results come back as `data.series[]`, one per country and category, each with `points[]` of `{ year, value }`. A year Eurostat has not published for a country is `null`, never 0, and the latest years are often provisional. Covers EU and EEA countries and some candidates; the latest published year differs by country, so recent years can be `null` for some of them. `country_code` takes ISO codes (`GR` for Greece, `GB` for the United Kingdom, `EU27` for the union) and Eurostat's own `EL` and `UK` spellings. The response also carries `dataset` (id, label, last update), `unit` and a `source_note`.
+Returns annual household final consumption expenditure per country and spending category, from Eurostat, the statistical office of the European Union. Categories are the thirteen top-level COICOP 2018 divisions (food, housing, transport, restaurants_hotels, insurance_financial and so on) plus `total`. Pick a unit: `eur_millions` for the size of the market, `eur_per_capita` to compare countries of different size, or `share_of_total` for the percentage of all household spending. Results come back as `data.series[]`, one per country and category, each with `points[]` of `{ year, value }`. A year Eurostat has not published for a country is `null`, never 0, and the latest years are often provisional. Covers EU and EEA countries and some candidates; the latest published year differs by country, so recent years can be `null` for some of them. Norway, the United Kingdom, Iceland, Albania, North Macedonia and Kosovo come from Eurostat's older COICOP 1999 dataset, the only one that still carries them: there `miscellaneous` also includes insurance and financial services, `insurance_financial` is `null`, and the United Kingdom stops at 2019. `country_code` takes ISO codes (`GR` for Greece, `GB` for the United Kingdom, `EU27` for the union) and Eurostat's own `EL` and `UK` spellings. The response also carries `dataset` (id, label, last update), `unit` and a `source_note`.
 
 **Use when** you want to compare how much people in different countries spend on a product category, or to see how a country's spending mix changes year to year.
 **Cost** cache 86400 s
@@ -29,7 +29,7 @@ Returns annual household final consumption expenditure per country and spending 
 **Query params**
 
 - `country_code` (required) - One or more ISO 3166-1 alpha-2 country codes, comma-separated (up to 10), e.g. `DE,FR,GR`. `EU27` returns the European Union total. · e.g. `DE,FR`
-- `category` (optional, string) - Spending categories, comma-separated. Any of total, food, alcohol_tobacco, clothing, housing, furnishings, health, transport, communication, recreation, education, restaurants_hotels, miscellaneous. Defaults to all thirteen. · e.g. `transport,food`
+- `category` (optional, string) - Spending categories, comma-separated. Any of total, food, alcohol_tobacco, clothing, housing, furnishings, health, transport, communication, recreation, education, restaurants_hotels, insurance_financial, miscellaneous. Defaults to all fourteen. · e.g. `transport,food`
 - `from_year` (optional, integer, 1990-2100) - First year to return. Defaults to five years before the current year. · e.g. `2020`
 - `to_year` (optional, integer, 1990-2100) - Last year to return. Defaults to the latest year Eurostat has. · e.g. `2024`
 - `unit` (optional, enum: eur_millions | eur_per_capita | share_of_total) - `eur_millions` (current prices, million euro, the default), `eur_per_capita` (current prices, euro per person) or `share_of_total` (percentage of total household spending). · e.g. `eur_millions`
@@ -37,9 +37,9 @@ Returns annual household final consumption expenditure per country and spending 
 **Constraints**
 
 - `country_code`: at most 10 comma-separated values; each value one of BE | BG | CZ | DK | DE | EE | IE | GR | ES | FR | HR | IT | CY | LV | LT | LU | HU | MT | NL | AT | PL | PT | RO | SI | SK | FI | SE | NO | CH | GB | ME | MK | AL | RS | IS | BA | TR | XK | EU27 | EL | UK.
-- `category`: each value one of total | food | alcohol_tobacco | clothing | housing | furnishings | health | transport | communication | recreation | education | restaurants_hotels | miscellaneous.
+- `category`: each value one of total | food | alcohol_tobacco | clothing | housing | furnishings | health | transport | communication | recreation | education | restaurants_hotels | insurance_financial | miscellaneous.
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=economy/consumer-spend` serves the current contract.
+**Response** `Analytics` object at `data`, `{ dataset, unit, series, source_note }` (inferred from a sample): `dataset` {id string, label string, updated string}; `unit` {code string, label string}; `series[]` {country string, country_name string, category string, category_label string}; `series[].points[]` {year number, value number}; {source_note string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/economy/consumer-spend" \
@@ -49,11 +49,11 @@ curl -G "https://www.socialcrawl.dev/v1/economy/consumer-spend" \
 
 ## GET /v1/economy/government-contracts - 1 credit (standard)
 
-Searches individual US federal contract awards (purchase orders, delivery orders, definitive contracts and blanket purchase agreement calls) from USAspending.gov, the official US government source for federal spending. Send at least one of `recipient` (a company name, matched as text), `keyword` (matched against the award description), `naics` or `psc`. The window defaults to the last full US federal fiscal year, and it matches awards with activity in that window, so `start_date` can be earlier and `amount` is the total value obligated to the award so far, not spend inside the window. Results come back under `data.items[]`, each `{ award_id, generated_id, type, recipient_name, recipient_uei, amount, awarding_agency, awarding_sub_agency, naics, psc, description, start_date, end_date, place_of_performance: { state, city, country }, url }`. `type` is `purchase_order`, `delivery_order`, `definitive_contract` or `bpa_call`. A foreign award has a null `place_of_performance.state`. Sorted by `amount`, largest first, unless you set `sort` and `order`. Paginate with `page` (1 based) or the universal `cursor`; the response's `pagination` block carries `has_more` and `next_cursor`. The source publishes no match count, so `data.total` appears on the last page only. No match is a 200 with an empty `items` and is not billed.
+Searches individual US federal contract awards (purchase orders, delivery orders, definitive contracts and blanket purchase agreement calls) from USAspending.gov, the official US government source for federal spending. Send at least one of `recipient` (a company name, matched as text), `keyword` (matched against the award description), `naics` or `psc`. The window defaults to the most recent US federal fiscal year that ended at least 90 days ago, and it matches awards with activity in that window, so `start_date` can be earlier and `amount` is the total value obligated to the award so far, not spend inside the window. Results come back under `data.items[]`, each `{ award_id, generated_id, type, recipient_name, recipient_uei, amount, awarding_agency, awarding_sub_agency, naics, psc, description, start_date, end_date, place_of_performance: { state, city, country }, url }`. `type` is `purchase_order`, `delivery_order`, `definitive_contract` or `bpa_call`. A foreign award has a null `place_of_performance.state`. Sorted by `amount`, largest first, unless you set `sort` and `order`. Paginate with `page` (1 based) or the universal `cursor`; the response's `pagination` block carries `has_more` and `next_cursor`. `data.total` is the full number of matching contracts. A search can be paged to 50,000 results (`page` x `limit`); a deeper page is a refunded 400, so narrow the filters to reach the rest. No match is a 200 with an empty `items` and is not billed.
 
 **Use when** you want to find purchase orders and contracts for a company, keyword, industry or product code; use government-spend for totals by place.
 **Cost** cache 120 s
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · ≈25/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/25) x 1 credits
 
 **Query params**
 
@@ -61,13 +61,13 @@ Searches individual US federal contract awards (purchase orders, delivery orders
 - `keyword` (optional, string) - Free-text match against award descriptions, 3 to 120 characters. Use it for a topic such as `travel` that no single industry code captures.
 - `naics` (optional, string) - Industry filter: one or more NAICS codes, comma-separated (up to 20). Each code must be 2, 4 or 6 digits, and a shorter code matches the whole family, so `4811` covers scheduled air transportation and `48` covers all transportation. · e.g. `4811`
 - `psc` (optional, string) - Product or service code filter: one or more codes, comma-separated (up to 20), 1 to 4 characters each. A shorter code matches the family, so `V` is all transportation, travel and relocation services and `V301` is travel agent services.
-- `from_date` (optional, string) - Start of the window, `YYYY-MM-DD`, no earlier than 2007-10-01. Defaults to the first day of the last full US federal fiscal year (1 October). Send only this and the window runs to today.
-- `to_date` (optional, string) - End of the window, `YYYY-MM-DD`. Defaults to the last day of the last full US federal fiscal year (30 September). Send only this and the window starts one year earlier.
+- `from_date` (optional, string) - Start of the window, `YYYY-MM-DD`, no earlier than 2007-10-01. Defaults to the first day of the most recent US federal fiscal year (1 October to 30 September) that ended at least 90 days ago, because agencies report with a lag and a year that just ended is only partly reported. Send only this and the window runs to today.
+- `to_date` (optional, string) - End of the window, `YYYY-MM-DD`. Defaults to the last day of the most recent US federal fiscal year that ended at least 90 days ago (30 September). Send only this and the window starts one year earlier.
 - `type` (optional, enum: purchase_order | delivery_order | definitive_contract | bpa_call | all) - Limit to one award type: `purchase_order`, `delivery_order`, `definitive_contract` or `bpa_call`. `all` (default) returns all four. · e.g. `purchase_order`
 - `sort` (optional, enum: amount | start_date | end_date | recipient) - Sort field: `amount` (default), `start_date`, `end_date` or `recipient`.
 - `order` (optional, enum: asc | desc) - `desc` (default) or `asc`.
 - `limit` (optional, integer, 1-100) - Awards per page, 1 to 100. Defaults to 25. · e.g. `10`
-- `page` (optional, integer, min 1) - Page number, starting at 1. The universal `cursor` returned in `pagination.next_cursor` is the simpler way to continue.
+- `page` (optional, integer, min 1) - Page number, starting at 1. `page` x `limit` cannot exceed 50,000, so with `limit` 100 the last page is 500 and a deeper page is a refunded 400. The universal `cursor` returned in `pagination.next_cursor` is the simpler way to continue.
 
 **Constraints**
 
@@ -75,7 +75,9 @@ Searches individual US federal contract awards (purchase orders, delivery orders
 - `naics`: at most 20 comma-separated values.
 - `psc`: at most 20 comma-separated values.
 
-**Response** `SearchResult`. Fields not published yet - call once with a small limit; `/v1/utility/endpoint?id=economy/government-contracts` serves the current contract.
+**Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {award_id string, generated_id string, type string, recipient_name string, recipient_uei string, amount number, awarding_agency string, awarding_sub_agency string, description string, start_date string, end_date string, url string}; `naics` {code string, description string}; `psc` {code string, description string}; `place_of_performance` {state string, city string, country string}.
+
+Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/economy/government-contracts" \
@@ -85,7 +87,7 @@ curl -G "https://www.socialcrawl.dev/v1/economy/government-contracts" \
 
 ## GET /v1/economy/government-spend - 1 credit (standard)
 
-Returns how much the US federal government spent, by geography, for an industry, a product or service, or a topic. Data comes from USAspending.gov, the official US government source for federal spending. Narrow it with `naics` (industry), `psc` (product or service code) and `keyword`, or send none to see all spending. The window defaults to the last full US federal fiscal year and any window since 2007-10-01 is allowed. `award_type` is `contracts` by default, with `grants` and `all` available. `geo` picks the layer: `state` (USPS codes, with DC and territories), `county` (5 digit FIPS codes) or `country` (ISO alpha-3 codes, which is how foreign place of performance appears). `scope` chooses whether spending is placed where the work is done (`place_of_performance`, the default) or where the recipient is based (`recipient_location`). Amounts are US dollars of federal obligations recorded in the window. The response is `data.regions[]`, sorted by amount, largest first, each `{ code, name, amount, population, per_capita }` (the last two when the source publishes them), plus `data.total_amount`, `data.geo_layer` and a `data.filters` echo of what was applied. A combination with no spending returns 404 and is not billed.
+Returns how much the US federal government spent, by geography, for an industry, a product or service, or a topic. Data comes from USAspending.gov, the official US government source for federal spending. Narrow it with `naics` (industry), `psc` (product or service code) and `keyword`, or send none to see all spending. The window defaults to the most recent US federal fiscal year that ended at least 90 days ago (agencies report with a lag, so a year that just ended is only partly reported), and any window since 2007-10-01 is allowed. `award_type` is `contracts` by default, with `grants` and `all` available. `geo` picks the layer: `state` (USPS codes, with DC and territories), `county` (5 digit FIPS codes) or `country` (ISO alpha-3 codes, which is how foreign place of performance appears). `scope` chooses whether spending is placed where the work is done (`place_of_performance`, the default) or where the recipient is based (`recipient_location`). Amounts are US dollars of federal obligations recorded in the window. The response is `data.regions[]`, sorted by amount, largest first, each `{ code, name, amount, population, per_capita }` (the last two when the source publishes them), plus `data.total_amount`, `data.geo_layer` and a `data.filters` echo of what was applied. A combination with no spending returns 404 and is not billed.
 
 **Use when** you want to see where federal money goes for an industry such as air travel, or to compare regions on spend.
 **Cost** cache 21600 s
@@ -96,8 +98,8 @@ Returns how much the US federal government spent, by geography, for an industry,
 - `naics` (optional, string) - Industry filter: one or more NAICS codes, comma-separated (up to 20). Each code must be 2, 4 or 6 digits, and a shorter code matches the whole family, so `4811` covers scheduled air transportation and `48` covers all transportation. · e.g. `4811`
 - `psc` (optional, string) - Product or service code filter: one or more codes, comma-separated (up to 20), 1 to 4 characters each. A shorter code matches the family, so `V` is all transportation, travel and relocation services and `V301` is travel agent services.
 - `keyword` (optional, string) - Free-text match against award descriptions, 3 to 120 characters. Use it for a topic such as `travel` that no single industry code captures.
-- `from_date` (optional, string) - Start of the window, `YYYY-MM-DD`, no earlier than 2007-10-01. Defaults to the first day of the last full US federal fiscal year (1 October). Send only this and the window runs to today. · e.g. `2024-10-01`
-- `to_date` (optional, string) - End of the window, `YYYY-MM-DD`. Defaults to the last day of the last full US federal fiscal year (30 September). Send only this and the window starts one year earlier. · e.g. `2025-09-30`
+- `from_date` (optional, string) - Start of the window, `YYYY-MM-DD`, no earlier than 2007-10-01. Defaults to the first day of the most recent US federal fiscal year (1 October to 30 September) that ended at least 90 days ago, because agencies report with a lag and a year that just ended is only partly reported. Send only this and the window runs to today. · e.g. `2024-10-01`
+- `to_date` (optional, string) - End of the window, `YYYY-MM-DD`. Defaults to the last day of the most recent US federal fiscal year that ended at least 90 days ago (30 September). Send only this and the window starts one year earlier. · e.g. `2025-09-30`
 - `geo` (optional, enum: state | county | country) - Geography layer: `state` (default), `county` or `country`.
 - `scope` (optional, enum: place_of_performance | recipient_location) - `place_of_performance` (default) places spending where the work is done. `recipient_location` places it where the recipient is based.
 - `award_type` (optional, enum: contracts | grants | all) - `contracts` (default) is purchase orders, delivery orders, definitive contracts and blanket purchase agreement calls. `grants` is grants and cooperative agreements. `all` is every award type.
@@ -107,7 +109,7 @@ Returns how much the US federal government spent, by geography, for an industry,
 - `naics`: at most 20 comma-separated values.
 - `psc`: at most 20 comma-separated values.
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=economy/government-spend` serves the current contract.
+**Response** `Analytics` object at `data`, `{ filters, geo_layer, total_amount, regions }` (inferred from a sample): `filters` {from_date string, to_date string, scope string, award_type string, naics string[]}; {geo_layer string, total_amount number}; `regions[]` {code string, name string, amount number, population number, per_capita number}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/economy/government-spend" \
@@ -159,7 +161,7 @@ Returns annual spending by a country's residents on tourism trips of one night o
 - `country_code`: at most 10 comma-separated values; each value one of BE | BG | CZ | DK | DE | EE | IE | GR | ES | FR | HR | IT | CY | LV | LT | LU | HU | MT | NL | AT | PL | PT | RO | SI | SK | FI | SE | NO | CH | GB | ME | MK | AL | RS | EU27 | EL | UK.
 - `category`: each value one of total | transport | restaurants | accommodation | package | other | durables.
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=economy/tourism-spend` serves the current contract.
+**Response** `Analytics` object at `data` (inferred from a sample): `dataset` {id string, label string, updated string}; `unit` {code string, label string}; {purpose string, destination string, measure string, source_note string}; `series[]` {country string, country_name string, category string, category_label string}; `series[].points[]` {year number, value number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/economy/tourism-spend" \

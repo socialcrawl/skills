@@ -10,7 +10,7 @@ Every field the 2 field-mapped endpoints returning `NewsArticleList` can carry, 
 | `article.placement` | string\|null | Source list: "news_search" or "top_stories" |
 | `article.published_at` | string\|number\|null | Absolute UTC publish time |
 | `article.rank` | number\|null | Result rank (news_search items only; null on top_stories) |
-| `article.snippet` | string\|null | Article excerpt (news_search items only; null on top_stories) (only when the fallback source serves) |
+| `article.snippet` | string\|null | Article excerpt (news_search items only; null on top_stories) (on some endpoints only when the fallback source serves) |
 | `article.source` | string\|null | Publishing outlet name (falls back to the domain) |
 | `article.title` | string\|null | Article headline |
 | `article.url` | string\|null | Direct URL to the article |

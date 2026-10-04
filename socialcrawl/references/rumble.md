@@ -47,7 +47,7 @@ Returns channel metadata, videos, shorts, and a numeric cursor for the next page
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `rumble/video/comments` (`url` ← `data.items[].post.url`) - List top-level comments on a Rumble video. · `rumble/video` (`url` ← `data.items[].post.url`) - Get a Rumble video. · `rumble/video/transcript` (`url` ← `data.items[].post.url`) - Get a Rumble video transcript.
 
@@ -81,7 +81,7 @@ Searches Rumble videos by keyword. Returns matching videos and shorts with title
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `rumble/video/comments` (`url` ← `data.items[].post.url`) - List top-level comments on a Rumble video. · `rumble/video` (`url` ← `data.items[].post.url`) - Get a Rumble video. · `rumble/video/transcript` (`url` ← `data.items[].post.url`) - Get a Rumble video transcript. · `rumble/channel/videos` (`handle` ← `data.items[].post.author.username`) - List videos for a Rumble channel.
 
@@ -114,7 +114,7 @@ Returns title, description, thumbnail, channel, publish date, view count, likes,
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more fields in the full schema. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `rumble/video/comments` (`url` ← `data.post.url`) - The comments on the video. · `rumble/video/transcript` (`url` ← `data.post.url`) - Get a Rumble video transcript. · `rumble/channel/videos` (`handle` ← `data.post.author.username`) - List videos for a Rumble channel.
 
@@ -147,7 +147,7 @@ Returns all top-level comments for a Rumble video: comment text, author, `create
 | `comment.author.avatar_url` | URL to comment author profile picture |
 | `comment.author.display_name` | Comment author display name |
 
-+4 more fields in the full schema. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++4 more (types in the full schema): `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/rumble/video/comments" \

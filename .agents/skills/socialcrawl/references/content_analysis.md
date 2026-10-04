@@ -33,7 +33,7 @@ Returns the full content-category taxonomy (3,000+ nodes: category_code, categor
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` rows at `data.items[]`, each `{ category_code, category_code_parent, category_name }` (inferred from a sample): `category_code`, `category_code_parent`, `category_name`.
+**Response** `Analytics` rows at `data.items[]`, each `{ category_code, category_name, category_code_parent }` (inferred from a sample): {category_code number, category_name string, category_code_parent number}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/categories" \
@@ -57,7 +57,7 @@ Like phrase-trends, but keyed on a category code from the /content_analysis/cate
 - `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1-20).
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions) over the citation fields listed by /content_analysis/filters, applied before the buckets are counted. Example: [["country","=","DE"]] for German-hosted citations, or [["language","=","de"]] for German-language ones.
 
-**Response** `Analytics` object at `data`, `{ series }` (inferred from a sample): `series`.
+**Response** `Analytics` object at `data`, `{ series }` (inferred from a sample): `series[]` {type string, date string, total_count number, rank number}; `series[].top_domains[]` {domain string, count number}; `series[].sentiment_connotations` {anger number, happiness number, love number, sadness number, share number, fun number}; `series[].connotation_types` {positive number, negative number, neutral number}; `series[].text_categories[]` {category number[], count number}; `series[].page_categories[]` {category number[], count number}; `series[].page_types` {blogs number, organization number, news number, message-boards number, ecommerce number}; `series[].countries` {US number} (+21 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/category-trends" \
@@ -74,7 +74,7 @@ Returns the map of filterable fields → value types (str, num, time, array.num,
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` object at `data`, `{ search }` (inferred from a sample): `search.content_info.author`, `search.content_info.connotation_types.negative`, `search.content_info.connotation_types.neutral`, `search.content_info.connotation_types.positive`, `search.content_info.content_quality_score`, `search.content_info.content_type`, `search.content_info.date_published`, `search.content_info.group_date` (+33 more).
+**Response** `Analytics` object at `data`, `{ search }` (inferred from a sample): `search` {url string, domain string, main_domain string, url_rank string, spam_score string, domain_rank string, fetch_time string, country string, language string, score string, page_category string, page_types string}; `search.content_info` {content_type string, title string, main_title string, previous_title string, level string, author string, snippet string, snippet_length string, highlighted_text string, language string}; `search.content_info.sentiment_connotations` {anger string, happiness string, love string} (+16 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/filters" \
@@ -89,7 +89,7 @@ Returns the list of languages (name + ISO code) supported by the Content Analysi
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` rows at `data.items[]`, each `{ language_code, language_name }` (inferred from a sample): `language_code`, `language_name`.
+**Response** `Analytics` rows at `data.items[]`, each `{ language_name, language_code }` (inferred from a sample): {language_name string, language_code string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/languages" \
@@ -104,7 +104,7 @@ Returns the list of locations supported by the Content Analysis endpoints. Stati
 **Cost** cache 1800 s
 **Paging** none
 
-**Response** `Analytics` rows at `data.items[]`, each `{ country_iso_code, location_name }` (inferred from a sample): `country_iso_code`, `location_name`.
+**Response** `Analytics` rows at `data.items[]`, each `{ location_name, country_iso_code }` (inferred from a sample): {location_name string, country_iso_code string}.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/locations" \
@@ -129,7 +129,7 @@ Returns a time series (one row per day/week/month bucket) of mention volume and 
 - `internal_list_limit` (optional, integer) - Cap on internal arrays per bucket (1-20).
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
-**Response** `Analytics` object at `data`, `{ series }` (inferred from a sample): `series`.
+**Response** `Analytics` object at `data`, `{ series }` (inferred from a sample): `series[]` {type string, date string, total_count number, rank number}; `series[].top_domains[]` {domain string, count number}; `series[].sentiment_connotations` {anger number, happiness number, love number, sadness number, share number, fun number}; `series[].connotation_types` {positive number, negative number, neutral number}; `series[].text_categories[]` {category number[], count number}; `series[].page_categories[]` {category number[], count number}; `series[].page_types` {blogs number, organization number, news number, message-boards number, ecommerce number}; `series[].countries` {US number} (+23 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/phrase-trends" \
@@ -152,7 +152,7 @@ Returns a 10-bucket histogram (0.0-0.1 … 0.9-1.0) of the relative ratings foun
 - `page_type` (optional, enum: ecommerce | news | blogs | message-boards | organization) - Narrow to one or more page types (comma-separated): ecommerce, news, blogs, message-boards, organization.
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
-**Response** `Analytics` object at `data`, `{ buckets }` (inferred from a sample): `buckets`.
+**Response** `Analytics` object at `data`, `{ buckets }` (inferred from a sample): `buckets[]` {type string, min number, max number}; `buckets[].metrics` {type string, total_count number, rank number}; `buckets[].metrics.top_domains[]` {domain string, count number}; `buckets[].metrics.sentiment_connotations` {anger number, happiness number, love number, sadness number, share number, fun number}; `buckets[].metrics.connotation_types` {positive number, negative number, neutral number}; `buckets[].metrics.text_categories[]` {category number[], count number}; `buckets[].metrics.page_categories[]` {category number[], count number}; `buckets[].metrics.page_types` {blogs number, organization number, news number, message-boards number} (+28 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/rating-distribution" \
@@ -178,7 +178,7 @@ Returns paginated web citations (news, blogs, ecommerce, message-boards, organiz
 - `order_by` (optional, string) - Sort rules as "field,direction"; separate multiple rules with ";" (e.g. content_info.sentiment_connotations.anger,desc).
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions). Combined with page_type via AND when both are present.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): `_raw.content_info.author`, `_raw.content_info.connotation_types.negative`, `_raw.content_info.connotation_types.neutral`, `_raw.content_info.connotation_types.positive`, `_raw.content_info.content_quality_score`, `_raw.content_info.content_type`, `_raw.content_info.date_published`, `_raw.content_info.group_date` (+56 more).
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {url string, domain string, main_domain string, country string, language string, domain_rank number, spam_score number, fetch_time string, page_types string[], title string, snippet string, rating null, text_category number[], date_published string}; `sentiment` {anger number, happiness number, love number, sadness number, share number, fun number}; `connotation` {positive number, negative number, neutral number}; `_raw` {type string, url string} (+39 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/search" \
@@ -201,7 +201,7 @@ Returns two sentiment distributions for the keyword's web mentions: a positive/n
 - `positive_connotation_threshold` (optional, string) - Minimum positive-connotation probability (0-1, default 0.4).
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
-**Response** `Analytics` object at `data`, `{ positive_connotation_distribution, sentiment_connotation_distribution, type }` (inferred from a sample): `positive_connotation_distribution.negative.connotation_types.negative`, `positive_connotation_distribution.negative.connotation_types.neutral`, `positive_connotation_distribution.negative.connotation_types.positive`, `positive_connotation_distribution.negative.countries.AI`, `positive_connotation_distribution.negative.countries.BR`, `positive_connotation_distribution.negative.countries.DE`, `positive_connotation_distribution.negative.countries.FR`, `positive_connotation_distribution.negative.countries.IN` (+353 more).
+**Response** `Analytics` object at `data`, `{ type, positive_connotation_distribution, sentiment_connotation_distribution }` (inferred from a sample): {type string}; `positive_connotation_distribution.positive` {type string, total_count number, rank number}; `positive_connotation_distribution.positive.top_domains[]` {domain string, count number}; `positive_connotation_distribution.positive.sentiment_connotations` {anger number, happiness number, love number, sadness number, share number, fun number}; `positive_connotation_distribution.positive.connotation_types` {positive number, negative number, neutral number}; `positive_connotation_distribution.positive.text_categories[]` {category number[], count number}; `positive_connotation_distribution.positive.page_categories[]` {category number[], count number}; `positive_connotation_distribution.positive.page_types` {blogs number, organization number, news number, message-boards number, ecommerce number}; `positive_connotation_distribution.positive.countries` {US number} (+363 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/sentiment" \
@@ -226,7 +226,7 @@ Returns a single roll-up over every web citation of the keyword: total mention c
 - `internal_list_limit` (optional, integer) - Cap on internal arrays such as top_domains / categories (1-20).
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions).
 
-**Response** `Analytics` object at `data` (inferred from a sample): `connotation_types.negative`, `connotation_types.neutral`, `connotation_types.positive`, `countries.AI`, `countries.BR`, `countries.CO`, `countries.DE`, `countries.FR` (+32 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {type string, total_count number, rank number}; `top_domains[]` {domain string, count number}; `sentiment_connotations` {anger number, happiness number, love number, sadness number, share number, fun number}; `connotation_types` {positive number, negative number, neutral number}; `text_categories[]` {category number[], count number}; `page_categories[]` {category number[], count number}; `page_types` {blogs number, organization number, news number, message-boards number, ecommerce number}; `countries` {US number, VN number} (+18 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/summary" \

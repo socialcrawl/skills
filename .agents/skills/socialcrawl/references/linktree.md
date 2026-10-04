@@ -37,7 +37,7 @@ Returns data from a Linktree page including the user's display name, bio, avatar
 | `author.display_name` | Display name or full name |
 | `computed.content_category` | Keyword-classified content category… |
 
-+3 more fields in the full schema. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
++3 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linktree/page" \

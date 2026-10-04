@@ -65,6 +65,8 @@ Over the cap: `403 MONITOR_LIMIT_REACHED`, e.g. "Active-monitor limit reached (1
 
 Body (JSON). Unknown top-level keys are ignored; unknown keys inside `track` are a 400.
 
+**Validate and price without creating:** add `?dry_run=1` (or `"dry_run": 1` in the body) to create, PATCH or DELETE. It runs the same checks (same 400s), writes nothing and returns `{ valid, normalized_body, estimate }` with `estimated_monthly_cost`. Only where `GET /v1/utility/estimate?id=monitors` answers (a 404 there means an older server that ignores `dry_run` here and **creates the monitor**).
+
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `recipe` | string, 1-200 | yes | Endpoint path without `/v1/`, e.g. `tiktok/profile`, `instagram/audio/reels`, `prism/brand-mentions`, `search/everywhere`. Must be registered, not disabled, and **GET**. The POST batch endpoints (`prism/post-stats`, `prism/comment-lookup`, `prism/profiles`, `youtube/transcripts`, `youtube/videos`, `youtube/channels`) are refused. |

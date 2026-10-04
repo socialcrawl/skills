@@ -83,24 +83,43 @@ Every field the 106 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.ad.video_sd_url` | unknown\|null |  |
 | `post.ext.ad.video_url_360p` | unknown\|null |  |
 | `post.ext.ad.video_url_540p` | unknown\|null |  |
+| `post.ext.all_media_urls` | array\|null | (seen in a sample response) |
 | `post.ext.apple_music.artist_id` | unknown\|null |  |
 | `post.ext.apple_music.artist_url` | unknown\|null |  |
 | `post.ext.apple_music.content_advisory` | unknown\|null |  |
 | `post.ext.apple_music.genres` | unknown\|null |  |
 | `post.ext.apple_music.kind` | unknown\|null |  |
 | `post.ext.apple_music.release_date` | unknown\|null |  |
+| `post.ext.article.source` | string\|null | (seen in a sample response) |
+| `post.ext.article.title` | string\|null | (seen in a sample response) |
+| `post.ext.article.url` | string\|null | (seen in a sample response) |
+| `post.ext.audio_cluster_id` | string\|null | Instagram's audio cluster for a reel, as an exact digit string: the id Instagram uses to group different uploads of the same sound. Present on `/v1/instagram/audio/reels` rows and on `/v1/instagram/profile/reels` with `include=stats`; absent on a row when it is not available and on every other surface. (seen in a sample response) |
 | `post.ext.author_country` | string\|null | The creator's country as they declare it on Instagram's About this account panel, as a country name (for example `Spain`). It is not where the reel was filmed. Present only on `/v1/instagram/search/reels` when the request sends `include=creator` (or `country`), filled by looking the creator up. Null when Instagram does not publish a country for the creator or the lookup did not resolve, and nothing is guessed; absent on a plain call. (with `include=creator`) |
 | `post.ext.author_followers` | number\|null | The creator's follower count as embedded in the search payload itself, when the search source happens to carry one. On `instagram/search/reels` it is null on a plain call, because Instagram stopped sending follower counts in its search payload in August 2026; send `include=creator` (or `country`) and it is filled from the creator's profile, 2 credits per creator looked up. It stays null when that lookup does not resolve. (with `include=channel`, `include=creator` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `post.ext.author_following` | number\|null | (with `include=creator` on some endpoints) (on some endpoints only when the fallback source serves) |
+| `post.ext.author_headline` | string\|null | (seen in a sample response) |
 | `post.ext.author_id` | string\|null | The creator's platform-native numeric user id. On TikTok search and list items, pass to `/v1/tiktok/profile?user_id=` for the creator's current follower count (survives username changes). On `instagram/search/reels` items it is present on every row from every serving source, accepted by `/v1/instagram/basic-profile?userId=`. On Facebook it appears when the upstream exposed a numeric actor id and no real handle. (with `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `post.ext.author_posts_count` | number\|null | (with `include=creator` on some endpoints) |
 | `post.ext.author_public_email` | string\|null | The public contact email on the creator's profile. Present only on `/v1/instagram/search/reels` when the request sends `include=creator`, filled by looking the creator up. Null when the creator lists no public email or the lookup did not resolve; absent on a plain call. (with `include=creator`) |
 | `post.ext.author_public_phone` | string\|null | The public contact phone number on the creator's profile. Present only on `/v1/instagram/search/reels` when the request sends `include=creator`, filled by looking the creator up. Null when the creator lists no public phone or the lookup did not resolve; absent on a plain call. (with `include=creator`) |
+| `post.ext.author_type` | string\|null | (seen in a sample response) |
+| `post.ext.author_urn` | string\|null | (seen in a sample response) |
+| `post.ext.caption` | string\|null | (seen in a sample response) |
+| `post.ext.carousel_count` | number\|null | (seen in a sample response) |
+| `post.ext.categoryId` | string\|null | (seen in a sample response) |
 | `post.ext.categoryTitle` | string\|null |  |
 | `post.ext.channel_id` | string\|null | (with `include=channel`, `include=engagement` on some endpoints) |
+| `post.ext.coauthors` | array\|null | Instagram collaborative posts (the native "Collab" feature). The full list of co-author accounts on the post, as `{ id, username, full_name, is_verified, profile_pic_url }`. A collab post has ONE producer and appears in every co-author's grid, so `post.author` is whichever account created it, which is not necessarily the profile you queried. The complete set of accounts on a post is `post.author.username` plus every `username` in this array. An empty array means Instagram reports the post as NOT a collab; the field is absent on surfaces that carry no co-author signal, including `/v1/instagram/post` (its web source ships the field permanently empty, so use `/v1/instagram/post/stats` for a single post). (seen in a sample response) |
 | `post.ext.content_language` | string\|null | The language the platform itself tags the post with, when it sends one: Reddit's own language tag on Reddit endpoints, and TikTok's caption-language tag (for example `de`) on `/v1/tiktok/trending?feed=local`. Null when the platform could not tell (Reddit `und`, TikTok `un`, common on short or emoji-only captions); absent where the source sends no tag. Never inferred from the text by us: that is `post.computed.language`. (on some endpoints only when the fallback source serves) |
+| `post.ext.content_type` | string\|null | (seen in a sample response) |
+| `post.ext.default_language` | string\|null | (seen in a sample response) |
+| `post.ext.defaultAudioLanguage` | string\|null | (seen in a sample response) |
 | `post.ext.description` | string\|null |  |
 | `post.ext.download_count` | number\|null | How many times the video has been saved to a device. TikTok only, and distinct from `engagement.saves`: a save keeps the video in a private collection on the platform, a download takes a copy off it, and TikTok counts the two separately. Present on TikTok post, search and post-list responses; absent everywhere else. |
+| `post.ext.dsp_ids.amazon` | string\|null | (seen in a sample response) |
+| `post.ext.dsp_ids.apple_music` | string\|null | (seen in a sample response) |
+| `post.ext.dsp_ids.spotify` | string\|null | (seen in a sample response) |
+| `post.ext.duration` | string\|null | (seen in a sample response) |
 | `post.ext.event.address` | unknown\|null | (with `include=details`) |
 | `post.ext.event.attendance_count` | unknown\|null | (with `include=details`) |
 | `post.ext.event.category` | unknown\|null | (with `include=details`) |
@@ -120,25 +139,58 @@ Every field the 106 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.event.privacy` | unknown\|null | (with `include=details`) |
 | `post.ext.event.start_timestamp` | unknown\|null |  |
 | `post.ext.event.time_text` | unknown\|null |  |
+| `post.ext.feedback_id` | string\|null | (seen in a sample response) |
 | `post.ext.flair` | string\|null | (on some endpoints only when the fallback source serves) |
+| `post.ext.hasPaidProductPlacement` | boolean\|null | (seen in a sample response) |
 | `post.ext.ig_play_count` | number\|null | Instagram-only play count (`ig_play_count`). Since mid-July 2026 Instagram's headline play count (`engagement.views`) no longer includes Facebook crosspost views and equals this value; it is surfaced explicitly so you can tell the Instagram-only figure apart and detect any future re-divergence. For combined Instagram + Facebook reach, also fetch the Facebook crosspost via `/v1/facebook/post`. Present on `/v1/instagram/post/stats` and, since the August 2026 views fix, on `/v1/instagram/post` for video posts. (with `include=engagement`) |
 | `post.ext.is_repost_quote` | boolean\|null |  |
+| `post.ext.license` | string\|null | (seen in a sample response) |
+| `post.ext.madeForKids` | boolean\|null | (seen in a sample response) |
+| `post.ext.media_type` | string\|null | (seen in a sample response) |
 | `post.ext.music` | object\|null | (with `include=audio`) |
 | `post.ext.music_id` | string\|null | TikTok music/clip id (exact string): pass to `/v1/tiktok/song/videos?clipId=` to find videos using the same sound (with `include=audio` on some endpoints) |
 | `post.ext.music.id` | unknown\|null |  |
 | `post.ext.music.track_title` | unknown\|null |  |
+| `post.ext.on_screen_texts` | array\|null | (seen in a sample response) |
+| `post.ext.playlist_item_id` | string\|null | (seen in a sample response) |
+| `post.ext.playlist_owner_channel_id` | string\|null | (seen in a sample response) |
+| `post.ext.playlist_owner_title` | string\|null | (seen in a sample response) |
+| `post.ext.playlistId` | string\|null | (seen in a sample response) |
+| `post.ext.position` | number\|null | (seen in a sample response) |
+| `post.ext.post_type` | string\|null | (seen in a sample response) |
+| `post.ext.published_at_epoch` | number\|null | Raw Unix epoch for `published_at` (seconds, or milliseconds when the upstream sent millis). Present only when the upstream sent a numeric epoch that was normalised to the ISO 8601 `published_at` string. Kept for one deprecation cycle for integrations pinned to the numeric form. (seen in a sample response) |
 | `post.ext.published_at_precision` | string\|null |  |
+| `post.ext.published_label` | string\|null | (seen in a sample response) |
+| `post.ext.published_precision` | string\|null | (seen in a sample response) |
 | `post.ext.quote_count` | number\|null |  |
 | `post.ext.reaction_counts` | array\|null |  |
 | `post.ext.reaction_type` | string\|null |  |
 | `post.ext.region` | string\|null | TikTok only: the country TikTok registers the video to, as an ISO 3166-1 alpha-2 code (normally the creator's account country when they posted). It is not the viewer's country, not the `region` you requested, and not a language. On `/v1/tiktok/trending`, `/v1/tiktok/search` and `/v1/tiktok/search/top` it is how you tell which rows are from a given country: filter on it when you need only that country. The `region` request parameter still only sets the proxy. |
+| `post.ext.remix_count` | number\|null | (seen in a sample response) |
 | `post.ext.reshare_count` | number\|null |  |
+| `post.ext.retweeted_post.author.display_name` | string\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.author.id` | string\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.author.username` | string\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.author.verified` | boolean\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.engagement.comments` | number\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.engagement.likes` | number\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.engagement.saves` | number\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.engagement.shares` | number\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.engagement.views` | number\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.id` | string\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.media_urls` | array\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.published_at` | string\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.quote_count` | number\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.text` | string\|null | (seen in a sample response) |
+| `post.ext.retweeted_post.url` | string\|null | (seen in a sample response) |
 | `post.ext.selftext` | string\|null |  |
+| `post.ext.share_urn` | string\|null | (seen in a sample response) |
 | `post.ext.subreddit` | string\|null | Reddit subreddit name (search/list items): pass to `/v1/reddit/subreddit/details?subreddit=` |
 | `post.ext.tags` | array\|null |  |
 | `post.ext.title` | string\|null |  |
 | `post.ext.topic_tag` | string\|null |  |
 | `post.ext.topic_tag_id` | string\|null |  |
+| `post.ext.topicCategories` | array\|null | (seen in a sample response) |
 | `post.ext.trend.boards` | unknown\|null |  |
 | `post.ext.trend.chart` | unknown |  |
 | `post.ext.trend.chart_title` | unknown\|null |  |
@@ -159,10 +211,14 @@ Every field the 106 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.trend.top_creators` | unknown\|null |  |
 | `post.ext.trend.updated_at` | unknown\|null |  |
 | `post.ext.trend.views` | unknown\|null |  |
+| `post.ext.type` | string\|null | (seen in a sample response) |
 | `post.ext.updated_at` | string\|null |  |
 | `post.ext.upvote_ratio` | number\|null | Reddit only: the share of a post's votes that are upvotes, as a fraction from 0 to 1 and usually close to 1 (six live rows measured 1, 1, 1, 0.86, 0.75, 1). Fractional despite the integer type this schema emits for every numeric leaf, the same caveat as `author.ext.average_rating`. Populated on `/v1/reddit/search` rows whose source carries it, and null everywhere else on Reddit including `/v1/reddit/post` and `/v1/reddit/subreddit`. |
 | `post.ext.video_count` | number\|null |  |
+| `post.ext.videoOwnerChannelId` | string\|null | (seen in a sample response) |
+| `post.ext.videoPublishedAt` | string\|null | (seen in a sample response) |
 | `post.flags.deleted` | boolean | Whether the post is tombstoned (always present) |
+| `post.flags.likes_hidden` | boolean\|null | Present and `true` when the creator has hidden the like count. `engagement.likes` is `null` in that case (never the platform's decoy preview number). Absent on normal posts. (seen in a sample response) |
 | `post.flags.nsfw` | boolean\|null | NSFW flag (null when platform does not surface) |
 | `post.flags.pinned` | boolean\|null | Pinned-to-profile flag (null when platform does not surface) (with `include=engagement` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `post.flags.spoiler` | boolean\|null | Spoiler flag (null when platform does not surface) |
