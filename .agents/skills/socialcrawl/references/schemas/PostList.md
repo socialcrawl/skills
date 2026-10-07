@@ -165,7 +165,7 @@ Every field the 106 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.quote_count` | number\|null |  |
 | `post.ext.reaction_counts` | array\|null |  |
 | `post.ext.reaction_type` | string\|null |  |
-| `post.ext.region` | string\|null | TikTok only: the country TikTok registers the video to, as an ISO 3166-1 alpha-2 code (normally the creator's account country when they posted). It is not the viewer's country, not the `region` you requested, and not a language. On `/v1/tiktok/trending`, `/v1/tiktok/search` and `/v1/tiktok/search/top` it is how you tell which rows are from a given country: filter on it when you need only that country. The `region` request parameter still only sets the proxy. |
+| `post.ext.region` | string\|null | TikTok only: the country TikTok registers the video to, as an ISO 3166-1 alpha-2 code (normally the creator's account country when they posted). It is not the viewer's country, not the `region` you requested, and not a language. On `/v1/tiktok/trending`, `/v1/tiktok/search`, `/v1/tiktok/search/top`, `/v1/tiktok/profile/videos` and `/v1/tiktok/search/hashtag` it is how you tell which rows are from a given country: filter on it when you need only that country. A row whose source omits the country stays null. The `region` request parameter still only sets the proxy. |
 | `post.ext.remix_count` | number\|null | (seen in a sample response) |
 | `post.ext.reshare_count` | number\|null |  |
 | `post.ext.retweeted_post.author.display_name` | string\|null | (seen in a sample response) |

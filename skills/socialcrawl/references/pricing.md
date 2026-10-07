@@ -1,6 +1,6 @@
 # SocialCrawl Pricing Reference
 
-Complete per-endpoint credit pricing for all 645 active endpoints across 68 platforms. Auto-derived from the live endpoint registry - the same registry the router uses to charge your balance.
+Complete per-endpoint credit pricing for all 646 active endpoints across 68 platforms. Auto-derived from the live endpoint registry - the same registry the router uses to charge your balance.
 
 ## How billing works
 
@@ -23,9 +23,9 @@ Most endpoints sit on a simple 1 / 5 / 10 ladder. A set of bundle and fan-out en
 | standard | 1 credit | 244 | Profiles, posts, comments, search, reference data |
 | advanced | 5 credits | 166 | Ad libraries, trending, audience analytics, app/product/business/place reviews, retail catalogs, LinkedIn social graph + jobs |
 | premium | 10 credits | 25 | Video transcripts, LinkedIn people/job search + reactions, app-listings search |
-| **custom (flat/metered)** | **varies (0-10000)** | 210 | Prism composites, `{platform}/profile/full`, `search/everywhere` (20), `search/forums` (10), `search/news` (2-62 metered), `naver/brief` (10), the free `/v1/utility/*` endpoints, web scrape/crawl/agent/sessions |
+| **custom (flat/metered)** | **varies (0-10005)** | 211 | Prism composites, `{platform}/profile/full`, `search/everywhere` (20), `search/forums` (10), `search/news` (2-62 metered), `naver/brief` (10), the free `/v1/utility/*` endpoints, web scrape/crawl/agent/sessions |
 
-Two groupings, both totalling 645: the table above counts endpoints **by pricing rule** (a custom override is its own row); counted instead **by base tier** (custom endpoints folded back into the ladder tier they sit on) the split is **359 standard · 240 advanced · 46 premium = 645**. Exact per-endpoint costs are in the tables below.
+Two groupings, both totalling 646: the table above counts endpoints **by pricing rule** (a custom override is its own row); counted instead **by base tier** (custom endpoints folded back into the ladder tier they sit on) the split is **360 standard · 240 advanced · 46 premium = 646**. Exact per-endpoint costs are in the tables below.
 
 ## Credit packs
 
@@ -90,7 +90,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 
 ## Metered and custom-priced endpoints
 
-143 endpoints do not charge a flat ladder price. Each one holds an upfront ceiling and refunds the unused portion, so the response `credits_used` is always the real charge. Quote the RANGE to a user before calling, then report the actual charge afterwards.
+144 endpoints do not charge a flat ladder price. Each one holds an upfront ceiling and refunds the unused portion, so the response `credits_used` is always the real charge. Quote the RANGE to a user before calling, then report the actual charge afterwards.
 
 | Endpoint | Range | How it is charged |
 |----------|-------|-------------------|
@@ -206,6 +206,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/tripadvisor/restaurant/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/tripadvisor/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/trustpilot/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `POST /v1/trustpilot/reviews/history` | 6-10005 credits | 1 credit per returned review, plus 5 credits to open. Submitting holds depth plus 5 credits and refunds the unused portion when the job settles. |
 | `GET /v1/twitter/search/tweets` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, each page walked is billed at this price (a cached page is free). With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/twitter/tweet/replies` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/twitter/user/tweets` | 1-5 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
@@ -1032,12 +1033,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/tripadvisor/reviews` | GET | Get TripAdvisor reviews for a place | 1-5 (metered) | standard | 300s |
 | `/v1/tripadvisor/search` | GET | Search TripAdvisor businesses & places | 1 | standard | 120s |
 
-### Trustpilot (2)
+### Trustpilot (3)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/trustpilot/business-search` | GET | Search Trustpilot businesses | 1 | standard | 120s |
 | `/v1/trustpilot/reviews` | GET | Get Trustpilot reviews for a business | 5-9 (metered) | advanced | 300s |
+| `/v1/trustpilot/reviews/history` | POST | Start a Trustpilot review history job | 6-10005 (metered) | custom | none |
 
 ### Truth Social (3)
 

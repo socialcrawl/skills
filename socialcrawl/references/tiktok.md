@@ -274,7 +274,7 @@ Returns public videos created with a TikTok effect, with full engagement counts 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted, pinned}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, music_id, region}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -409,7 +409,7 @@ Returns public videos tagged at a TikTok place, twenty per page, with full engag
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 
-+19 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count}; `post.flags` {deleted, pinned}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, region}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/song` (`clipId` ← `data.items[].post.ext.music_id`) - Get TikTok song details. · `tiktok/profile/full` (`handle` ← `data.items[].post.author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -449,7 +449,7 @@ Returns the videos inside one of a creator's profile playlists, in playlist orde
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++21 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id, region} (+2 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -703,7 +703,7 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/profile/region" \
 
 ## GET /v1/tiktok/profile/videos - 1-5 credits (request-shaped)
 
-Returns a paginated list of recent public videos posted by a TikTok user. Each video includes view count, like count, comment count, share count, caption, and thumbnail URL. Profiles with TikTok 'audience controls' enabled (a login/age wall in the browser) are supported when looked up by `handle`; page-1 order on those gated accounts may follow recency rather than pinned-first.
+Returns a paginated list of recent public videos posted by a TikTok user. Each video includes view count, like count, comment count, share count, caption, and thumbnail URL. `post.ext.region` is the ISO 3166-1 alpha-2 country TikTok registers that video to, normally the creator's account country when they posted. It is not the viewer's country, and a video with no registered country has it null. The creator's account country on its own is `author.location` from `/v1/tiktok/profile`. Profiles with TikTok 'audience controls' enabled (a login/age wall in the browser) are supported when looked up by `handle`; page-1 order on those gated accounts may follow recency rather than pinned-first.
 
 **Use when** you want to list what one account has posted and page through it. Results come back in the source order, so sort_by does not reorder them. To find videos from many accounts by keyword, use search.
 **Cost** price moves with `label` · cache 600 s · multi-source (billed once)
@@ -716,7 +716,7 @@ Returns a paginated list of recent public videos posted by a TikTok user. Each v
 - `user_id` (optional, string) - TikTok user id. Use this for faster responses.
 - `sort_by` (optional, enum: latest | popular) - Accepted for compatibility and ignored on this endpoint: neither `latest` nor `popular` reorders the page. Videos come back in the source's own order, described above. To rank a creator's videos by views or likes, page through with `max_cursor` and sort the collected rows yourself.
 - `max_cursor` (optional, string) - Cursor to get more videos. Get 'max_cursor' from previous response.
-- `region` (optional, string) - Region (Country) you want the proxy in. Defaults to US.
+- `region` (optional, string) - Region (Country) you want the proxy in. Defaults to US. It does not filter the videos. The country TikTok registers each video to is post.ext.region.
 - `trim` (optional, boolean) - Accepted for compatibility; the response is already the canonical shape, so this flag has no effect.
 - `format` (optional, enum: stationery) - Optional. stationery files each video into wedding, birthday, birth, sympathy, seasonal greeting, or leaves it ungrouped. data.format_buckets gives the counts, the ungrouped share, and a by-day count when the page spans more than one day. A null save count stays null. brief= skips the walk when the page is not about that subject. No extra credits.
 - `brief` (optional, string) - Optional, with format=stationery. The subject these videos should be about. When the page is not about it, data.format_buckets.skip_creator is true and the videos are not filed.
@@ -737,7 +737,7 @@ Returns a paginated list of recent public videos posted by a TikTok user. Each v
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+28 more (types in the full schema): `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {pinned}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language} (+9 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.format_buckets`, `data.held_back`, `data.labels`.
++29 more (types in the full schema): `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {pinned}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language} (+10 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.estimate`, `data.format_buckets`, `data.held_back`, `data.labels`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/post/comments` (`url` ← `data.items[].post.url`) - List TikTok post comments. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -792,7 +792,7 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/search" \
 
 ## GET /v1/tiktok/search/hashtag - 1-5 credits (request-shaped)
 
-Searches TikTok for videos under a specific hashtag. Returns matching videos with engagement metrics and author info.
+Searches TikTok for videos under a specific hashtag. Returns matching videos with engagement metrics and author info. `post.ext.region` is the ISO country TikTok registers each video to, when the source sends one.
 
 **Use when** you want to track one tag such as a campaign or challenge; use search when you want a free text keyword rather than a tag.
 **Cost** price moves with `label` · cache 120 s · multi-source (billed once)
@@ -818,7 +818,7 @@ Searches TikTok for videos under a specific hashtag. Returns matching videos wit
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 
-+26 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes} (+7 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
++27 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes} (+8 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/profile` (`handle` ← `data.items[].post.author.username`) - The creator's profile: followers, likes and bio. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/profile/videos` (`handle` ← `data.items[].post.author.username`) - List TikTok user videos.
 
@@ -1235,7 +1235,7 @@ Returns the videos a given TikTok account has liked, newest first, thirty per pa
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted, pinned}. Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, music_id, region}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 

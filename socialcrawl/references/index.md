@@ -1,6 +1,6 @@
 # SocialCrawl Reference Index
 
-Built from **68 platforms, 645 endpoints** - the Freshness Check in SKILL.md compares the live `data.stats` against these totals. Pick the platform row, open its file, read the TOC at the top, then only the section you need.
+Built from **68 platforms, 646 endpoints** - the Freshness Check in SKILL.md compares the live `data.stats` against these totals. Pick the platform row, open its file, read the TOC at the top, then only the section you need.
 
 ## Platforms
 
@@ -55,7 +55,7 @@ Built from **68 platforms, 645 endpoints** - the Freshness Check in SKILL.md com
 
 | Platform | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| Trustpilot | 2 | GET | [trustpilot.md](trustpilot.md) |
+| Trustpilot | 3 | GET/POST | [trustpilot.md](trustpilot.md) |
 | G2 (software products + reviews) | 7 | GET | [g2.md](g2.md) |
 | Tripadvisor | 16 | GET | [tripadvisor.md](tripadvisor.md) |
 | Yelp (businesses, reviews, search) | 5 | GET | [yelp.md](yelp.md) |
@@ -119,7 +119,7 @@ Built from **68 platforms, 645 endpoints** - the Freshness Check in SKILL.md com
 |----------|-----------|---------|-----------|
 | Economy | 5 | GET | [economy.md](economy.md) |
 
-Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 645 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
+Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 646 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
 
 **Withdrawn platforms:** SoundCloud is registered but soft-disabled - every endpoint returns `503 SERVICE_UNAVAILABLE` and never bills, pending a re-source. Say withdrawn, not unsupported.
 
@@ -699,6 +699,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET tripadvisor/search: businesses places matching keyword location name category star rating total review count url path
 - GET trustpilot/business-search: businesses matching keyword company name domain website review url total count find reviews matches ratings
 - GET trustpilot/reviews: business customer domain star rating title text language reviewer company replies publish date opinions ratings
+- POST trustpilot/reviews/history: start review job starts background collects depth business domain right away holding plus credits ratings
 - GET truthsocial/post: truth social details text retruth reply counts media attachments author creation time url whole
 - GET truthsocial/profile: truth social user account public display name bio follower following counts count image url
 - GET truthsocial/user/posts: truth social recent truths text retruth reply counts media attachments creation time account feed

@@ -5,7 +5,7 @@
 **Give your AI agent access to 67 social, commerce + research platforms through a single API**
 
 [![Platforms](https://img.shields.io/badge/Platforms-68-blue?style=flat-square)](https://socialcrawl.dev)
-[![Endpoints](https://img.shields.io/badge/Endpoints-645-green?style=flat-square)](https://socialcrawl.dev/docs)
+[![Endpoints](https://img.shields.io/badge/Endpoints-646-green?style=flat-square)](https://socialcrawl.dev/docs)
 [![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
 [![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
@@ -18,7 +18,7 @@
 
 ## Overview
 
-`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social, commerce, and research data — profiles, posts, comments, search results, transcripts, ad libraries, product/app/business reviews, places & hotels, prediction markets, news, finance quotes, AI-grounded answers, job listings and salary bands, market quotes and financial statements, congressional trading disclosures, a universal cross-platform search, cross-platform **Prism** composites, scheduled **Monitors**, and audience-filtered **Cohorts** — from 68 platforms (645 endpoints) using the [SocialCrawl API](https://socialcrawl.dev).
+`@socialcrawl` is a skill for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and [40+ more](https://skills.sh)) that lets your agent fetch live social, commerce, and research data — profiles, posts, comments, search results, transcripts, ad libraries, product/app/business reviews, places & hotels, prediction markets, news, finance quotes, AI-grounded answers, job listings and salary bands, market quotes and financial statements, congressional trading disclosures, a universal cross-platform search, cross-platform **Prism** composites, scheduled **Monitors**, and audience-filtered **Cohorts** — from 68 platforms (646 endpoints) using the [SocialCrawl API](https://socialcrawl.dev).
 
 One API key. One consistent response format. Every platform. Every response is wrapped in a unified envelope with transparent credit accounting. Social archetypes (`Author`, `Post`, `Comment`) go through per-platform **field maps** that normalize dozens of quirky upstream shapes into a single schema — plus four computed fields (`engagement_rate`, `language`, `content_category`, `estimated_reach`) that most data APIs don't give you. Commerce, review, place, and app-store endpoints share first-class canonical `Product` / `Review` / `Seller` / `Place` / `App` schemas.
 
@@ -31,7 +31,7 @@ One API key. One consistent response format. Every platform. Every response is w
 - Generates working code snippets that call the SocialCrawl API
 - Answers questions about endpoints, parameters, and capabilities
 - Scrapes, crawls, and monitors arbitrary web pages, and drives interactive browser sessions (`/v1/web/*`)
-- Gives exact per-endpoint pricing for all 645 endpoints — cost, tier, cache TTL, and the full rule behind every metered endpoint (bundled pricing reference)
+- Gives exact per-endpoint pricing for all 646 endpoints — cost, tier, cache TTL, and the full rule behind every metered endpoint (bundled pricing reference)
 - Quotes the cost before spending your credits, and reports the real charge afterwards
 - Checks your credit balance
 
@@ -261,7 +261,7 @@ Every response follows a unified envelope:
 | **Polymarket** | 1 | Prediction-market research — multi-query fan-out + ranking |
 | **Product Hunt** | 1 | The public launches feed (~50 launches), optionally by topic |
 
-**Total: 645 endpoints across 68 platforms** — plus two stateful families that are not counted in the endpoint total: **Monitors** (`/v1/monitors/*`, scheduled recipe runs with webhook delivery) and **Cohorts** (`/v1/cohorts/*`, audience-filtered mention search over a panel you upload).
+**Total: 646 endpoints across 68 platforms** — plus two stateful families that are not counted in the endpoint total: **Monitors** (`/v1/monitors/*`, scheduled recipe runs with webhook delivery) and **Cohorts** (`/v1/cohorts/*`, audience-filtered mention search over a panel you upload).
 
 ## Credit System
 
@@ -308,7 +308,7 @@ socialcrawl/
 └── references/
     ├── api-overview.md    # Auth, response envelope, unified schemas, pagination, caching, idempotency, errors
     ├── cost-gate.md       # Mandatory request-level pricing formulas and preflight format
-    ├── pricing.md         # Exact credit cost for every one of the 645 endpoints + credit packs
+    ├── pricing.md         # Exact credit cost for every one of the 646 endpoints + credit packs
     ├── prism.md           # Cross-platform Prism composite recipes (/v1/prism/*)
     ├── monitors.md        # Scheduled recipe runs + webhook delivery (/v1/monitors/*)
     ├── cohorts.md         # Audience-filtered mention search over a panel you upload (/v1/cohorts/*)
