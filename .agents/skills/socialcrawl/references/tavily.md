@@ -107,10 +107,10 @@ curl -G "https://www.socialcrawl.dev/v1/tavily/map" \
 
 ## GET /v1/tavily/search - 1 credit (standard)
 
-Runs a web search via Tavily and returns ranked results plus an optional LLM-generated `answer` synthesised from the top sources. Set `include_answer=true` to enable answer synthesis. Use `search_depth=advanced` for higher-relevance results (also unlocks `chunks_per_source`). Filter results to specific domains via `include_domains` (comma-separated), or exclude via `exclude_domains`. Time-bounded queries via `time_range` (`d` / `w` / `m` / `y`) or explicit `start_date` / `end_date` (YYYY-MM-DD).
+Runs a web search via Tavily and returns ranked results plus an optional LLM-generated `answer` synthesised from the top sources. Set `include_answer=true` to enable answer synthesis. Use `search_depth=advanced` for higher-relevance results (also unlocks `chunks_per_source`). Filter results to specific domains via `include_domains` (comma-separated), or exclude via `exclude_domains`. Time-bounded queries via `time_range` (`d` / `w` / `m` / `y`) or explicit `start_date` / `end_date` (YYYY-MM-DD). When Tavily cannot answer, a second web index serves the call in the same shape at the same price: its results carry `score: null`, and it does not serve `include_answer`, `include_raw_content`, `include_images` or `topic=finance`.
 
 **Use when** you want search results you can narrow by domain, date, or topic, with a short written answer alongside them if you ask for one.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Paging** none
 
 **Query params**

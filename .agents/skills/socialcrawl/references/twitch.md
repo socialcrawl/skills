@@ -29,7 +29,7 @@ Returns detailed information about a specific Twitch clip including the title, v
 
 **Query params**
 
-- `url` (required) - Full URL of the Twitch clip · e.g. `https://www.twitch.tv/ninja/clip/ExampleClipSlug`
+- `url` (required) - Full URL of the Twitch clip · e.g. `https://www.twitch.tv/ninja/clip/BeautifulSolidYamOSkomodo-NXBFNORy-qFIXZ9R`
 
 **Response** `Post` object at `data`, `{ computed, post }` ([full schema](schemas/Post.md))
 
@@ -42,11 +42,11 @@ Returns detailed information about a specific Twitch clip including the title, v
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+14 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
++15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitch/clip" \
-  --data-urlencode "url=https://www.twitch.tv/ninja/clip/ExampleClipSlug" \
+  --data-urlencode "url=https://www.twitch.tv/ninja/clip/BeautifulSolidYamOSkomodo-NXBFNORy-qFIXZ9R" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
@@ -73,7 +73,7 @@ Returns public profile information for a Twitch streamer including display name,
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
++12 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}.
 
 **Next** `twitch/user/videos` (`handle` ← `data.author.username`) - List a Twitch user's videos.
 
@@ -116,6 +116,8 @@ Fetches up to 100 videos for a Twitch user: id, slug, URL, embed URL, title, vie
 - `handle` (required) - Twitch username. · e.g. `ishowspeed`
 - `filter_by` (optional, enum: HIGHLIGHT | UPLOAD) - Filter the returned videos by type: `HIGHLIGHT` or `UPLOAD`. (Archived past broadcasts are not currently available upstream.)
 - `sort_by` (optional, enum: TIME | VIEWS) - Sort order: `TIME` (newest first) or `VIEWS`.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -128,7 +130,7 @@ Fetches up to 100 videos for a Twitch user: id, slug, URL, embed URL, title, vie
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+10 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/twitch/user/videos" \

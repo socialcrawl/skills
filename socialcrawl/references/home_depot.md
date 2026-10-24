@@ -70,7 +70,15 @@ Returns the ten most relevant written customer reviews for a Home Depot product,
 **Query params**
 
 - `item_id` (required) - Home Depot internet number (item id), the numeric id at the end of a homedepot.com product URL: homedepot.com/p/<name>/326680222 is item id 326680222. Pass url instead if you would rather hand over the whole product URL. · e.g. `326680222`
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -97,7 +105,7 @@ Returns Home Depot products matching a keyword, 24 per page, each with its item 
 
 **Use when** you want to turn a keyword into item ids. Pass store_id when the price and stock have to match one store; get that id from the stores endpoint.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** page (native `page`) · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 5 credits
+**Paging** page (native `page`) · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 5 credits · typical 2.0-9.4 s
 
 **Query params**
 

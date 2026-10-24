@@ -41,7 +41,7 @@ Returns buyer questions for a Kohl's product, 10 per page by default, each with 
 
 **Use when** you already have a product id from search and want the Q&A thread. Paginate with cursor. A missing product returns an empty list.
 **Cost** cache 300 s
-**Paging** page (native `page`) · ≈10/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 5 credits
+**Paging** page (native `page`) · ≈10/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 5 credits · typical 0.6-0.8 s
 
 **Query params**
 
@@ -69,7 +69,7 @@ Returns written customer reviews for a Kohl's product, 8 per page by default, ea
 **Use when** you already have a product id from search and want the review corpus. Paginate with cursor. A missing product returns an empty list.
 **Cost** price moves with `label` · cache 300 s
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 1.4-1.6 s
 
 **Query params**
 
@@ -77,11 +77,16 @@ Returns written customer reviews for a Kohl's product, 8 per page by default, ea
 - `url` (optional, string) - Kohl's product page URL, for example https://www.kohls.com/product/prd-1695762/gloria-vanderbilt-amanda-tapered-jeans-womens.jsp. The product id is parsed from prd-{id}.
 - `page` (optional, integer, min 1) - Page number, starting at 1. Prefer the universal cursor parameter.
 - `limit` (optional, integer, 1-50) - Reviews per page, 1 to 50. Default 8.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
 
 **Constraints**
 
 - Provide at least one of `product_id`, `url`.
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -108,7 +113,7 @@ Returns one page of Kohl's products for a keyword, 12 per page by default, each 
 
 **Use when** you want to search the Kohl's catalogue by keyword. Paginate with cursor until a short page. There is no product-detail endpoint; feed a product id into reviews or questions.
 **Cost** cache 120 s
-**Paging** page (native `page`) · 12/page by default, max 48; set with `limit` · depth unknown · N items ≈ ceil(N/12) x 5 credits
+**Paging** page (native `page`) · 12/page by default, max 48; set with `limit` · depth unknown · N items ≈ ceil(N/12) x 5 credits · typical 2.3-2.9 s
 
 **Query params**
 

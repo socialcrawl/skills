@@ -48,7 +48,7 @@ Returns full metadata for an issue or PR (title, body, author, labels, state, re
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.engagement` {comments, likes}; `post.flags` {deleted}.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.engagement` {comments, likes}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/issue" \
@@ -62,7 +62,7 @@ Returns comments under `data.items[]`: each entry includes `id`, `user.login`, `
 
 **Use when** you want to read the discussion thread on one issue or pull request rather than the item itself.
 **Cost** cache 300 s
-**Paging** page (native `page`) · ≈4/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/4) x 1 credits
+**Paging** page (native `page`) · ≈4/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/4) x 1 credits · typical 0.4-1.1 s
 
 **Query params**
 
@@ -113,7 +113,7 @@ Returns public profile information for a GitHub user (login, name, avatar, bio, 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
++12 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}.
 
 **Next** `github/profile/repos` (`handle` ← `data.author.username`) - The account's repositories.
 
@@ -129,7 +129,7 @@ Returns the public repositories owned by the user under `data.items[]`: each ent
 
 **Use when** you want to list everything a user has published. For one repository in more detail, call the repo endpoint.
 **Cost** cache 900 s
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 0.3-0.5 s
 
 **Query params**
 
@@ -139,6 +139,8 @@ Returns the public repositories owned by the user under `data.items[]`: each ent
 - `direction` (optional, enum: asc | desc) - `asc` or `desc`. Defaults to `asc` for full_name, `desc` otherwise.
 - `per_page` (optional, integer) - Repos per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number for pagination.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -151,7 +153,7 @@ Returns the public repositories owned by the user under `data.items[]`: each ent
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/profile/repos" \
@@ -182,7 +184,7 @@ Returns repository metadata (full_name, description, stars, forks, open issues, 
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}.
++12 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo" \
@@ -216,7 +218,7 @@ Returns issues for the repository under `data.items[]`. NOTE: GitHub treats pull
 
 **Use when** you want to list or filter one project's issues by state, label, or date. Keep only issues or only pull requests with the type filter.
 **Cost** cache 600 s
-**Paging** page (native `page`) · ≈30/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/30) x 1 credits
+**Paging** page (native `page`) · ≈30/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/30) x 1 credits · typical 0.6-1.1 s
 
 **Query params**
 
@@ -241,7 +243,7 @@ Returns issues for the repository under `data.items[]`. NOTE: GitHub treats pull
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {type string}. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null} (+1 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/issues" \
@@ -272,7 +274,7 @@ Returns the repository's README in raw form (the file contents, not base64-wrapp
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+3 more (types in the full schema): `computed` {language}; `post.content` {media_urls}; `post.flags` {deleted}.
++4 more (types in the full schema): `computed` {language, save_rate}; `post.content` {media_urls}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/readme" \
@@ -286,13 +288,15 @@ Returns the most recent releases for the repository under `data.items[]`: each e
 
 **Use when** you want to track what a project has shipped and to read its release notes.
 **Cost** cache 600 s
-**Paging** page (native `page`) · ≈30/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/30) x 1 credits
+**Paging** page (native `page`) · ≈30/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/30) x 1 credits · typical 0.6-1.5 s
 
 **Query params**
 
 - `url` (required) - GitHub repo URL: `https://github.com/{owner}/{repo}`. · e.g. `https://github.com/facebook/react`
 - `per_page` (optional, integer) - Releases per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -305,7 +309,7 @@ Returns the most recent releases for the repository under `data.items[]`: each e
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+6 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {likes}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
++7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url}; `post.engagement` {likes}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {display_name null, verified null}; `post.engagement` {views null, comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/repo/releases" \
@@ -339,7 +343,7 @@ Searches issues and PRs across all of GitHub via the `/search/issues` endpoint. 
 
 **Use when** you want to find issues across many repositories at once. To list them inside a single repository, use the repo issues endpoint.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈30/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/30) x 1 credits
+**Paging** page (native `page`) · ≈30/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/30) x 1 credits · typical 1.8-2.5 s
 
 **Query params**
 
@@ -348,6 +352,8 @@ Searches issues and PRs across all of GitHub via the `/search/issues` endpoint. 
 - `order` (optional, enum: asc | desc) - `asc` or `desc`. Defaults to `desc`.
 - `per_page` (optional, integer) - Results per page (1-100). Defaults to 30.
 - `page` (optional, integer) - 1-indexed page number.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Constraints**
 
@@ -364,7 +370,7 @@ Searches issues and PRs across all of GitHub via the `/search/issues` endpoint. 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.ext` {type string}. Never filled: `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post.ext` {type string}. Never filled: `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/github/search" \

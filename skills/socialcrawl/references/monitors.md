@@ -2,9 +2,11 @@
 
 The stateful, scheduled wrapper around any SocialCrawl recipe. A monitor re-runs a registered GET endpoint or a Prism composite on a cadence, evaluates alert rules, optionally delivers each run to a signed webhook, and accumulates a per-run time-series you can read back or export. *"Prism answers once; monitors watch it for you."*
 
-Monitors are **not** registry endpoints. They live at `/v1/monitors/*`, use methods beyond GET (POST/PATCH/DELETE), and are **not** counted in the endpoint total quoted in `SKILL.md`. Auth is the same `x-api-key` header. Monitors belong to the **account**, not the key: every key on the account sees and manages all of them, and revoking the key that created a monitor does **not** stop it (it keeps running and billing on the account balance).
+Monitors are **not** registry endpoints. They live at `/v1/monitors/*`, use methods beyond GET (POST/PATCH/DELETE), and are **not** counted in the endpoint total quoted in `SKILL.md`. Auth is the same `x-api-key` header. Monitors belong to the **account**, not the key: every key on the account sees and manages all of them, and revoking the key that created a monitor does **not** stop it (it keeps running and billing on the account balance), except for the recipes whose platform calls run as that key (see [Billing](#billing)), whose runs then fail unbilled.
 
 **Do not confuse these with `/v1/web/monitors/*`.** That is a different, narrower family: it watches ONE web page for changes on a minute-level cadence and lives in [web.md](web.md). `/v1/monitors/*` (this file) schedules ANY registered GET endpoint or Prism composite, with a one-hour floor. If the user wants "watch this URL for changes", use the web one; if they want "track this brand / creator / product / sound over time", use this one.
+
+**`prism/discover` has its own scheduler, separate from this one.** `POST /v1/prism/discover` with a `schedule` object (`every`: 1h, 6h, 12h, 1d, 7d or 30d; `max_credits_per_run`; optional `max_credits_per_month`, `name`, `start_at`) re-runs that discovery request on its own, each run starting from the previous run's watermark so it delivers only rows not delivered before. It is managed at `/v1/prism/discover/schedules` (list, get with its latest runs and this month's spend, `POST .../{schedule_id}/pause`, `POST .../{schedule_id}/resume`, `DELETE`), every management call is free, and its events go to the account's registered webhook endpoints rather than a per-monitor `webhook_url`. Those schedules are capped by their own `max_credits_per_run` / `max_credits_per_month`, not by the monitor plan caps below. For a multi-platform topic watch with judged, de-duplicated rows, use it; for anything else, use a monitor. See the `prism/discover` section of [prism.md](prism.md).
 
 ## Two kinds of monitor
 
@@ -15,6 +17,7 @@ Monitors are **not** registry endpoints. They live at `/v1/monitors/*`, use meth
 | What a run stores | the whole body in `result` | only the tracked numbers (`numbers`) + `deltas`; `result` is always `null` |
 | Alert / delta paths | dot paths into the stored body (supplier field names for single-platform endpoints) | must be one of `track.metrics` |
 | `webhook_format: "rows"` | not allowed | allowed |
+| `webhook_rows: "new"` | not allowed | allowed (needs an `items[].` metric) |
 | `legs` on a run | the recipe's own `legs[]` (Prism composites), else `[]` | one entry naming the step that answered, `primary` or `fallback` |
 
 **Prefer `track`** whenever the goal is a number over time (followers, views, a sound's reel count). It reads unified paths (`author.followers`, `items[].post.engagement.views`, `total`), validates them at create for free, and never bills a run that recorded nothing.
@@ -22,8 +25,9 @@ Monitors are **not** registry endpoints. They live at `/v1/monitors/*`, use meth
 ## Billing
 
 - **Free:** create, list, get, runs, timeseries, export, pause/resume (PATCH), delete. None of these touch the balance.
-- **Each executed run:** the recipe's price for the monitor's frozen params **+ 1 credit** scheduling premium. The recipe price comes from the same pricer `/v1` uses (static tier, flat `cost`, or the metered price computed from the params), with `now-<N>d` tokens resolved first. Look the recipe price up in that endpoint's reference / [cost-gate.md](cost-gate.md). Examples: `instagram/audio/reels` (1) = **2 per run**; `search/everywhere` (20) = **21 per run**; `prism/reputation` (30) = **31 per run**.
+- **Each executed run:** the recipe's price for the monitor's frozen params **+ 1 credit** scheduling premium. The recipe price comes from the same pricer `/v1` uses (static tier, flat `cost`, or the metered price computed from the params), with `now-<N>d` / `now-<N>h` tokens resolved first. Look the recipe price up in that endpoint's reference / [cost-gate.md](cost-gate.md). Examples: `instagram/audio/reels` (1) = **2 per run**; `search/everywhere` (20) = **21 per run**; `prism/reputation` (30) = **31 per run**.
 - **`estimated_cost_per_run`** (create and GET responses) = that price + 1. **`estimated_monthly_cost`** = cost per run x runs/month: `hourly` 730, `daily` 30, `weekly` 4, cron = round(30 days / its shortest interval between firings, floored at 1 hour).
+- **Recipes whose platform calls bill themselves** (`search/multi`, `tiktokshop/sales`, `twitter/search/hashtag`, `facebook/search/hashtag`, `twitter/search/mentions`, `facebook/search/mentions`, `instagram/search/mentions` and `tiktok/search/mentions`): each run makes those platform calls **as the API key that created the monitor**, and each call bills its own page price (shown per call in `/v1/credits/transactions`) on top of the 1-credit premium. `estimated_cost_per_run` shows only the premium, so quote the recipe's own per-call price x platforms from its reference as well. If that key is revoked or expired, every run fails, unbilled, with a `skip_reason` saying so: recreate the monitor with a live key.
 - The run is charged upfront (cost + 1), then reconciled:
 
 | Run outcome | `status` | Charged |
@@ -69,12 +73,13 @@ Body (JSON). Unknown top-level keys are ignored; unknown keys inside `track` are
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `recipe` | string, 1-200 | yes | Endpoint path without `/v1/`, e.g. `tiktok/profile`, `instagram/audio/reels`, `prism/brand-mentions`, `search/everywhere`. Must be registered, not disabled, and **GET**. The POST batch endpoints (`prism/post-stats`, `prism/comment-lookup`, `prism/profiles`, `youtube/transcripts`, `youtube/videos`, `youtube/channels`) are refused. |
-| `params` | object | no (default `{}`) | The recipe's query params, frozen and replayed every run (values sent as strings). Required params and `oneOf` groups must be present. Validated at create with the **same checks `/v1/{recipe}` runs**: a value `/v1` would 400 is a free 400 here, nothing created. Pass a bare handle (`nasa`, not a profile URL). A value `now-<N>d` is resolved each run to the UTC date N days ago (`YYYY-MM-DD`), for rolling windows. |
+| `recipe` | string, 1-200 | yes | Endpoint path without `/v1/`, e.g. `tiktok/profile`, `instagram/audio/reels`, `prism/brand-mentions`, `search/everywhere`. Must be registered, not disabled, and **GET**. Any POST endpoint is refused (free 400): the batch reads (`prism/post-stats`, `prism/comment-lookup`, `prism/profiles`, `youtube/transcripts`, `youtube/videos`, `youtube/channels`), `prism/jobs`, `prism/discover/inputs` and `trustpilot/reviews/history`. For a recurring discover run use `POST /v1/prism/discover` with `schedule` instead. |
+| `params` | object | no (default `{}`) | The recipe's query params, frozen and replayed every run (values sent as strings). Required params and `oneOf` groups must be present. Validated at create with the **same checks `/v1/{recipe}` runs**: a value `/v1` would 400 is a free 400 here, nothing created. Pass a bare handle (`nasa`, not a profile URL). A value `now-<N>d` is resolved each run to the UTC date N days ago (`YYYY-MM-DD`), and `now-<N>h` to the ISO 8601 timestamp N hours before the run (for an hourly `since`, e.g. `prism/profile/comments` with `since=now-3h`), for rolling windows. |
 | `cadence` | `"hourly"` \| `"daily"` \| `"weekly"` \| `{ "cron": string }` | yes | See above. |
 | `webhook_url` | string, ≤2048 | yes, **unless `track` is set** | `https` only, public host (loopback, `localhost`, private 10/8, 172.16/12, 192.168/16, 169.254/16, 0/8, IPv6 `::1`/`fe80:`/`fc`/`fd` refused). |
 | `track` | object | no | Makes a numbers-only monitor. See [track](#track-numbers-only-monitors). |
 | `webhook_format` | `"full"` \| `"rows"` | no (default `"full"`) | `"rows"` requires `track`. Not allowed without `webhook_url`. |
+| `webhook_rows` | `"all"` \| `"new"` | no (default `"all"`) | `"new"` delivers only the list rows new since the previous run (see [Webhook delivery](#webhook-delivery)). Requires `track` with at least one `items[].` metric and a resolvable `row_key` (`search/everywhere` rows key themselves). Not allowed without `webhook_url`. Every tracked number is still stored. |
 | `webhook_secret` | string, 8-200 | no | Your own signing secret. Otherwise a `whsec_` + 48-hex secret is generated. Not allowed without `webhook_url`. |
 | `name` | string, 1-200 | no | Default `"<recipe> monitor"`. |
 | `alert_rules` | array | no (default `[]`) | `[{ "metric", "op", "value", "window"? }]`. See [Alert rules](#alert-rules). |
@@ -156,7 +161,7 @@ curl -X POST "https://www.socialcrawl.dev/v1/monitors" \
 | Field | Type | Notes |
 | --- | --- | --- |
 | `metrics` | string[], 1-20, each ≤200 chars | Paths to numbers on the unified page. Duplicates are dropped. |
-| `row_key` | string | Dot path inside a row to its stable id (no `items[]` prefix). Defaults to `post.id` (PostList), `comment.id` (CommentList), `author.id` (AuthorList). **Required** for any other list (e.g. `product.id` on a ProductList) and for `items[]` paths on Prism/meta composites. Must sit under the row's wrapper (`post.` on a PostList). |
+| `row_key` | string | Dot path inside a row to its stable id (no `items[]` prefix). Defaults to `post.id` (PostList), `comment.id` (CommentList), `author.id` (AuthorList). **Required** for any other list (e.g. `product.id` on a ProductList) and for `items[]` paths on most Prism/meta composites. Exceptions: `search/everywhere` rows default to `candidate_id` (the normalised URL), and a composite that returns a canonical list (e.g. `prism/profile/comments`, a CommentList) uses that list's default (`comment.id`). Must sit under the row's wrapper (`post.` on a PostList). |
 | `max_rows` | integer 1-200 | Rows kept per run, in page order. Default 100. |
 
 **Path syntax.** Segments are `[A-Za-z0-9_]`, at most 8, joined by `.`. No array indexes, no nested `[]`.
@@ -169,7 +174,7 @@ curl -X POST "https://www.socialcrawl.dev/v1/monitors" \
 - A string / boolean leaf: 400 "... is a boolean on <recipe> (...), not a number, so it cannot be tracked." (lists numeric siblings). An object: 400 naming a number inside it.
 - `items[]` on a single-object recipe (e.g. `tiktok/profile`): 400, use a dot path like `author.followers`.
 - `computed.relevance`, `computed.labels`, `computed.labels_evidence`: 400 (only filled by a live request's judge; a monitor would store null forever).
-- **Cannot be checked** (Prism / meta composites, pages with no canonical schema, or a path inside an object whose keys vary by source such as `ext.*`): accepted with a `warnings[]` entry. Such a path stores `null` on any run where it does not resolve, so verify the first run.
+- **Cannot be checked** (Prism / meta composites that return a page of their own, pages with no canonical schema, or a path inside an object whose keys vary by source such as `ext.*`): accepted with a `warnings[]` entry. Such a path stores `null` on any run where it does not resolve, so verify the first run. A composite returning a canonical list (such as `prism/profile/comments`) is checked like that list.
 
 **Stored per run** (`GET /runs?include=numbers`):
 
@@ -343,6 +348,8 @@ Sent only for `ok` and `partial` runs, only while the webhook is `active`, and n
 
 **`track` monitor, `webhook_format: "full"`:** same keys, but `result` is the unified canonical page (delivered, **never stored**), `deltas` is the per-row delta object (or `null` on the first run), plus `numbers` (what was stored).
 
+**`track` monitor, `webhook_rows: "new"`:** either format carries only the rows new since the previous run: `full` keeps the page's other keys and narrows `result.items`, `numbers` and `deltas` to the new rows; `rows` lists only their entries. The body adds `"webhook_rows": "new"`, and `"baseline": true` on the first run, which has no previous run and so no new rows. Pair it with a `rows_new` alert and `suppress_webhook_unless_alert: true` to be called only when something new appeared.
+
 **`track` monitor, `webhook_format: "rows"`:** flat rows for a spreadsheet:
 
 ```json
@@ -389,7 +396,7 @@ Monitors routes answer errors as `{ "error": { "type", "message" } }` (a body-va
 
 | Status | `type` | When |
 | --- | --- | --- |
-| 400 | `INVALID_REQUEST` | Invalid JSON; schema violation; unknown / disabled / non-GET recipe; missing required params ("Missing required parameter(s) for '<recipe>': handle."); a param `/v1` would refuse ("params for '<recipe>': ... The monitor was not created ..."); bad `track` path / `row_key`; alert metric not in `track.metrics`; `webhook_url` missing without `track`; `webhook_secret`/`webhook_format` without `webhook_url`; `rows` without `track`; webhook URL not https / not public / >2048; bad cadence (`INVALID_CRON: ...`, `INVALID_CADENCE: ...`); bad `include` / `status` / `limit` query ("Invalid query."); bad PATCH body; export date or format; legacy export with no numbers. All free. |
+| 400 | `INVALID_REQUEST` | Invalid JSON; schema violation; unknown / disabled / non-GET recipe; missing required params ("Missing required parameter(s) for '<recipe>': handle."); a param `/v1` would refuse ("params for '<recipe>': ... The monitor was not created ..."); bad `track` path / `row_key`; alert metric not in `track.metrics`; `webhook_url` missing without `track`; `webhook_secret`/`webhook_format`/`webhook_rows` without `webhook_url`; `rows` without `track`; `webhook_rows: "new"` without an `items[].` metric; webhook URL not https / not public / >2048; bad cadence (`INVALID_CRON: ...`, `INVALID_CADENCE: ...`); bad `include` / `status` / `limit` query ("Invalid query."); bad PATCH body; export date or format; legacy export with no numbers. All free. |
 | 403 | `MONITOR_LIMIT_REACHED` | Active-monitor cap reached for the plan. |
 | 404 | `RESOURCE_NOT_FOUND` | "Monitor not found." (missing or another account's). |
 | 401 / 429 / 503 | `MISSING_API_KEY`, `INVALID_API_KEY` / `CONCURRENCY_LIMIT` / `SERVICE_UNAVAILABLE` | Same `x-api-key` and concurrency middleware as `/v1` (standard `/v1` error envelope; honor `Retry-After` on 429). |
@@ -398,7 +405,7 @@ Monitors routes answer errors as `{ "error": { "type", "message" } }` (a body-va
 
 1. Pick the recipe and confirm its params with a normal `/v1` call first (that call costs credits; monitor create is free and also rejects bad params).
 2. Want numbers over time? Use `track`. Create returns 400 with "Did you mean" for a wrong path; fix and retry. Read `warnings[]`.
-3. Tell the user `estimated_cost_per_run` and `estimated_monthly_cost`, and that the first run is at `next_run_at` (daily = 24 h after create), not now.
+3. Tell the user `estimated_cost_per_run` and `estimated_monthly_cost`, and that the first run is at `next_run_at` (daily = 24 h after create), not now. Runs that record nothing (an error, an empty page, no tracked number) are refunded; an insufficient balance skips the slot at 0.
 4. After the first slot, check `GET /runs?include=numbers` (or `include=result`): a `failed` run's `skip_reason` says why, and `legs` shows which step answered.
 5. Webhook users: store `webhook_secret` from the create response immediately; verify every delivery; de-dupe on `run_id`.
 6. To stop spending: `PATCH {"status":"paused"}` or `DELETE` (DELETE erases history; export first).

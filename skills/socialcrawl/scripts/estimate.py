@@ -9,7 +9,12 @@ when that route answers 404 / is unreachable, it falls back to the offline catal
 (assets/endpoints.json) and says so: `source` is "api" or "offline", and an offline quote adds
 an `offline` warning. The hold is the most a call can cost; the unused part is refunded.
 
---items N quotes reading N rows from a paged endpoint (pages x price). plan.json is
+--items N quotes reading N rows from a paged endpoint (pages x price). Offline, a request that turns
+on an include= row join (the catalogue's `hydration[]`) is held at the base price plus that join's
+ceiling (rows x credits_per_row, rows capped by the row-cap param, default_rows or max_rows, and a
+batch join capped per lookup); joins left off are taken out of cost.max. A per_unit cost is quoted
+as rate x units when the request names its units (`urls`, `items`), never as exact; otherwise
+the hold is null and the formula states the rate. plan.json is
 {"calls": [{"id", "params"?, "body"?, "repeat"?, "items"?, "ref"?}], "fan_out"?}; an offline plan
 total is `exact: false` whenever a price is a range, a page size is unknown or fan_out is used.
 Prints JSON to stdout; exit 1 when the quote is invalid. A key is optional here.
@@ -71,6 +76,42 @@ def check(ep: dict, given: dict) -> str | None:
     return None
 
 
+UNIT_KEYS = ("urls", "items")
+
+
+def count_units(given: dict) -> int | None:
+    """How many units a per_unit request covers, when it names them in a list."""
+    for k in UNIT_KEYS:
+        v = given.get(k)
+        v = sclib.jsonish(v) if isinstance(v, str) else v
+        if isinstance(v, list):
+            return len(v)
+    return None
+
+
+def _credits(n) -> str:
+    return f"{n:g} credit{'' if n == 1 else 's'}"
+
+
+def quote_per_unit(cost: dict, given: dict) -> tuple[dict, list]:
+    unit = cost.get("unit") or "unit"
+    lo_rate, hi_rate = cost.get("min") or 0, cost.get("max")
+    rate = hi_rate if hi_rate is not None else lo_rate
+    n = count_units(given)
+    rule = cost.get("rule")
+    warnings = [f"per_unit: priced per {unit}, so the quote is not exact." + (f" Rule: {rule}" if rule else "")]
+    if n is None:
+        band = _credits(lo_rate) if hi_rate is None else f"{lo_rate:g}-{_credits(hi_rate)}"
+        formula = (f"Priced per {unit} (from {band} each): the total depends on how many {unit}s the request runs, "
+                   "so there is no fixed hold to quote.")
+        return {"hold": None, "expected_min": None, "expected_max": None, "exact": False, "formula": formula,
+                "units": {"unit": unit, "count": None, "rate": rate}}, warnings
+    lo, hi = lo_rate * n, rate * n
+    formula = f"{_credits(rate)} per {unit} x {n} = {_credits(hi)}" + ("." if lo == hi else f" (at least {_credits(lo)}).")
+    return {"hold": hi, "expected_min": lo, "expected_max": hi, "exact": False, "formula": formula,
+            "units": {"unit": unit, "count": n, "rate": rate}}, warnings
+
+
 def quote_call(cat: dict, call: dict, items: int | None = None) -> dict:
     endpoint_id = sclib.normalize_id(call["id"])
     method = (call.get("method") or "").upper() or None
@@ -90,11 +131,27 @@ def quote_call(cat: dict, call: dict, items: int | None = None) -> dict:
         return out
     cost = ep["cost"]
     paging = ep.get("paging")
-    metered = cost["model"] == "metered"
     out["pricing"] = cost["model"]
-    lo, hi, exact = cost["min"], cost["max"], not metered
+    if cost["model"] == "per_unit":
+        quote, warnings = quote_per_unit(cost, given)
+        out.update(quote)
+        out["warnings"] += warnings + [OFFLINE_WARNING]
+        return out
+    metered = cost["model"] != "flat"
+    lo, hi, exact = cost["min"], sclib.call_ceiling(ep, given), not metered
+    joins = sclib.joins_on(ep, given)
+    if joins:
+        out["hydration"] = [{"param": j.get("param") or "include", "token": j["token"], "rows": sclib.hydration_rows(j, given),
+                             "credits": sclib.hydration_credits(j, given)} for j in joins]
+    if hi is None:
+        out.update(hold=None, expected_min=lo, expected_max=None, exact=False,
+                   formula=f"At least {_credits(lo)}; the catalogue has no ceiling for this call.")
+        out["warnings"] += ["ceiling_unknown: the offline catalogue has no cost.max for this endpoint", OFFLINE_WARNING]
+        return out
     formula = f"{hi} credit{'s' if hi != 1 else ''} per call, flat." if not metered else (
         f"Metered: {hi} credits held up front (the most this request can cost); the unused part is refunded, so a successful call settles between {lo} and {hi}.")
+    if joins:
+        formula += " Includes " + ", ".join(f"include={j['token']} up to {_credits(sclib.hydration_credits(j, given))}" for j in joins) + "."
     n = items if items is not None else call.get("items")
     if n:
         if not paging:
@@ -113,8 +170,10 @@ def quote_call(cat: dict, call: dict, items: int | None = None) -> dict:
                 rows = min(n, pages * paging["page_size"])
                 lo = hi = rows * paging["credits_per_row"]
             else:
-                per = paging.get("credits_per_page") or {"min": cost["min"], "max": cost["max"]}
-                lo, hi = pages * per["min"], pages * (per["max"] if per.get("max") is not None else cost["max"])
+                per = paging.get("credits_per_page") or {"min": cost["min"], "max": hi}
+                # A join-bearing page is held at this request's ceiling, not at every join's.
+                per_max = hi if ep.get("hydration") or per.get("max") is None else per["max"]
+                lo, hi = pages * per["min"], pages * per_max
                 if basis == "unknown" or per.get("max") is None:
                     out["warnings"].append("price_basis_unknown: the per-page price of this endpoint is not proven, so the hold is the registry's ceiling per page.")
                     exact = False
@@ -133,16 +192,21 @@ def quote_plan(cat: dict, plan: dict) -> dict:
         q = quote_call(cat, c)
         runs = c.get("repeat") if isinstance(c.get("repeat"), int) and c["repeat"] > 0 else 1
         q["runs"] = runs
-        q["hold_total"] = q["hold"] * runs
-        q["expected_min_total"] = q["expected_min"] * runs
+        q["hold_total"] = q["hold"] * runs if q.get("hold") is not None else None
+        q["expected_min_total"] = (q.get("expected_min") or 0) * runs
         calls.append(q)
     warnings = [OFFLINE_WARNING]
-    exact = all(c.get("exact", False) for c in calls if c["valid"])
+    unpriced = [c["id"] for c in calls if c["valid"] and c["hold_total"] is None]
+    if unpriced:
+        warnings.append(f"unpriced: {', '.join(unpriced)} {'has' if len(unpriced) == 1 else 'have'} no fixed hold "
+                        "(a per_unit cost with no unit count, or no ceiling); the totals leave them out")
+    exact = all(c.get("exact", False) for c in calls if c["valid"]) and not unpriced
     if plan.get("fan_out"):
         warnings.append("fan_out_unknown: offline quotes do not expand fan_out; the total is a floor for those calls")
         exact = False
-    total = {"hold": sum(c["hold_total"] for c in calls), "expected_min": sum(c["expected_min_total"] for c in calls),
-             "expected_max": sum(c["hold_total"] for c in calls), "exact": exact and len(calls) > 0}
+    held = sum(c["hold_total"] for c in calls if c["hold_total"] is not None)
+    total = {"hold": held, "expected_min": sum(c["expected_min_total"] for c in calls),
+             "expected_max": held, "exact": exact and len(calls) > 0}
     return {"valid": all(c["valid"] for c in calls), "unit": "credits", "calls": calls, "total": total, "warnings": warnings, "source": "offline"}
 
 

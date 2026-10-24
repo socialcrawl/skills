@@ -55,7 +55,7 @@ Returns eBay listings matching a keyword, 60 per page on an active search, each 
 
 **Use when** you want to scan active or ended marketplace listings, then pull full detail by item id. Sold-comps search is temporarily unavailable.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈60/page (observed once) · depth unknown · N items ≈ ceil(N/60) x 5 credits
+**Paging** page (native `page`) · ≈60/page (observed once) · depth unknown · N items ≈ ceil(N/60) x 5 credits · typical 4.6-7.7 s
 
 **Query params**
 

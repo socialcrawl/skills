@@ -29,6 +29,8 @@ Returns the launches Product Hunt is currently featuring, roughly 50 of them, ea
 
 - `topic` (optional, string) - Product Hunt topic slug, as in producthunt.com/topics/<slug>, for example artificial-intelligence or developer-tools. A display name such as Developer Tools is converted to its slug. An unrecognised topic returns no launches, with a note in data._warnings, and costs nothing. · e.g. `artificial-intelligence`
 - `query` (optional, string) - Case-insensitive text filter applied to the product name and tagline of the current launches. It filters this feed; it does not search Product Hunt's archive.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -41,7 +43,7 @@ Returns the launches Product Hunt is currently featuring, roughly 50 of them, ea
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+6 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.flags` {deleted}; `post.ext` {title, updated_at}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
++7 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.flags` {deleted}; `post.ext` {title, updated_at}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/producthunt/launches" \

@@ -38,6 +38,9 @@ REQUIRED_FILES = (
     # code table every retry decision reads.
     "references/index.md",
     "references/errors.md",
+    "references/recipes.md",
+    "references/utility.md",
+    "references/search.md",
     "scripts/sc.py",
     "scripts/sclib.py",
     "scripts/paginate.py",
@@ -71,7 +74,9 @@ REQUIRED_FILES = (
 PRICING_INVARIANTS = {
     "references/prism.md": (
         "## POST /v1/prism/post-stats - 1-500 credits (request-shaped)",
-        "## POST /v1/prism/profiles - 1-250 credits (request-shaped)",
+        # 17/10/2026: include=comments raised the prism/profiles ceiling from
+        # 250 to 126,375 (50 handles x posts pages x comment pages).
+        "## POST /v1/prism/profiles - 1-126,375 credits (request-shaped)",
         "## POST /v1/prism/comment-lookup - 2-100 credits (request-shaped)",
         "2 on Instagram and 5 on LinkedIn",
     ),
@@ -88,10 +93,11 @@ PRICING_INVARIANTS = {
     "references/cost-gate.md": (
         "2 x 1 x 8 x 2 = 32 credits",
         "2 x 20 x 20 x 2 + 5 = 1,605",
+        "100 LinkedIn URLs hold 500 credits; 100 Instagram URLs hold 200",
     ),
     "references/pricing.md": (
         "`POST /v1/prism/post-stats` | 1-500 credits",
-        "`POST /v1/prism/profiles` | 1-250 credits",
+        "`POST /v1/prism/profiles` | 1-126,375 credits",
         "`POST /v1/prism/comment-lookup` | 2-100 credits",
         "`POST /v1/youtube/transcripts` | 3-300 credits",
         "1 credit per URL submitted",

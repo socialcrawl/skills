@@ -1,6 +1,6 @@
 # CommentList fields
 
-Every field the 24 field-mapped endpoints returning `CommentList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 25 field-mapped endpoints returning `CommentList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -15,6 +15,7 @@ Every field the 24 field-mapped endpoints returning `CommentList` can carry, wit
 | `comment.ext.author_following` | number\|null | The commenter's following count as embedded in this row. Same snapshot caveat as `author_followers`. |
 | `comment.ext.author_headline` | string\|null |  |
 | `comment.ext.author_id` | string\|null | The commenter's platform-native numeric user id, where the upstream exposes one. |
+| `comment.ext.author_location` | string\|null |  |
 | `comment.ext.author_posts_count` | number\|null | The commenter's post count as embedded in this row. Same snapshot caveat as `author_followers`. |
 | `comment.ext.author_url` | string\|null |  |
 | `comment.ext.content_language` | string\|null | ISO 639-1 language tag for this comment, when the source reports one. X writes `zxx` / `und` for no linguistic content; those collapse to null. |

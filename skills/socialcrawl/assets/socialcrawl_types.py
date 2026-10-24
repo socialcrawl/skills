@@ -25,6 +25,7 @@ class ApiErrorDetail(TypedDict, total=False):
     status: int
     doc_url: str
     retryable: bool
+    # Structured context: next_step says what to do next; a missing one-of group is named in fields.
     details: Dict[str, Any]
 
 
@@ -36,6 +37,11 @@ class ApiErrorBody(TypedDict, total=False):
     request_id: str
 
 
+class AuthorExtBioLinksItem(TypedDict, total=False):
+    title: Optional[str]
+    url: Optional[str]
+    link_type: Optional[str]
+
 class AuthorExtEmployeeCountRange(TypedDict, total=False):
     start: Optional[int]
     end: Optional[int]
@@ -45,6 +51,7 @@ class AuthorExtSearchHit(TypedDict, total=False):
     title: Optional[str]
     snippet: Optional[str]
     evidence_url: Optional[str]
+    matched_urls: Optional[List[str]]
 
 class AuthorExt(TypedDict, total=False):
     social_context: Optional[str]
@@ -52,12 +59,18 @@ class AuthorExt(TypedDict, total=False):
     country: Optional[str]
     collects_received: Optional[int]
     former_usernames: Optional[List[str]]
+    former_usernames_count: Optional[int]
+    verified_at: Optional[str]
     public_email: Optional[str]
     contact_email: Optional[str]
     public_phone: Optional[str]
     similar_source: Optional[str]
     instagram_username: Optional[str]
+    similar_via: Optional[str]
     business_category: Optional[str]
+    bio_links: Optional[List[AuthorExtBioLinksItem]]
+    is_business: Optional[bool]
+    fbid: Optional[str]
     hd_avatar_url: Optional[str]
     website: Optional[str]
     cover_url: Optional[str]
@@ -91,6 +104,7 @@ class AuthorExt(TypedDict, total=False):
     company_id: Optional[str]
     reaction_type: Optional[str]
     followers_approximate: Optional[bool]
+    counts_source: Optional[str]
     keywords: Optional[str]
     total_views: Optional[int]
     joined_at_timestamp: Optional[str]
@@ -121,8 +135,17 @@ class AuthorExt(TypedDict, total=False):
     profile_title: Optional[str]
     social_links: Optional[List[str]]
     bio_link: Optional[str]
+    embed_html: Optional[str]
+    embed_url: Optional[str]
     group: Optional[str]
     search_hit: Optional[AuthorExtSearchHit]
+    blog_name: Optional[str]
+    blog_no: Optional[str]
+    visitors_today: Optional[int]
+    visitors_total: Optional[int]
+    topic: Optional[str]
+    power_blog: Optional[bool]
+    official_blog: Optional[bool]
 
 class Author(TypedDict, total=False):
     id: str
@@ -181,12 +204,36 @@ class PostFlags(TypedDict, total=False):
     views_hidden: Optional[bool]
     saves_hidden: Optional[bool]
 
+class PostExtMediaItem(TypedDict, total=False):
+    type: str
+    url: Optional[str]
+    width: Optional[int]
+    height: Optional[int]
+
+class PostExtTopCommentsItem(TypedDict, total=False):
+    id: Optional[str]
+    text: Optional[str]
+    username: Optional[str]
+    likes: Optional[int]
+    published_at: Optional[str]
+
 class PostExt(TypedDict, total=False):
     music_id: Optional[str]
+    matched_song_id: Optional[str]
+    matched_song_title: Optional[str]
+    matched_song_artist: Optional[str]
+    music_title: Optional[str]
+    music_artist: Optional[str]
+    music_is_original: Optional[bool]
     author_id: Optional[str]
+    author_url: Optional[str]
     author_followers: Optional[int]
     author_following: Optional[int]
     author_posts_count: Optional[int]
+    author_location: Optional[str]
+    in_reply_to_id: Optional[str]
+    in_reply_to_username: Optional[str]
+    conversation_id: Optional[str]
     author_country: Optional[str]
     author_public_email: Optional[str]
     author_public_phone: Optional[str]
@@ -212,12 +259,24 @@ class PostExt(TypedDict, total=False):
     audio_cluster_id: Optional[str]
     facebook_likes: Optional[int]
     facebook_comments: Optional[int]
+    instagram_views: Optional[int]
+    facebook_views: Optional[int]
     published_at_epoch: Optional[int]
     usertags: Optional[List[str]]
     coauthors: Optional[List[str]]
     music: Optional[str]
     sponsor_tags: Optional[List[str]]
+    sponsored_disclosed: Optional[bool]
+    ai_label: Optional[str]
+    story_mentions: Optional[List[str]]
+    story_links: Optional[List[str]]
+    story_reshared_posts: Optional[List[str]]
     location: Optional[str]
+    media: Optional[List[PostExtMediaItem]]
+    top_comments: Optional[List[PostExtTopCommentsItem]]
+    hashtags: Optional[List[str]]
+    mentions: Optional[List[str]]
+    mentioned_user_ids: Optional[List[str]]
     quoted_post: Optional[str]
     retweeted_post: Optional[str]
     quote_count: Optional[int]
@@ -257,7 +316,9 @@ class PostExt(TypedDict, total=False):
     channel_id: Optional[str]
     published_label: Optional[str]
     published_precision: Optional[str]
+    title_maybe_translated: Optional[bool]
     video_count: Optional[int]
+    posts_count: Optional[int]
     commerce: Optional[str]
     on_screen_texts: Optional[List[str]]
     topic_tag: Optional[str]
@@ -271,9 +332,16 @@ class PostExt(TypedDict, total=False):
     ad: Optional[str]
     apple_music: Optional[str]
     feedback_id: Optional[str]
+    question_id: Optional[str]
+    answer_no: Optional[int]
+    answer_nos: Optional[List[int]]
+    published_at_est: Optional[str]
+    date_basis: Optional[str]
     event: Optional[str]
     trend: Optional[str]
     updated_at: Optional[str]
+    alt_text: Optional[str]
+    board_name: Optional[str]
 
 class Post(TypedDict, total=False):
     id: str
@@ -296,6 +364,7 @@ class PostListItemsItemComputed(TypedDict, total=False):
     language: Optional[str]
     content_category: Optional[str]
     estimated_reach: Optional[int]
+    save_rate: Optional[int]
     relevance: Optional[PostListItemsItemComputedRelevance]
     labels: Optional[str]
     labels_evidence: Optional[str]
@@ -322,6 +391,7 @@ class CommentEngagement(TypedDict, total=False):
 class CommentFlags(TypedDict, total=False):
     pinned: Optional[bool]
     deleted: bool
+    liked_by_creator: Optional[bool]
 
 class CommentExt(TypedDict, total=False):
     replies_token: Optional[str]
@@ -360,6 +430,7 @@ class CommentExt(TypedDict, total=False):
     author_followers: Optional[int]
     author_following: Optional[int]
     author_posts_count: Optional[int]
+    author_location: Optional[str]
     quote_count: Optional[int]
     views: Optional[int]
     saves: Optional[int]
@@ -430,6 +501,7 @@ class TranscriptTranscriptsItem(TypedDict, total=False):
 
 class Transcript(TypedDict, total=False):
     transcript: Optional[str]
+    transcript_format: Literal["webvtt", "text"]
     transcripts: Optional[List[TranscriptTranscriptsItem]]
 
 class WebPagePageContent(TypedDict, total=False):
@@ -443,6 +515,18 @@ class WebPagePageMedia(TypedDict, total=False):
     audio_url: Optional[str]
     video_url: Optional[str]
 
+class WebPagePageExtractionCheckRemovedItem(TypedDict, total=False):
+    field: str
+    value: Any
+    reason: Literal["placeholder", "not_on_page"]
+
+class WebPagePageExtractionCheck(TypedDict, total=False):
+    checked: int
+    found_in_text: int
+    confirmed: int
+    removed: List[WebPagePageExtractionCheckRemovedItem]
+    unverified: List[str]
+
 class WebPagePageFetch(TypedDict, total=False):
     cache_state: Optional[str]
     cached_at: Optional[str]
@@ -454,9 +538,11 @@ class WebPagePage(TypedDict, total=False):
     status_code: Optional[float]
     scrape_id: Optional[str]
     fetched_at: Optional[str]
+    published_at: Optional[str]
     content: WebPagePageContent
     media: WebPagePageMedia
     extraction: Optional[Dict[str, Any]]
+    extraction_check: WebPagePageExtractionCheck
     fetch: WebPagePageFetch
 
 class WebPage(TypedDict, total=False):
@@ -598,9 +684,18 @@ class ReviewResponsesItem(TypedDict, total=False):
     text: Optional[str]
     published_at: Optional[Union[str, int]]
 
+class ReviewExtNaver(TypedDict, total=False):
+    visit_count: Optional[int]
+    verified_by: Optional[str]
+    treatment: Optional[str]
+    view_count: Optional[int]
+    keywords: Optional[List[str]]
+    dedupe_key: Optional[str]
+
 class ReviewExt(TypedDict, total=False):
     appdata: Optional[str]
     tiktokshop: Optional[str]
+    naver: Optional[ReviewExtNaver]
 
 class Review(TypedDict, total=False):
     id: str
@@ -718,6 +813,25 @@ class PlaceExt(TypedDict, total=False):
     rating_distribution: Optional[str]
     people_also_search: Optional[List[PlaceExtPeopleAlsoSearchItem]]
     menu_url: Optional[str]
+    domain: Optional[str]
+    maps_url: Optional[str]
+    rank: Optional[int]
+    city: Optional[str]
+    postal_code: Optional[str]
+    region: Optional[str]
+    country_code: Optional[str]
+    posts_count: Optional[int]
+    website: Optional[str]
+    facebook_places_id: Optional[str]
+    business_username: Optional[str]
+    is_ad: Optional[bool]
+    ad_rank: Optional[int]
+    ad_description: Optional[str]
+    status_description: Optional[str]
+    visitor_reviews_count: Optional[int]
+    blog_reviews_count: Optional[int]
+    booking_url: Optional[str]
+    keywords: Optional[List[str]]
 
 class Place(TypedDict, total=False):
     id: str
@@ -812,6 +926,7 @@ class App(TypedDict, total=False):
     tags: Optional[List[str]]
     similar_apps: Optional[List[AppSimilarAppsItem]]
     more_by_developer: Optional[List[AppMoreByDeveloperItem]]
+    rank: Optional[int]
     ext: Optional[AppExt]
 
 class AppListItemsItem(TypedDict, total=False):
@@ -1291,6 +1406,7 @@ TwitterSearchTweetsResponse = PostListResponse
 RedditSearchResponse = PostListResponse
 SearchForumsResponse = AnalyticsResponse
 GoogleNewsSearchResponse = NewsArticleListResponse
+PrismDiscoverResponse = AnalyticsResponse
 SearchCreatorsResponse = AnalyticsResponse
 InstagramSearchReelsResponse = PostListResponse
 InstagramProfileAboutResponse = AuthorResponse
@@ -1332,4 +1448,3 @@ FinanceNewsResponse = NewsArticleListResponse
 WebCrawlPostResponse = AnalyticsResponse
 WebJobsJobIdResponse = AnalyticsResponse
 WebExtractResponse = WebPageResponse
-NaverBriefResponse = AnalyticsResponse

@@ -1,6 +1,6 @@
 # ReviewList fields
 
-Every field the 22 field-mapped endpoints returning `ReviewList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 23 field-mapped endpoints returning `ReviewList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -10,7 +10,7 @@ Every field the 22 field-mapped endpoints returning `ReviewList` can carry, with
 | `computed.labels.issue` | object\|null | issue: the main problem the review reports (label: product_defect, sizing_or_fit, shipping_or_delivery, customer_service, price_or_value, missing_feature, other, or none, with confidence; label is null when unsure). |
 | `computed.labels.reports` | object\|null | reports (needs reports=): does this review say that the thing you describe happened (p, 0 to 1). (with `label=reports`) |
 | `computed.labels.sentiment` | object\|null | sentiment and issue are free when asked for too; reports, incentivized and injection add 1 credit per started 25 newly judged reviews. |
-| `review.author.avatar_url` | string\|null |  |
+| `review.author.avatar_url` | string\|null | (on some endpoints only when the fallback source serves) |
 | `review.author.location` | string\|null | (on some endpoints only when the fallback source serves) |
 | `review.author.name` | string\|null |  |
 | `review.author.reviews_count` | number\|null | (on some endpoints only when the fallback source serves) |
@@ -34,6 +34,7 @@ Every field the 22 field-mapped endpoints returning `ReviewList` can carry, with
 | `review.ext.appdata.user_profile.profile_image_url` | string\|unknown\|null | (seen in a sample response) |
 | `review.ext.appdata.user_profile.profile_name` | string\|null | (seen in a sample response) |
 | `review.ext.appdata.version` | string\|null | (seen in a sample response) |
+| `review.ext.naver` | object\|null |  |
 | `review.ext.tiktokshop.is_incentivized_review` | unknown\|null |  |
 | `review.ext.tiktokshop.reviewer_id` | unknown\|null |  |
 | `review.ext.tiktokshop.sku_specification` | unknown\|null |  |

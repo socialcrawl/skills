@@ -41,7 +41,7 @@ Returns products listed in a Target category, 24 per page, each with title, bran
 
 **Use when** you want to walk a whole Target category and discover TCINs, since Target has no keyword search here. De-duplicate by product id when paging.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 5 credits
+**Paging** page (native `page`) · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 5 credits · typical 5.2-5.8 s
 
 **Query params**
 
@@ -109,13 +109,21 @@ Returns written customer reviews for a Target product, 10 per page, each with th
 **Use when** you want the review text itself. For just the star distribution, one call to the product endpoint is cheaper than paging reviews.
 **Cost** price moves with `label` · cache 300 s
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven
+**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 2.0-2.6 s
 
 **Query params**
 
 - `tcin` (required) - Target catalogue id (TCIN), the numeric id at the end of a target.com product URL: target.com/p/<name>/-/A-92148487 is TCIN 92148487. Target rolls a colour or size variant up to its parent product, so the id returned by GET /v1/target/product can differ from the one you sent; the id you asked for is preserved at product.ext.requested_id. · e.g. `92146817`
 - `page` (optional, integer, 1-500) - Page number, starting at 1. Prefer the universal cursor parameter.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 

@@ -59,7 +59,7 @@ Returns written customer reviews for a Wayfair product, 10 per page, each with t
 **Use when** you want to read what buyers actually said about a product. Pages do not overlap and the total is stable, so a full crawl is predictable.
 **Cost** price moves with `label` · cache 300 s
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven
+**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 11-12 s
 
 **Query params**
 
@@ -68,7 +68,15 @@ Returns written customer reviews for a Wayfair product, 10 per page, each with t
 - `page` (optional, integer, 1-500) - Page number, starting at 1. Prefer the universal cursor parameter.
 - `sort_order` (optional, enum: relevance | helpful | date_ascending | date_descending | rating_ascending | rating_descending) - Review ordering: relevance (default), helpful, date_ascending, date_descending, rating_ascending, or rating_descending.
 - `star` (optional, integer, 1-5) - Return only reviews with this star rating, 1 to 5.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -95,7 +103,7 @@ Returns Wayfair products matching a keyword, 48 per page by default, each with i
 
 **Use when** you want to find SKUs to feed the product and reviews endpoints. Consecutive pages repeat some rows, so de-duplicate by product id when paging.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈48/page (observed once) · depth unknown · N items ≈ ceil(N/48) x 5 credits
+**Paging** page (native `page`) · ≈48/page (observed once) · depth unknown · N items ≈ ceil(N/48) x 5 credits · typical 8.6-11 s
 
 **Query params**
 

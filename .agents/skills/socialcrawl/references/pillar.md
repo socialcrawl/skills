@@ -19,7 +19,7 @@
 Returns data from a Pillar page including display name, bio, avatar, and list of links with titles and URLs.
 
 **Use when** you want it for pillar.io pages; Linktree, lnk.bio, Linkme, and Komi pages each have their own endpoint.
-**Cost** cache 900 s
+**Cost** cache 900 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -31,13 +31,13 @@ Returns data from a Pillar page including display name, bio, avatar, and list of
 | Field | Meaning |
 |---|---|
 | `author.id` | Platform-specific user ID… |
+| `author.url` | Direct URL to the profile page |
+| `author.username` | User handle or username |
+| `author.avatar_url` | URL to profile picture |
+| `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
-| `author.location` | ISO region code… |
-| `computed.content_category` | Keyword-classified content category… |
-| `computed.engagement_rate` | Computed engagement rate (0..1). |
-| `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+1 more (types in the full schema): `computed` {language}. Never filled: `author.avatar_url`, `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.username`, `author.verified`.
++7 more (types in the full schema): `author` {location}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {links}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pillar/page" \

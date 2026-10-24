@@ -23,7 +23,7 @@
 | [GET /v1/reddit/subreddit/search](#get-v1redditsubredditsearch---1-26-credits-request-shaped) | 1-26 credits (request-shaped) | Returns posts matching a query inside one subreddit, each with title, score, comment… | Use it to search one community. Bodies cost extra here, so prefer search with… |
 | [GET /v1/reddit/subreddits/search](#get-v1redditsubredditssearch---1-26-credits-request-shaped) | 1-26 credits (request-shaped) | Returns up to 25 communities matching a topic, each with the name at author.id… | Use it to find which communities discuss a subject. Send include=details instead of one… |
 
-**Cheaper or broader options:** `prism/comments` - Every page of one post's comments in a single call, replies nested. `search/multi` - The same query on several platforms' search in one call, at the same price per platform.
+**Cheaper or broader options:** `prism/comments` - Every page of one post's comments in a single call, replies nested. `prism/profiles` - Up to 50 profiles per call, at the same price per profile, with the ones not found refunded. `prism/profile/comments` - The same data from prism. `search/multi` - The same query on several platforms' search in one call, at the same price per platform.
 
 <!-- END:GENERATED:TOC -->
 
@@ -37,7 +37,7 @@ Runs reddit/search, expands the top N threads' comments in parallel (capped 15/t
 **Cost** price depends on how many items the request sends or returns · cache 120 s
 **Pricing** 1 credit for the search page plus 1 per thread SUCCESSFULLY expanded, with a floor of 5. The call holds `1 + threads` up front (the 8-thread maximum holds 9) and refunds every thread that failed to expand, so the floor is what most sweeps cost. Running the same sweep by hand - one reddit/search plus eight reddit/post/comments calls - costs the same 9 at best and gives you no subreddit rollup.
 **Streaming** Optional SSE - send `Accept: text/event-stream` for incremental frames, or omit it for one JSON body.
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 15-48 s
 
 **Query params**
 
@@ -84,7 +84,7 @@ Returns a single Reddit post from its URL, including the post BODY (selftext). `
 | `post.published_at` | 100% | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+20 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes, shares, views}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair, selftext}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}; `post.content` {duration_seconds, media_urls} (+1 more). Never filled: `post.engagement.saves`.
++21 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes, shares, views}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair, selftext}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.flags` {deleted}; `post.content` {duration_seconds} (+2 more). Never filled: `post.engagement.saves`.
 
 **Next** `reddit/post/comments` (`url` ← `data.post.url`) - The comment thread on the post. · `reddit/profile/posts` (`handle` ← `data.post.author.username`) - The author's other posts. · `reddit/profile` (`handle` ← `data.post.author.username`) - Get a Reddit user profile. · `prism/comments` (`url` ← `data.post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -96,19 +96,28 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/post" \
 
 ## GET /v1/reddit/post/comments - 5-9 credits (request-shaped)
 
-Returns the full threaded comment tree for a Reddit post. Nested replies are auto-expanded by following upstream pagination, so a single call returns the deep tree (not just top-level comments). Each comment includes the author, body, score, direct-reply count, creation timestamp, its nesting depth at `ext.depth`, and a recursive `replies[]` array. Comment bodies are Reddit's own markdown source, so `comment.text` can contain markdown such as `**bold**` and `[label](url)`. Comment ids are unique within a response: cursor windows can re-offer a boundary node, and those are de-duplicated before the tree is returned. Very large threads are bounded, and `data.truncated` tells you whether more of the thread exists than the response carries. It is not simply a record of our own paging: a response that reached the source's end of the thread is still reported as `truncated: true` when it falls far short of the post's own comment count, because that end is the end of one ranking window rather than the end of the thread. So `truncated: true` can arrive with no `next_cursor`, which means the thread is incomplete and this endpoint cannot fetch you the rest. A whole thread pages from one top-level cursor, so `ext.replies_cursor` on an individual branch is rare. `truncated: false` means the response looks complete against the post's own count, which is normally still higher than the comments you receive because Reddit counts removed, deleted, and filtered replies that no listing returns to anyone. `items[]` can also contain a comment whose own parent was removed upstream: it sits at the top level beside the real roots, and `parent_id` is what separates them, because a root's `parent_id` equals its `post_id` and an orphan's does not.
+Returns the full threaded comment tree for a Reddit post. Nested replies are auto-expanded by following upstream pagination, so a single call returns the deep tree (not just top-level comments). Each comment includes the author, body, score, direct-reply count, creation timestamp, its nesting depth at `ext.depth`, and a recursive `replies[]` array. `items[]` holds only the top-level comments, so `items.length` and `pagination.page_size` count those alone; `data.comments_returned` counts every comment in the response, replies included, and is the number to compare with the post's comment count. Comment bodies are Reddit's own markdown source, so `comment.text` can contain markdown such as `**bold**` and `[label](url)`. Comment ids are unique within a response: cursor windows can re-offer a boundary node, and those are de-duplicated before the tree is returned. Very large threads are bounded, and `data.truncated` tells you whether more of the thread exists than the response carries. It is not simply a record of our own paging: a response that reached the source's end of the thread is still reported as `truncated: true` when it falls far short of the post's own comment count, because that end is the end of one ranking window rather than the end of the thread. So `truncated: true` can arrive with no `next_cursor`, which means the thread is incomplete and this endpoint cannot fetch you the rest. A whole thread pages from one top-level cursor, so `ext.replies_cursor` on an individual branch is rare. `truncated: false` means the response looks complete against the post's own count, which is normally still higher than the comments you receive because Reddit counts removed, deleted, and filtered replies that no listing returns to anyone. `items[]` can also contain a comment whose own parent was removed upstream: it sits at the top level beside the real roots, and `parent_id` is what separates them, because a root's `parent_id` equals its `post_id` and an orphan's does not. When the main source is unavailable, a backup answers with the same tree and fields, except that `author.avatar_url` is null.
 
 **Use when** you want the whole discussion rather than only top-level comments. Read data.truncated: true means the thread is incomplete, so keep paging while a cursor comes back.
 **Cost** price moves with `label` · cache 300 s · multi-source (billed once)
 **Pricing** 5 credits per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 3.4-19 s
 
 **Query params**
 
 - `url` (required) - Full URL of the Reddit post to fetch comments for · e.g. `https://www.reddit.com/r/NoteTaking/comments/1o9s55r/i_tried_all_popular_ai_notetaking_apps_so_you/`
 - `cursor` (optional, string) - Cursor to get more comments, or replies.
 - `trim` (optional, boolean) - Accepted, but not honoured on this endpoint: the source that serves it does not offer a trimmed shape, so the response is the same either way. Kept because removing an accepted parameter would break existing calls.
-- **Shared controls** `label` (sentiment | spam | question | purchase_intent | complaint | toxic | low_quality | injection; paid: spam, toxic, low_quality, injection) · `exclude` (spam | low_quality) · `label_evidence` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | spam | question | purchase_intent | complaint | toxic | low_quality | injection; paid: spam, toxic, low_quality, injection) · `exclude` (spam | low_quality) · `label_evidence` (1) → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `exclude`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 8 comma-separated values.
+- `exclude`: at most 2 comma-separated values.
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` (fill from 1 call) ([full schema](schemas/CommentList.md))
 
@@ -121,7 +130,7 @@ Returns the full threaded comment tree for a Reddit post. Nested replies are aut
 | `comment.author.username` | 100% | Comment author username (null when tombstoned) |
 | `comment.parent_id` | 100% | Parent comment ID for nested replies, or null for… |
 
-+19 more (types in the full schema): `comment` {post_id}; `comment.author` {display_name, avatar_url, verified}; `comment.engagement` {likes, replies}; `comment.ext` {depth}; `computed` {labels_evidence, language}; `comment.flags` {deleted, pinned}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.truncated`.
++19 more (types in the full schema): `comment` {post_id}; `comment.author` {display_name, avatar_url, verified}; `comment.engagement` {likes, replies}; `comment.ext` {depth}; `computed` {labels_evidence, language}; `comment.flags` {deleted, pinned}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Page-level: `data.comment_language`, `data.comment_recency`, `data.comments_returned`, `data.dropped`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.truncated`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/post/comments" \
@@ -152,10 +161,10 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/post/transcript" \
 
 ## GET /v1/reddit/profile - 1 credit (standard)
 
-Returns one Reddit account by username: the four-way karma split, the cake day, the bio, the avatar and banner, the trophy count and the profile title. `author.likes_count` is TOTAL karma; the split that Reddit users actually reason about is at `ext.post_karma`, `ext.comment_karma` and `ext.awardee_karma`, and the three sum to the total. `author.joined_at` is the cake day. `author.display_name` carries Reddit's `t2_` fullname, which is the same value and the same encoding this API puts on `post.author.display_name` and `comment.author.display_name`, so a profile joins to that account's posts and comments on one field. `author.url` is the canonical `https://www.reddit.com/user/<name>/` profile, derived from the username rather than fetched. `author.followers` is Reddit's public follower count for the account (`subscribers` on the upstream). It is a real number: accounts nobody follows report 0, and creator accounts report a non-zero count (measured 09/09/2026: u/GallowBoob 33899, u/spez 0, corroborated by a second independent source on the same day). Reddit publishes no following count and no submission count on this surface, so `author.following` and `author.posts_count` stay null. Verification, moderator and employee flags are not available on this surface and are null rather than guessed. A username that does not exist returns 404 and costs nothing. Usernames are matched case-insensitively.
+Returns one Reddit account by username: the four-way karma split, the cake day, the bio, the avatar and banner, the trophy count and the profile title. `author.likes_count` is TOTAL karma; the split that Reddit users actually reason about is at `ext.post_karma`, `ext.comment_karma` and `ext.awardee_karma`, and the three sum to the total. `author.joined_at` is the cake day. `author.display_name` carries Reddit's `t2_` fullname, which is the same value and the same encoding this API puts on `post.author.display_name` and `comment.author.display_name`, so a profile joins to that account's posts and comments on one field. `author.url` is the canonical `https://www.reddit.com/user/<name>/` profile, derived from the username rather than fetched. `author.followers` is Reddit's public follower count for the account (`subscribers` on the upstream). It is a real number: accounts nobody follows report 0, and creator accounts report a non-zero count (measured 09/09/2026: u/GallowBoob 33899, u/spez 0, corroborated by a second independent source on the same day). Reddit publishes no following count and no submission count on this surface, so `author.following` and `author.posts_count` stay null. Verification, moderator and employee flags are not available on this surface and are null rather than guessed. When the main source is unavailable, a second source answers the same call with the same fields; only when both are down does the call return a 5xx, which costs nothing. A username that does not exist returns 404 and costs nothing. Usernames are matched case-insensitively.
 
 **Use when** you want to size or vet an account before reading its posts. author.followers is null on purpose: Reddit publishes no public follower count, so karma is the reach signal.
-**Cost** cache 900 s
+**Cost** cache 900 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -173,7 +182,7 @@ Returns one Reddit account by username: the four-way karma split, the cake day, 
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+15 more (types in the full schema): `author` {followers, likes_count, joined_at}; `author.ext` {awardee_karma, banner_url, comment_karma, is_nsfw, post_karma, profile_title, trophy_count, social_links}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author.following`, `author.posts_count`, `author.private`, `author.verified`.
++16 more (types in the full schema): `author` {followers, likes_count, joined_at}; `author.ext` {awardee_karma, banner_url, comment_karma, is_nsfw, post_karma, profile_title, trophy_count, social_links}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.following`, `author.posts_count`, `author.private`, `author.verified`.
 
 **Next** `reddit/profile/posts` (`handle` ← `data.author.username`) - The author's other posts.
 
@@ -185,10 +194,10 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/profile" \
 
 ## GET /v1/reddit/profile/comments - 2-200 credits (request-shaped)
 
-Returns the comments one Reddit account has written, newest first, read from the account's own listing rather than from a search index. **That distinction is the whole endpoint.** `/v1/reddit/search/comments?query=author:username` costs 1 credit for a page and looks like the same thing, but it reads Reddit's search index, which holds a small relevance-ranked subset: measured 07/09/2026 on one account, the search route returned 9 comments and then stopped, while this endpoint returned 60 in chronological order reaching back to 2021. **Start with the search route.** Come here when you need the history rather than a sample. Each row carries the comment text, the score, the permalink, the post it sits under at `post_id` and `ext.post_url`, the community at `ext.subreddit`, and a real `parent_id` — `t1_` on a reply and `t3_` on a top-level comment, so a comment whose `parent_id` equals its `post_id` is top-level. `ext.is_submitter` is Reddit's OP badge, true when the commenter also wrote the post they are replying under, and `ext.controversiality` is Reddit's own flag for a comment with roughly balanced up and down votes, which the score alone hides. `limit` is a real depth control and not a page size: a higher `limit` reaches further back, at the same speed. There is no cursor, because the depth control makes one unnecessary — ask for the depth you want in one call. **Pricing is metered at 2 credits per comment RETURNED**, so an account with fewer comments than your `limit` costs less than you asked for. A username that does not exist returns an empty list and costs nothing, and so does a real account that has never commented — this upstream cannot tell them apart, so call `/v1/reddit/profile` when you need to know which it was.
+Returns the comments one Reddit account has written, newest first, read from the account's own listing rather than from a search index. **That distinction is the whole endpoint.** `/v1/reddit/search/comments?query=author:username` costs 1 credit for a page and looks like the same thing, but it reads Reddit's search index, which holds a small relevance-ranked subset: measured 07/09/2026 on one account, the search route returned 9 comments and then stopped, while this endpoint returned 60 in chronological order reaching back to 2021. **Start with the search route.** Come here when you need the history rather than a sample. Each row carries the comment text, the score, the permalink, the post it sits under at `post_id` and `ext.post_url`, the community at `ext.subreddit`, and a real `parent_id` — `t1_` on a reply and `t3_` on a top-level comment, so a comment whose `parent_id` equals its `post_id` is top-level. `ext.is_submitter` is Reddit's OP badge, true when the commenter also wrote the post they are replying under, and `ext.controversiality` is Reddit's own flag for a comment with roughly balanced up and down votes, which the score alone hides. `limit` is a real depth control and not a page size: a higher `limit` reaches further back, at the same speed. There is no cursor, because the depth control makes one unnecessary — ask for the depth you want in one call. **Pricing is metered at 2 credits per comment RETURNED**, so an account with fewer comments than your `limit` costs less than you asked for. A username that does not exist returns an empty list and costs nothing, and so does a real account that has never commented — this upstream cannot tell them apart, so call `/v1/reddit/profile` when you need to know which it was. When the main source is unavailable, a second source answers the same call with the same fields and the same price; on those rows `comment.text` is Reddit's own markdown, so a link reads `[text](url)`. A call with `before` has no second source and returns an error to retry.
 
 **Use when** you need a real comment history rather than a sample. Try search/comments with query=author:name first: 1 credit a page, but far fewer rows.
-**Cost** price moves with `limit` · cache 600 s
+**Cost** price moves with `limit` · cache 600 s · multi-source (billed once)
 **Pricing** 2 credits per comment returned. A limit of 25 holds 50 credits and settles down to the number of comments that actually came back; an account with no comments costs nothing.
 **Paging** single page - The upstream has no cursor. `limit` is a depth control, so a deeper history is one larger call rather than more pages; use `before` to window past the 100-comment ceiling.
 
@@ -197,6 +206,8 @@ Returns the comments one Reddit account has written, newest first, read from the
 - `handle` (required) - Reddit username without the u/ prefix. Case-insensitive. · e.g. `spez`
 - `limit` (optional, integer, 1-100) - How many comments to return, 1-100, default 25. This is a depth control, not a page size: a higher limit reaches further back into the account's history at the same speed.
 - `before` (optional, string) - Only return comments older than this date (YYYY-MM-DD). Use it to walk a long history in windows instead of raising limit.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -223,7 +234,7 @@ Returns the posts a Reddit account has submitted, newest first by default, up to
 
 **Use when** you want to read one person's submissions across communities. An account with no posts and one that does not exist both return an empty list, so call profile to tell them apart.
 **Cost** cache 600 s · multi-source (billed once)
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 24-31 s
 
 **Query params**
 
@@ -231,6 +242,12 @@ Returns the posts a Reddit account has submitted, newest first by default, up to
 - `sort` (optional, enum: hot | new | top) - Sort order for the account's submissions. `top` defaults to the all-time window; pass `timeframe` to narrow it.
 - `timeframe` (optional, enum: all | year | month | week | day | hour) - Only return posts from this window. Applied on `sort=top`. Omitted `sort=top` is treated as `timeframe=all` so the documented call is not an empty page.
 - `cursor` (optional, string) - Cursor to get more results. Get 'cursor' from the previous response.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+
+**Constraints**
+
+- `since` requires `sort=new` (auto-injected when `sort` is absent; a different value is a free 400).
 
 **Response** `PostList` rows at `data.items[]`, each `{ post, computed }` (fill from 1 call) ([full schema](schemas/PostList.md))
 
@@ -243,7 +260,7 @@ Returns the posts a Reddit account has submitted, newest first by default, up to
 | `post.author.username` | 100% | Author username |
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 
-+19 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes}; `post.ext` {upvote_ratio, content_language, subreddit, title, selftext, flair}; `post.flags` {nsfw, deleted}; `post.content` {thumbnail_url, media_urls, duration_seconds}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `post.author` {display_name, verified}; `post.engagement` {comments, likes}; `post.ext` {upvote_ratio, content_language, subreddit, title, selftext, flair}; `post.flags` {nsfw, deleted}; `post.content` {thumbnail_url, media_urls}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate} (+1 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/profile/posts" \
@@ -257,8 +274,8 @@ Searches Reddit for posts matching a keyword query. Returns a list of matching p
 
 **Use when** you want to search all of Reddit at once. Bodies arrive free here, so include_body=true is rarely needed and refunds what it does not spend. subreddit/search searches inside one community.
 **Cost** price moves with `include_body`, `label` · cache 120 s · multi-source (billed once)
-**Pricing** 1 credit for the search page. include_body=true reserves up to 25 extra credits and refunds every one it does not spend. Rows now arrive with their bodies, and a link post has no body to fetch, so a row is only charged for when a body actually comes back: on most pages nothing is spent and the page costs 1 credit. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, each page walked is billed at this price (a cached page is free). With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
-**Paging** cursor (native `after`) · ≈25/page (observed once) · depth unknown · price per N items not proven
+**Pricing** 1 credit for the search page. include_body=true reserves up to 25 extra credits and refunds every one it does not spend. Rows now arrive with their bodies, and a link post has no body to fetch, so a row is only charged for when a body actually comes back: on most pages nothing is spent and the page costs 1 credit. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, each page walked is billed at this price (a cached page is free). With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
+**Paging** cursor (native `after`) · ≈25/page (observed once) · depth unknown · price per N items not proven · typical 5.8-9.4 s
 
 **Query params**
 
@@ -268,7 +285,20 @@ Searches Reddit for posts matching a keyword query. Returns a list of matching p
 - `after` (optional, string) - Used to paginate to next page
 - `trim` (optional, boolean) - Set to true for a trimmed down version of the response. On this endpoint it also skips the second source that widens the page, so a trimmed page is both thinner and usually shorter. Measured 09/09/2026: default 29 rows, `trim=true` 25 rows. It does not drop `author.avatar_url` or `ext.*` — those leaves stay when the first source already carried them. Use it to skip the widening pass, not to strip fields.
 - `include_body` (optional, boolean) - Set to true to include each post's body (selftext) on the search page. Rarely needed now: bodies arrive on the rows themselves. 1 extra credit per row that actually comes back with a body, unused credits refunded. Link posts have no body, so they are looked up and not charged for.
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | injection; paid: mention, quality, injection) · `exclude` · `label_evidence` · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-5) · `seen` · `max_age_days` (1-3650) → [walks](api-overview.md#search-filters-and-multi-page-walks)
+- `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-5) · `seen` · `max_age_days` (1-3650) → [walks](api-overview.md#search-filters-and-multi-page-walks)
+
+**Constraints**
+
+- `ai_written_threshold` is a no-op without `label` - sending it alone is a free 400.
+- `since` requires `sort=new` (auto-injected when `sort` is absent; a different value is a free 400).
+- `relevance_threshold`, `relevant_to` are no-ops without `relevance` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `exclude`, `brand`, `brand_description`, `offer`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `label`: at most 8 comma-separated values.
+- `exclude`: at most 3 comma-separated values.
 
 **Response** `PostList` rows at `data.items[]`, each `{ post, computed }` (fill from 1 call) ([full schema](schemas/PostList.md))
 
@@ -281,7 +311,7 @@ Searches Reddit for posts matching a keyword query. Returns a list of matching p
 | `post.author.username` | 96% | Author username |
 | `post.engagement.comments` | 100% | Comment count. |
 
-+28 more (types in the full schema): `post.engagement` {likes}; `post.ext` {subreddit, upvote_ratio, title, selftext}; `post.flags` {nsfw, spoiler}; `post.author` {display_name}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality} (+9 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
++31 more (types in the full schema): `post.engagement` {likes}; `post.ext` {subreddit, upvote_ratio, title, selftext}; `post.flags` {nsfw, spoiler}; `post.author` {display_name}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {ai_style, ai_written, injection, intent, mention} (+12 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/search" \
@@ -291,11 +321,11 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/search" \
 
 ## GET /v1/reddit/search/comments - 1 credit (standard)
 
-Searches Reddit's COMMENT index directly, so a phrase that only ever appears three levels deep inside someone's reply is reachable in one call. Every other comment surface on this API needs a post you have already found; this one does not. Each hit arrives with its parent post inline, because a bare comment body off a search index is unreadable without it: `ext.post_title`, `ext.subreddit`, `ext.subreddit_subscribers`, `ext.post_score`, `ext.post_comment_count`, `ext.post_author`, `ext.post_published_at`, `ext.post_flair`, `ext.post_url` and `ext.content_language`. Reddit's search operators work in `query`, which is where most of the power is: `author:username` returns that account's indexed comments, `subreddit:name terms` scopes the sweep to one community, and quoted phrases tighten a loose match. `comment.parent_id` is null on this endpoint and that is honest rather than missing — the upstream does not say whether a hit is a top-level comment or a deep reply, and this API does not guess. Up to 25 hits per page; paginate with `cursor`. A query that matches nothing still returns a full page of loosely-related comments rather than an empty list, which is Reddit's own search behaviour on both of this API's Reddit upstreams, so judge relevance on the rows rather than on the count. When the main source is unavailable, the first page is answered by a second source that reads the same comment index: the same hits, but without the parent-post block, so `ext.post_title`, `ext.post_url`, `ext.subreddit_subscribers`, `ext.post_score`, `ext.post_comment_count`, `ext.post_author`, `ext.post_published_at`, `ext.post_flair`, `ext.content_language` and `author.avatar_url` are null on that page, and it carries no next cursor. `ext.subreddit` is still filled. A later page has no second source and returns an error to retry.
+Searches Reddit's COMMENT index directly, so a phrase that only ever appears three levels deep inside someone's reply is reachable in one call. Every other comment surface on this API needs a post you have already found; this one does not. Each hit arrives with its parent post inline, because a bare comment body off a search index is unreadable without it: `ext.post_title`, `ext.subreddit`, `ext.subreddit_subscribers`, `ext.post_score`, `ext.post_comment_count`, `ext.post_author`, `ext.post_published_at`, `ext.post_flair`, `ext.post_url` and `ext.content_language`. Reddit's search operators work in `query`, which is where most of the power is: `author:username` returns that account's indexed comments, `subreddit:name terms` scopes the sweep to one community, and quoted phrases tighten a loose match. `comment.parent_id` is null on this endpoint and that is honest rather than missing — the upstream does not say whether a hit is a top-level comment or a deep reply, and this API does not guess. Up to 25 hits per page; paginate with `cursor`. A query that matches nothing returns an empty `items` list and costs nothing. When the main source is unavailable, the first page is answered by a backup that reads the same comment index with the same fields, parent-post block included, and carries no next cursor. If that backup fails too, a third source answers with the same hits in the same order, up to 10 on a page, and its pages carry a next cursor that pages on that same source; on those pages `ext.subreddit_subscribers`, `ext.post_author`, `ext.post_flair`, `ext.content_language` and `author.display_name` are null, and the rest of the parent-post block is filled. If that fails as well, a fourth source answers the first page with the same hits but without the parent-post block, so `ext.post_title`, `ext.post_url`, `ext.subreddit_subscribers`, `ext.post_score`, `ext.post_comment_count`, `ext.post_author`, `ext.post_published_at`, `ext.post_flair`, `ext.content_language` and `author.avatar_url` are null on that page; `ext.subreddit` is still filled. A later page has no second source: it is answered by the source that served the page before it, and returns an error to retry when that source is unavailable.
 
 **Use when** the phrase lives in a reply rather than a title, and for author:username or subreddit:name sweeps. parent_id is null: the upstream does not report thread position.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** cursor · ≈24/page (observed) · depth unknown · N items ≈ ceil(N/24) x 1 credits
+**Paging** cursor · ≈24/page (observed) · depth unknown · N items ≈ ceil(N/24) x 1 credits · typical 4.0-28 s
 
 **Query params**
 
@@ -303,6 +333,12 @@ Searches Reddit's COMMENT index directly, so a phrase that only ever appears thr
 - `sort` (optional, enum: relevance | top | new) - Sort order for the comment hits.
 - `cursor` (optional, string) - Cursor to get more results. Get 'cursor' from the previous response.
 - `switch_from` (optional, string) - Optional brand. data.switch_receipts lists comments where the author says they personally left that brand, with the verbatim text, the reason, where they went, and a link. There is no percentage. A comment that is not a switch, or that is not confident, is left out. No extra credits.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+
+**Constraints**
+
+- `since` requires `sort=new` (auto-injected when `sort` is absent; a different value is a free 400).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -327,11 +363,11 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/search/comments" \
 
 ## GET /v1/reddit/search/media - 1 credit (standard)
 
-Searches Reddit's media-scoped index: the posts a keyword search would return, filtered to those that actually carry an image, a video or a gallery. Use it when you want visual content for a topic and do not want to filter a mixed page yourself. Up to 25 posts per page, each with the title, the score, the comment count, the subreddit, the upvote ratio, the flair, the author avatar, the thumbnail and the media at `content.media_urls` — an array on a gallery post and a single-element array otherwise. Reddit's operators work in `query` here too, so `subreddit:name terms` scopes the sweep to one community. `timeframe` applies on `sort=relevance`, `sort=top` and `sort=comment_count`; it has no effect on `sort=new`, which is already newest-first. Paginate with `cursor`. A query that matches nothing still returns loosely-related media posts rather than an empty list, which is Reddit's own search behaviour.
+Searches Reddit's media-scoped index: the posts a keyword search would return, filtered to those that actually carry an image, a video or a gallery. Use it when you want visual content for a topic and do not want to filter a mixed page yourself. Up to 25 posts per page, each with the title, the score, the comment count, the subreddit, the upvote ratio, the flair, the author avatar, the thumbnail and the media at `content.media_urls` — an array on a gallery post and a single-element array otherwise. Reddit's operators work in `query` here too, so `subreddit:name terms` scopes the sweep to one community. `timeframe` applies on `sort=relevance`, `sort=top` and `sort=comment_count`; it has no effect on `sort=new`, which is already newest-first. Paginate with `cursor`. When the main source is down, a backup serves the first page and offers a `cursor` on `sort=top` only, for one more page of 25; on other sorts that page carries no `cursor`. A query that matches nothing still returns loosely-related media posts rather than an empty list, which is Reddit's own search behaviour.
 
 **Use when** you want it for visual posts on a topic without filtering a mixed page yourself. subreddit:name terms scopes it to one community; timeframe has no effect on sort=new.
-**Cost** cache 120 s
-**Paging** cursor · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 1 credits
+**Cost** cache 120 s · multi-source (billed once)
+**Paging** cursor · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 1 credits · typical 4.4-12 s
 
 **Query params**
 
@@ -339,6 +375,8 @@ Searches Reddit's media-scoped index: the posts a keyword search would return, f
 - `sort` (optional, enum: relevance | new | top | comment_count) - Sort by
 - `timeframe` (optional, enum: all | day | week | month | year) - Only return posts from this window. Applied on sort=relevance, sort=top and sort=comment_count. It has no effect with sort=new, which is already ordered newest-first.
 - `cursor` (optional, string) - Cursor to get more results. Get 'cursor' from the previous response.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -351,7 +389,7 @@ Searches Reddit's media-scoped index: the posts a keyword search would return, f
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+19 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair, selftext}; `post.flags` {deleted, nsfw}. Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair}; `post.flags` {deleted, nsfw} (+1 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `reddit/post` (`url` ← `data.items[].post.url`) - Full details and score for each post. · `reddit/post/comments` (`url` ← `data.items[].post.url`) - List Reddit post comments. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -367,8 +405,8 @@ Returns a list of posts from a subreddit. Each post includes the title, the post
 
 **Use when** you want to read a community's feed, noting timeframe works only with sort=top, which is auto-selected when you omit sort; subreddit/search filters that same community by keyword.
 **Cost** price moves with `label` · cache 600 s
-**Pricing** 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** cursor (native `after`) · ≈15/page (observed once) · depth unknown · price per N items not proven
+**Pricing** 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Paging** cursor (native `after`) · ≈15/page (observed once) · depth unknown · price per N items not proven · typical 2.6-8.4 s
 
 **Query params**
 
@@ -377,11 +415,20 @@ Returns a list of posts from a subreddit. Each post includes the title, the post
 - `sort` (optional, enum: best | hot | new | top | rising) - Sort order
 - `after` (optional, string) - After to get more posts. Get 'after' from previous response.
 - `trim` (optional, boolean) - Set to true for a trimmed down version of the response. This also skips the enrichment pass, so `author.avatar_url`, `content.media_urls`, `flags.spoiler`, `post.url` and the `ext.*` fields are omitted along with the rest of the trimmed leaves.
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | injection; paid: mention, quality, injection) · `exclude` · `label_evidence` · `brand` · `brand_description` · `offer` → [labels](api-overview.md#labels-relevance-and-quality)
+- `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` → [labels](api-overview.md#labels-relevance-and-quality)
 
 **Constraints**
 
 - `timeframe` requires `sort=top` (auto-injected when `sort` is absent; a different value is a free 400).
+- `ai_written_threshold` is a no-op without `label` - sending it alone is a free 400.
+- `since` requires `sort=new` (auto-injected when `sort` is absent; a different value is a free 400).
+- `exclude`, `brand`, `brand_description`, `offer`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 8 comma-separated values.
+- `exclude`: at most 3 comma-separated values.
 
 **Response** `PostList` rows at `data.items[]`, each `{ post, computed }` (fill from 1 call) ([full schema](schemas/PostList.md))
 
@@ -394,7 +441,7 @@ Returns a list of posts from a subreddit. Each post includes the title, the post
 | `post.author.username` | 100% | Author username |
 | `post.author.display_name` | 100% | Author display name |
 
-+31 more (types in the full schema): `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {subreddit, upvote_ratio, title, flair}; `post.flags` {nsfw, spoiler}; `post.author` {avatar_url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {injection, intent, mention} (+12 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++34 more (types in the full schema): `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {subreddit, upvote_ratio, title, flair}; `post.flags` {nsfw, spoiler}; `post.author` {avatar_url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language}; `computed.labels` {ai_style, ai_written, injection} (+15 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
 
 **Next** `reddit/post/comments` (`url` ← `data.items[].post.url`) - List Reddit post comments. · `reddit/post` (`url` ← `data.items[].post.url`) - Get a Reddit post. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -406,7 +453,7 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/subreddit" \
 
 ## GET /v1/reddit/subreddit/details - 1 credit (standard)
 
-Returns detailed information about a subreddit including the subscriber count at `author.followers`, weekly active users and weekly contributions at `author.ext.weekly_active_users` and `author.ext.weekly_contributions`, the description, creation date, rules, and subreddit icon URL. The subscriber count and Reddit's own community language tag at `author.ext.language` come from a second source that runs only when the main one leaves the count empty, so on a small share of calls they are null while every other field is unchanged. The subreddit name is case-sensitive on the main source: pass the canonical casing (e.g. `AskReddit`, not `askreddit`) to get the whole object. A non-canonical spelling is not a 404 — it falls through to the second source, which still answers with the core fields but without the weekly-activity numbers.
+Returns detailed information about a subreddit including the subscriber count at `author.followers`, weekly active users and weekly contributions at `author.ext.weekly_active_users` and `author.ext.weekly_contributions`, the description, creation date, rules, and subreddit icon URL. The subscriber count and Reddit's own community language tag at `author.ext.language` come from a second source that runs only when the main one leaves the count empty, so on a small share of calls they are null while every other field is unchanged. The name can be sent in any casing: `askreddit` is resolved to Reddit's own spelling `AskReddit` and returns the whole object.
 
 **Use when** you want to size up a community before pulling its posts; the name is case-sensitive here, so spell it exactly as Reddit does.
 **Cost** cache 900 s · multi-source (billed once)
@@ -414,7 +461,7 @@ Returns detailed information about a subreddit including the subscriber count at
 
 **Query params**
 
-- `subreddit` (optional, string) - Subreddit name without the r/ prefix. Case-sensitive: use the subreddit's canonical casing (e.g. `AskReddit`). · e.g. `AskReddit`
+- `subreddit` (optional, string) - Subreddit name without the r/ prefix, in any casing (e.g. `AskReddit` or `askreddit`). · e.g. `AskReddit`
 - `url` (optional, string) - Subreddit URL
 
 **Constraints**
@@ -432,7 +479,7 @@ Returns detailed information about a subreddit including the subscriber count at
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+16 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {is_nsfw, language, rules_text, weekly_active_users, weekly_contributions}.
++17 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {is_nsfw, language, rules_text, weekly_active_users, weekly_contributions}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/reddit/subreddit/details" \
@@ -447,7 +494,7 @@ Searches for posts within a specific subreddit. Returns matching posts with titl
 **Use when** you want to search one community. Bodies cost extra here, so prefer search with query=subreddit:name plus your terms: bodies for one credit, though it returns a different set of rows.
 **Cost** price moves with `include_body` · cache 120 s · multi-source (billed once)
 **Pricing** 1 credit for the search page. With include_body=true, 1 extra credit per post that comes back with a body, up to 25 per page, unused credits refunded. Link posts have no body and are not charged for.
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 2.2-8.1 s
 
 **Query params**
 
@@ -457,6 +504,8 @@ Searches for posts within a specific subreddit. Returns matching posts with titl
 - `timeframe` (optional, enum: all | year | month | week | day | hour) - Only return posts from this window. Applied on sort=relevance, sort=top and sort=comments. It has no effect with sort=new, which is already ordered newest-first and returns recent posts regardless.
 - `cursor` (optional, string) - Cursor to get more results. Get 'cursor' from previous response.
 - `include_body` (optional, boolean) - Set to true to include each post's body (selftext) on the search page. 1 extra credit per post that comes back with a body, unused credits refunded. Link posts have no body, so they are looked up and not charged for.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -469,7 +518,7 @@ Searches for posts within a specific subreddit. Returns matching posts with titl
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {content_language, subreddit, upvote_ratio, title, flair}; `post.flags` {deleted, nsfw, spoiler} (+1 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`.
++21 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes}; `post.ext` {content_language, subreddit, upvote_ratio, title}; `post.flags` {deleted, nsfw, spoiler} (+2 more). Never filled: `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.pinned`. Page-level: `data.dropped`.
 
 **Next** `reddit/post/comments` (`url` ← `data.items[].post.url`) - The comment thread on each post. · `reddit/post` (`url` ← `data.items[].post.url`) - Get a Reddit post. · `prism/comments` (`url` ← `data.items[].post.url`) - Every comment on a post, replies nested, server-paginated to completion.
 
@@ -481,12 +530,12 @@ curl -G "https://www.socialcrawl.dev/v1/reddit/subreddit/search" \
 
 ## GET /v1/reddit/subreddits/search - 1-26 credits (request-shaped)
 
-Finds communities by topic. Every other Reddit endpoint on this API needs you to already know the subreddit you want; this is the one that answers which communities discuss a subject. Returns up to 25 communities with the name, the subscriber count, the description, the icon, the NSFW flag and the community URL. `author.id` is the bare community name in Reddit's own casing, which is exactly what `/v1/reddit/subreddit`, `/v1/reddit/subreddit/details` and `/v1/reddit/subreddit/search` take as their `subreddit` parameter, so a discovery call feeds a listing call with no re-mapping in between. The row is the same Author shape `/v1/reddit/subreddit/details` returns. The search surface publishes nothing else, so on a plain call `author.joined_at`, `author.ext.weekly_active_users`, `author.ext.weekly_contributions`, `author.ext.rules_text` and `author.ext.language` are null on every row. Send `include=details` and every row is joined, in the same call, to the details lookup that carries them: the community's creation date, weekly active users, weekly contributions and rules land on each row (rules stay null for a community that publishes none), and the language on most rows (it comes from a second source that can miss a row on a busy page, so treat it as usually present). When the details lookup's main source cannot answer a row, its second source still fills the creation date and the language and that row is billed as filled, but the weekly numbers and the rules stay null on it; `data.hydration` counts it among the filled rows. Cost: 1 credit for the page plus 1 credit per row filled from a fresh lookup (25 rows, so 26 at most); rows already in cache are filled for free, rows that could not be filled are refunded, and a repeat of the same call within the cache window is 0. Time: a plain call is about 1 second; `include=details` adds 3 to 9 seconds on a fresh page (the lookups run in parallel and the call waits for the slowest, never more than 12 seconds) and nothing when the rows are already cached. `limit=N` (1 to 25) takes the top N communities of the page and, with `include`, caps the extra credits at N. The response carries a `hydration` block itemising rows, lookups, cache hits, credits and milliseconds. The subscriber count on a search row is the search index's own figure; the join never overwrites a value the row already carries. Note the name: this is `subreddits/search` and it finds COMMUNITIES, where the singular `subreddit/search` searches posts INSIDE one community. Paginate with `cursor`. A query that matches nothing still returns communities rather than an empty list, which is Reddit's own search behaviour, so judge relevance on the rows.
+Finds communities by topic. Every other Reddit endpoint on this API needs you to already know the subreddit you want; this is the one that answers which communities discuss a subject. Returns up to 25 communities with the name, the subscriber count, the description, the icon, the NSFW flag and the community URL. `author.id` is the bare community name in Reddit's own casing, which is exactly what `/v1/reddit/subreddit`, `/v1/reddit/subreddit/details` and `/v1/reddit/subreddit/search` take as their `subreddit` parameter, so a discovery call feeds a listing call with no re-mapping in between. The row is the same Author shape `/v1/reddit/subreddit/details` returns. The search surface publishes nothing else, so on a plain call `author.joined_at`, `author.ext.weekly_active_users`, `author.ext.weekly_contributions`, `author.ext.rules_text` and `author.ext.language` are null on every row. Send `include=details` and every row is joined, in the same call, to the details lookup that carries them: the community's creation date, weekly active users, weekly contributions and rules land on each row (rules stay null for a community that publishes none), and the language on most rows (it comes from a second source that can miss a row on a busy page, so treat it as usually present). When the details lookup's main source cannot answer a row, its second source still fills the creation date and the language and that row is billed as filled, but the weekly numbers and the rules stay null on it; `data.hydration` counts it among the filled rows. Cost: 1 credit for the page plus 1 credit per row filled from a fresh lookup (25 rows, so 26 at most); rows already in cache are filled for free, rows that could not be filled are refunded, and a repeat of the same call within the cache window is 0. Time: a plain call is about 1 second; `include=details` adds 3 to 9 seconds on a fresh page (the lookups run in parallel and the call waits for the slowest, never more than 12 seconds) and nothing when the rows are already cached. `limit=N` (1 to 25) takes the top N communities of the page and, with `include`, caps the extra credits at N. The response carries a `hydration` block itemising rows, lookups, cache hits, credits and milliseconds. The subscriber count on a search row is the search index's own figure; the join never overwrites a value the row already carries. Note the name: this is `subreddits/search` and it finds COMMUNITIES, where the singular `subreddit/search` searches posts INSIDE one community. Paginate with `cursor`. When the main source is unavailable, a backup answers the first page with the same fields and no `cursor`. A query that matches nothing still returns communities rather than an empty list, which is Reddit's own search behaviour, so judge relevance on the rows.
 
 **Use when** you want to find which communities discuss a subject. Send include=details instead of one subreddit/details call per community, at 1 credit plus 1 per row filled, 26 at most.
-**Cost** price moves with `include` · cache 120 s
+**Cost** price moves with `include` · cache 120 s · multi-source (billed once)
 **Pricing** 1 credit for the page. include=details holds 1 credit per row, at most 25 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 26 credits; rows served from cache are free, unfilled rows are refunded, and a repeat within the cache window costs 0.
-**Paging** cursor · default page size not measured; set with `limit` · depth unknown
+**Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 3.9-15 s
 
 **Query params**
 

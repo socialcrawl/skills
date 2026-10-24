@@ -166,7 +166,7 @@ Returns paginated web citations (news, blogs, ecommerce, message-boards, organiz
 
 **Use when** you want to read the individual mentions and page through them; for one roll-up per keyword use summary instead. **Not for** a roll-up or a trend (content_analysis/summary, content_analysis/phrase-trends) or for social posts and comments (search/everywhere).
 **Cost** cache 1800 s
-**Paging** cursor · ≈100/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/100) x 20 credits
+**Paging** cursor · ≈100/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/100) x 20 credits · typical 8.4-27 s
 
 **Query params**
 

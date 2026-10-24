@@ -41,7 +41,7 @@ Returns a directory of politicians with at least one STOCK Act disclosure: first
 **Use when** you want to find a last name, then pass that handle to politician or politician/trades.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · ≈50/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/50) x 1 credits
+**Paging** offset (native `offset`) · ≈50/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/50) x 1 credits · typical 0.3-0.3 s
 
 **Query params**
 
@@ -86,7 +86,7 @@ Returns every STOCK Act disclosure for one politician, keyed by last name. Same 
 **Use when** Use it after members or politician when you want that member's filings, not the summary.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · ≈20/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 1 credits
+**Paging** offset (native `offset`) · ≈20/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 1 credits · typical 0.3-0.3 s
 
 **Query params**
 
@@ -113,7 +113,7 @@ Returns STOCK Act disclosures filed by members from one US state. Pass the two-l
 **Use when** you have a USPS state code and want that delegation's filings.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · ≈20/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 1 credits
+**Paging** offset (native `offset`) · ≈20/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 1 credits · typical 0.2-0.2 s
 
 **Query params**
 
@@ -236,7 +236,7 @@ Returns politicians ranked by average days between the trade date and the public
 **Use when** you want to find late STOCK Act filers. Filter by chamber; pass a last name to politician for the summary.
 **Cost** cache 1800 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · default page size not measured; set with `limit` · depth unknown
+**Paging** offset (native `offset`) · default page size not measured; set with `limit` · depth unknown · typical 0.2-0.2 s
 
 **Query params**
 
@@ -367,7 +367,7 @@ Returns STOCK Act disclosures for one stock. Filter by chamber, party, transacti
 **Use when** Use it after ticker or stats/tickers when you want every filing on that symbol.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · ≈20/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 1 credits
+**Paging** offset (native `offset`) · ≈20/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 1 credits · typical 0.2-0.2 s
 
 **Query params**
 
@@ -397,7 +397,7 @@ Returns STOCK Act disclosures across the House and Senate. Filter by ticker (AAP
 **Use when** you want to search congressional trades. For one member pass handle to politician/trades; for one stock pass keyword to ticker/trades.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · default page size not measured; set with `limit` · depth unknown
+**Paging** offset (native `offset`) · default page size not measured; set with `limit` · depth unknown · typical 0.4-0.4 s
 
 **Query params**
 
@@ -430,7 +430,7 @@ Returns STOCK Act disclosures published in the last 48 hours, newest first. Same
 **Use when** you want it for the newest filings. For a 7-day window call trades/recent; for filters call trades.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · default page size not measured; set with `limit` · depth unknown
+**Paging** offset (native `offset`) · default page size not measured; set with `limit` · depth unknown · typical 0.3-0.3 s
 
 **Query params**
 
@@ -453,7 +453,7 @@ Returns STOCK Act disclosures published in the last 7 days, newest first. Same r
 **Use when** you want it for a week of filings. For 48 hours call trades/latest; for filters call trades.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** offset (native `offset`) · ≈50/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/50) x 1 credits
+**Paging** offset (native `offset`) · ≈50/page (observed); set with `limit` · depth unknown · N items ≈ ceil(N/50) x 1 credits · typical 0.3-0.4 s
 
 **Query params**
 

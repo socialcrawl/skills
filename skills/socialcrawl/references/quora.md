@@ -38,6 +38,8 @@ Returns Quora answers matching a keyword, including the answer text, author name
 - `query` (required) - Search keywords, for example learn programming. · e.g. `learn programming`
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -50,7 +52,7 @@ Returns Quora answers matching a keyword, including the answer text, author name
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+9 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/answers" \
@@ -81,7 +83,7 @@ Returns one Quora question from its URL: title, body text, and published date. Q
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+4 more (types in the full schema): `computed` {estimated_reach, language}; `post.engagement` {comments}; `post.flags` {deleted}.
++5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.engagement` {comments}; `post.flags` {deleted}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/post" \
@@ -103,6 +105,8 @@ Returns posts from Quora Spaces matching a keyword: URL, author, upvotes, commen
 - `query` (required) - Search keywords. · e.g. `learn programming`
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -115,7 +119,7 @@ Returns posts from Quora Spaces matching a keyword: URL, author, upvotes, commen
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+7 more (types in the full schema): `computed` {language}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Page-level: `data.dropped`.
++8 more (types in the full schema): `computed` {language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Page-level: `data.dropped`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 
@@ -173,6 +177,8 @@ Returns Quora questions matching a keyword: title, URL, answer count, follower c
 - `query` (required) - Search keywords, for example learn programming. · e.g. `learn programming`
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -185,7 +191,7 @@ Returns Quora questions matching a keyword: title, URL, answer count, follower c
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+4 more (types in the full schema): `computed` {estimated_reach, language}; `post.engagement` {comments}; `post.flags` {deleted}. Page-level: `data.dropped`.
++5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.engagement` {comments}; `post.flags` {deleted}. Page-level: `data.dropped`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 

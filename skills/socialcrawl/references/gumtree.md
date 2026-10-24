@@ -213,7 +213,7 @@ Returns Gumtree UK classifieds matching a keyword, about 22 per page, each with 
 
 **Use when** you want to find UK second-hand, vehicle, or property ads by keyword. Feed a returned ad id into product for the full listing.
 **Cost** cache 120 s
-**Paging** page (native `page`) · 22/page · depth unknown · N items ≈ ceil(N/22) x 5 credits
+**Paging** page (native `page`) · 22/page · depth unknown · N items ≈ ceil(N/22) x 5 credits · typical 0.9-1.2 s
 
 **Query params**
 

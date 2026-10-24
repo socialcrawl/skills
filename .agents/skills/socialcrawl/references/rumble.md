@@ -24,13 +24,15 @@ Returns channel metadata, videos, shorts, and a numeric cursor for the next page
 
 **Use when** you want to walk one channel's uploads by handle or URL; search looks across every channel by keyword instead.
 **Cost** cache 600 s
-**Paging** cursor · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 1 credits
+**Paging** cursor · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 1 credits · typical 5.5-5.6 s
 
 **Query params**
 
 - `handle` (optional, string) - Rumble channel handle. · e.g. `CuteCats223`
 - `url` (optional, string) - Rumble channel URL.
 - `cursor` (optional, string) - Cursor from the previous response: the next page number (e.g. `2`).
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Constraints**
 
@@ -47,7 +49,7 @@ Returns channel metadata, videos, shorts, and a numeric cursor for the next page
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `rumble/video/comments` (`url` ← `data.items[].post.url`) - List top-level comments on a Rumble video. · `rumble/video` (`url` ← `data.items[].post.url`) - Get a Rumble video. · `rumble/video/transcript` (`url` ← `data.items[].post.url`) - Get a Rumble video transcript.
 
@@ -63,12 +65,14 @@ Searches Rumble videos by keyword. Returns matching videos and shorts with title
 
 **Use when** you want to find videos across all of Rumble, passing the returned cursor for the next page; channel/videos covers one named channel.
 **Cost** cache 120 s
-**Paging** cursor · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 1 credits
+**Paging** cursor · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 1 credits · typical 1.7-6.3 s
 
 **Query params**
 
 - `query` (required) - Search query. · e.g. `funny cats`
 - `cursor` (optional, string) - Cursor from the previous response: the next page number (e.g. `2`).
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -81,7 +85,7 @@ Searches Rumble videos by keyword. Returns matching videos and shorts with title
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
 
 **Next** `rumble/video/comments` (`url` ← `data.items[].post.url`) - List top-level comments on a Rumble video. · `rumble/video` (`url` ← `data.items[].post.url`) - Get a Rumble video. · `rumble/video/transcript` (`url` ← `data.items[].post.url`) - Get a Rumble video transcript. · `rumble/channel/videos` (`handle` ← `data.items[].post.author.username`) - List videos for a Rumble channel.
 
@@ -114,7 +118,7 @@ Returns title, description, thumbnail, channel, publish date, view count, likes,
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++10 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `rumble/video/comments` (`url` ← `data.post.url`) - The comments on the video. · `rumble/video/transcript` (`url` ← `data.post.url`) - Get a Rumble video transcript. · `rumble/channel/videos` (`handle` ← `data.post.author.username`) - List videos for a Rumble channel.
 
@@ -135,6 +139,8 @@ Returns all top-level comments for a Rumble video: comment text, author, `create
 **Query params**
 
 - `url` (required) - Rumble video URL. · e.g. `https://rumble.com/v792vns-example.html`
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 

@@ -27,7 +27,7 @@ Returns ranked Amazon Best Seller listings for a category: ASIN, title, price, r
 
 **Use when** you want to read a chart by category slug or department/node path such as officeproduct/202900031, then pass an ASIN into product or reviews.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈50/page (observed once) · depth unknown · N items ≈ ceil(N/50) x 1 credits
+**Paging** page (native `page`) · ≈50/page (observed once) · depth unknown · N items ≈ ceil(N/50) x 1 credits · typical 2.8-4.2 s
 
 **Query params**
 
@@ -91,7 +91,7 @@ curl "https://www.socialcrawl.dev/v1/amazon/deals" \
 
 ## GET /v1/amazon/product - 5 credits (advanced)
 
-Returns full product detail for an Amazon ASIN: title, brand, description, price, rating, image gallery, specifications, and variant ASINs. For this product's customer reviews, call GET /v1/amazon/reviews with the same ASIN (shared upstream call).
+Returns full product detail for an Amazon ASIN: title, brand, description, price, rating, image gallery, specifications, and variant ASINs. Prices are the marketplace's own, in its currency. For this product's customer reviews, call GET /v1/amazon/reviews with the same ASIN. A timeout or a missing product is refunded.
 
 **Use when** you already have the ASIN and need full product detail rather than search results. For its reviews, call the reviews endpoint.
 **Cost** cache 600 s · multi-source (billed once)
@@ -100,7 +100,7 @@ Returns full product detail for an Amazon ASIN: title, brand, description, price
 **Query params**
 
 - `asin` (required) - 10-character Amazon ASIN (the product identifier). · e.g. `B0FQFB8FMG`
-- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Note: non-US marketplaces (especially EU) are best-effort: the upstream provider is slower and occasionally times out for these; such calls are refunded, and US is the most reliable marketplace. · e.g. `US`
+- `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. The same ASIN can be a different listing, price or stock state on each marketplace, so pass the one the ASIN came from. · e.g. `US`
 
 **Response** `Product` object at `data`, `{ product }` ([full schema](schemas/Product.md))
 
@@ -125,17 +125,17 @@ curl -G "https://www.socialcrawl.dev/v1/amazon/product" \
 
 ## GET /v1/amazon/product-search - 1 credit (standard)
 
-Returns organic Amazon search results for a keyword: title, price, list price, rating, image, and ASIN per product. Where Amazon shows its monthly purchase badge, `product.ext.bought_past_month_label` carries Amazon's text in the marketplace's own language ("9K+ bought in past month", "2000+ Mal im letzten Monat gekauft") and `product.ext.bought_past_month` its LOWER BOUND as an integer (9000; a badge reading "2000+" means at least 2000, not exactly 2000). Parsed for US, GB, CA, AU, IN, DE, FR, IT, ES, MX, NL, BR and JP. Both are null when the row shows no badge, and the number is null on a badge with no count ("New on Amazon in past month") or in a wording we have not parsed (the label is still returned as-is). Calls served from the secondary source, or made with `depth`, carry the number without a label. Multiply it by `price.current` per `country` for an estimate of monthly spend by marketplace. Results reflect the chosen marketplace (default United States). Sponsored placements and related searches are excluded in v1. Paginate with the universal cursor parameter; pass depth instead if you need a single large page.
+Returns organic Amazon search results for a keyword: title, price, list price, rating, image, and ASIN per product. Where Amazon shows its monthly purchase badge, `product.ext.bought_past_month_label` carries Amazon's text in the marketplace's own language ("9K+ bought in past month", "2000+ Mal im letzten Monat gekauft") and `product.ext.bought_past_month` its LOWER BOUND as an integer (9000; a badge reading "2000+" means at least 2000, not exactly 2000). Parsed for US, GB, CA, AU, IN, DE, FR, IT, ES, MX, NL, BR and JP. Both are null when the row shows no badge, and the number is null on a badge with no count ("New on Amazon in past month") or in a wording we have not parsed (the label is still returned as-is). Calls served from the secondary source, including `depth` calls it answers, carry the number without a label. Multiply it by `price.current` per `country` for an estimate of monthly spend by marketplace. Results reflect the chosen marketplace (default United States). Sponsored placements and related searches are excluded in v1. Paginate with the universal cursor parameter; pass depth instead if you need a single large page. A `depth` of 1 to 3 that the depth backend cannot answer within the request budget is served from the default page instead. That answer is cut to `depth` rows, has `data.details.depth_truncated` set to `true`, and is complete: it has no next page (`next_cursor` is null and `has_more` is false). A `depth` of 4 or more is never served that way, and a timeout is auto-refunded.
 
 **Use when** you have a keyword and need to find products or their ASINs, then call the product endpoint for full detail.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** page (native `page`) · ≈16/page (observed once) · depth unknown · N items ≈ ceil(N/16) x 1 credits
+**Paging** page (native `page`) · ≈16/page (observed once) · depth unknown · N items ≈ ceil(N/16) x 1 credits · typical 5.5-38 s
 
 **Query params**
 
 - `query` (required) - Search keyword or phrase. · e.g. `wireless earbuds`
 - `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Non-US marketplaces are best-effort; an occasional timeout is refunded. · e.g. `US`
-- `depth` (optional, integer) - Maximum number of products to return in ONE call (default 20, max 700). Use it when you would rather make a single large request than paginate: it selects a different, slower search backend whose latency grows with depth, and a timeout is auto-refunded. Leave it unset for the fast default page size, which is the better choice for keyword→ASIN resolution.
+- `depth` (optional, integer) - Maximum number of products to return in ONE call (default 20, max 700). Use it when you would rather make a single large request than paginate: it selects a different, slower search backend whose latency grows with depth, and a timeout is auto-refunded. Leave it unset for the fast default page size, which is the better choice for keyword→ASIN resolution. A depth of 1 to 3 falls back to the fast default page when the slower backend times out, so that answer has at most `depth` rows and carries `data.details.depth_truncated: true`. When the slower backend answers it may return more rows than `depth` (it returns its whole first page), as before.
 - `page` (optional, integer, 1-100) - Page number, starting at 1. Prefer the universal cursor parameter.
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
@@ -161,18 +161,26 @@ curl -G "https://www.socialcrawl.dev/v1/amazon/product-search" \
 
 ## GET /v1/amazon/reviews - 5-9 credits (request-shaped)
 
-Returns the customer reviews shown on an Amazon product page (by ASIN), typically around 8 per product. Each review carries the full text, star rating, reviewer, verified-purchase flag, helpful-vote count, and any review images. A product with no on-page reviews returns a refunded empty list.
+Returns Amazon's top customer reviews for a product (by ASIN), usually 10 per call. Each review carries the full text, star rating, reviewer, verified-purchase flag, helpful-vote count, publish date, and any review images. A product with no reviews returns a refunded empty list. On the Mexico store (country=MX) a listed product can occasionally come back as not found; retry once. A product that does not exist takes up to about 50s to come back as a refunded not-found, so use a 60s timeout.
 
 **Use when** you want what shoppers wrote about an ASIN. This is one page of on-page reviews, not a full review crawl. **Not for** a rating comparison across shops with themed pros and cons (prism/product-reviews) or whether the ratings look genuine (prism/review-integrity).
 **Cost** price moves with `label` · cache 300 s · multi-source (billed once)
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** single page - Both sources return one fixed page of on-page reviews and expose no honest pagination: /amazon/product-reviews repeats the same 8 review ids on page 1, 2 and 50 (measured 2026-08-29), and the fallback source controls page size by depth in a single call.
+**Paging** single page - Every source returns one fixed page: the primary is asked for one page (it can page, measured 2026-10-11, but no source behind it can, so a page-2 cursor could not survive a fallback); /amazon/product-reviews repeats the same 8 review ids on page 1, 2 and 50 (measured 2026-08-29); the last fallback controls page size by depth in a single call.
 
 **Query params**
 
 - `asin` (required) - 10-character Amazon ASIN (the product identifier). · e.g. `B0BTYCRJSS`
 - `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Amazon shows reviews across a product's whole variant family, so a review row can originate from a sibling ASIN; review.entity_id is always the ASIN you requested. · e.g. `US`
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -269,7 +277,7 @@ Returns product listings from an Amazon shop or storefront page including produc
 
 **Query params**
 
-- `url` (required) - Full URL of the Amazon shop or storefront page · e.g. `https://www.amazon.com/shop/sydneydelrey`
+- `url` (required) - Full URL of the Amazon shop or storefront page · e.g. `https://www.amazon.com/shop/alix_earle`
 
 **Response** `Post` object at `data`, `{ computed, post }` ([full schema](schemas/Post.md))
 
@@ -282,11 +290,11 @@ Returns product listings from an Amazon shop or storefront page including produc
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+11 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext` {amazon_shop_curations, amazon_shop_lists, amazon_shop_socials, amazon_shop_trending_picks}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++12 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext` {amazon_shop_curations, amazon_shop_lists, amazon_shop_socials, amazon_shop_trending_picks}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/amazon/shop" \
-  --data-urlencode "url=https://www.amazon.com/shop/sydneydelrey" \
+  --data-urlencode "url=https://www.amazon.com/shop/alix_earle" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 

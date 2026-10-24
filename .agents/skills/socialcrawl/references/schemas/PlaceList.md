@@ -1,6 +1,6 @@
 # PlaceList fields
 
-Every field the 15 field-mapped endpoints returning `PlaceList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 17 field-mapped endpoints returning `PlaceList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -8,14 +8,22 @@ Every field the 15 field-mapped endpoints returning `PlaceList` can carry, with 
 | `place.categories` | array\|null |  |
 | `place.category` | string\|null | Primary category (e.g. "Coffee shop", "Hotel") |
 | `place.description` | string\|null |  |
-| `place.ext.distance` | number\|null | (seen in a sample response) |
+| `place.ext.ad_description` | string\|null |  |
+| `place.ext.ad_rank` | number\|null |  |
+| `place.ext.blog_reviews_count` | number\|null |  |
+| `place.ext.booking_url` | string\|null |  |
+| `place.ext.distance` | number\|null |  |
 | `place.ext.distance_miles` | unknown\|null |  |
 | `place.ext.hours` | array\|null | (seen in a sample response) |
+| `place.ext.is_ad` | boolean\|null |  |
 | `place.ext.pro_desk_phone` | unknown\|null |  |
+| `place.ext.rank` | number\|null |  |
 | `place.ext.status` | string\|null |  |
+| `place.ext.status_description` | string\|null |  |
 | `place.ext.store_hours` | unknown\|null |  |
 | `place.ext.timezone` | string\|null | (seen in a sample response) |
 | `place.ext.tool_rental_phone` | unknown\|null |  |
+| `place.ext.visitor_reviews_count` | number\|null |  |
 | `place.hotel.amenities` | array\|null |  |
 | `place.hotel.check_in_time` | string\|null |  |
 | `place.hotel.check_out_time` | string\|null |  |
@@ -33,5 +41,5 @@ Every field the 15 field-mapped endpoints returning `PlaceList` can carry, with 
 | `place.rating.max` | number\|null |  |
 | `place.rating.value` | number\|null |  |
 | `place.reviews_count` | number\|null | Number of ratings |
-| `place.url` | string\|null | Website or canonical URL |
-| `place.verified` | boolean\|null | Claimed-business flag (Google is_claimed) (seen in a sample response) |
+| `place.url` | string\|null | Website or canonical URL (on some endpoints only when the fallback source serves) |
+| `place.verified` | boolean\|null | Claimed-business flag (Google is_claimed) |

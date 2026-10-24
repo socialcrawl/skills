@@ -13,6 +13,8 @@ Task to cheapest call chain. Each recipe lists the calls in order (with the valu
 - [Find posts from people ready to buy](#find-posts-from-people-ready-to-buy)
 - [Forum threads about a topic, with top replies](#forum-threads-about-a-topic-with-top-replies)
 - [News coverage of a topic](#news-coverage-of-a-topic)
+- [How people reacted to a brand and its competitors last month](#how-people-reacted-to-a-brand-and-its-competitors-last-month)
+- [Find the accounts behind a topic: sellers, creators, pages and channels](#find-the-accounts-behind-a-topic-sellers-creators-pages-and-channels)
 - [Find creators in a niche](#find-creators-in-a-niche)
 - [Instagram creators from one country about a topic](#instagram-creators-from-one-country-about-a-topic)
 - [Instagram creators from one country on a small budget](#instagram-creators-from-one-country-on-a-small-budget)
@@ -43,6 +45,9 @@ Task to cheapest call chain. Each recipe lists the calls in order (with the valu
 - [Crawl a site and get each page as markdown](#crawl-a-site-and-get-each-page-as-markdown)
 - [Pull structured fields from a web page](#pull-structured-fields-from-a-web-page)
 - [What Korean consumers say about a product, and search interest](#what-korean-consumers-say-about-a-product-and-search-interest)
+- [What Korean people ask and say about a topic: questions, communities, blogs, search interest and video](#what-korean-people-ask-and-say-about-a-topic-questions-communities-blogs-search-interest-and-video)
+- [Read what Korean people write on a named community (theqoo, pann, clien, dcinside and others)](#read-what-korean-people-write-on-a-named-community-theqoo-pann-clien-dcinside-and-others)
+- [Public prices for a cosmetic or clinic treatment in Korea](#public-prices-for-a-cosmetic-or-clinic-treatment-in-korea)
 
 ## Watch what the web says about a brand
 
@@ -117,7 +122,7 @@ const mentions = await sc("prism/brand-mentions", { keyword: "notion", date_from
 **Pitfalls**
 
 - Name the platforms: the default set is TikTok, Instagram, YouTube, Reddit and Threads, so X is missing unless you ask for twitter.
-- X has no date parameter. search/multi turns since= into the since: operator for you; calling twitter/search/tweets directly, put since:YYYY-MM-DD inside query.
+- On X, since= and until= work as on every dated list, and search/multi also sends them to X as its own since:/until: operators. Calling twitter/search/tweets directly, since= sets sort=latest and ends the walk at that date; since:YYYY-MM-DD and until:YYYY-MM-DD inside query narrow the search itself instead.
 - search/multi does not page itself: continue one platform on its own endpoint with data.sources.<platform>.next_cursor as cursor.
 - prism/brand-mentions and search/everywhere are not this job: they cost far more and do not limit the results to the platforms you named.
 
@@ -243,7 +248,7 @@ const search = await sc("search/multi", { query: "matcha latte", platforms: "tik
 
 - Billing is per page of about twenty tweets, not per call: quote pages (N / 20) before you start, and expect short pages to raise the count.
 - max_pages caps at five per call, so a large job is many calls; it does not change the price per page.
-- There is no date parameter: put since:YYYY-MM-DD and until:YYYY-MM-DD inside query.
+- Bound the walk with since=YYYY-MM-DD: it keeps sort=latest and ends the walk at that date. until= only filters rows off each page (you still pay for the newer pages it skips), so for an upper bound put until:YYYY-MM-DD inside query, which narrows the search itself.
 
 **Code**
 
@@ -350,6 +355,74 @@ const threads = await sc("search/forums", { query: "vector databases" });
 const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "week" });
 ```
 
+## How people reacted to a brand and its competitors last month
+
+**When** "a monthly report on how people react to a brand and its competitors", "how did people react to our brand on social media last month", "what people said about a brand and its rivals during the month", "monthly brand and competitor reaction for a client report"
+
+**Inputs**
+
+- `brands`: The brand and its competitors, comma-separated (e.g. `aruba,curacao,bonaire`)
+- `exclude_terms`: Words that mark another meaning of a brand name, comma-separated (e.g. `networks`)
+
+**Chain**
+
+1. `GET /v1/prism/discover?brands=<brands>&period=last_month&exclude_terms=<exclude_terms>&max_credits=150` - One run searches every brand on the default platforms and the news for the whole of last month, keeps the posts about each brand and drops duplicates. A 202 answer keeps running in the background: wait on data.next.status_url and read every row at data.next.results_url.
+
+**Cost** for a brand and its competitors, one month: at most 150 credits (max_credits caps the whole run; each search bills at its platform's price only when it returns rows, so it settles 0-150; nothing beyond the judging bound is held up front).
+
+**Cheaper** `search/multi` - Each platform's own search once per brand, with since= for the month, when you judge and de-duplicate the rows yourself.
+
+**Deeper** `prism/share-of-voice` - Reach and share for two to five brands as one figure, beside the posts this run keeps.
+
+**Pitfalls**
+
+- Name every brand in brands: each brand is its own group in one run, so the rows come back per brand.
+- A brand name that is also a word or another company (Aruba the island and Aruba the network vendor) needs exclude_terms, or rows about the other meaning are fetched and judged before they are dropped.
+- period=last_month is the last full calendar month in UTC; add tz= (an IANA zone such as America/New_York) for the month in another time zone.
+- max_credits caps the whole run, and a request expected to cost more is refused free with the estimate: raise it only after the user approves.
+- A run that answers 202 keeps going in the background: never resubmit it, follow data.next.status_url.
+
+**Code**
+
+```ts
+// sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
+const reactions = await sc("prism/discover", { brands: "aruba,curacao,bonaire", period: "last_month", exclude_terms: "networks", max_credits: "150" });
+```
+
+## Find the accounts behind a topic: sellers, creators, pages and channels
+
+**When** "find accounts selling a product or a service on social media", "accounts, sellers or creators that post about a topic, with bio and followers", "who is posting about a topic on Instagram, YouTube, Facebook, LinkedIn, X, Reddit and Telegram", "collect public accounts whose posts match a description"
+
+**Inputs**
+
+- `keywords`: Two to six topic words or phrases, comma-separated (e.g. `replica rolex dubai,fake watches uae`)
+- `context`: Who the accounts are, in one sentence (e.g. `accounts selling counterfeit luxury watches in the UAE`)
+
+**Chain**
+
+1. `GET /v1/prism/discover?view=accounts&keywords=<keywords>&context=<context>&period=90d&max_credits=400` - One run searches the topic on Instagram, YouTube, Facebook, LinkedIn, X, Reddit, Telegram and TikTok, keeps the posts about it, and returns one row per account behind them, judged against context, with its profile and the posts that matched.
+
+**Cost** for the accounts behind one topic: at most 400 credits (max_credits caps the whole run; each search bills at its platform's price only when it returns rows, so it settles 0-400; nothing beyond the judging bound is held up front).
+
+**Cheaper** `search/multi` - Each platform's own search for the topic, when you group the posts by author yourself.
+
+**Deeper** `prism/profiles` - Full profiles for the accounts you keep, many in one batch call.
+
+**Pitfalls**
+
+- Put the topic words in keywords and the user's question in context: context is what each account is judged against, never a search phrase.
+- role=seller,reseller (or promoter, reviewer) keeps only accounts in those roles and adds the role judgment.
+- targets_country=AE keeps accounts that target that market; country=AE keeps rows whose post or author country is AE.
+- Followers is a number on each account row, not a follower list: no follower list is fetched.
+- A large run keeps going in the background: follow data.next.status_url, and read every account at data.next.results_url or as JSON lines at its results.jsonl.
+
+**Code**
+
+```ts
+// sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
+const accounts = await sc("prism/discover", { view: "accounts", keywords: "replica rolex dubai,fake watches uae", context: "accounts selling counterfeit luxury watches in the UAE", period: "90d", max_credits: "400" });
+```
+
 ## Find creators in a niche
 
 **When** "find influencers who post about skincare", "creators in a niche with over 50k followers", "influencer discovery for a campaign"
@@ -369,7 +442,7 @@ const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "we
 
 **Pitfalls**
 
-- search/creators has no country filter: for creators from one market use instagram/search/reels with country= or tiktok/search/users with country=.
+- For creators from one market, add country= (CL, AR, MX, CO, PE, EC, UY, ES or BR): search/creators then finds the TikTok and Instagram creators who post about the query there, instead of matching account names. For other markets use instagram/search/reels with country= or tiktok/search/users with country=.
 - Pass brief= (what you are looking for) to re-rank creators who post about it above brands, shops and repost pages; it adds a small refundable charge.
 
 **Code**
@@ -386,7 +459,7 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 **Inputs**
 
 - `topic`: The topic, ideally as locals phrase it (e.g. `matcha`)
-- `country`: Market code: ES, MX, DE, BR, KR or FR (e.g. `DE`)
+- `country`: Market code: ES, MX, DE, BR, KR, FR, ZA, NG or KE (e.g. `DE`)
 
 **Chain**
 
@@ -394,11 +467,11 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 
 **Cost** for one page of reels with each creator looked up: 61 credits held up front (settles 1-61; the unused hold is refunded).
 
-**Cheaper** `instagram/profile/about` - On a small budget, the instagram-creators-by-country-budget recipe: search with region= at the plain page price, then one instagram/profile/about call per candidate you keep, which returns both the follower count and the declared country.; `search/creators` - Cross-platform creator search with min_followers, when the country does not matter.
+**Cheaper** `instagram/profile/about` - On a small budget, the instagram-creators-by-country-budget recipe: search with region= at the plain page price, then one instagram/profile/about call per candidate you keep, which returns both the follower count and the declared country.; `search/creators` - Cross-platform creator search with min_followers; with country= (CL, AR, MX, CO, PE, EC, UY, ES, BR) it finds the TikTok and Instagram creators who post about the topic in that market.
 
 **Pitfalls**
 
-- country= supports ES, MX, DE, BR, KR and FR only; any other code is a free 400.
+- country= supports ES, MX, DE, BR, KR, FR, ZA, NG and KE only; any other code is a free 400.
 - Without country= or include=creator, post.ext.author_followers is null, so a follower floor cannot be applied.
 - Each creator looked up is billed whether it is kept or dropped; quote the creator lookups, not the plain page price.
 - author_country is the country the creator declares, not where the reel was filmed; topics about a place (travel, eSIMs) are often made by visitors.
@@ -407,12 +480,12 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 
 | Option | Endpoint | Best for | Cost shape |
 |--------|----------|----------|------------|
-| Reels from creators who declare one market | `instagram/search/reels` | country= keeps only that market's creators (ES, MX, DE, BR, KR, FR) and fills followers | per page, plus per creator looked up |
+| Reels from creators who declare one market | `instagram/search/reels` | country= keeps only that market's creators (ES, MX, DE, BR, KR, FR, ZA, NG, KE) and fills followers | per page, plus per creator looked up |
 | Localised reel search without a guarantee | `instagram/search/reels` | region= adds the market to the query at the plain page price; creators may be from anywhere | per page |
 | Budget: region= reels, then check each candidate | `instagram/profile/about` | one call per shortlisted creator returns followers and declared country together (recipe instagram-creators-by-country-budget) | per page, plus flat per candidate checked |
 | Instagram profile search with declared country | `instagram/search/profiles` | include=about fills author.ext.country on up to twelve rows of a profile search | per page, plus per row filled |
 | TikTok creators by account region | `tiktok/search/users` | country= with a wide list of markets, when TikTok fits the brief | per in-country row returned |
-| Cross-platform creator discovery | `search/creators` | Ranked creators with min_followers, but no country filter | flat per call |
+| Cross-platform creator discovery | `search/creators` | Ranked creators with min_followers; country= (CL, AR, MX, CO, PE, EC, UY, ES, BR) finds the TikTok and Instagram creators who post about the topic in that market | flat per call, plus the searches country= runs |
 
 **Code**
 
@@ -428,7 +501,7 @@ const reels = await sc("instagram/search/reels", { query: "matcha", country: "DE
 **Inputs**
 
 - `topic`: The topic, ideally as locals phrase it (e.g. `matcha`)
-- `country`: Market code for region=: ES, MX, DE, BR, KR or FR (e.g. `DE`)
+- `country`: Market code for region=: ES, MX, DE, BR, KR, FR, ZA, NG or KE (e.g. `DE`)
 
 **Chain**
 
@@ -446,7 +519,7 @@ const reels = await sc("instagram/search/reels", { query: "matcha", country: "DE
 
 **Pitfalls**
 
-- region= supports ES, MX, DE, BR, KR and FR only; any other code is a free 400.
+- region= supports ES, MX, DE, BR, KR, FR, ZA, NG and KE only; any other code is a free 400.
 - Two reels by one creator are one candidate: deduplicate post.author.username before the lookups, and look up only the creators you would keep.
 - author.ext.country is the country the creator declares, and is null when Instagram publishes none; treat a null as unknown, not as a match.
 
@@ -770,7 +843,7 @@ The quote is not exact yet, so set --max-credits from your quote.
 
 - max drives the price: leave it at its default and a long thread is read to a thousand comments.
 - Whole pages are returned, so the count can slightly exceed max.
-- Instagram returns top-level comments only at a flat price; replies come from instagram/post/comment/replies, one call per parent with engagement.replies above zero.
+- Instagram returns top-level comments only at a flat price unless you send replies=true, which nests every reply in the same call and adds a small charge for each replies call on top of the flat price.
 - sort=top on Instagram is the platform's own finite ranked head; use the default order to harvest the whole thread.
 
 **Code**
@@ -1142,12 +1215,12 @@ const s1 = await sc("monitors", undefined, { method: "POST", body: {"recipe":"yo
 
 - `page_url`: The page to watch (e.g. `https://example.com/pricing`)
 - `cadence_minutes`: Minutes between checks: 5 to 60, or whole hours (e.g. `15`)
-- `webhook_url`: HTTPS URL that receives a signed callback on each check (e.g. `https://example.com/hooks/socialcrawl`)
+- `webhook_url`: Optional URL the monitoring backend calls with its own check payloads (not signed by SocialCrawl) (e.g. `https://example.com/hooks/socialcrawl`)
 
 **Chain**
 
 1. `POST /v1/web/monitors` body `{"url":"<page_url>","cadence_minutes":"<cadence_minutes>","webhook_url":"<webhook_url>"}` - Creating the monitor is free; data.monitor_id names it.
-2. `GET /v1/web/monitors/<monitor.monitor_id>/checks` - Reading the checks is free; the webhook means you rarely need to.
+2. `GET /v1/web/monitors/<monitor.monitor_id>/checks` - Reading the checks is free and is the authoritative record; the webhook_url callback comes from the monitoring backend, unsigned and with its own ids.
 
 **Cost** Creating and reading are free. Each check bills at least 2 credits (the page read, at least 1 credit, plus 1 for orchestration; the page read can bill more); 96 checks per day at least 192 credits/day.
 
@@ -1340,7 +1413,7 @@ const news = await sc("finance/news", { keyword: ticker.data.items[0].quote.id }
 **Chain**
 
 1. `POST /v1/web/crawl` body `{"url":"<site_url>","limit":"<max_pages>","formats":"markdown"}` - An async job: the response carries job_id and the credits held for limit pages.
-2. `GET /v1/web/jobs/<crawl.job_id>` - Poll until status is completed (or pass webhook_url on the crawl); reading the job is free.
+2. `GET /v1/web/jobs/<crawl.job_id>` - Poll until status is succeeded (or failed, cancelled or expired); reading the job is free.
 
 **Cost** for fifty pages: 50 credits held up front (settles 1-50; the unused hold is refunded).
 
@@ -1404,7 +1477,7 @@ const extract = await sc("web/extract", { url: "https://example.com/pricing", pr
 
 **Chain**
 
-1. `GET /v1/naver/brief?query=<keyword>&corpora=news,blog,cafearticle` - One query across the Naver corpora you name; include=digest adds an English digest with translated quotes.
+1. `GET /v1/naver/brief?query=<keyword>&corpora=news,blog,cafearticle,kin` - One query across the Naver corpora you name, KnowledgeiN (questions and answers) included; include=digest adds an English digest with translated quotes.
 2. `GET /v1/naver/search-trend?keywords=<keyword>&time_unit=month` - Twelve months by default; the series is relative search volume.
 
 **Cost** for one brief and one trend series: 15 credits held up front (exact; the unused hold is refunded).
@@ -1421,13 +1494,155 @@ const extract = await sc("web/extract", { url: "https://example.com/pricing", pr
 **Pitfalls**
 
 - Search in Korean: translating the keyword to English misses most Korean posts.
-- naver/search-trend takes keywords, not query, and sums several keywords into ONE series; call it once per term to compare.
+- naver/search-trend takes keywords, not query, and sums several keywords into ONE series; to compare terms send them as groups (up to 5, one call, one shared scale). Separate calls are never comparable.
+- Naver relevance pages past rank 100 repeat the top 100 (removed, with a recycled_rows warning); page deeper with sort=date.
+- naver/cafearticle and naver/webkr rows have no date; naver/kin rows carry an estimated date (published_at_est).
 - Western indexes (google_trends, tiktok/search) miss most Korean search; use the Naver endpoints.
+- One plan covers one keyword: for several products or topics, run it once per topic.
 
 **Code**
 
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
-const posts = await sc("naver/brief", { query: "불닭볶음면", corpora: "news,blog,cafearticle" });
+const posts = await sc("naver/brief", { query: "불닭볶음면", corpora: "news,blog,cafearticle,kin" });
 const trend = await sc("naver/search-trend", { keywords: "불닭볶음면", time_unit: "month" });
+```
+
+## What Korean people ask and say about a topic: questions, communities, blogs, search interest and video
+
+**When** "what Korean patients or consumers ask about a topic", "Korean questions and experiences on KnowledgeiN, cafes and blogs", "research Korean public opinion on several topics", "collect Korean community posts and search interest for a report"
+
+**Inputs**
+
+- `keyword`: One topic, in Korean (run the recipe once per topic) (e.g. `다한증`)
+
+**Chain**
+
+1. `GET /v1/naver/kin/search?query=<keyword>&display=100` - KnowledgeiN questions and answers, the plainest record of what people ask. One row per answer, so several rows can share a question; the date is an estimate (published_at_est).
+2. `GET /v1/naver/cafearticle/search?query=<keyword>&display=100` - Naver Cafe community posts: experiences and recommendations among members. Undated.
+3. `GET /v1/naver/blog/search?query=<keyword>&display=100` - Blog posts, dated. Many are written by businesses; relevance sorting (the default) reads best, and sort=date starts from the newest posts.
+4. `GET /v1/naver/search-trend?keywords=<keyword>&time_unit=month` - Twelve months of relative search volume for the topic; to compare topics on one scale, send them as groups in one call.
+5. `GET /v1/youtube/search/advanced?query=<keyword>&language=ko&region=KR` - Korean-language videos, with their original titles.
+
+**Cost** for one full page from each of five sources: 9 credits held up front (exact; the unused hold is refunded).
+
+| Step | Endpoint | Runs | Hold each | Hold total |
+|------|----------|------|-----------|------------|
+| questions | `naver/kin/search` | 1 | 1 | 1 |
+| cafes | `naver/cafearticle/search` | 1 | 1 | 1 |
+| blogs | `naver/blog/search` | 1 | 1 | 1 |
+| trend | `naver/search-trend` | 1 | 5 | 5 |
+| videos | `youtube/search/advanced` | 1 | 1 | 1 |
+
+**Cheaper** `naver/brief` - One call across the Naver corpora, fewer rows from each.
+
+**Deeper** `prism/korea-gap` - What Korea says about a topic against what the rest of the web says.; `prism/discover` - Every topic and market as one background run (preset=korea), with estimated dates, dropped rows and a call log; the guide is https://www.socialcrawl.dev/docs/prism/discover-research.
+
+**Pitfalls**
+
+- Search in Korean: an English keyword finds little on Naver.
+- One run covers one topic: for several topics, run every step once per topic, and do not join topics into one query.
+- Cafe rows are undated; KnowledgeiN rows carry an estimated date (published_at_est); blog rows carry the post date.
+- KnowledgeiN returns one row per answer, so count questions by their link, not by rows.
+- Use short noun queries: long phrases loosen the match.
+
+**Code**
+
+```ts
+// sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
+const questions = await sc("naver/kin/search", { query: "다한증", display: "100" });
+const cafes = await sc("naver/cafearticle/search", { query: "다한증", display: "100" });
+const blogs = await sc("naver/blog/search", { query: "다한증", display: "100" });
+const trend = await sc("naver/search-trend", { keywords: "다한증", time_unit: "month" });
+const videos = await sc("youtube/search/advanced", { query: "다한증", language: "ko", region: "KR" });
+```
+
+## Read what Korean people write on a named community (theqoo, pann, clien, dcinside and others)
+
+**When** "Korean community posts about a topic on theqoo, pann, instiz, clien or dcinside", "full text of Korean forum posts outside Naver", "what Korean patients write on modoodoc, babitalk or gangnamunni", "search one Korean website for a topic and read the posts"
+
+**Inputs**
+
+- `site`: The community's domain, without https:// (e.g. `theqoo.net`)
+- `keyword`: The topic, in Korean (e.g. `다한증`)
+
+**Chain**
+
+1. `GET /v1/google/search?query=site:<site> <keyword>&region=KR&date_posted=last-year` - Ten results a page, all from the named site. date_posted keeps them to the last year; page= walks further.
+2. `GET /v1/web/scrape?url=<discover.items[].url>` - once per row of `discover`. Each post as markdown, comments included where the site prints them. Skip list pages first (see pitfalls).
+
+**Cost** for ten posts from one community: 11 credits held up front (exact; the unused hold is refunded).
+
+| Step | Endpoint | Runs | Hold each | Hold total |
+|------|----------|------|-----------|------------|
+| discover | `google/search` | 1 | 1 | 1 |
+| read | `web/scrape` | 10 | 1 | 10 |
+
+**Cheaper** `web/map` - With search=, lists the matching URLs of one site; it returned the same posts as the site: search.
+
+**Deeper** `web/extract` - Named fields (title, posted date, comments) from each post instead of markdown.; `prism/discover` - Several sites, topics and markets in one run (sites=, include=body), reporting full text, preview or wall per site; the guide is https://www.socialcrawl.dev/docs/prism/discover-research.
+
+**Pitfalls**
+
+- One community per run: site: is honoured, so every row comes from the site you name. Run the recipe once per site and topic.
+- Communities that worked: theqoo.net, pann.nate.com, instiz.net, clien.net, 82cook.com, mlbpark.donga.com, dcinside.com, fmkorea.com; for clinics and treatments, modoodoc.com, babitalk.com and gangnamunni.com.
+- Drop a list page before scraping it: dcinside gallery lists and many pann and mlbpark results are lists, not posts. Keep URLs that point at one post.
+- dcinside fails a plain fetch: scrape it with proxy=auto. fmkorea sits behind a challenge page: use proxy=enhanced.
+- web/scrape returns no published date: read the date from the markdown (theqoo prints it only beside the comments) or use web/extract.
+- goodoc.co.kr answer pages are written by an AI, as the page says; ppomppu results are mostly news reposts. Neither is a patient's voice.
+- For Naver (KnowledgeiN, cafes, blogs) use the korea-community-research recipe: Naver cafe posts are mostly members-only to a scraper.
+
+**Code**
+
+```ts
+// sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
+const discover = await sc("google/search", { query: "site:theqoo.net 다한증", region: "KR", date_posted: "last-year" });
+const read = [];
+for (const row of discover.data.items.slice(0, 10)) {
+  read.push(await sc("web/scrape", { url: row.url }));
+}
+```
+
+## Public prices for a cosmetic or clinic treatment in Korea
+
+**When** "how much does a treatment cost at Korean clinics", "Korean clinic event prices for a procedure", "compare Korean clinics' prices for miraDry, botox or hair removal", "price research for a Korean hospital marketing report"
+
+**Inputs**
+
+- `keyword`: The treatment, in Korean (e.g. `미라드라이`)
+
+**Chain**
+
+1. `GET /v1/web/scrape?url=https://www.gangnamunni.com/events?q=<keyword>` - 강남언니's event list for the treatment: each event's clinic, sale price and list price, as text.
+2. `GET /v1/google/search?query=site:babitalk.com <keyword>&region=KR` - 바비톡 event pages (babitalk.com/events/...) carry the same kind of price. Run again with site:yeoshin.co.kr for 여신티켓, which also lists prices for foreign patients.
+3. `GET /v1/web/scrape?url=<platforms.items[].url>` - once per row of `platforms`. Keep the /events/ URLs; community and hospital pages carry no price.
+
+**Cost** for one event list and ten platform pages: 12 credits held up front (exact; the unused hold is refunded).
+
+| Step | Endpoint | Runs | Hold each | Hold total |
+|------|----------|------|-----------|------------|
+| events | `web/scrape` | 1 | 1 | 1 |
+| platforms | `google/search` | 1 | 1 | 1 |
+| pages | `web/scrape` | 10 | 1 | 10 |
+
+**Deeper** `web/extract` - Clinic, treatment, sale price and list price as fields from each event page.
+
+**Pitfalls**
+
+- Clinic websites rarely show a price in text: 0 of 13 clinic sites checked did, and event prices are posted as images. There is no OCR for web images (screen-text reads Instagram and TikTok posts only), so read prices from the platforms.
+- Platform prices are promotions: keep the list price, the sale price and the date you read them.
+- Events differ in units (one side or both, one session or a package), so prices are not like-for-like without reading the event.
+- Back, neck and shingles pain treatments are not on 강남언니; hospitals publish their non-covered (비급여) price tables as text instead. Search google/search for the treatment with 비급여 and scrape the hospital's 비급여 page.
+- Sites that collect hospitals' 비급여 disclosures (yakcheck.co.kr/npay pages give a median, minimum and maximum) scrape as text, but site: search does not find those pages; open them from a link.
+
+**Code**
+
+```ts
+// sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
+const events = await sc("web/scrape", { url: "https://www.gangnamunni.com/events?q=미라드라이" });
+const platforms = await sc("google/search", { query: "site:babitalk.com 미라드라이", region: "KR" });
+const pages = [];
+for (const row of platforms.data.items.slice(0, 10)) {
+  pages.push(await sc("web/scrape", { url: row.url }));
+}
 ```

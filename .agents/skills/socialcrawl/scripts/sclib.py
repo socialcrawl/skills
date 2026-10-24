@@ -7,6 +7,7 @@ the x-api-key header; it is never printed, logged or put in an error message.
 from __future__ import annotations
 
 import json
+import math
 import os
 import random
 import ssl
@@ -128,6 +129,69 @@ def find_endpoint(cat: dict | None, endpoint_id: str, method: str | None = None)
         if e["id"] == endpoint_id and (method is None or e["method"] == method):
             return e
     return None
+
+
+# Row joins (`hydration[]`: opt-in include= tokens), mirroring src/hydrate/pricing.ts.
+
+
+def csv_has(value, token: str) -> bool:
+    """CSV membership, trimmed and case-insensitive: "foo, Engagement" has "engagement"."""
+    if value is None:
+        return False
+    want = token.lower()
+    return want in [x.strip().lower() for x in str(value).split(",") if x.strip()]
+
+
+def hydration_rows(lane: dict, params: dict) -> int:
+    """How many rows the join can fill: the caller's row cap (`row_cap_param`) when sent,
+    else the lane's `default_rows`, else `max_rows`; never more than `max_rows`."""
+    max_rows = lane["max_rows"]
+    default = lane.get("default_rows")
+    fallback = min(max_rows, default if default is not None else max_rows)
+    param = lane.get("row_cap_param")
+    raw = params.get(param) if param else None
+    if raw is None or str(raw).strip() == "":
+        return fallback
+    try:
+        n = float(str(raw).strip())
+    except ValueError:
+        return fallback
+    if not math.isfinite(n) or n < 1:
+        return fallback
+    return min(max_rows, math.floor(n))
+
+
+def hydration_credits(lane: dict, params: dict):
+    """The most this request's join can hold: rows x credits_per_row, and on a batch lane never
+    more than credit_cap per `size`-row lookup."""
+    rows = hydration_rows(lane, params)
+    per_row = rows * lane["credits_per_row"]
+    batch = lane.get("batch")
+    if not batch:
+        return per_row
+    return min(per_row, math.ceil(rows / batch["size"]) * batch["credit_cap"])
+
+
+def joins_on(ep: dict | None, params: dict) -> list:
+    """The hydration lanes whose include= token this request turns on."""
+    return [lane for lane in (ep or {}).get("hydration") or []
+            if csv_has(params.get(lane.get("param") or "include"), lane["token"])]
+
+
+def call_ceiling(ep: dict | None, params: dict | None = None):
+    """The most one call can hold, from the catalogue: cost.max without the joins this request
+    does not turn on, plus the ceiling of each join it does. None when the catalogue has no
+    ceiling (no entry, or a per_unit cost whose max is null)."""
+    cost = (ep or {}).get("cost") or {}
+    hi = cost.get("max")
+    if hi is None:
+        return None
+    lanes = (ep or {}).get("hydration") or []
+    if not lanes:
+        return hi
+    params = params or {}
+    base = max(cost.get("min") or 0, hi - sum(lane.get("max_extra_credits") or 0 for lane in lanes))
+    return min(hi, base + sum(hydration_credits(lane, params) for lane in joins_on(ep, params)))
 
 
 # --------------------------------------------------------------------------- params
@@ -411,12 +475,40 @@ def _once(method: str, url: str, headers: dict, data: bytes | None) -> Response:
     return Response(status, hdrs, body, raw)
 
 
-def _retry_wait(resp: Response) -> float:
+def _retry_after(resp: Response) -> float | None:
+    """The Retry-After header in seconds, or None when absent or not a number."""
     try:
-        wait = float(resp.headers.get("retry-after", ""))
+        return float(resp.headers.get("retry-after", ""))
     except ValueError:
+        return None
+
+
+def _retry_wait(resp: Response) -> float:
+    wait = _retry_after(resp)
+    if wait is None:
         wait = 1.0 + random.random()
     return max(0.0, min(wait, MAX_RETRY_WAIT_S))
+
+
+def _retry_with(resp: Response):
+    details = resp.error.get("details")
+    return details.get("retry_with") if isinstance(details, dict) else None
+
+
+def should_retry(resp: Response) -> bool:
+    """Whether one automatic retry can help. Never on success or 402. Always on
+    409 IDEMPOTENCY_IN_PROGRESS (the first request with this key is still running: wait
+    Retry-After, resend the same key). Otherwise only when `error.retryable` is true and none of
+    these says the same request would fail again: `error.details.retry_with` (a parameter has to
+    change), an open `error.incident`, or a Retry-After longer than MAX_RETRY_WAIT_S."""
+    if resp.ok or resp.status == 402:
+        return False
+    if resp.code == "IDEMPOTENCY_IN_PROGRESS":
+        return True
+    if not resp.retryable or _retry_with(resp) is not None or resp.error.get("incident"):
+        return False
+    wait = _retry_after(resp)
+    return wait is None or wait <= MAX_RETRY_WAIT_S
 
 
 def request(
@@ -428,8 +520,8 @@ def request(
     idempotency_key: str | None = None,
     retry: bool = True,
 ) -> Response:
-    """One API call. `path` is relative to /v1. Retries once, and only when the API says
-    the error is retryable; never on 402. The same Idempotency-Key is sent on the retry."""
+    """One API call. `path` is relative to /v1. Retries once, only when `should_retry` says
+    so (never on 402). The same Idempotency-Key is sent on the retry."""
     url = f"{base_url()}/v1/{path.lstrip('/')}"
     q = encode_query(params or {})
     if q:
@@ -444,7 +536,7 @@ def request(
     if idempotency_key:
         headers["Idempotency-Key"] = idempotency_key
     resp = _once(method, url, headers, data)
-    if retry and not resp.ok and resp.status != 402 and resp.retryable:
+    if retry and should_retry(resp):
         _sleep(_retry_wait(resp))
         resp = _once(method, url, headers, data)
     return resp
@@ -467,6 +559,21 @@ def report_error(resp: Response) -> None:
     if resp.status == 402:
         msg += "; not retryable - top up credits or raise the key's spend cap"
     print(msg, file=sys.stderr)
+    hint = _retry_with(resp)
+    if isinstance(hint, dict) and hint:
+        pairs = ", ".join(f"{k}={v if isinstance(v, str) else json.dumps(v)}" for k, v in hint.items())
+        print(f"retry_with: {pairs} (the same request fails the same way; resend with these params)", file=sys.stderr)
+    incident = e.get("incident")
+    if isinstance(incident, dict) and incident.get("title"):
+        line = f"incident: {incident['title']}"
+        if incident.get("url"):
+            line += f" ({incident['url']})"
+        print(line + "; not retried while it is open", file=sys.stderr)
+    if e.get("status_url"):
+        print(f"status: {e['status_url']}", file=sys.stderr)
+    wait = _retry_after(resp)
+    if resp.retryable and wait is not None and wait > MAX_RETRY_WAIT_S:
+        print(f"Retry-After {wait:g} s is longer than {MAX_RETRY_WAIT_S} s; not retried - try again later", file=sys.stderr)
 
 
 def exit_code_for(resp: Response) -> int:

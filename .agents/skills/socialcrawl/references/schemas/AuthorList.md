@@ -1,11 +1,11 @@
 # AuthorList fields
 
-Every field the 34 field-mapped endpoints returning `AuthorList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 36 field-mapped endpoints returning `AuthorList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `author.avatar_url` | string\|null | URL to profile picture |
-| `author.bio` | string\|null | Profile biography or description (with `include=profile`, `include=details` on some endpoints) |
+| `author.avatar_url` | string\|null | URL to profile picture (with `include=details` on some endpoints) |
+| `author.bio` | string\|null | Profile biography or description (with `include=details`, `include=profile` on some endpoints) |
 | `author.display_name` | string\|null | Display name or full name (with `include=details` on some endpoints) |
 | `author.ext.account_created` | string\|null | (with `include=about`) |
 | `author.ext.bio_link` | string\|null | (with `include=profile` on some endpoints) (on some endpoints only when the fallback source serves) |
@@ -33,6 +33,7 @@ Every field the 34 field-mapped endpoints returning `AuthorList` can carry, with
 | `author.ext.rules_text` | string\|null | (with `include=details`) |
 | `author.ext.search_hit.evidence_url` | string |  |
 | `author.ext.search_hit.match` | string |  |
+| `author.ext.search_hit.matched_urls` | array |  |
 | `author.ext.search_hit.snippet` | string\|null |  |
 | `author.ext.search_hit.title` | string\|null |  |
 | `author.ext.urn` | string\|null |  |
@@ -44,11 +45,11 @@ Every field the 34 field-mapped endpoints returning `AuthorList` can carry, with
 | `author.following` | number\|null | Number of accounts followed (with `include=profile` on some endpoints) |
 | `author.id` | string | Platform-specific user ID (always a string; platform-specific prefixes like `did:`, `spotify:artist:`, `t2_` are stripped) |
 | `author.joined_at` | string\|null | (with `include=profile`, `include=details` on some endpoints) |
-| `author.likes_count` | number\|null | Total likes received across the author's content (when surfaced) |
+| `author.likes_count` | number\|null | Total likes received across the author's content (when surfaced) (with `include=details` on some endpoints) |
 | `author.location` | string\|null | ISO region code (e.g. `US`) or freeform location string when surfaced (with `include=profile` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `author.posts_count` | number\|null | Total number of posts / videos / tracks / episodes (with `include=profile` on some endpoints) |
 | `author.private` | boolean\|null | (with `include=profile` on some endpoints) |
 | `author.url` | string\|null | Direct URL to the profile page |
 | `author.username` | string\|null | User handle or username |
-| `author.verified` | boolean\|null | Whether the account is verified |
+| `author.verified` | boolean\|null | Whether the account is verified (with `include=details` on some endpoints) |
 | `computed.relevance` | object\|null | Without this param every row already carries computed.relevance against your query, free ({ p, sense, depth, spam }: is this row about what your query means, or a different thing that shares its words?), and nothing is dropped or reordered. |

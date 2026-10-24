@@ -127,7 +127,7 @@ Returns one page of listings from an Etsy shop, 36 per page, each with listing i
 
 **Use when** you want to walk a shop catalogue. Paginate until a page comes back short. Feed a listing id into product for the full listing.
 **Cost** cache 120 s
-**Paging** page (native `page`) · 36/page by default, max 36; set with `limit` · depth unknown · N items ≈ ceil(N/36) x 5 credits
+**Paging** page (native `page`) · 36/page by default, max 36; set with `limit` · depth unknown · N items ≈ ceil(N/36) x 5 credits · typical 2.2-4.4 s
 
 **Query params**
 

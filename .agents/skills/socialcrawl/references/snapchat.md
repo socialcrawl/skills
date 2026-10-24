@@ -40,7 +40,7 @@ Returns public profile information for a Snapchat user including display name, B
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+10 more (types in the full schema): `author` {followers, following, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}. Never filled: `author.likes_count`.
++11 more (types in the full schema): `author` {followers, following, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.likes_count`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/profile" \
@@ -54,12 +54,14 @@ Returns comments on a Snapchat Spotlight snap. Each comment includes text, displ
 
 **Use when** you have a Spotlight URL and want the comment thread, paging with cursor.
 **Cost** cache 300 s
-**Paging** cursor · ≈25/page (observed) · depth unknown · N items ≈ ceil(N/25) x 1 credits
+**Paging** cursor · ≈25/page (observed) · depth unknown · N items ≈ ceil(N/25) x 1 credits · typical 2.2-6.2 s
 
 **Query params**
 
 - `url` (required) - Full URL of the Snapchat Spotlight snap. · e.g. `https://www.snapchat.com/@lilah4823/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYY2pvZnd0ZXVmAZ8fgG8pAZ8ff-_IAAAAAQ`
 - `cursor` (optional, string) - Cursor from the previous response to fetch the next page.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 

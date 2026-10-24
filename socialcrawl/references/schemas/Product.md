@@ -13,7 +13,7 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.ext.aliexpress.shop_url` | string\|null | (seen in a sample response) |
 | `product.ext.aliexpress.subcategory` | string\|null | (seen in a sample response) |
 | `product.ext.available_quantity` | number\|null | (seen in a sample response) |
-| `product.ext.bought_past_month` | number\|null |  |
+| `product.ext.bought_past_month` | number\|null | (only when the fallback source serves) |
 | `product.ext.catalog_id` | string\|null |  |
 | `product.ext.condition` | string\|null | (seen in a sample response) |
 | `product.ext.etsy.favorites` | number\|null | (seen in a sample response) |
@@ -78,6 +78,12 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.ext.sold_count` | number\|null |  |
 | `product.ext.store_inventory` | array\|null | (seen in a sample response) |
 | `product.ext.tiktokshop` | object\|null |  |
+| `product.ext.tiktokshop.delivery_days_max` | unknown\|null | (with `include=details`) |
+| `product.ext.tiktokshop.delivery_days_min` | unknown\|null | (with `include=details`) |
+| `product.ext.tiktokshop.delivery_estimate` | unknown\|null | (with `include=details`) |
+| `product.ext.tiktokshop.free_shipping` | unknown\|null | (with `include=details`) |
+| `product.ext.tiktokshop.shipping_fee` | unknown\|null | (with `include=details`) |
+| `product.ext.tiktokshop.shop_identity` | unknown\|null | (with `include=details`) |
 | `product.ext.upc` | unknown\|null |  |
 | `product.features` | array\|null |  |
 | `product.id` | string | Platform product ID (Amazon ASIN / Google Shopping product id) |
@@ -89,7 +95,7 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.rating.count` | number\|null |  |
 | `product.reviews_count` | number\|null |  |
 | `product.seller` | string\|null |  |
-| `product.specifications` | array\|null |  |
+| `product.specifications` | array\|null | (with `include=details` on some endpoints) |
 | `product.title` | string\|null | Product title |
 | `product.url` | string\|null | Direct URL to the product page |
 | `product.variations` | array\|null |  |

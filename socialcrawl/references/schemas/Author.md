@@ -1,6 +1,6 @@
 # Author fields
 
-Every field the 38 field-mapped endpoints returning `Author` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 41 field-mapped endpoints returning `Author` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -16,6 +16,8 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.banner_url` | string\|null |  |
 | `author.ext.bannerExternalUrl` | string\|null | (only when the fallback source serves) |
 | `author.ext.bio_link` | string\|null | (on some endpoints only when the fallback source serves) |
+| `author.ext.blog_name` | string\|null |  |
+| `author.ext.blog_no` | string\|null |  |
 | `author.ext.business_category` | string\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.business_hours` | array\|null |  |
 | `author.ext.collects_received` | number\|null |  |
@@ -24,6 +26,8 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.country` | string\|null |  |
 | `author.ext.cover_url` | string\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.creator_username` | string\|null |  |
+| `author.ext.embed_html` | string\|null |  |
+| `author.ext.embed_url` | string\|null |  |
 | `author.ext.employee_count` | number\|null |  |
 | `author.ext.employee_count_range` | object\|null |  |
 | `author.ext.followers_approximate` | boolean\|null | True when `author.followers` is a published or rounded figure rather than an unrounded census: LinkedIn people-list display buckets, TikTok `stats.followerCount` when the exact sibling is absent, and YouTube subscriber counts at or above 1,000. Null or absent on exact counts. |
@@ -64,8 +68,10 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.madeForKids` | boolean\|null | (seen in a sample response) |
 | `author.ext.member_id` | string\|null |  |
 | `author.ext.monthly_listeners` | number\|null |  |
+| `author.ext.official_blog` | boolean\|null |  |
 | `author.ext.page_active` | boolean\|null |  |
 | `author.ext.post_karma` | number\|null |  |
+| `author.ext.power_blog` | boolean\|null |  |
 | `author.ext.price_range` | string\|null |  |
 | `author.ext.profile_title` | string\|null |  |
 | `author.ext.public_email` | string\|null |  |
@@ -79,6 +85,7 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.social_links` | array\|null |  |
 | `author.ext.specialities` | array\|null |  |
 | `author.ext.talking_about_count` | number\|null |  |
+| `author.ext.topic` | string\|null |  |
 | `author.ext.topic_ids` | array\|null | (seen in a sample response) |
 | `author.ext.topicCategories` | array\|null | (seen in a sample response) |
 | `author.ext.total_ratings` | number\|null | Spotify podcasts only: how many listeners have rated the show. Cumulative over the show's whole run, so it reflects longevity as well as size, and it is NOT an audience count (Spotify publishes no play, download, subscriber or follower count for a podcast) |
@@ -86,6 +93,8 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.trophy_count` | number\|null |  |
 | `author.ext.unsubscribed_trailer` | string\|null | (seen in a sample response) |
 | `author.ext.urn` | string\|null | (only when the fallback source serves) |
+| `author.ext.visitors_today` | number\|null |  |
+| `author.ext.visitors_total` | number\|null |  |
 | `author.ext.website` | string\|null | (on some endpoints only when the fallback source serves) |
 | `author.ext.weekly_active_users` | number\|null |  |
 | `author.ext.weekly_contributions` | number\|null |  |
@@ -106,3 +115,4 @@ Every field the 38 field-mapped endpoints returning `Author` can carry, with pat
 | `computed.engagement_rate` | number\|null | Computed engagement rate (0..1). Null when the upstream lacks enough signal. |
 | `computed.estimated_reach` | number\|null | Estimated reach based on views or follower count. Null when uncomputable. |
 | `computed.language` | string\|null |  |
+| `computed.save_rate` | number\|null |  |

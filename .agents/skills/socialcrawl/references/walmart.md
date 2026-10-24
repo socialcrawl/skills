@@ -26,7 +26,7 @@ Returns products listed in a Walmart category, up to 100 per call, with title, p
 
 **Use when** you want to walk or price-monitor a whole Walmart category by its id, since it reports real prices. De-duplicate by product id when paging.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 12-12 s
 
 **Query params**
 
@@ -136,7 +136,7 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 **Use when** you want what shoppers wrote about a Walmart item. Sort the results yourself, since the sort option does not guarantee an order.
 **Cost** price moves with `label` · cache 300 s
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 7.8-7.8 s
 
 **Query params**
 
@@ -146,7 +146,15 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 - `sort` (optional, enum: relevancy | recent | rating_high_low | rating_low_high) - Which reviews to return: relevancy (default), recent, rating_high_low, or rating_low_high. Changes the selection but does not guarantee the returned page is ordered; sort client-side if you need a strict order. · e.g. `recent`
 - `rating` (optional, integer, 1-5) - Return only reviews with this exact star rating, 1 to 5. Applied exactly.
 - `country` (optional, enum: US | CA) - Walmart marketplace as a two-letter country code: US (walmart.com, default) or CA (walmart.ca). A product id from one marketplace will not resolve in the other.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -173,7 +181,7 @@ Returns Walmart search results for a keyword: title, product id, URL, image, pri
 
 **Use when** you want to turn a keyword into the product ids the rest of the Walmart API takes. Rows carry prices, and an in-stock row without one reports null rather than zero.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** page (native `page`) · ≈36/page (observed once) · depth unknown · N items ≈ ceil(N/36) x 5 credits
+**Paging** page (native `page`) · ≈36/page (observed once) · depth unknown · N items ≈ ceil(N/36) x 5 credits · typical 5.5-11 s
 
 **Query params**
 

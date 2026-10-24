@@ -121,7 +121,7 @@ Returns products similar to a source product id, or to a keyword if no product i
 **Use when** Use it after product or search when you want nearby listings.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits
+**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits · typical 1.4-1.6 s
 
 **Query params**
 
@@ -185,7 +185,7 @@ Returns written customer reviews for an AliExpress product, 20 per page, each wi
 **Cost** price moves with `label` · cache 300 s
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · 20/page by default · depth unknown · price per N items not proven
+**Paging** page (native `page`) · 20/page by default · depth unknown · price per N items not proven · typical 1.1-1.2 s
 
 **Query params**
 
@@ -196,11 +196,16 @@ Returns written customer reviews for an AliExpress product, 20 per page, each wi
 - `sort_by` (optional, enum: default | newest) - Review ordering: default or newest.
 - `country` (optional, string) - Reviewer country when filter=local. Default US.
 - `language` (optional, string) - Copy language as an ISO code. Default EN. Live-validated: EN RU PT ES FR ID IT TH JA AR VI TR DE HE KO NL PL MX CL IN.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
 
 **Constraints**
 
 - Provide at least one of `product_id`, `url`.
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -228,7 +233,7 @@ Returns AliExpress products matching a keyword, 10 per page by default (max 50).
 **Use when** you want to find products by keyword. A query that matches nothing comes back empty and is not billed.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits
+**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits · typical 1.3-3.3 s
 
 **Query params**
 
@@ -272,7 +277,7 @@ Returns currently hot AliExpress products, optionally filtered by keyword or cat
 **Use when** you want to browse currently promoted catalogue items without a precise keyword.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits
+**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits · typical 0.9-0.9 s
 
 **Query params**
 
@@ -314,7 +319,7 @@ Returns products in a named AliExpress promotion. Promotion names come from GET 
 **Use when** Use it with a promotion name from GET /v1/aliexpress/promo.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits
+**Paging** page (native `page`) · 10/page by default, max 50 · depth unknown · N items ≈ ceil(N/10) x 5 credits · typical 1.1-1.3 s
 
 **Query params**
 

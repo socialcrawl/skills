@@ -79,7 +79,7 @@ class SkillPackageTests(unittest.TestCase):
             prism,
         )
         self.assertIn(
-            "## POST /v1/prism/profiles - 1-250 credits (request-shaped)",
+            "## POST /v1/prism/profiles - 1-126,375 credits (request-shaped)",
             prism,
         )
         self.assertIn(
@@ -164,6 +164,11 @@ class BundledScriptTests(unittest.TestCase):
         if not SCRIPT_TESTS.is_dir():
             self.skipTest("codebase script tests are not checked out next to this repo")
         env = {"PATH": os.environ.get("PATH", ""), "PYTHONDONTWRITEBYTECODE": "1"}
+        # Windows cannot open a socket without SYSTEMROOT (WinError 10106), and
+        # the fake API the script tests run against is a local HTTP server.
+        for name in ("SYSTEMROOT", "USERPROFILE"):
+            if name in os.environ:
+                env[name] = os.environ[name]
         result = subprocess.run(
             [sys.executable, "-m", "unittest", "discover", "-s", str(SCRIPT_TESTS)],
             cwd=ROOT,

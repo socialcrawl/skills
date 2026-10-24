@@ -65,18 +65,23 @@ Returns a unified ReviewList of customer reviews for a Yelp business, keyed by t
 **Use when** Use it after business/info to page the review thread. Page 2 does not overlap page 1.
 **Cost** price moves with `label` · cache 300 s
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** cursor · ≈10/page (observed once) · depth unknown · price per N items not proven
+**Paging** cursor · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 2.4-2.5 s
 
 **Query params**
 
 - `id` (optional, string) - Yelp business encid, the 22-character opaque id (for example zj8Lq1T8KIC5zwFief15jg for Prince Street Pizza). Alias slugs such as prince-street-pizza-new-york-2 are not accepted on this surface: they come back as not found. · e.g. `zj8Lq1T8KIC5zwFief15jg`
 - `url` (optional, string) - Yelp business URL. Only URLs whose /biz/ segment is the 22-character encid resolve. Alias URLs such as https://www.yelp.com/biz/prince-street-pizza-new-york-2 come back as not found.
 - `cursor` (optional, string) - Opaque cursor from the previous page's next_cursor. Omit on page 1.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
 
 **Constraints**
 
 - Provide at least one of `id`, `url`.
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -99,19 +104,19 @@ curl -G "https://www.socialcrawl.dev/v1/yelp/business/reviews" \
 
 ## GET /v1/yelp/search - 1 credit (standard)
 
-Searches Yelp businesses by term and location. Returns a unified PlaceList: name, rating, review count, price level, address, coordinates, categories, and photos when the provider returns rows. Sort by recommended, rating, or review_count. ads=true includes sponsored results. Page with cursor from next_cursor. If the provider reports a non-zero total with no rows, the call fails and is refunded. Search cards may carry an alias URL; only the 22-character encid resolves on GET /v1/yelp/business/info.
+Searches Yelp businesses by term and location. Returns a unified PlaceList of 10 businesses a page: the 22-character encid as place.id (use it on GET /v1/yelp/business/info and /v1/yelp/business/reviews), name, Yelp URL, unrounded star rating, review count, price level, address, coordinates, categories, and photos, with the total number of matches. Results are in Yelp's recommended order; sort=rating and sort=review_count are refused with a free 400. ads=true adds sponsored businesses after the regular results. Page with cursor from next_cursor. A location Yelp does not cover returns an empty list and is not billed.
 
 **Use when** you want to find businesses before business/info. query and location are required. If the provider reports a non-zero total with no rows, the call fails and is refunded.
-**Cost** cache 120 s
-**Paging** cursor · page size not measured · depth unknown
+**Cost** cache 120 s · multi-source (billed once)
+**Paging** cursor · page size not measured · depth unknown · typical 1.8-2.0 s
 
 **Query params**
 
 - `query` (required) - Search term as typed on Yelp, for example Pizza or coffee. · e.g. `Pizza`
 - `location` (required) - City or full location string, for example New York, NY or San Francisco, CA, United States. Required with query. · e.g. `New York, NY`
-- `cursor` (optional, string) - Cursor from the previous page's next_cursor. Omit on page 1. Live pages use a numeric offset such as 10.
-- `sort` (optional, enum: recommended | rating | review_count) - Result order. recommended (default), rating, or review_count.
-- `ads` (optional, boolean) - When true, include sponsored results. Default false.
+- `cursor` (optional, string) - Cursor from the previous page's next_cursor. Omit on page 1. Pages hold 10 regular businesses (plus any sponsored ones when ads=true); the cursor is a numeric offset such as 10.
+- `sort` (optional, enum: recommended | rating | review_count) - Result order. Only recommended (the default, Yelp's recommended order) is served. rating and review_count are refused with a free 400: no source can order Yelp search by them. To rank by rating or review count, sort the returned items by place.rating.value or place.reviews_count yourself.
+- `ads` (optional, boolean) - When true, sponsored businesses are added after the page's regular results. They are not marked as sponsored. Default false.
 
 **Response** `PlaceList` rows at `data.items[]`, each `{ place }` ([full schema](schemas/PlaceList.md))
 
@@ -119,12 +124,12 @@ Searches Yelp businesses by term and location. Returns a unified PlaceList: name
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
+| `place.url` | Website or canonical URL (only when the fallback source serves) |
 | `place.price_level` | Price band ("inexpensive" / "$$" / null) |
 | `place.reviews_count` | Number of ratings |
 | `place.address` |  |
-| `place.latitude` |  |
 
-+2 more (types in the full schema): `place` {longitude}; `place.rating` {value}. Page-level: `data.dropped`.
++3 more (types in the full schema): `place` {latitude, longitude}; `place.rating` {value}. Page-level: `data.dropped`.
 
 **Next** `yelp/business/reviews` (`id` ← `data.items[].place.id`) - Get Yelp reviews for a business. · `yelp/business/info` (`id` ← `data.items[].place.id`) - Get a Yelp business by encid.
 
@@ -137,19 +142,19 @@ curl -G "https://www.socialcrawl.dev/v1/yelp/search" \
 
 ## GET /v1/yelp/search/full - 1 credit (standard)
 
-Same search as GET /v1/yelp/search, on the full-search path that is documented to return fuller business cards. Same required query + location, and the same optional cursor, sort (recommended | rating | review_count), and ads. Returns a unified PlaceList. If the provider reports a non-zero total with no rows, the call fails and is refunded.
+Same search and the same PlaceList as GET /v1/yelp/search: same required query + location, the same optional cursor, sort, and ads, and the same fields on every business. Results are in Yelp's recommended order; sort=rating and sort=review_count are refused with a free 400. A location Yelp does not cover returns an empty list and is not billed.
 
 **Use when** you want the fuller search card. Same required params as /v1/yelp/search.
-**Cost** cache 120 s
-**Paging** cursor · page size not measured · depth unknown
+**Cost** cache 120 s · multi-source (billed once)
+**Paging** cursor · page size not measured · depth unknown · typical 1.6-17 s
 
 **Query params**
 
 - `query` (required) - Search term as typed on Yelp, for example Pizza or coffee. · e.g. `Pizza`
 - `location` (required) - City or full location string, for example New York, NY or San Francisco, CA, United States. Required with query. · e.g. `New York, NY`
-- `cursor` (optional, string) - Cursor from the previous page's next_cursor. Omit on page 1. Live pages use a numeric offset such as 10.
-- `sort` (optional, enum: recommended | rating | review_count) - Result order. recommended (default), rating, or review_count.
-- `ads` (optional, boolean) - When true, include sponsored results. Default false.
+- `cursor` (optional, string) - Cursor from the previous page's next_cursor. Omit on page 1. Pages hold 10 regular businesses (plus any sponsored ones when ads=true); the cursor is a numeric offset such as 10.
+- `sort` (optional, enum: recommended | rating | review_count) - Result order. Only recommended (the default, Yelp's recommended order) is served. rating and review_count are refused with a free 400: no source can order Yelp search by them. To rank by rating or review count, sort the returned items by place.rating.value or place.reviews_count yourself.
+- `ads` (optional, boolean) - When true, sponsored businesses are added after the page's regular results. They are not marked as sponsored. Default false.
 
 **Response** `PlaceList` rows at `data.items[]`, each `{ place }` ([full schema](schemas/PlaceList.md))
 
@@ -157,12 +162,12 @@ Same search as GET /v1/yelp/search, on the full-search path that is documented t
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
+| `place.url` | Website or canonical URL (only when the fallback source serves) |
 | `place.price_level` | Price band ("inexpensive" / "$$" / null) |
 | `place.reviews_count` | Number of ratings |
 | `place.address` |  |
-| `place.latitude` |  |
 
-+2 more (types in the full schema): `place` {longitude}; `place.rating` {value}. Page-level: `data.dropped`.
++3 more (types in the full schema): `place` {latitude, longitude}; `place.rating` {value}. Page-level: `data.dropped`.
 
 **Next** `yelp/business/reviews` (`id` ← `data.items[].place.id`) - Customer reviews of each business. · `yelp/business/info` (`id` ← `data.items[].place.id`) - Get a Yelp business by encid.
 

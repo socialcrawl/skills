@@ -63,7 +63,7 @@ curl -G "https://www.socialcrawl.dev/v1/google_play/app-info" \
 
 ## GET /v1/google_play/app-list - 5 credits (advanced)
 
-Returns a unified AppList for a Google Play store chart (top free, top paid, top grossing, movers & shakers, etc.), optionally scoped to a category. Each item is the same canonical `App` shape as app-search. Use it to track ranking movements or build a category leaderboard.
+Returns a unified AppList for a Google Play store chart (top free, top paid, top grossing, movers & shakers, etc.), optionally scoped to a category. Each item is the same canonical `App` shape as app-search, and `app.rank` is its position in the chart (1 is the top), in the order the items arrive. Use it to track ranking movements or build a category leaderboard. A chart row carries the title, icon, developer name, store URL, price and free flag, and the star rating (`app.rating.value`) where the storefront publishes it. `app.reviews_count` and `app.rating.count` are not sent on chart rows in any storefront and are always null here; read them from /v1/google_play/app-info. Some storefronts send no star rating on chart rows at all: on 19/10/2026 the South African (`country=ZA`) top free chart had no rating on 100 of 100 apps, while Nigeria had a rating on all 100 and Kenya on 98. When no app on the page has a rating, `_warnings` carries `ratings_unavailable`, so an empty rating column is never mistaken for zero; /v1/google_play/app-info returns the rating for one app in that storefront. `app.ext.appdata` is the store's raw row, kept for reference; read the unified leaves above it first.
 
 **Use when** you want to track ranking movements or build a category leaderboard, rather than searching for one named app.
 **Cost** cache 120 s
@@ -92,7 +92,7 @@ Returns a unified AppList for a Google Play store chart (top free, top paid, top
 | `app.developer.id` |  |
 | `app.developer.name` |  |
 
-+23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
++21 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free, original} (+2 more). Never filled: `app.rating.count`, `app.reviews_count`. Page-level: `data.dropped`.
 
 **Next** `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Get full Google Play app details.
 
@@ -108,7 +108,7 @@ Searches a real-time, filterable Google Play listings database by app title (and
 
 **Use when** you must page through many results, since it is the only Google Play endpoint with real paging.
 **Cost** cache 120 s
-**Paging** cursor (native `offset_token`) · ≈20/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 10 credits
+**Paging** cursor (native `offset_token`) · ≈20/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 10 credits · typical 0.7-0.7 s
 
 **Query params**
 
@@ -159,7 +159,16 @@ Returns a unified ReviewList of Google Play user reviews for an app, keyed by it
 - `depth` (optional, integer) - Number of reviews to retrieve (default 150, batches of 150, max 600). · e.g. `150`
 - `sort_by` (optional, enum: newest | most_relevant) - Review ordering: `newest` (default) or `most_relevant`. · e.g. `newest`
 - `rating` (optional, integer) - Filter to a single star rating (1-5). Verified working on this store (measured 06/09/2026: `rating=5` returns 150 five-star reviews, `rating=1` returns 150 one-star). The Apple App Store has no equivalent filter upstream.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `since` requires `sort_by=newest` (auto-injected when `sort_by` is absent; a different value is a free 400).
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -182,7 +191,7 @@ curl -G "https://www.socialcrawl.dev/v1/google_play/app-reviews" \
 
 ## GET /v1/google_play/app-search - 5 credits (advanced)
 
-Returns a unified AppList of Google Play apps matching a keyword: title, icon, developer, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "google_play"). Detail-only fields (description, screenshots, installs) are null on search items; fetch /v1/google_play/app-info for the full record. Served from the Google Play catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
+Returns a unified AppList of Google Play apps matching a keyword: title, icon, developer, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "google_play"). `app.rank` is the position of the app in the results (1 is the first). Detail-only fields (description, screenshots, installs) are null on search items; fetch /v1/google_play/app-info for the full record. Some storefronts send no star rating on search rows (on 19/10/2026, 21 of 21 rows in South Africa, `country=ZA`); when no app on the page has a rating, `_warnings` carries `ratings_unavailable`. Served from the Google Play catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
 
 **Use when** you want to find an app's package name by keyword; description, screenshots, and install counts come from app-info.
 **Cost** cache 120 s

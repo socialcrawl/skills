@@ -55,13 +55,21 @@ Ten platforms: `bluesky`, `instagram`, `kwai`, `linkedin`, `threads`, `tiktok`, 
 ## Rules that will bite you
 
 - **Everything is scoped to the API key, not the account.** A cohort or query created with one key is a `404` from any other key on the same account. A cross-tenant hit and a genuine miss both return `404`, never `403`.
-- **`POST` and `PUT` require an `Idempotency-Key` header holding a UUID.** `DELETE` does not. Same key plus the same body replays the original response and sets `X-Idempotent-Replay: true` (the envelope also carries `idempotent_replay: true`). Same key plus a different body is a `422 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH`. A missing or non-UUID key is a `400`.
+- **`POST` and `PUT` require an `Idempotency-Key` header holding a UUID.** `DELETE` does not. Same key plus the same body replays the original response (same status: `201`, `200` or `202`) and sets `X-Idempotent-Replay: true` and `Idempotent-Replayed: true` (the envelope also carries `idempotent_replay: true`). Same key plus a different body is a `422 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH`. A missing or non-UUID key is a `400`.
 - **`external_id` names exactly ONE identity in a cohort.** It is unique per cohort. Re-sending an existing `external_id` with a different platform or handle **replaces** that member's identity. It does not add a second one. A person with accounts on three platforms needs three different `external_id`s (for example `buyer_01984:tiktok`, `buyer_01984:youtube`). Reusing one `external_id` for two identities is never supported. Depending on the order the rows arrive in, it either fails the chunk or silently keeps only the last identity.
 - **`date_from` is a full RFC3339 timestamp with an offset**, not a calendar date. `2026-08-01` is a `400`. Send `2026-08-01T00:00:00.000Z`. The same applies to `date_to`, and `date_to` must not be earlier than `date_from`.
 - **A cohort never reads identities back.** `GET /v1/cohorts/{id}` returns metadata and counts only. Handles and external ids are encrypted at rest and cannot be retrieved through the API, so keep your own copy.
 - **Results are served only when `status` is `succeeded`.** For `queued`, `running`, `failed`, `cancelled` and `expired` queries, the results route returns `409 COHORT_QUERY_NOT_READY`. If you cancel a running query, you lose access to the matches it already found, and you still pay for the pages it fetched.
 - **`succeeded` does not mean exhaustive.** Upstream errors on a member do not fail the query. They show up as coverage `status: "failed"` and in `progress.pages_failed`. Read each member's `coverage` before you treat a result set as complete.
 - Every response carries `Cache-Control: private, no-store`.
+
+## Dry runs (`dry_run=1`)
+
+Every route except the results read accepts `?dry_run=1` (or `true`). It runs that route's own checks (path id, `Idempotency-Key` on POST/PUT, the strict body schema, and that the cohort or query exists under this key) and answers `200` with `credits_used: 0`, including create (normally `201`) and both deletes (normally `204`). Nothing is created, written, held, cancelled or deleted, and the `Idempotency-Key` is not claimed, so send the same key with the real call. `data` is `{ valid: true, normalized_params, estimate: { hold, expected_min, expected_max, unit: "credits", notes } }`; free routes quote `hold: 0`.
+
+- On `POST /v1/cohorts/{cohortId}/queries` the dry run does **not** compute the ceiling: it returns `hold: null`, `expected_max: max_credits` and the cohort's `member_count`, and it does not catch `max_credits` below the ceiling or a `platforms` subset with no members. `GET /v1/utility/estimate` cannot price a cohort query either. Compute the ceiling yourself with the formula under [Pricing](#pricing) and quote that.
+- Any other `dry_run` value is a free `400`. Put `dry_run` in the query string.
+- `GET /v1/cohort-queries/{queryId}/results` ignores `dry_run` and does a normal (free) read.
 
 ## POST /v1/cohorts: create a cohort
 
@@ -72,6 +80,8 @@ Body (JSON):
 - `retention_days` (optional, integer, 7 to 90, default 30): how long the cohort lives. `expires_at = now + retention_days`. Each new member upload and each query submission renews the clock (an idempotent replay does not).
 
 Response `data`: `id`, `name`, `member_count`, `retention_days`, `created_at`, `updated_at`, `expires_at`.
+
+Send a JSON body even when you set neither field: `{}` is valid, and an empty request body is a `400 INVALID_REQUEST`.
 
 The 101st cohort on one key is a `400 COHORT_LIMIT_EXCEEDED`. Delete an unused cohort to make room.
 
@@ -307,7 +317,7 @@ Keyword matching is deterministic code, not a model. It never stems, fuzzes, exp
 
 A query bills in two steps.
 
-**1. Hold at submission.** The ceiling is computed and deducted from your balance up front:
+**1. Hold at submission.** The ceiling is computed and deducted from your balance up front. Neither `GET /v1/utility/estimate` nor `dry_run=1` computes it, so work it out with this formula before you submit:
 
 ```
 ceiling = SUM over queried members, over that platform's endpoints, of
@@ -327,7 +337,7 @@ Per queried member, that works out to:
 - The hardest possible ceiling is 10,000 members x 40 (Instagram or YouTube at 20 pages) = 400,000.
 - The hold fails before anything is created, and nothing is charged:
   - `max_credits` below the ceiling: `400 INVALID_REQUEST`, with `error.details = { estimated_credits, max_credits }`. Raise `max_credits` to at least `estimated_credits`.
-  - `max_credits` above 1,000,000: `400 INVALID_REQUEST`, with `error.details = { max_credits, max_credits_limit }`.
+  - `max_credits` above 1,000,000: `400 INVALID_REQUEST` naming `max_credits` (as `error.details = { max_credits, max_credits_limit }`, or as a `too_big` schema issue on `max_credits`).
   - Balance below the ceiling, or the hold would breach the API key's own spend cap: `402 INSUFFICIENT_CREDITS`.
 - The hold also counts against the key's spend cap. `max_credits` is a safety limit, never permission to spend: the hold is always exactly the ceiling.
 

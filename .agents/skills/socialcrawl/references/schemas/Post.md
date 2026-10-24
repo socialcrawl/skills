@@ -1,6 +1,6 @@
 # Post fields
 
-Every field the 38 field-mapped endpoints returning `Post` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 40 field-mapped endpoints returning `Post` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -8,6 +8,7 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `computed.engagement_rate` | number\|null | Computed engagement rate (0..1). Null when the upstream lacks enough signal. |
 | `computed.estimated_reach` | number\|null | Estimated reach based on views or follower count. Null when uncomputable. |
 | `computed.language` | string\|null | ISO 639-1 language code detected from the post text. Null when undetectable. |
+| `computed.save_rate` | number\|null |  |
 | `post.author.avatar_url` | string\|null | URL to author profile picture (on some endpoints only when the fallback source serves) |
 | `post.author.display_name` | string\|null | Author display name |
 | `post.author.username` | string\|null | Author username (on some endpoints only when the fallback source serves) |
@@ -72,7 +73,8 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.author_followers` | number\|null | The creator's follower count as embedded in the search payload itself, when the search source happens to carry one. On `instagram/search/reels` it is null on a plain call, because Instagram stopped sending follower counts in its search payload in August 2026; send `include=creator` (or `country`) and it is filled from the creator's profile, 2 credits per creator looked up. It stays null when that lookup does not resolve. |
 | `post.ext.author_following` | number\|null |  |
 | `post.ext.author_headline` | string\|null | (seen in a sample response) |
-| `post.ext.author_id` | string\|null | The creator's platform-native numeric user id. On TikTok search and list items, pass to `/v1/tiktok/profile?user_id=` for the creator's current follower count (survives username changes). On `instagram/search/reels` items it is present on every row from every serving source, accepted by `/v1/instagram/basic-profile?userId=`. On Facebook it appears when the upstream exposed a numeric actor id and no real handle. (on some endpoints only when the fallback source serves) |
+| `post.ext.author_id` | string\|null | The creator's platform-native numeric user id. On TikTok search and list items, pass to `/v1/tiktok/profile?user_id=` for the creator's current follower count (survives username changes). On Instagram `/v1/instagram/search/reels`, `/v1/instagram/search/hashtag` and `/v1/instagram/location/posts` items it is present on every row, accepted by `/v1/instagram/profile/country?user_id=` and `/v1/instagram/basic-profile?userId=`. On Facebook it appears when the upstream exposed a numeric actor id and no real handle. (on some endpoints only when the fallback source serves) |
+| `post.ext.author_location` | string\|null | The free text the author wrote in their profile's location field, exactly as written (for example `Johannesburg, South Africa`). It is not a country code and is not checked. Present on X tweet and reply rows; null or absent when the author left it blank. |
 | `post.ext.author_posts_count` | number\|null |  |
 | `post.ext.author_type` | string\|null | (seen in a sample response) |
 | `post.ext.author_urn` | string\|null | (seen in a sample response) |
@@ -103,6 +105,7 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.commerce.seller_name` | unknown\|null |  |
 | `post.ext.commerce.strikethrough_price_formatted` | unknown\|null |  |
 | `post.ext.content_language` | string\|null | The language the platform itself tags the post with, when it sends one: Reddit's own language tag on Reddit endpoints, and TikTok's caption-language tag (for example `de`) on `/v1/tiktok/trending?feed=local`. Null when the platform could not tell (Reddit `und`, TikTok `un`, common on short or emoji-only captions); absent where the source sends no tag. Never inferred from the text by us: that is `post.computed.language`. |
+| `post.ext.conversation_id` | string\|null |  |
 | `post.ext.description` | string\|null | (on some endpoints only when the fallback source serves) |
 | `post.ext.download_count` | number\|null | How many times the video has been saved to a device. TikTok only, and distinct from `engagement.saves`: a save keeps the video in a private collection on the platform, a download takes a copy off it, and TikTok counts the two separately. Present on TikTok post, search and post-list responses; absent everywhere else. (on some endpoints only when the fallback source serves) |
 | `post.ext.event.address` | unknown\|null |  |
@@ -129,6 +132,8 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.flair` | string\|null |  |
 | `post.ext.hasPaidProductPlacement` | boolean\|null | (only when the fallback source serves) |
 | `post.ext.ig_play_count` | number\|null | Instagram-only play count (`ig_play_count`). Since mid-July 2026 Instagram's headline play count (`engagement.views`) no longer includes Facebook crosspost views and equals this value; it is surfaced explicitly so you can tell the Instagram-only figure apart and detect any future re-divergence. For combined Instagram + Facebook reach, also fetch the Facebook crosspost via `/v1/facebook/post`. Present on `/v1/instagram/post/stats` and, since the August 2026 views fix, on `/v1/instagram/post` for video posts. (on some endpoints only when the fallback source serves) |
+| `post.ext.in_reply_to_id` | string\|null |  |
+| `post.ext.in_reply_to_username` | string\|null |  |
 | `post.ext.ip_location` | string\|null |  |
 | `post.ext.media_type` | string\|null | (seen in a sample response) |
 | `post.ext.music_id` | string\|null | TikTok music/clip id (exact string): pass to `/v1/tiktok/song/videos?clipId=` to find videos using the same sound |
@@ -137,13 +142,16 @@ Every field the 38 field-mapped endpoints returning `Post` can carry, with paths
 | `post.ext.music.is_original` | boolean\|null | (seen in a sample response) |
 | `post.ext.music.track_title` | string\|null | (seen in a sample response) |
 | `post.ext.post_type` | string\|null | (seen in a sample response) |
+| `post.ext.posts_count` | number | `/v1/instagram/hashtag` only: the exact number of public posts Instagram counts under the hashtag. Live: it moves between calls minutes apart. |
 | `post.ext.published_at_epoch` | number\|null | Raw Unix epoch for `published_at` (seconds, or milliseconds when the upstream sent millis). Present only when the upstream sent a numeric epoch that was normalised to the ISO 8601 `published_at` string. Kept for one deprecation cycle for integrations pinned to the numeric form. (seen in a sample response) |
 | `post.ext.published_at_precision` | string\|null |  |
 | `post.ext.quote_count` | number\|null |  |
+| `post.ext.quoted_post` | object | Threads quote posts: the post this one quotes, as `{ id, url, author: { id, username }, text, media_urls, thumbnail_url }`. A quote post usually carries no caption or media of its own, and the text and video you see on the post's page belong to this attachment, by a different author. It is returned here rather than merged into `post.content`, so `content.*` always stays the outer post's own content and one account's media is never attributed to another. Absent on posts that are not quote posts. |
 | `post.ext.reaction_counts` | array\|null |  |
 | `post.ext.remix_count` | number\|null | (seen in a sample response) |
 | `post.ext.repost_count` | number\|null | (on some endpoints only when the fallback source serves) |
 | `post.ext.reshare_count` | number\|null |  |
+| `post.ext.retweeted_post` | object |  |
 | `post.ext.selftext` | string\|null |  |
 | `post.ext.subreddit` | string\|null | Reddit subreddit name (search/list items): pass to `/v1/reddit/subreddit/details?subreddit=` |
 | `post.ext.tags` | array\|null | (only when the fallback source serves) |

@@ -78,7 +78,7 @@ Returns one page of H&M products for a keyword, 36 per page by default, each wit
 
 **Use when** you want to search the H&M catalogue by keyword. Paginate with cursor until a short page. There is no product-detail endpoint; feed a product id into product/suppliers for factory data.
 **Cost** cache 120 s
-**Paging** page (native `page`) · 36/page by default, max 36; set with `limit` · depth unknown · N items ≈ ceil(N/36) x 5 credits
+**Paging** page (native `page`) · 36/page by default, max 36; set with `limit` · depth unknown · N items ≈ ceil(N/36) x 5 credits · typical 0.9-1.0 s
 
 **Query params**
 

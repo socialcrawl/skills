@@ -30,11 +30,13 @@ Returns a unified NewsArticleList of the top Google News results for a keyword, 
 - `location_code` (optional, integer) - Google location code (e.g. 2840 = United States: the codes are 2000 + the ISO 3166 numeric code, so small integers are not valid and are rejected). Use one of location_code / location_name / location_coordinate.
 - `location_name` (optional, string) - Google location name (e.g. 'South Korea').
 - `location_coordinate` (optional, string) - GPS target as 'latitude,longitude,radius_mm' (e.g. '40.7128,-74.0060,200') for local-news radius queries.
-- `language_code` (optional, string) - Google language code (e.g. 'en', 'ko'). Default 'en'. · e.g. `en`
+- `language_code` (optional, string) - Google language code (e.g. 'en', 'ko'). Default 'en'. Without a location, en and es get the US edition and most other languages their home edition (bn = Bangladesh, ko = South Korea). Region codes such as pt-BR, zh-TW or zh-Hans are accepted and pick that edition. · e.g. `en`
 - `time_range` (optional, enum: hour | day | week | month | year) - Only return articles published within this window: hour, day, week, month, or year. Ignored when from/to is present. Resolution is a calendar DAY on the primary source, so `day` means 'since yesterday', not the last 24 hours; only `hour` is a true rolling window, and it is served by the fallback. · e.g. `day`
 - `publisher` (optional, string) - Limit results to a single outlet's domain (e.g. 'bbc.com'). Bare domain only, no scheme, no path. Not combinable with location_coordinate or time_range=hour. · e.g. `bbc.com`
 - `from` (optional, string) - Start of an exact publish-date window, as YYYY-MM-DD or a Unix timestamp. Overrides time_range. Not combinable with location_coordinate or time_range=hour. · e.g. `2026-07-01`
 - `to` (optional, string) - End of the publish-date window (inclusive), as YYYY-MM-DD or a Unix timestamp. Defaults to now when only from is set. · e.g. `2026-07-15`
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `NewsArticleList` rows at `data.items[]`, each `{ article }` ([full schema](schemas/NewsArticleList.md))
 

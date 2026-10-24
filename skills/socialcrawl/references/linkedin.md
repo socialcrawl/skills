@@ -77,7 +77,7 @@
 | [GET search/posts](#get-v1linkedinsearchposts---1-56-credits-request-shaped) | 1-56 credits (request-shaped) | Use it for broad keyword monitoring; it reads public… |
 | [GET search/schools](#get-v1linkedinsearchschools---1-credit-standard) | 1 credit (standard) | Use it to turn a university name into the school id that… |
 
-**Cheaper or broader options:** `prism/profiles` - Up to 50 profiles per call, at the same price per profile, with the ones not found refunded. `search/multi` - The same query on several platforms' search in one call, at the same price per platform.
+**Cheaper or broader options:** `prism/profiles` - Up to 50 profiles per call, at the same price per profile, with the ones not found refunded. `prism/profile/comments` - The same data from prism. `search/multi` - The same query on several platforms' search in one call, at the same price per platform.
 
 <!-- END:GENERATED:TOC -->
 
@@ -106,7 +106,7 @@ Returns one LinkedIn Ad Library ad as a canonical Post: `content.text` (the ad c
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++10 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/ad" \
@@ -120,7 +120,7 @@ Searches the LinkedIn Ad Library for ads by company, keyword, or filters. Return
 
 **Use when** you want to find what a competitor is running, then pass a result's ad URL to ad for the complete record.
 **Cost** cache 120 s
-**Paging** cursor (native `paginationToken`) · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 5 credits
+**Paging** cursor (native `paginationToken`) · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 5 credits · typical 6.8-9.1 s
 
 **Query params**
 
@@ -169,7 +169,7 @@ Returns one Pulse article as a canonical Post: text, author, engagement, and pub
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+15 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {published_at_precision}.
++16 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {published_at_precision}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/article" \
@@ -184,12 +184,14 @@ Returns comments on a Pulse article as a canonical CommentList: commenter identi
 **Use when** Use it after article or profile/articles, passing the article URL.
 **Cost** cache 300 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · ≈10/page (observed) · depth unknown · N items ≈ ceil(N/10) x 5 credits
+**Paging** page (native `page`) · ≈10/page (observed) · depth unknown · N items ≈ ceil(N/10) x 5 credits · typical 2.3-2.3 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn Pulse article. · e.g. `https://www.linkedin.com/pulse/2024-corporate-climate-pivot-bill-gates-u89mc/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -217,7 +219,7 @@ Returns members who reacted to a Pulse article as a canonical AuthorList. The re
 **Use when** Use it after article, passing the same Pulse URL.
 **Cost** cache 300 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.0-2.1 s
 
 **Query params**
 
@@ -268,9 +270,9 @@ Returns public information about a LinkedIn company page. Canonical fields carry
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+24 more (types in the full schema): `author` {followers, verified, location, following, likes_count, posts_count, joined_at, private}; `author.ext` {employee_count, industries, locations, page_active, specialities, website, cover_url}; `computed` {content_category, engagement_rate, estimated_reach, language} (+5 more).
++25 more (types in the full schema): `author` {followers, verified, location, following, likes_count, posts_count, joined_at}; `author.ext` {employee_count, industries, locations, page_active, specialities, website, cover_url}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate} (+6 more).
 
-**Next** `linkedin/company/posts` (`company_id` ← `data.author.id`) - The company page's latest posts. · `linkedin/company/jobs` (`company_id` ← `data.author.id`) - The company's open jobs. · `linkedin/company/also-viewed` (`company_id` ← `data.author.id`) - List company pages people also viewed. · `linkedin/company/employees-count` (`company_id` ← `data.author.id`) - Get a company's employee count, optionally by location.
+**Next** `linkedin/company/posts` (`company_id` ← `data.author.id`) - The company page's latest posts. · `linkedin/company/jobs` (`company_id` ← `data.author.id`) - The company's open jobs. · `linkedin/company/also-viewed` (`company_id` ← `data.author.id`) - List company pages people also viewed. · `linkedin/company/affiliated-pages` (`company_id` ← `data.author.id`) - List a company's affiliated/showcase pages.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company" \
@@ -280,10 +282,10 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/company" \
 
 ## GET /v1/linkedin/company/affiliated-pages - 5 credits (advanced)
 
-List a company's affiliated/showcase pages, normalised to the SocialCrawl schema.
+Lists a company's affiliated and showcase pages as a canonical AuthorList: name, vanity id, page URL, logo and the numeric `author.ext.company_id`, with the page's speciality on `author.bio` and its follower count on `author.followers`. When the primary source is momentarily rate-limited, a second source answers with the same pages in the same order, but `author.bio` and `author.followers` are null on every row, and `data._warnings` says so.
 
 **Use when** you want to map a parent brand to its regional and product pages before pulling posts or jobs for each one.
-**Cost** cache 900 s
+**Cost** cache 900 s · multi-source (billed once)
 **Paging** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
 **Query params**
@@ -341,7 +343,7 @@ Returns company pages LinkedIn shows as 'people also viewed' for a company, as a
 
 +6 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `author.ext` {company_id}. Page-level: `data.dropped`.
 
-**Next** `linkedin/company/employees-count` (`company_id` ← `data.items[].author.ext.company_id`) - Get a company's employee count, optionally by location. · `linkedin/company` (`url` ← `data.items[].author.url`) - Get LinkedIn company page with its full About tab.
+**Next** `linkedin/company` (`url` ← `data.items[].author.url`) - Get LinkedIn company page with its full About tab. · `linkedin/company/employees-count` (`company_id` ← `data.items[].author.ext.company_id`) - Get a company's employee count, optionally by location.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/also-viewed" \
@@ -351,10 +353,10 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/company/also-viewed" \
 
 ## GET /v1/linkedin/company/by-domain - 5 credits (advanced)
 
-Returns the LinkedIn company page that owns a public website domain, as the same canonical Author `/v1/linkedin/company` returns from a page URL: `author.id` (the numeric company_id the other `/company/*` endpoints take), `username`, `display_name`, `bio`, `avatar_url`, `followers`, `location`, `verified`, and the About tab in `author.ext` (`website`, `employee_count`, `headquarters`, `locations[]`, `industries[]`, `specialities[]`). Pass `microsoft.com` or `https://www.microsoft.com/en-us/`: the registrable domain is extracted before the lookup. Not every domain resolves: a domain the source cannot match to a company page answers 502 with your credits refunded, and that includes some well-known brands, so treat a 502 here as 'not found by domain' and fall back to `/v1/linkedin/search/companies` or `/v1/linkedin/company` with the page URL.
+Returns the LinkedIn company page that owns a public website domain, as the same canonical Author `/v1/linkedin/company` returns from a page URL: `author.id` (the numeric company_id the other `/company/*` endpoints take), `username`, `display_name`, `bio`, `avatar_url`, `followers`, `location`, `verified`, and the About tab in `author.ext` (`website`, `employee_count`, `headquarters`, `locations[]`, `industries[]`, `specialities[]`). Pass `microsoft.com` or `https://www.microsoft.com/en-us/`: the host is extracted before the lookup. A page is returned only when its own website is the domain you passed (a subdomain such as `careers.fedex.com` counts), so a company with a similar name is never returned in its place. A domain with no LinkedIn company page answers 404 `RESOURCE_NOT_FOUND` with your credits refunded; for those, try `/v1/linkedin/search/companies` with the company name. A 502 or 504 is a transient upstream failure, also refunded, and is worth one retry. `author.ext.cover_url` can be null on this endpoint.
 
 **Use when** you have a company website rather than a LinkedIn page URL. company looks up the same record from a page URL.
-**Cost** cache 900 s
+**Cost** cache 900 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -372,9 +374,9 @@ Returns the LinkedIn company page that owns a public website domain, as the same
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+22 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {employee_count, employee_count_range, founded_year, funding, hashtags, headquarters, industries, locations} (+3 more).
++23 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {employee_count, employee_count_range, founded_year, funding, hashtags, headquarters, industries} (+4 more).
 
-**Next** `linkedin/company/people` (`company_id` ← `data.author.id`) - People who work at the company. · `linkedin/company/jobs` (`company_id` ← `data.author.id`) - The company's open jobs. · `linkedin/company/posts` (`company_id` ← `data.author.id`) - List LinkedIn company posts. · `linkedin/company/employees-count` (`company_id` ← `data.author.id`) - Get a company's employee count, optionally by location.
+**Next** `linkedin/company/people` (`company_id` ← `data.author.id`) - People who work at the company. · `linkedin/company/jobs` (`company_id` ← `data.author.id`) - The company's open jobs. · `linkedin/company/posts` (`company_id` ← `data.author.id`) - List LinkedIn company posts. · `linkedin/company/affiliated-pages` (`company_id` ← `data.author.id`) - List a company's affiliated/showcase pages.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/by-domain" \
@@ -428,7 +430,7 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/company/insights" \
 Returns `total`, the number of jobs the company currently has open on LinkedIn. `/v1/linkedin/company/jobs` returns the same figure as `total` beside its first page of listings at twice the credit cost, so this is the cheaper call when only the count is needed. A company with no openings answers `total: 0` and is billed: the upstream cannot tell an unknown `company_id` from a company with nothing open.
 
 **Use when** you want to track hiring volume over time without paging through the full list in company/jobs.
-**Cost** cache 1800 s
+**Cost** cache 1800 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -449,7 +451,7 @@ List a company's job postings, normalised to the SocialCrawl schema.
 
 **Use when** you want it for one employer's openings; search/jobs looks across all companies and job returns one posting's full text.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 10 credits
+**Paging** page (native `page`) · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 10 credits · typical 0.9-0.9 s
 
 **Query params**
 
@@ -485,12 +487,12 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/company/jobs" \
 
 ## GET /v1/linkedin/company/people - 10-50 credits (request-shaped)
 
-Returns a paginated list of members who work at a company, with handle, headline, location, and member URN. Get the company_id from /v1/linkedin/company. Each page is 10 members. On a plain call `author.followers` is LinkedIn's rounded display bucket, and only on the rows that show one (flagged `author.ext.followers_approximate: true`), and `author.following` is null on every row. Send `include=profile` and every row is joined, in the same call, to the member's profile lookup (`/v1/linkedin/profile`): `author.followers` becomes the exact follower count and `author.ext.followers_approximate` reads false on every row the lookup filled, whether the row arrived with LinkedIn's rounded bucket or with no count at all, `author.following` is filled with the member's connection count (on LinkedIn a member's `following` is the number of connections), and the location, the joined date (`author.joined_at`), and the country, website, cover image and profile flags on `author.ext` land where the row lacks them. Cost: 10 credits for the list; include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup, so a call costs at most 50; rows already in cache are free and unfilled rows are refunded. Pass `limit` (1 to 10) to join only the top rows: `limit=3&include=profile` costs at most 22. Time: the lookups run in parallel, about 1 second for 10 rows, up to 3 on a slow second, and never more than 8 seconds. The response carries a `hydration` block itemising rows, lookups, cache hits, credits and milliseconds.
+Returns a paginated list of members who work at a company, with handle, headline, location, and member URN. Get the company_id from /v1/linkedin/company. Each page is 10 members. On a plain call `author.followers` is LinkedIn's rounded display bucket, and only on the rows that show one (flagged `author.ext.followers_approximate: true`), and `author.following` is null on every row. When the primary source is momentarily rate-limited on page 1, a second source answers that page with current members of the same company in a different order and with exact follower counts (`author.ext.followers_approximate: false`), and `data._warnings` says so; page 2 onwards always comes from the primary, so a member can repeat or be missed across that boundary. Send `include=profile` and every row is joined, in the same call, to the member's profile lookup (`/v1/linkedin/profile`): `author.followers` becomes the exact follower count and `author.ext.followers_approximate` reads false on every row the lookup filled, whether the row arrived with LinkedIn's rounded bucket or with no count at all, `author.following` is filled with the member's connection count (on LinkedIn a member's `following` is the number of connections), and the location, the joined date (`author.joined_at`), and the country, website, cover image and profile flags on `author.ext` land where the row lacks them. Cost: 10 credits for the list; include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup, so a call costs at most 50; rows already in cache are free and unfilled rows are refunded. Pass `limit` (1 to 10) to join only the top rows: `limit=3&include=profile` costs at most 22. Time: the lookups run in parallel, about 1 second for 10 rows, up to 3 on a slow second, and never more than 8 seconds. The response carries a `hydration` block itemising rows, lookups, cache hits, credits and milliseconds.
 
 **Use when** you already have a company_id and want its staff; use search/people to filter across all of LinkedIn instead.
-**Cost** price moves with `include` · cache 900 s
+**Cost** price moves with `include` · cache 900 s · multi-source (billed once)
 **Pricing** 10 credits for the list. include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup: at most 50 for the 10-row page, or 10 + 4 x limit when you pass `limit`. Rows served from cache are free, unfilled rows are refunded, and a repeat of a fully joined page within the list's cache window costs 0. The list is cached for 15 minutes and each profile lookup for 15 minutes.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 13-29 s
 
 **Query params**
 
@@ -510,7 +512,7 @@ Returns a paginated list of members who work at a company, with handle, headline
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+17 more (types in the full schema): `author` {followers, following, location, verified, joined_at}; `author.ext` {followers_approximate, country, cover_url, is_creator, is_hiring, is_influencer, is_open_to_work, is_premium, is_top_voice, member_id, urn, website}. Never filled: `author.likes_count`, `author.posts_count`. Page-level: `data.dropped`, `data.hydration`.
++19 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, verified, joined_at}; `author.ext` {followers_approximate, country, cover_url, is_creator, is_hiring, is_influencer, is_open_to_work, is_premium, is_top_voice, member_id, urn, website}. Page-level: `data.dropped`, `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/people" \
@@ -524,13 +526,19 @@ Returns recent posts from a LinkedIn company page as the same PostList shape as 
 
 **Use when** you want it for what a brand publishes; profile/posts covers an individual member and group/posts covers a group feed.
 **Cost** cache 600 s · multi-source (billed once)
-**Paging** page (native `page`) · ≈50/page (observed once) · depth unknown · N items ≈ ceil(N/50) x 5 credits
+**Paging** page (native `page`) · ≈50/page (observed once) · depth unknown · N items ≈ ceil(N/50) x 5 credits · typical 3.6-17 s
 
 **Query params**
 
 - `company_id` (required) - LinkedIn numeric company ID (from /v1/linkedin/company). · e.g. `1035`
 - `page` (optional, integer, min 1) - Page number for pagination (default 1).
 - `sort_by` (optional, enum: top | recent) - Post ordering: 'top' or 'recent'.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+
+**Constraints**
+
+- `since` requires `sort_by=recent` (auto-injected when `sort_by` is absent; a different value is a free 400).
 
 **Response** `PostList` rows at `data.items[]`, each `{ post, computed }` (fill from 1 call) ([full schema](schemas/PostList.md))
 
@@ -543,7 +551,7 @@ Returns recent posts from a LinkedIn company page as the same PostList shape as 
 | `post.author.display_name` | 100% | Author display name |
 | `post.engagement.comments` | 100% | Comment count. |
 
-+10 more (types in the full schema): `post.engagement` {likes, shares}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls string[], thumbnail_url null, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null} (+10 more). Page-level: `data.dropped`.
++11 more (types in the full schema): `post.engagement` {likes, shares}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls string[], thumbnail_url null, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null} (+11 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/company/posts" \
@@ -577,12 +585,14 @@ List posts in a LinkedIn group, normalised to the SocialCrawl schema.
 
 **Use when** you want to read a group's discussion feed; call group first if you also need the group's own details.
 **Cost** cache 600 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 1.3-1.4 s
 
 **Query params**
 
 - `group_id` (required) - LinkedIn numeric group ID. · e.g. `62438`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -595,7 +605,7 @@ List posts in a LinkedIn group, normalised to the SocialCrawl schema.
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls string[], thumbnail_url null, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null} (+11 more). Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls string[], thumbnail_url null, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null} (+12 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/group/posts" \
@@ -605,10 +615,10 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/group/posts" \
 
 ## GET /v1/linkedin/job - 5 credits (advanced)
 
-Get LinkedIn job details, normalised to the SocialCrawl schema.
+Returns one LinkedIn job posting: title, description, location, employment type, apply URL, listing date and the hiring company. When the primary source is momentarily rate-limited (and `include_skills` is not set), a second source answers with the same job, but `job.remote`, `job.experience_level` and `job.ext.applicant_count` are null, and `data._warnings` says so.
 
 **Use when** Use it after search/jobs or company/jobs, passing a job id from those lists to read the complete description.
-**Cost** cache 600 s
+**Cost** cache 600 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -700,7 +710,7 @@ Returns detailed information about a specific LinkedIn post including the post t
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+10 more (types in the full schema): `post.engagement` {comments, likes, shares}; `computed` {content_category, engagement_rate, estimated_reach, language}; `post.flags` {deleted}; `post.content` {duration_seconds}; `post.ext` {published_at_precision}. Also in the sample: `post` {url string}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {author_id string, post_type string, author_urn string}; `post.ext.reaction_counts[]` {count number, type string} (+5 more). Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`.
++11 more (types in the full schema): `post.engagement` {comments, likes, shares}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.flags` {deleted}; `post.content` {duration_seconds}; `post.ext` {published_at_precision}. Also in the sample: `post` {url string}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {author_id string, post_type string}; `post.ext.reaction_counts[]` {count number, type string} (+6 more). Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.saves`, `post.engagement.views`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post" \
@@ -714,7 +724,7 @@ Returns a paginated list of comments on a LinkedIn post, with commenter identity
 
 **Use when** you want it for the top-level comments on a post, then pass a comment's id to post/comments/replies to open one thread.
 **Cost** cache 600 s · multi-source (billed once)
-**Paging** page (native `page`) · ≈3/page (observed) · depth unknown · N items ≈ ceil(N/3) x 5 credits
+**Paging** page (native `page`) · ≈3/page (observed) · depth unknown · N items ≈ ceil(N/3) x 5 credits · typical 1.8-14 s
 
 **Query params**
 
@@ -722,6 +732,12 @@ Returns a paginated list of comments on a LinkedIn post, with commenter identity
 - `page` (optional, integer, min 1) - Page number for pagination (default 1).
 - `post_type` (optional, enum: activity | ugc) - Upstream post type: 'activity' (default) or 'ugc'.
 - `sort_order` (optional, enum: recent | relevance) - Comment ordering: 'relevance' or 'recent'.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+
+**Constraints**
+
+- `since` requires `sort_order=recent` (auto-injected when `sort_order` is absent; a different value is a free 400).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -750,13 +766,15 @@ Lists the replies under one LinkedIn comment, oldest first, each with its author
 
 **Use when** Use it after post/comments: pass that comment's comment_id together with the post url to expand a single thread.
 **Cost** cache 300 s · multi-source (billed once)
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 27-31 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn post. It has to carry the post's ACTIVITY id, either `https://www.linkedin.com/feed/update/urn:li:activity:<id>` or `https://www.linkedin.com/posts/<slug>-activity-<id>-<code>`. A `urn:li:share:` or `urn:li:ugcPost:` URL names a different id for the same post and is rejected with a 400 before any credits are charged, because it cannot be resolved to the post. Every endpoint that lists posts publishes the activity form as `post.url`, so copy that field rather than rebuilding the URL from `post.id`, which is not always the activity id. · e.g. `https://www.linkedin.com/feed/update/urn:li:activity:7501466755261820928`
 - `comment_id` (required) - The parent comment's `comment.id` from /v1/linkedin/post/comments, or its `comment.ext.urn` (urn:li:comment:(ugcPost:<post>,<comment>)). · e.g. `7501480403283886080`
 - `cursor` (optional, string) - LinkedIn cursor.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -785,7 +803,7 @@ Lists the members who reacted to a LinkedIn post as a canonical AuthorList: name
 **Use when** you want to see who liked or praised a post, optionally filtered by type; post/comments covers the people who wrote a comment.
 **Cost** price moves with `include` · cache 300 s · multi-source (billed once)
 **Pricing** 10 credits for the list. include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup: at most 50 for the 10-row page, or 10 + 4 x limit when you pass `limit`. Rows served from cache are free, unfilled rows are refunded, and a repeat of a fully joined page within the list's cache window costs 0. The list is cached for 5 minutes and each profile lookup for 15 minutes.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 3.2-5.0 s
 
 **Query params**
 
@@ -820,13 +838,15 @@ Lists the members and companies that reshared a LinkedIn post. Each row is one r
 
 **Use when** you want to see who amplified a post; post/reactions lists who reacted and post/comments lists who replied.
 **Cost** cache 600 s
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 10-17 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn post. It has to carry the post's ACTIVITY id, either `https://www.linkedin.com/feed/update/urn:li:activity:<id>` or `https://www.linkedin.com/posts/<slug>-activity-<id>-<code>`. A `urn:li:share:` or `urn:li:ugcPost:` URL names a different id for the same post and is rejected with a 400 before any credits are charged, because it cannot be resolved to the post. Every endpoint that lists posts publishes the activity form as `post.url`, so copy that field rather than rebuilding the URL from `post.id`, which is not always the activity id. · e.g. `https://www.linkedin.com/feed/update/urn:li:activity:7501466755261820928`
 - `cursor` (optional, string) - LinkedIn cursor.
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -839,7 +859,7 @@ Lists the members and companies that reshared a LinkedIn post. Each row is one r
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/post/reposts" \
@@ -912,7 +932,7 @@ Returns a LinkedIn member's public profile as a canonical Author: `display_name`
 | `author.bio` | 100% | Profile biography or description |
 | `author.display_name` | 100% | Display name or full name |
 
-+23 more (types in the full schema): `author` {followers, following, verified, location, likes_count, posts_count, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language}; `author.ext` {cover_url, is_premium, is_top_voice, urn, country, is_creator, is_hiring} (+4 more).
++24 more (types in the full schema): `author` {followers, following, verified, location, likes_count, posts_count, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {cover_url, is_premium, is_top_voice, urn, country, is_creator} (+5 more).
 
 **Next** `linkedin/profile/posts` (`url` ← `data.author.url`) - The person's latest posts. · `linkedin/profile/complete` (`url` ← `data.author.url`) - The person's full profile in one call. · `linkedin/profile/articles` (`url` ← `data.author.url`) - List Pulse articles a LinkedIn member published. · `linkedin/profile/interests/companies` (`url` ← `data.author.url`) - List companies a member follows.
 
@@ -933,7 +953,7 @@ Returns LinkedIn's account-freshness panel for a member: `joined` (the month the
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `Analytics` object at `data`, `{ joined, contact_information, profile_photo }` (inferred from a sample): {joined string, contact_information string, profile_photo string}.
 
@@ -995,12 +1015,14 @@ Returns the member's LinkedIn Pulse articles as a canonical PostList: `post.id`,
 
 **Use when** you want it for long-form writing. profile/posts is the short-form feed; article fetches one Pulse URL.
 **Cost** cache 600 s
-**Paging** page (native `page`) · ≈19/page (observed once) · depth unknown · N items ≈ ceil(N/19) x 5 credits
+**Paging** page (native `page`) · ≈19/page (observed once) · depth unknown · N items ≈ ceil(N/19) x 5 credits · typical 1.4-1.5 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile whose articles to list. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1013,7 +1035,7 @@ Returns the member's LinkedIn Pulse articles as a canonical PostList: `post.id`,
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Page-level: `data.dropped`.
++17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Also in the sample: `post.flags` {nsfw null, spoiler null} (+1 more). Page-level: `data.dropped`.
 
 **Next** `linkedin/article/comments` (`url` ← `data.items[].post.url`) - List comments on a LinkedIn Pulse article. · `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/article` (`url` ← `data.items[].post.url`) - Get a LinkedIn Pulse article.
 
@@ -1028,35 +1050,35 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/articles" \
 List a member's licenses and certifications, normalised to the SocialCrawl schema.
 
 **Use when** you want to check formal credentials, as opposed to self-listed skills in profile/skills or degrees in profile/educations.
-**Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.0-6.7 s
 
 **Query params**
 
-- `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
+- `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/adamgrant/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/certifications` serves the current contract.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/certifications" \
-  --data-urlencode "url=https://www.linkedin.com/in/williamhgates/" \
+  --data-urlencode "url=https://www.linkedin.com/in/adamgrant/" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
 ## GET /v1/linkedin/profile/comments - 5 credits (advanced)
 
-List a member's comments, normalised to the SocialCrawl schema.
+Lists the comments a LinkedIn member has left on posts, newest first, as one fixed window of up to 20: each with the comment text, its time and reactions, and the post it was left on (text, media, author and engagement). When the primary source is momentarily rate-limited, a second source answers with the same comments in the same order, with the same text, dates and counts, but each image, logo and avatar list carries one size (the largest), a video's `duration`, `aspect_ratio`, stream sizes and thumbnail dimensions are null, the post author's `first_name` and `last_name` are null, and `post.created_at` is the post's exact time rather than an estimate from LinkedIn's relative label; `data._warnings` says so.
 
 **Use when** you want to track someone's activity in other conversations; post/comments returns the comments on one specific post.
-**Cost** cache 300 s
+**Cost** cache 300 s · multi-source (billed once)
 **Paging** single page - The upstream serves this feed as one fixed window: it ignores both `page` and its own continuation token and re-serves the first page forever (re-verified against the provider 04/09/2026), so there is no second page to fetch.
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {urn string, comment string, created_at string}; `activity` {num_likes number, num_comments number, num_shares null}; `activity.reaction_counts[]` {count number, type string}; `post` {id string, post_type string, text string}; `post.content` {images null, document null}; `post.content.video.thumbnail[]` {width number, height number, url string, expires_at number}; `post.content.video` {duration string, aspect_ratio string}; `post.content.video.streams[]` {url string, expires_at number, size number, width number, height number, bit_rate number} (+26 more).
 
@@ -1114,13 +1136,13 @@ List a member's education history, normalised to the SocialCrawl schema.
 
 **Use when** you want it for schooling detail; profile/experiences covers jobs, and search/schools turns a school name into a filter id.
 **Cost** cache 900 s · multi-source (billed once)
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.0-14 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ id, school, date }` (inferred from a sample): {id string, school string, date object}; `date` {start string, end string}.
 
@@ -1138,13 +1160,13 @@ List a member's work experiences, normalised to the SocialCrawl schema.
 
 **Use when** you want it for the full career list, which the main profile endpoint condenses down to the current company only.
 **Cost** cache 900 s · multi-source (billed once)
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 3.4-18 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ title, date, company }` (inferred from a sample): {title string}; `date` {start string, end string}; `company` {id string, name string, url string}; `company.logo[]` {width number, height number, url string, expires_at number}.
 
@@ -1162,7 +1184,7 @@ Fans out to the LinkedIn company profile and recent-posts endpoints in parallel 
 
 **Use when** you want it for a one-call company snapshot instead of calling company and company/posts and doing the engagement maths yourself. **Not for** a member's profile, because it takes company pages only (linkedin/profile/all for the whole profile, linkedin/profile/with-posts for counts and recent posts).
 **Cost** cache 900 s
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · page size not measured · depth unknown · typical 11-27 s
 
 **Query params**
 
@@ -1188,14 +1210,14 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/full" \
 List a member's honors and awards, normalised to the SocialCrawl schema.
 
 **Use when** you want it for awards only: certifications live in profile/certifications and published work in profile/publications.
-**Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 3.2-14 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/honors` serves the current contract.
 
@@ -1216,7 +1238,9 @@ Lists the image posts on a LinkedIn member's profile, normalised to the same Pos
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1229,7 +1253,7 @@ Lists the image posts on a LinkedIn member's profile, normalised to the same Pos
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {published_at_precision, reaction_counts}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++13 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {published_at_precision, reaction_counts}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post` (`url` ← `data.items[].post.url`) - Get LinkedIn post details.
 
@@ -1241,17 +1265,17 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/images" \
 
 ## GET /v1/linkedin/profile/interests/companies - 5 credits (advanced)
 
-List companies a member follows, normalised to the SocialCrawl schema.
+Lists the companies a LinkedIn member follows, 20 per page, each with `id`, `title`, `url`, `follower_count` and a `logo` ladder; page through with `page`. When the primary source is momentarily rate-limited on page 1, a second source answers that page with the same rows in the same order but without follower counts: `follower_count` is null on every row, and `data._warnings` says so.
 
 **Use when** you want to infer a person's interests and vendor affinities; profile/interests/groups covers the groups they follow.
-**Cost** cache 900 s
-**Paging** page (native `page`) · ≈20/page (observed once) · depth unknown · N items ≈ ceil(N/20) x 5 credits
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · ≈20/page (observed once) · depth unknown · N items ≈ ceil(N/20) x 5 credits · typical 0.7-3.5 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, title string, follower_count number, url string}; `logo[]` {width number, height number, url string, expires_at number}.
 
@@ -1268,14 +1292,14 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/interests/companies" \
 List groups a member follows, normalised to the SocialCrawl schema.
 
 **Use when** you want to find the communities a person belongs to, then pass a group_id to group or group/posts to go deeper.
-**Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 1.5-1.6 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/interests/groups` serves the current contract.
 
@@ -1291,7 +1315,7 @@ Returns the newsletters a member follows. Pass the same profile URL `/v1/linkedi
 
 **Use when** Use it after profile to see which newsletters they follow.
 **Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 1.5-1.8 s
 
 **Query params**
 
@@ -1314,7 +1338,7 @@ Returns the school pages a member follows. Sibling of `/v1/linkedin/profile/inte
 
 **Use when** Use it after profile. search/schools turns a university name into a school id.
 **Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 1.2-1.3 s
 
 **Query params**
 
@@ -1423,7 +1447,9 @@ List a LinkedIn member's recent posts, normalised to the SocialCrawl schema. The
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `limit` (optional, integer, 1-100) - How many posts to return in the one call, 1 to 100. Defaults to the upstream's 20. 100 is the provider's hard ceiling. Up to 50 the call is a flat 5 credits; above 50 it is metered at 2 credits per post returned (holds `limit x 2`, never below 5). Ask for the depth you need up front - there is no second page to fetch.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1436,7 +1462,7 @@ List a LinkedIn member's recent posts, normalised to the SocialCrawl schema. The
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls null, thumbnail_url string, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null} (+13 more). Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Also in the sample: `post` {url string}; `post.content` {media_urls null, thumbnail_url string, duration_seconds null}; `post.author` {avatar_url string, verified null}; `post.engagement` {views null, saves null} (+14 more). Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/posts" \
@@ -1451,13 +1477,15 @@ Returns a LinkedIn member's posts read from their own feed rather than from a pu
 **Use when** Use it only when profile/posts (up to 100 posts; 5 credits to 50, then 2 per post) and search/posts with from_member run out of depth. Metered at 5 credits per post returned.
 **Cost** price moves with `limit` · cache 600 s · multi-source (billed once)
 **Pricing** 5 credits per post RETURNED. The call holds `limit x 5` up front - the default limit of 20 holds 100 and the 100 maximum holds 500 - and refunds down to the posts that actually came back, so a member with 12 posts settles at 60 credits however high `limit` was set. This is the most expensive read on the platform per row: check whether /v1/linkedin/profile/posts (5 credits up to 50 posts, 2 a post above that) already covers the window you need before walking the archive.
-**Paging** cursor (native `pagination_token`) · default page size not measured; set with `limit` · depth unknown
+**Paging** cursor (native `pagination_token`) · default page size not measured; set with `limit` · depth unknown · typical 4.0-5.5 s
 
 **Query params**
 
 - `url` (required) - The member's LinkedIn profile URL, for example https://www.linkedin.com/in/williamhgates/. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `limit` (optional, integer, 1-100) - How many posts to return, 1 to 100 (default 20). Pass 100 to walk the full archive: only a full page returns a `next_cursor`. You are charged 5 credits for each post actually returned, not for the limit you asked for. · e.g. `100`
 - `pagination_token` (optional, string) - The `next_cursor` from the previous page. Omit it for the newest posts.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1470,7 +1498,7 @@ Returns a LinkedIn member's posts read from their own feed rather than from a pu
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {avatar_url null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {published_at_epoch number} (+1 more). Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {avatar_url null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more). Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post` (`url` ← `data.items[].post.url`) - Get LinkedIn post details.
 
@@ -1485,14 +1513,14 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/posts/archive" \
 List a member's publications, normalised to the SocialCrawl schema.
 
 **Use when** you want it for articles, papers, and books a person published, not for their LinkedIn posts, which profile/posts returns.
-**Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.5-12 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/publications` serves the current contract.
 
@@ -1513,7 +1541,9 @@ List posts a LinkedIn member reacted to, normalised to the SocialCrawl schema.
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1526,7 +1556,7 @@ List posts a LinkedIn member reacted to, normalised to the SocialCrawl schema.
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {is_repost_quote, published_at_precision, reaction_type}. Page-level: `data.dropped`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/reactions" \
@@ -1539,21 +1569,21 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/reactions" \
 List recommendations for a member, normalised to the SocialCrawl schema.
 
 **Use when** you want it for written references, and set type to received or given to choose which side of the relationship you want.
-**Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.0-14 s
 
 **Query params**
 
-- `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
+- `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/reidhoffman/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
 - `type` (optional, enum: received | given) - Filter by kind. See the allowed values.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/recommendations` serves the current contract.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/recommendations" \
-  --data-urlencode "url=https://www.linkedin.com/in/williamhgates/" \
+  --data-urlencode "url=https://www.linkedin.com/in/reidhoffman/" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
@@ -1596,13 +1626,13 @@ List a member's skills, normalised to the SocialCrawl schema.
 
 **Use when** you want to score a person against a skill requirement, separately from the roles returned by profile/experiences.
 **Cost** cache 900 s · multi-source (billed once)
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.0-14 s
 
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/skills` serves the current contract.
 
@@ -1663,7 +1693,9 @@ Lists the video posts on a LinkedIn member's profile, normalised to the same Pos
 **Query params**
 
 - `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1676,7 +1708,7 @@ Lists the video posts on a LinkedIn member's profile, normalised to the same Pos
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more (types in the full schema): `computed` {estimated_reach, language}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {published_at_precision, reaction_counts}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++13 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext` {published_at_precision, reaction_counts}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.content.text`, `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post/reposts` (`url` ← `data.items[].post.url`) - List reposts of a LinkedIn post. · `linkedin/post/reactions` (`url` ← `data.items[].post.url`) - List reactors on a LinkedIn post.
 
@@ -1691,20 +1723,20 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/videos" \
 List a member's volunteer experiences, normalised to the SocialCrawl schema.
 
 **Use when** you want it for unpaid and community roles, which the paid work history in profile/experiences does not cover.
-**Cost** cache 900 s
-**Paging** page (native `page`) · page size not measured · depth unknown
+**Cost** cache 900 s · multi-source (billed once)
+**Paging** page (native `page`) · page size not measured · depth unknown · typical 2.4-10 s
 
 **Query params**
 
-- `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/williamhgates/`
+- `url` (required) - Full URL of the LinkedIn profile, company, or post. · e.g. `https://www.linkedin.com/in/reidhoffman/`
 - `page` (optional, integer, min 1) - 1-based page number. Defaults to 1.
-- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026.
+- `urn` (optional, string) - The member's opaque LinkedIn URN, as returned in `author.ext.urn` by /v1/linkedin/profile. Optional, and a pure optimisation: pass it ALONGSIDE `url` (which stays required) and this call skips the internal handle lookup, so it answers faster and consumes half the upstream rate-limit budget. Verified on the deployed API 05/09/2026. To address a member by URN alone, send the URN-form profile URL as `url`, for example https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc: it resolves to the same member as the public address (verified 20/10/2026 on profile/posts and profile/comments) and holds only ASCII, which helps when the public address carries an emoji or other symbol.
 
 **Response** `SearchResult`. Fields not published yet - call it once; `/v1/utility/endpoint?id=linkedin/profile/volunteers` serves the current contract.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/profile/volunteers" \
-  --data-urlencode "url=https://www.linkedin.com/in/williamhgates/" \
+  --data-urlencode "url=https://www.linkedin.com/in/reidhoffman/" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
@@ -1734,7 +1766,7 @@ Returns company pages matching a keyword, as a canonical AuthorList: `username`,
 
 **Use when** you want to find companies by name and optional size, industry, location, or open-jobs filters, then pass a result to company.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 10 credits
+**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 10 credits · typical 2.9-9.1 s
 
 **Query params**
 
@@ -1758,7 +1790,7 @@ Returns company pages matching a keyword, as a canonical AuthorList: `username`,
 
 +6 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `author.ext` {company_id}. Page-level: `data.dropped`.
 
-**Next** `linkedin/company` (`url` ← `data.items[].author.url`) - The company page: size, industry and about. · `linkedin/company/posts` (`company_id` ← `data.items[].author.ext.company_id`) - List LinkedIn company posts. · `linkedin/company/also-viewed` (`company_id` ← `data.items[].author.ext.company_id`) - List company pages people also viewed. · `linkedin/company/employees-count` (`company_id` ← `data.items[].author.ext.company_id`) - Get a company's employee count, optionally by location.
+**Next** `linkedin/company` (`url` ← `data.items[].author.url`) - The company page: size, industry and about. · `linkedin/company/posts` (`company_id` ← `data.items[].author.ext.company_id`) - List LinkedIn company posts. · `linkedin/company/also-viewed` (`company_id` ← `data.items[].author.ext.company_id`) - List company pages people also viewed. · `linkedin/company/people` (`company_id` ← `data.items[].author.ext.company_id`) - List people at a LinkedIn company.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkedin/search/companies" \
@@ -1778,6 +1810,8 @@ Returns public posts tagged with a hashtag as a canonical PostList. Pass the tag
 
 - `query` (required) - Hashtag to search, with or without a leading #. · e.g. `hiring`
 - `sort_by` (optional, enum: recent | oldest | relevance) - Result ordering: recent, oldest, or relevance.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -1790,7 +1824,7 @@ Returns public posts tagged with a hashtag as a canonical PostList. Pass the tag
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Page-level: `data.dropped`.
++17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Page-level: `data.dropped`.
 
 **Next** `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - Get LinkedIn post comments. · `linkedin/post/reactions` (`url` ← `data.items[].post.url`) - List reactors on a LinkedIn post. · `linkedin/article` (`url` ← `data.items[].post.url`) - Get a LinkedIn Pulse article.
 
@@ -1828,7 +1862,7 @@ Search LinkedIn jobs, normalised to the SocialCrawl schema.
 
 **Use when** you want to search openings across employers with filters like remote, job type, and experience level, then pass an id to job.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 10 credits
+**Paging** page (native `page`) · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 10 credits · typical 5.8-16 s
 
 **Query params**
 
@@ -1870,7 +1904,7 @@ curl -G "https://www.socialcrawl.dev/v1/linkedin/search/jobs" \
 Resolve a location to a LinkedIn geocode id, normalised to the SocialCrawl schema.
 
 **Use when** Use it first to turn a city or country name into the id that search/people and search/jobs expect for location filters.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Paging** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
 **Query params**
@@ -1894,7 +1928,7 @@ Searches LinkedIn members by name and B2B filters (title, current/past company, 
 **Use when** you want to build a prospect list by job title, company, school, or location; use company/people to list one employer's staff.
 **Cost** price moves with `include` · cache 120 s · multi-source (billed once)
 **Pricing** 10 credits for the list. include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup: at most 50 for the 10-row page, or 10 + 4 x limit when you pass `limit`. Rows served from cache are free, unfilled rows are refunded, and a repeat of a fully joined page within the list's cache window costs 0. The list is cached for 2 minutes and each profile lookup for 15 minutes.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 8.6-27 s
 
 **Query params**
 
@@ -1978,8 +2012,8 @@ Finds public LinkedIn posts, feed updates, and Pulse articles via Google Search.
 
 **Use when** you want it for broad keyword monitoring; it reads public search results, so treat coverage as best effort rather than complete.
 **Cost** price moves with `label`, `limit` · cache 120 s · multi-source (billed once)
-**Pricing** 5 credits per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 8 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, or label=intent with offer=, holds 8 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown
+**Pricing** 5 credits per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 8 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 8 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 3.0-27 s
 
 **Query params**
 
@@ -1991,11 +2025,20 @@ Finds public LinkedIn posts, feed updates, and Pulse articles via Google Search.
 - `from_member` (optional, string) - Filter to posts from one member, by their LinkedIn member urn — the bare `ACoAA…` value published as `author.ext.urn` by /v1/linkedin/profile. A profile URL, a public slug (`williamhgates`) or a `urn:li:fsd_profile:`-prefixed value is rejected, because the source cannot use any of them. Pass this on its own, with no `query`, to walk one member's back catalogue.
 - `query` (optional, string) - Keyword or phrase to search for. Optional when `from_member` or `from_company` is set: omit it to get that subject's posts unfiltered, and note that supplying a real content word narrows the results to posts matching it. · e.g. `ai agents`
 - `limit` (optional, integer, 1-200) - Return up to this many posts in one call, 1 to 200. The call reads as many pages as it needs, removes duplicates, and is charged 1 credit for every 5 posts returned (200 posts = 40 credits). Repeating the identical call inside the 2-minute cache window is free. Requires `query`. Cannot be combined with `page` or `cursor`: the result always starts at the top and `pagination.next_cursor` is null. `pagination.has_more` says whether more posts were available when the call stopped, and `walk.stopped` says why it stopped (`limit`, `exhausted`, `deadline` or `sources_unavailable`).
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | injection; paid: mention, quality, injection) · `exclude` · `label_evidence` · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
 
 **Constraints**
 
 - Provide at least one of `query`, `from_member`, `from_company`.
+- `ai_written_threshold` is a no-op without `label` - sending it alone is a free 400.
+- `relevance_threshold`, `relevant_to` are no-ops without `relevance` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `exclude`, `brand`, `brand_description`, `offer`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `label`: at most 8 comma-separated values.
+- `exclude`: at most 3 comma-separated values.
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -2008,7 +2051,7 @@ Finds public LinkedIn posts, feed updates, and Pulse articles via Google Search.
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+24 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes} (+5 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++27 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url} (+8 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
 
 **Next** `linkedin/post` (`url` ← `data.items[].post.url`) - Full details and stats for each post. · `linkedin/post/comments` (`url` ← `data.items[].post.url`) - The comments on each post. · `linkedin/article/comments` (`url` ← `data.items[].post.url`) - List comments on a LinkedIn Pulse article. · `linkedin/post/with-comments` (`url` ← `data.items[].post.url`) - Get a LinkedIn post together with its comments.
 
@@ -2024,7 +2067,7 @@ Search LinkedIn schools, normalised to the SocialCrawl schema.
 
 **Use when** you want to turn a university name into the school id that search/people accepts as a filter.
 **Cost** cache 120 s
-**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 1 credits
+**Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 0.7-0.7 s
 
 **Query params**
 

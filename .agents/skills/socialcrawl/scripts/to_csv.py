@@ -13,7 +13,9 @@ arrived. Wrapped rows (`{"comment": {...}}`) are unwrapped, with or without --ar
 union of every row's dotted leaf paths. The schema's platform-specific `ext.*` columns are left
 out unless --all-ext. --columns overrides the list; --extra appends any leaf
 the schema does not declare (sorted). A --columns path may keep the wrapper key
-(`comment.text` and `text` both work on Comment rows); a requested column that is empty
+(`comment.text` and `text` both work on Comment rows). Unwrapping keeps the row's siblings, so the
+per-row judgments stay exportable: pass `--columns id,text,computed.labels.sentiment.label,computed.relevance`
+(or --extra) to add `computed.labels.*` / `computed.relevance`; a requested column that is empty
 in every row is an error that lists the keys the rows do have. Lists and objects below a
 column are written as JSON.
 Strings that start with = + - @ are prefixed with ' so a spreadsheet does not run them.
@@ -135,7 +137,9 @@ def main(argv=None) -> int:
     rows = []
     for r in load_rows(text):
         if row_key and isinstance(r, dict) and isinstance(r.get(row_key), dict):
-            r = r[row_key]
+            # Keep the row's siblings (computed: labels, relevance) beside the archetype's fields.
+            siblings = {k: v for k, v in r.items() if k != row_key}
+            r = {**r[row_key], **siblings}
         rows.append(r)
     if not row_key:
         row_key = wrapper_key(rows)

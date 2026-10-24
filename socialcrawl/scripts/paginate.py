@@ -8,13 +8,16 @@ usage: paginate.py <platform/resource> --items N [--max-credits C] [--max-pages 
 Each row of `data.items` is one JSON line on stdout; a row already seen (same id, else same url,
 else same content) is dropped and counted as `duplicates`, so overlapping pages never inflate N. Pages are chained with the response's
 `pagination.next_cursor` sent back verbatim as `cursor`. Budget rule: before each page, spent + the next page's hold must be <= --max-credits. The next
-page's hold is the endpoint's cost.max from assets/endpoints.json (the flat price for a flat
-endpoint, the registry ceiling for a metered one); with no catalogue it is the last page's
-credits_used. Stops, and says why in the stderr
-summary (`stopped`: items, has_more, budget, 402, repeat_cursor, max_pages, error): the item
-target is met, the API reports no more pages, the next page could exceed --max-credits, a
-402, a repeated cursor, or any other error. `credits_used` goes to stderr. Exit 2 on 402,
-1 on another error, 3 when no key.
+page's hold is the free live quote GET /v1/utility/estimate for these exact params (asked once,
+only when --max-credits is set); when that is unavailable it is the endpoint's cost.max from
+assets/endpoints.json (the flat price, or the registry ceiling of a metered one, without the
+include= joins this request does not turn on); with neither it is the last page's credits_used.
+Stops, and says why in the stderr summary (`stopped`: items, has_more, budget, page_limit, 402,
+repeat_cursor, max_pages, error): the item target is met, the API reports no more pages, the next
+page could exceed --max-credits, the source's last reachable page (a free 400 with
+error.details.reason "page_limit"; its details go to stderr and the exit is 0), a 402, a repeated
+cursor, or any other error. `credits_used` goes to stderr. Exit 2 on 402, 1 on another error, 3
+when no key.
 """
 from __future__ import annotations
 
@@ -27,12 +30,29 @@ import sys
 import sclib
 
 
-def page_hold(ep: dict | None) -> float | None:
-    """What one more page can hold: the catalogue's cost.max (the flat price, or the ceiling of a
-    metered endpoint), or None when the endpoint is not in the catalogue."""
-    if not ep or not ep.get("cost"):
+def page_hold(ep: dict | None, params: dict | None = None) -> float | None:
+    """What one more page can hold offline: the catalogue's cost.max (the flat price, or the
+    ceiling of a metered endpoint) less the joins these params leave off, or None when the
+    endpoint is not in the catalogue or has no ceiling (a per_unit cost with max null)."""
+    return sclib.call_ceiling(ep, params or {})
+
+
+def quoted_hold(key: str, endpoint_id: str, params: dict) -> float | None:
+    """The live per-page hold from the free estimator, or None when it cannot quote this call."""
+    resp = sclib.request("GET", "utility/estimate", {"id": endpoint_id, "params": sclib.encode_query(params)}, key=key, retry=False)
+    data = (resp.body or {}).get("data") if resp.ok and isinstance(resp.body, dict) else None
+    if not isinstance(data, dict) or data.get("valid") is False:
         return None
-    return ep["cost"]["max"]
+    hold = data.get("hold")
+    return hold if isinstance(hold, (int, float)) and not isinstance(hold, bool) else None
+
+
+def page_limit_details(resp) -> dict | None:
+    """error.details of a 400 page_limit (the source's last reachable page), else None."""
+    details = resp.error.get("details")
+    if resp.status == 400 and isinstance(details, dict) and details.get("reason") == "page_limit":
+        return details
+    return None
 
 
 def row_key(row) -> str:
@@ -66,7 +86,9 @@ def main(argv=None) -> int:
 
     rows = pages = 0
     spent: float = 0
-    hold = page_hold(ep)
+    hold = quoted_hold(key, endpoint_id, params) if args.max_credits is not None else None
+    if hold is None:
+        hold = page_hold(ep, params)
     next_cost = hold
     seen_rows: set[str] = set()
     duplicates = 0
@@ -89,6 +111,12 @@ def main(argv=None) -> int:
             q["cursor"] = cursor
         resp = sclib.request("GET", endpoint_id, q, key=key, idempotency_key=sclib.new_idempotency_key())
         if not resp.ok:
+            limit = page_limit_details(resp)
+            if limit is not None:
+                # The natural end of this query: narrow it (details.narrow_with) to reach more.
+                print(json.dumps({"page_limit": limit}, ensure_ascii=False), file=sys.stderr)
+                stopped = "page_limit"
+                break
             sclib.report_error(resp)
             stopped = "402" if resp.status == 402 else "error"
             code = sclib.exit_code_for(resp)

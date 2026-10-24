@@ -63,7 +63,7 @@ curl -G "https://www.socialcrawl.dev/v1/app_store/app-info" \
 
 ## GET /v1/app_store/app-list - 5 credits (advanced)
 
-Returns a unified AppList for an Apple App Store chart (top free, top paid, top grossing, and the three new-apps charts), optionally scoped to a category. Each item is the same canonical `App` shape as app-search. Use it to track ranking movements or build a category leaderboard. iPad-specific charts are not available from this source. Apple publishes a chart for most but not all categories: the Newsstand-era `magazines_*` values plus `catalogs`, `games_dice` and `games_educational` return an empty list on `top_free_ios` at 0 credits (measured 06/09/2026), and several of them do populate on the `new_ios` charts.
+Returns a unified AppList for an Apple App Store chart (top free, top paid, top grossing, and the three new-apps charts), optionally scoped to a category. Each item is the same canonical `App` shape as app-search, and `app.rank` is its position in the chart (1 is the top). Use it to track ranking movements or build a category leaderboard. When no app on the page has a star rating, `_warnings` carries `ratings_unavailable`. iPad-specific charts are not available from this source. Apple publishes a chart for most but not all categories: the Newsstand-era `magazines_*` values plus `catalogs`, `games_dice` and `games_educational` return an empty list on `top_free_ios` at 0 credits (measured 06/09/2026), and several of them do populate on the `new_ios` charts.
 
 **Use when** you want to track ranking movements or build a category leaderboard, rather than searching for one named app.
 **Cost** cache 120 s
@@ -108,7 +108,7 @@ Searches a real-time, filterable Apple App Store listings database by app title 
 
 **Use when** you must page through many results, since it is the only App Store endpoint with real paging.
 **Cost** cache 120 s
-**Paging** cursor (native `offset_token`) · ≈20/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 10 credits
+**Paging** cursor (native `offset_token`) · ≈20/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/20) x 10 credits · typical 0.6-0.7 s
 
 **Query params**
 
@@ -159,7 +159,16 @@ Returns a unified ReviewList of Apple App Store user reviews for an app, keyed b
 - `depth` (optional, integer) - Number of reviews to retrieve (default 50, batches of 50, max 500). Above 500 is clamped, not rejected. Apple's feed stops there; Google Play reaches 600. · e.g. `50`
 - `sort_by` (optional, enum: most_recent | most_helpful) - Review ordering: `most_recent` (default) or `most_helpful`. · e.g. `most_recent`
 - `rating` (optional, integer) - Not supported on this store: Apple's review feed cannot be filtered by star rating upstream, so this is rejected with a free 400 rather than silently returning the unfiltered feed. Filter on `review.rating.value` client-side, or use /v1/google_play/app-reviews.
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+
+**Constraints**
+
+- `since` requires `sort_by=most_recent` (auto-injected when `sort_by` is absent; a different value is a free 400).
+- `reports`, `label_evidence` are no-ops without `label` - sending one alone is a free 400.
+- `goal`, `fit_tokens` are no-ops without `fit` - sending one alone is a free 400.
+- `label`: at most 5 comma-separated values.
 
 **Response** `ReviewList` rows at `data.items[]`, each `{ computed, review }` ([full schema](schemas/ReviewList.md))
 
@@ -182,7 +191,7 @@ curl -G "https://www.socialcrawl.dev/v1/app_store/app-reviews" \
 
 ## GET /v1/app_store/app-search - 5 credits (advanced)
 
-Returns a unified AppList of Apple App Store apps matching a keyword: title, icon, developer, category, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "app_store"). Detail-only fields (description, screenshots, similar apps) are null on search items; fetch /v1/app_store/app-info for the full record. Served from the Apple App Store catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
+Returns a unified AppList of Apple App Store apps matching a keyword: title, icon, developer, category, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "app_store"). `app.rank` is the position of the app in the results (1 is the first). Detail-only fields (description, screenshots, similar apps) are null on search items; fetch /v1/app_store/app-info for the full record. Served from the Apple App Store catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
 
 **Use when** you want to find an app's numeric id by keyword; description, screenshots, and developer come from app-info.
 **Cost** cache 120 s

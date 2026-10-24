@@ -124,6 +124,8 @@ Returns recent news articles for one financial instrument as a unified NewsArtic
 
 - `keyword` (required) - Instrument ticker. A bare symbol ('AAPL', '005930.KS') or the 'TICKER:EXCHANGE' form from ticker-search ('AAPL:NASDAQ'); the exchange suffix is ignored. · e.g. `AAPL`
 - `limit` (optional, integer, 1-50) - Maximum articles to return, 1 to 50. Defaults to the upstream batch size.
+- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
 
 **Response** `NewsArticleList` rows at `data.items[]`, each `{ article }` ([full schema](schemas/NewsArticleList.md))
 

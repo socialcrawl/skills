@@ -10,7 +10,7 @@
 |----------|------|---------|----------|
 | [POST /v1/web/agent](#post-v1webagent---25-credits-custom) | 25 credits (custom) | Starts a job where a browser agent follows your plain-language instruction on a site… | Use it for tasks that need clicking and navigating to reach the data; for a page you can… |
 | [POST /v1/web/batch-scrape](#post-v1webbatch-scrape---n-credits-for-n-submitted-urls-request-shaped) | N credits for N submitted URLs (request-shaped) | Starts a job that scrapes a list of URLs you supply, returning a job id to poll for the… | Use it when you already know every URL you want; use crawl instead when the site should… |
-| [POST /v1/web/crawl](#post-v1webcrawl---1-10000-credits-request-shaped) | 1-10000 credits (request-shaped) | Starts an async crawl job that walks a site and scrapes every page it finds, returning a… | Use it when you need many pages from one site; check progress with GET jobs/{job_id}. |
+| [POST /v1/web/crawl](#post-v1webcrawl---1-10000-credits-request-shaped) | 1-10,000 credits (request-shaped) | Starts an async crawl job that walks a site and scrapes every page it finds, returning a… | Use it when you need many pages from one site; check progress with GET jobs/{job_id}. |
 | [GET /v1/web/extract](#get-v1webextract---5-credits-custom) | 5 credits (custom) | Returns structured fields pulled from one web page, shaped by the schema or… | Use it when you want specific values such as price or author rather than the page's full… |
 | [GET /v1/web/jobs](#get-v1webjobs---free-0-credits) | free (0 credits) | Returns the crawl, batch scrape, and agent jobs created with your API key, each with its… | Use it to find a job id you did not keep, or to see everything still running. |
 | [GET /v1/web/jobs/{job_id}](#get-v1webjobsjob_id---free-0-credits) | free (0 credits) | Returns one job's current status, progress, credits charged, and its results once the… | Use it to poll a crawl, batch scrape, or agent job after starting it; add /errors to the… |
@@ -80,20 +80,20 @@ Starts an async batch scrape job for multiple URLs and returns a SocialCrawl job
 - `formats` (optional, string) - CSV of output formats for each URL, e.g. 'markdown' (default) or 'markdown,html'.
 - `only_main_content` (optional, boolean) - Strip nav, headers, footers and sidebars on every URL and keep the article body. Default true.
 - `proxy` (optional, enum: basic | auto | enhanced) - Proxy tier applied to every URL: basic, auto, or enhanced.
-- `webhook_url` (optional, string) - HTTPS URL that receives a signed callback when the job reaches a terminal state, so you do not have to poll GET /v1/web/jobs/{job_id}.
+- `webhook_url` (optional, string) - Accepted but not used: a batch-scrape job sends no webhook. Poll GET /v1/web/jobs/{job_id} for its status.
 
 **Response** `Analytics` async job: this call returns `job_id`; poll `GET /v1/web/jobs/{job_id}` for status, and the result comes back there once it completes ([full schema](schemas/Analytics.md)).
 
 | Field | Meaning |
 |---|---|
+| `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.extraction` | Structured extraction result when requested. |
 | `page.fetched_at` | Fetch timestamp when reported. |
 | `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+18 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, source_type, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: {job_id string} (+13 more).
++19 more (types in the full schema): `page` {scrape_id, status_code, answer, change_tracking, description, highlights, page_count, source_type, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/batch-scrape" \
@@ -102,9 +102,9 @@ curl -X POST "https://www.socialcrawl.dev/v1/web/batch-scrape" \
   -d '{"urls":["https://example.com/a","https://example.com/b"]}'
 ```
 
-## POST /v1/web/crawl - 1-10000 credits (request-shaped)
+## POST /v1/web/crawl - 1-10,000 credits (request-shaped)
 
-Starts an async crawl job and returns a SocialCrawl job id (job_...). Poll or cancel it via GET/DELETE /v1/web/jobs/{job_id}, or track it with a webhook.
+Starts an async crawl job and returns a SocialCrawl job id (job_...). Poll or cancel it via GET/DELETE /v1/web/jobs/{job_id}; polling is the authoritative status.
 
 **Use when** you need many pages from one site; check progress with GET jobs/{job_id}.
 **Cost** price depends on how many items the request sends or returns · not cached
@@ -121,7 +121,7 @@ Starts an async crawl job and returns a SocialCrawl job id (job_...). Poll or ca
 - `allow_external_links` (optional, boolean) - Follow links off the domain. Off by default, and easy to make expensive: `limit` is the only thing bounding it.
 - `include_paths` (optional, string) - CSV of URL path patterns to crawl, e.g. '/blog/.*,/docs/.*'. Everything else is skipped, which is the cheapest way to narrow a crawl.
 - `exclude_paths` (optional, string) - CSV of URL path patterns to skip, e.g. '/tag/.*'. Applied after include_paths.
-- `webhook_url` (optional, string) - Optional webhook URL for terminal job updates.
+- `webhook_url` (optional, string) - Optional URL the crawl backend calls directly with its own progress events. SocialCrawl does not sign or filter that callback, and its payload carries the backend's own job id, not your job_... id; poll GET /v1/web/jobs/{job_id} for the authoritative status.
 - `formats` (optional, string) - CSV of output formats for each crawled page, e.g. 'markdown' (default) or 'markdown,html'.
 - `goal` (optional, string) - Optional. What you are looking for on the site, in your own words. SocialCrawl maps the site, scrapes the URLs that likely hold it (always at least two), and lists every skipped URL with p. Without this param the crawl follows links by depth only.
 
@@ -147,7 +147,7 @@ curl -X POST "https://www.socialcrawl.dev/v1/web/crawl" \
 
 ## GET /v1/web/extract - 5 credits (custom)
 
-Fetches one web page and returns structured extraction output under the WebPage extraction field.
+Fetches one web page and returns structured extraction output under the WebPage extraction field. Every extracted value is checked against the page's own text: a placeholder such as 'Not specified', or a value the page does not state, comes back as null, and `page.extraction_check.removed` lists each such field with the value it had. A value stated in another language than the one you asked for is kept. Fields that could not be checked are kept as extracted and named in `page.extraction_check.unverified` and `_warnings`. Write the schema or prompt for what the page shows: a field the page never mentions will be null.
 
 **Use when** you want specific values such as price or author rather than the page's full text.
 **Cost** not cached
@@ -172,14 +172,14 @@ Fetches one web page and returns structured extraction output under the WebPage 
 
 | Field | Meaning |
 |---|---|
+| `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.extraction` | Structured extraction result when requested. |
 | `page.fetched_at` | Fetch timestamp when reported. |
 | `page.final_url` | Final resolved URL after redirects. |
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
-| `page.status_code` | HTTP status code observed while fetching the page. |
 
-+15 more (types in the full schema): `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}; `page` {answer, change_tracking, highlights, page_count, total_page_count}.
++21 more (types in the full schema): `page` {status_code, answer, change_tracking, highlights}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+2 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/extract" \
@@ -195,7 +195,7 @@ Lists async crawl, batch scrape, and agent jobs for the API key.
 **Use when** you want to find a job id you did not keep, or to see everything still running.
 **Cost** not cached
 **Execution** Job-management route for the async submitters (`web/crawl`, `web/batch-scrape`, `web/agent`). Free to call.
-**Paging** cursor · default page size not measured; set with `limit` · depth unknown
+**Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 0.0-0.1 s
 
 **Query params**
 
@@ -281,7 +281,7 @@ Discovers URLs for a public site and returns them as a normalized WebPageList.
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+17 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Page-level: `data.dropped`, `data.judged_urls`, `data.skipped_urls`.
++22 more (types in the full schema): `page` {status_code, answer, change_tracking, description}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+3 more). Page-level: `data.dropped`, `data.judged_urls`, `data.skipped_urls`.
 
 **Next** `web/scrape` (`url` ← `data.items[].page.url`) - The full content of each page.
 
@@ -298,7 +298,7 @@ Lists web monitors created by the current API key.
 **Use when** you want to review what you are currently monitoring, or to look up a monitor id.
 **Cost** not cached
 **Execution** Stateful monitor-management route. Managing a monitor is free; each scheduled check bills its own upstream cost plus 1 credit for orchestration.
-**Paging** cursor · default page size not measured; set with `limit` · depth unknown
+**Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 0.0-0.1 s
 
 **Query params**
 
@@ -333,7 +333,7 @@ Creates an upstream-backed monitor. Creation is free; every scheduled check bill
 - `schedule_text` (optional, string) - Plain-language schedule, such as every 15 minutes.
 - `schedule_cron` (optional, string) - Cron schedule. Mutually exclusive with schedule_text.
 - `timezone` (optional, string) - IANA timezone for the schedule.
-- `webhook_url` (optional, string) - HTTPS URL that receives a signed callback on every check, so you do not have to poll the checks list.
+- `webhook_url` (optional, string) - Optional URL the monitoring backend calls directly with its own check payloads. SocialCrawl does not sign or deliver that callback, and the ids in it are the backend's own, not your wm_... id; read GET /v1/web/monitors/{monitor_id}/checks for the authoritative record.
 - `query` (optional, string) - Search query the monitor re-runs, used only when mode=search. On a scrape monitor the url is the target instead.
 - `goal` (optional, string) - Plain-language description of what a meaningful change looks like, used by the judge to decide whether a check is worth notifying about. A search monitor needs this unless judge_enabled is false.
 - `retention_days` (optional, integer) - How long to keep each check's captured result, 1 to 365 days. Older checks are dropped.
@@ -463,14 +463,14 @@ Uploads a document through multipart/form-data and returns parsed web-style cont
 
 | Field | Meaning |
 |---|---|
+| `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.extraction` | Structured extraction result when requested. |
 | `page.fetched_at` | Fetch timestamp when reported. |
 | `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` | (seen in a sample response) |
 
-+16 more (types in the full schema): `page` {status_code, answer, change_tracking, highlights, page_count, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: `page` {description null, source_type null}.
++22 more (types in the full schema): `page` {scrape_id, status_code, answer, change_tracking}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+3 more).
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/parse" \
@@ -484,7 +484,7 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 
 **Use when** you want it for a single known URL; for whole sites start a crawl job instead.
 **Cost** price moves with `pdf_parse`, `proxy` · not cached · multi-source (billed once)
-**Pricing** 1 credit for a standard scrape. It rises to a flat 5 when the fetch needs more than a plain request: `proxy=auto`, `proxy=enhanced`, or `pdf_parse=true`. Nothing else moves the price, so screenshots, tag filters, `wait_for` and a mobile viewport are all included in the 1 credit.
+**Pricing** 1 credit for a standard scrape. `proxy=auto`, `proxy=enhanced` and `pdf_parse=true` hold 5 credits and settle to what the fetch actually used, so a page a plain request could read still costs 1. Nothing else moves the price: screenshots, tag filters, `wait_for` and a mobile viewport are included. A page that comes back as the site's own block or error page (HTTP 400 or more), a CAPTCHA, a sign-in wall or an empty shell is returned with `page_state` saying so and a `_warnings` line, and is not charged.
 **Paging** none
 
 **Query params**
@@ -495,12 +495,12 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 - `wait_for` (optional, integer) - Milliseconds to wait after load before capturing, for pages that render their content in JavaScript. Leave unset unless the page comes back empty or half-built.
 - `mobile` (optional, boolean) - Render in a mobile viewport with a mobile user agent. Use it when the site serves a different layout to phones.
 - `timeout` (optional, integer) - Hard cap on the page load in milliseconds, 1 to 30000. A page that exceeds it fails and is refunded rather than returning a partial capture.
-- `max_age` (optional, integer) - Accept an upstream-cached copy up to this many milliseconds old, which is faster and still one credit. Default 172800000 (48 hours); send 0 to force a live fetch.
+- `max_age` (optional, integer) - Accept an upstream-cached copy up to this many milliseconds old, which is faster and still one credit. Default 172800000 (48 hours), or 0 (a live fetch) with `proxy=auto` or `proxy=enhanced`; send 0 to force a live fetch. A cached copy of a page that failed (HTTP 400 or more) is never served: it is fetched again, live.
 - `location_country` (optional, string) - ISO 3166-1 alpha-2 country code to fetch from, e.g. 'us' or 'de'. Use it for geo-varying pages such as pricing or availability.
 - `screenshot_full_page` (optional, boolean) - When a screenshot format is requested, capture the entire scrollable page instead of the visible viewport.
 - `include_tags` (optional, string) - CSV of CSS selectors or HTML tags to keep, e.g. 'article,main'. Everything outside them is dropped. Use it to pin extraction to a known container.
 - `exclude_tags` (optional, string) - CSV of CSS selectors or HTML tags to drop, e.g. 'nav,footer,.cookie-banner'. Applied after include_tags.
-- `proxy` (optional, enum: basic | auto | enhanced) - Proxy tier: basic, auto, or enhanced.
+- `proxy` (optional, enum: basic | auto | enhanced) - Proxy tier: basic (the default), auto (a plain request first, then a stronger one if the site blocks it), or enhanced. Use auto when a plain scrape returns a block or CAPTCHA page. auto and enhanced read the page live unless you set max_age.
 - `pdf_parse` (optional, boolean) - Parse the target as a PDF and return its extracted text. Send it when the URL points at a PDF rather than an HTML page.
 - `block_ads` (optional, boolean) - Block ad and tracker requests, which is faster and quieter. Default true.
 - `remove_base64_images` (optional, boolean) - Drop inline base64-encoded images from the returned content instead of carrying them in the payload. Default true.
@@ -509,14 +509,14 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 
 | Field | Meaning |
 |---|---|
+| `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.extraction` | Structured extraction result when requested. |
 | `page.fetched_at` | Fetch timestamp when reported. |
 | `page.final_url` | Final resolved URL after redirects. |
 | `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
-| `page.status_code` | HTTP status code observed while fetching the page. |
 
-+15 more (types in the full schema): `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}; `page` {answer, change_tracking, highlights, page_count, total_page_count}. Also in the sample: `page.page_state` {value string, confidence number, skipped_judge boolean}.
++21 more (types in the full schema): `page` {status_code, answer, change_tracking, highlights}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+2 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/scrape" \
@@ -552,13 +552,13 @@ Searches web, news, and image sources and returns a single normalized list of we
 | Field | Meaning |
 |---|---|
 | `page.url` | Requested URL. |
+| `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.extraction` | Structured extraction result when requested. |
 | `page.fetched_at` | Fetch timestamp when reported. |
 | `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 | `page.title` |  |
 
-+18 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, source_type, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Page-level: `data.dropped`.
++24 more (types in the full schema): `page` {scrape_id, status_code, answer, change_tracking}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+5 more). Page-level: `data.dropped`.
 
 **Next** `web/scrape` (`url` ← `data.items[].page.url`) - The full content of each page.
 

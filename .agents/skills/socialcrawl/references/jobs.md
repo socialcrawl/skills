@@ -36,7 +36,7 @@ Returns one Bing-aggregated job: title, company, location, employment type, desc
 
 **Query params**
 
-- `id` (required) - Bing job id from bing/search. · e.g. `MTE5OTc2NjYxOS5SZXRybw==`
+- `id` (required) - Bing job id from bing/search. · e.g. `NTU5NDY0MDEzLlJldHJv`
 
 **Response** `Job` object at `data`, `{ job }` ([full schema](schemas/Job.md))
 
@@ -53,7 +53,7 @@ Returns one Bing-aggregated job: title, company, location, employment type, desc
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/bing" \
-  --data-urlencode "id=MTE5OTc2NjYxOS5SZXRybw==" \
+  --data-urlencode "id=NTU5NDY0MDEzLlJldHJv" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
@@ -64,7 +64,7 @@ Returns aggregated job listings from Bing matching a keyword and location, with 
 **Use when** you want to search across boards in one call, then pass an id to bing for the description and apply URL. location is required on page 1.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** cursor · ≈20/page (observed once) · depth unknown · N items ≈ ceil(N/20) x 10 credits
+**Paging** cursor · ≈20/page (observed once) · depth unknown · N items ≈ ceil(N/20) x 10 credits · typical 1.7-2.2 s
 
 **Query params**
 
@@ -138,7 +138,7 @@ Returns Indeed job listings matching a keyword, country, and optional city, sort
 **Use when** you want to search Indeed in a given country, optionally narrowing by city, sort, and radius, then pass an id to indeed. country_code is required on page 1.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** cursor · ≈20/page (observed once) · depth unknown · N items ≈ ceil(N/20) x 10 credits
+**Paging** cursor · ≈20/page (observed once) · depth unknown · N items ≈ ceil(N/20) x 10 credits · typical 0.7-2.4 s
 
 **Query params**
 
@@ -235,7 +235,7 @@ Returns LinkedIn job listings matching a keyword and optional location, date, em
 **Use when** you want to search LinkedIn openings with location, date, employment type, experience, workplace, or company-id filters, then pass an id to linkedin.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** cursor · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 10 credits
+**Paging** cursor · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 10 credits · typical 1.1-2.9 s
 
 **Query params**
 
@@ -325,7 +325,7 @@ Returns one Xing job: title, company, location, employment type, remote option, 
 
 **Query params**
 
-- `id` (required) - Xing job id from xing/search. · e.g. `YmVybGluLXNlbmlvci1zb2x1dGlvbi1lbmdpbmVlci0xNTY3NTI5MTA=`
+- `id` (required) - Xing job id from xing/search. · e.g. `YmVybGluLXNvZnR3YXJlZW50d2lja2xlci0xNTY4OTYwMjk=`
 
 **Response** `Job` object at `data`, `{ job }` ([full schema](schemas/Job.md))
 
@@ -342,7 +342,7 @@ Returns one Xing job: title, company, location, employment type, remote option, 
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/xing" \
-  --data-urlencode "id=YmVybGluLXNlbmlvci1zb2x1dGlvbi1lbmdpbmVlci0xNTY3NTI5MTA=" \
+  --data-urlencode "id=YmVybGluLXNvZnR3YXJlZW50d2lja2xlci0xNTY4OTYwMjk=" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
@@ -353,7 +353,7 @@ Returns Xing job listings matching a keyword, with optional German-language loca
 **Use when** you want to search the German-language job market with location, date, career level, remote, and minimum-salary filters, then pass an id to xing.
 **Cost** cache 120 s
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
-**Paging** cursor · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 10 credits
+**Paging** cursor · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 10 credits · typical 0.7-1.8 s
 
 **Query params**
 
