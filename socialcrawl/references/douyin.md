@@ -29,7 +29,7 @@ Returns the reply thread under one Douyin comment: text, replier, like count, IP
 
 **Use when** a comment shows a non-zero reply count and you need the conversation, not just the opening line.
 **Cost** price moves with `limit` · cache 300 s
-**Pricing** 5 credits per reply RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the replies actually delivered. Only a comment with a non-zero `engagement.replies` has a thread, so check that on the parent row before spending a call here.
+**Pricing** 5 credits per reply RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the replies actually delivered. Only a comment with a non-zero `engagement.replies` has a thread, so check that on the parent row before spending a call here With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 5.1-6.3 s
 
@@ -39,8 +39,8 @@ Returns the reply thread under one Douyin comment: text, replier, like count, IP
 - `comment_id` (required) - The comment to expand, taken from the id field of a GET /v1/douyin/post/comments row. Only comments with a non-zero engagement.replies have a thread. · e.g. `7682735175344833317`
 - `limit` (optional, integer, 1-50) - Replies to return, 1 to 50. Default 10. Each reply costs 5 credits and you are charged only for replies returned.
 - `cursor` (optional, string) - Continuation token from a previous response's pagination block. Omit for the first page.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -53,7 +53,7 @@ Returns the reply thread under one Douyin comment: text, replier, like count, IP
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+8 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++8 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/douyin/comment/replies" \
@@ -85,7 +85,7 @@ Returns one Douyin video from its URL or aweme ID: caption, creator, likes, comm
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted}. Never filled: `post.engagement.views`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_id, download_count, music_id}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null} (+5 more). Never filled: `post.engagement.views`.
 
 **Next** `douyin/post/comments` (`url` ← `data.post.url`) - The comments on the video.
 
@@ -109,8 +109,8 @@ Returns top-level comments on a Douyin video: text, commenter, like count, reply
 
 - `url` (required) - Douyin video URL or the bare numeric aweme ID. · e.g. `https://www.douyin.com/video/7681266289940544369`
 - `limit` (optional, integer, 1-100) - Comments to return, 1 to 100. Default 20. Each comment costs 1 credit and you are charged only for comments returned.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -123,7 +123,7 @@ Returns top-level comments on a Douyin video: text, commenter, like count, reply
 | `comment.author.avatar_url` | URL to comment author profile picture |
 | `comment.author.display_name` | Comment author display name |
 
-+6 more (types in the full schema): `comment.author` {verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++6 more (types in the full schema): `comment.author` {verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/douyin/post/comments" \
@@ -160,7 +160,7 @@ Returns one Douyin creator: nickname, Douyin ID, bio, avatar, follower and follo
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {country}. Never filled: `author.joined_at`, `author.private`.
++13 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, country, products}. Never filled: `author.joined_at`, `author.private`.
 
 **Next** `douyin/profile/posts` (`handle` ← `data.author.username`) - List a Douyin creator's videos.
 
@@ -175,7 +175,7 @@ curl -G "https://www.socialcrawl.dev/v1/douyin/profile" \
 Returns a Douyin creator's recent videos with caption, likes, comments, shares, saves, hashtags, music and cover image, newest first. Narrow the window with recent_days, or drop pinned posts with exclude_pinned to read genuine recent activity. Douyin publishes no view counts, so post.engagement.views is null.
 
 **Use when** you want to read a creator's posting cadence. Set exclude_pinned to true so an old pinned video does not distort recent activity.
-**Cost** price moves with `limit` · cache 900 s
+**Cost** price moves with `limit` · cache 900 s · multi-source (billed once)
 **Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the videos actually delivered, so a creator with 4 recent videos costs 20 credits however high `limit` was set. `recent_days` and `exclude_pinned` narrow the result set BEFORE billing settles, so they lower the charge as well as the noise.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** single page - Upstream has no cursor. maxResultsPerQuery is a cap, probed 2026-09-08: limit=1 and limit=5 honoured, no page token in the schema or the body. Deeper reads raise limit, up to 25.
@@ -188,8 +188,8 @@ Returns a Douyin creator's recent videos with caption, likes, comments, shares, 
 - `limit` (optional, integer, 1-25) - Rows to return, 1 to 25. Default 10. Each row costs 5 credits and you are charged only for rows returned.
 - `recent_days` (optional, integer, 1-3650) - Only return videos published in the last N days. Leave unset for the newest regardless of age.
 - `exclude_pinned` (optional, boolean) - Set true to skip videos pinned to the top of the profile, which can be old.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -206,7 +206,7 @@ Returns a Douyin creator's recent videos with caption, likes, comments, shares, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted, pinned} (+1 more). Never filled: `post.engagement.views`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted} (+1 more). Never filled: `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `douyin/post/comments` (`url` ← `data.items[].post.url`) - Get Douyin video comments. · `douyin/post` (`url` ← `data.items[].post.url`) - Get a Douyin video.
 
@@ -233,8 +233,8 @@ Returns Douyin videos matching a keyword: caption, creator, likes, comments, sha
 - `sort` (optional, enum: relevance | most_liked | latest) - Result ordering: relevance, most_liked, or latest. Default relevance.
 - `published` (optional, enum: all | day | week | half_year) - Recency window: all, day, week, or half_year. Default all.
 - `duration` (optional, enum: all | under_1m | one_to_five_m | over_5m) - Length filter: all, under_1m, one_to_five_m, or over_5m. Default all.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -247,7 +247,7 @@ Returns Douyin videos matching a keyword: caption, creator, likes, comments, sha
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted, pinned} (+1 more). Never filled: `post.engagement.views`. Page-level: `data.dropped`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {deleted} (+1 more). Never filled: `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `douyin/post/comments` (`url` ← `data.items[].post.url`) - Get Douyin video comments. · `douyin/post` (`url` ← `data.items[].post.url`) - Get a Douyin video.
 
@@ -263,7 +263,7 @@ Returns Douyin creators matching a keyword: nickname, Douyin ID, bio, follower c
 
 **Use when** you want to shortlist creators for outreach. Narrow by follower band or account type before you spend calls on full profiles.
 **Cost** price moves with `limit` · cache 120 s
-**Pricing** 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered.
+**Pricing** 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · 10/page by default, max 25; set with `limit` · depth unknown · N items ≈ N rows x 5 credits · typical 4.3-5.1 s
 
@@ -274,6 +274,7 @@ Returns Douyin creators matching a keyword: nickname, Douyin ID, bio, follower c
 - `cursor` (optional, string) - Continuation token from a previous response's pagination block. Omit for the first page.
 - `followers` (optional, enum: all | under_1k | 1k_to_10k | 10k_to_100k | 100k_to_1m | over_1m) - Follower band: all, under_1k, 1k_to_10k, 10k_to_100k, 100k_to_1m, or over_1m. Default all.
 - `user_type` (optional, enum: all | regular_user | enterprise_verified | individual_verified) - Account type: all, regular_user, enterprise_verified, or individual_verified. Default all.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `AuthorList` rows at `data.items[]`, each `{ author }` ([full schema](schemas/AuthorList.md))
 
@@ -286,7 +287,7 @@ Returns Douyin creators matching a keyword: nickname, Douyin ID, bio, follower c
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+5 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}. Page-level: `data.dropped`.
++7 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `author.ext` {business_hours, products}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `douyin/profile` (`handle` ← `data.items[].author.username`) - Get a Douyin creator profile.
 
@@ -307,7 +308,7 @@ Returns the live Douyin hot-search board (抖音热搜): roughly 50 trending top
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {rank number, word string, hot_value number, view_count number, video_count number, event_time string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/douyin/trending" \

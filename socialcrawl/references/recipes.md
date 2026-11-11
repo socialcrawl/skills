@@ -64,6 +64,8 @@ Task to cheapest call chain. Each recipe lists the calls in order (with the valu
 
 **Cost** for one brand, one window: 50 credits held up front (exact; the unused hold is refunded).
 
+**Measured** Measured on 25/10/2026: 50 credits in 1 call (the quote held 50). The TypeScript and Python programs both ran.
+
 **Cheaper** `search/multi` - Native search results from the platforms you name, priced per platform page, when you need this week's social posts rather than a trend.
 
 **Deeper** `prism/share-of-voice` - The same read for two to five competing brands at once, as a share of voice.
@@ -115,6 +117,8 @@ const mentions = await sc("prism/brand-mentions", { keyword: "notion", date_from
 | posts (reddit leg) | `reddit/search` | 1 | 1 | 1 |
 | posts (twitter leg) | `twitter/search/tweets` | 1 | 1 | 1 |
 
+**Measured** Measured on 25/10/2026: 2 credits in 1 call for ITEMS=25 (the quote held 2). The TypeScript and Python programs both ran.
+
 **Cheaper** `reddit/search` - One platform only, one page, when the user named a single platform.
 
 **Deeper** `search/everywhere` - A ranked, clustered answer across many more sources, at a much higher flat price.
@@ -122,7 +126,7 @@ const mentions = await sc("prism/brand-mentions", { keyword: "notion", date_from
 **Pitfalls**
 
 - Name the platforms: the default set is TikTok, Instagram, YouTube, Reddit and Threads, so X is missing unless you ask for twitter.
-- On X, since= and until= work as on every dated list, and search/multi also sends them to X as its own since:/until: operators. Calling twitter/search/tweets directly, since= sets sort=latest and ends the walk at that date; since:YYYY-MM-DD and until:YYYY-MM-DD inside query narrow the search itself instead.
+- On X, since= and until= work as on every dated list, and search/multi also sends them to X as since_time:/until_time: operators, which X applies to the second. Calling twitter/search/tweets directly, since= sets sort=latest and ends the walk at that date; since_time: and until_time: inside query, in Unix seconds, narrow the search itself instead.
 - search/multi does not page itself: continue one platform on its own endpoint with data.sources.<platform>.next_cursor as cursor.
 - prism/brand-mentions and search/everywhere are not this job: they cost far more and do not limit the results to the platforms you named.
 
@@ -147,6 +151,8 @@ const posts = await sc("search/multi", { query: "Notion", platforms: "reddit,twi
 1. `GET /v1/prism/mentions?handle=<handle>&since=<start_date>` - Searches X and Reddit by default; each kept row says whether it is a reply, retweet, mention or tag.
 
 **Cost** for first page of each default search: 3 credits held up front (settles 1-3; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 1 credit in 1 call for ITEMS=3 (the quote held 3). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/brand-mentions` - Mentions of the brand name across the web index, with a trend and sentiment, rather than of the handle.
 
@@ -177,6 +183,8 @@ const mentions = await sc("prism/mentions", { handle: "nasa", since: "2026-09-01
 1. `GET /v1/prism/share-of-voice?brands=<brands>&date_from=<start_date>`
 
 **Cost** for three brands with the social leg: 120 credits held up front (settles 20-120; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 120 credits in 1 call for ITEMS=3 (the quote held 120). The TypeScript and Python programs both ran.
 
 **Cheaper** `prism/brand-mentions` - One brand's web trend and sentiment, when you do not need the comparison.
 
@@ -215,6 +223,8 @@ const sov = await sc("prism/share-of-voice", { brands: "notion,coda,airtable", d
 | search (instagram leg) | `instagram/search/reels` | 1 | 1 | 1 |
 | search (youtube leg) | `youtube/search` | 1 | 1 | 1 |
 
+**Measured** Measured on 25/10/2026: 3 credits in 1 call for ITEMS=25 (the quote held 3). The TypeScript and Python programs both ran.
+
 **Deeper** `search/everywhere` - Ranked and clustered across many sources, with top comments, for a research overview.
 
 **Pitfalls**
@@ -240,15 +250,17 @@ const search = await sc("search/multi", { query: "matcha latte", platforms: "tik
 
 **Chain**
 
-1. `GET /v1/twitter/search/tweets?query=<keyword>&sort=latest&max_pages=5` - repeat with `cursor=<pagination.next_cursor>` until 10000 rows or `has_more=false`. max_pages=5 makes each call walk up to five pages and return them together; the cursor it returns continues from the last page read.
+1. `GET /v1/twitter/search/tweets?query=<keyword>&sort=latest&max_items=1000` - repeat with `cursor=<pagination.next_cursor>` until 10000 rows or `has_more=false`. max_items=1000 makes each call walk pages (up to 50) until it holds a thousand tweets and return them together; add max_credits to cap what one call spends. The cursor it returns continues from the last page read.
 
 **Cost** for ten thousand tweets: 1 credit per page (page size not yet measured; quote the whole job with GET /v1/utility/estimate or scripts/estimate.py).
+
+**Measured** Measured on 25/10/2026: 17 credits in 1 call for ITEMS=25 (the quote held 1). The TypeScript and Python programs both ran.
 
 **Pitfalls**
 
 - Billing is per page of about twenty tweets, not per call: quote pages (N / 20) before you start, and expect short pages to raise the count.
-- max_pages caps at five per call, so a large job is many calls; it does not change the price per page.
-- Bound the walk with since=YYYY-MM-DD: it keeps sort=latest and ends the walk at that date. until= only filters rows off each page (you still pay for the newer pages it skips), so for an upper bound put until:YYYY-MM-DD inside query, which narrows the search itself.
+- One call walks up to 50 pages and can stop early on its time budget (data.walk.stopped is time_budget), so a large job is a few calls; walking does not change the price per page.
+- Bound the walk with since=YYYY-MM-DD: it keeps sort=latest and ends the walk at that date. until= only filters rows off each page (you still pay for the newer pages it skips), so for an upper bound put until_time: inside query, in Unix seconds, which narrows the search itself.
 
 **Code**
 
@@ -257,14 +269,14 @@ const search = await sc("search/multi", { query: "matcha latte", platforms: "tik
 const tweets: unknown[] = [];
 let cursor: string | undefined;
 do {
-  const r = await sc("twitter/search/tweets", { query: "nvidia", sort: "latest", max_pages: "5", cursor });
+  const r = await sc("twitter/search/tweets", { query: "nvidia", sort: "latest", max_items: "1000", cursor });
   tweets.push(...r.data.items);
-  cursor = r.pagination.has_more ? r.pagination.next_cursor : undefined;
+  cursor = r.pagination?.has_more ? r.pagination.next_cursor : undefined;
 } while (cursor && tweets.length < 10000);
 ```
 
 ```sh
-python3 scripts/paginate.py twitter/search/tweets --items 10000 query=nvidia sort=latest max_pages=5
+python3 scripts/paginate.py twitter/search/tweets --items 10000 query=nvidia sort=latest max_items=1000
 ```
 
 The quote is not exact yet, so set --max-credits from your quote.
@@ -282,6 +294,8 @@ The quote is not exact yet, so set --max-credits from your quote.
 1. `GET /v1/reddit/search?query=<category>&label=intent&relevance=filter` - Each post carries computed.labels.intent; relevance=filter drops posts that are not about the category.
 
 **Cost** for one page of posts: 1 credit held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 1 credit in 1 call for ITEMS=25 (the quote held 1). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/comment-leads` - Buyer leads from the comments under the posts a search returns, opening only the posts worth opening.
 
@@ -310,6 +324,8 @@ const posts = await sc("reddit/search", { query: "best crm for startups", label:
 1. `GET /v1/search/forums?query=<topic>` - Fuses Reddit, Hacker News and Korean forums, and attaches top comments to the leading threads.
 
 **Cost** for one fused page of threads: 10 credits held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 10 credits in 1 call for ITEMS=25 (the quote held 10). The TypeScript and Python programs both ran.
 
 **Cheaper** `reddit/search` - Reddit only, one page, no comment enrichment.
 
@@ -341,6 +357,8 @@ const threads = await sc("search/forums", { query: "vector databases" });
 
 **Cost** for one call at the default depth: 1 credit held up front (exact; the unused hold is refunded).
 
+**Measured** Measured on 25/10/2026: 1 credit in 1 call for ITEMS=10 (the quote held 1). The TypeScript and Python programs both ran.
+
 **Deeper** `search/news` - One query localised and fanned out across several countries and two news indexes.; `prism/earned-media` - Earned media coverage of a brand against a competitor, with domain authority.
 
 **Pitfalls**
@@ -369,6 +387,8 @@ const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "we
 1. `GET /v1/prism/discover?brands=<brands>&period=last_month&exclude_terms=<exclude_terms>&max_credits=150` - One run searches every brand on the default platforms and the news for the whole of last month, keeps the posts about each brand and drops duplicates. A 202 answer keeps running in the background: wait on data.next.status_url and read every row at data.next.results_url.
 
 **Cost** for a brand and its competitors, one month: at most 150 credits (max_credits caps the whole run; each search bills at its platform's price only when it returns rows, so it settles 0-150; nothing beyond the judging bound is held up front).
+
+**Measured** Measured on 25/10/2026: 35 credits in 5 calls (the quote held 150). The TypeScript and Python programs both ran.
 
 **Cheaper** `search/multi` - Each platform's own search once per brand, with since= for the month, when you judge and de-duplicate the rows yourself.
 
@@ -404,6 +424,8 @@ const reactions = await sc("prism/discover", { brands: "aruba,curacao,bonaire", 
 
 **Cost** for the accounts behind one topic: at most 400 credits (max_credits caps the whole run; each search bills at its platform's price only when it returns rows, so it settles 0-400; nothing beyond the judging bound is held up front).
 
+**Measured** Measured on 25/10/2026: 24 credits in 1 call (the quote held 400). The TypeScript and Python programs both ran.
+
 **Cheaper** `search/multi` - Each platform's own search for the topic, when you group the posts by author yourself.
 
 **Deeper** `prism/profiles` - Full profiles for the accounts you keep, many in one batch call.
@@ -434,22 +456,26 @@ const accounts = await sc("prism/discover", { view: "accounts", keywords: "repli
 
 **Chain**
 
-1. `GET /v1/search/creators?query=<niche>&sources=tiktok,instagram&min_followers=<min_followers>` - One ranked list across the platforms in sources; YouTube, X and Facebook are opt-in.
+1. `GET /v1/prism/creators?keywords=<niche>&platforms=tiktok,instagram&min_followers=<min_followers>&depth=quick&limit=10&max_credits=30` - One call finds the creators who post about the niche, measures each from its recent posts and ranks them best first in data.items. A larger request answers 202 and keeps running: follow data.next.status_url. An answer that stops on time carries data.next.resume_url: POST it to finish the rest in the background. Add dry_run=true first to read the estimate and how the request was understood.
 
-**Cost** for one fused list: 10 credits held up front (exact; the unused hold is refunded).
+**Cost** for ten ranked creators: 30 credits held up front (settles 0-30; the unused hold is refunded).
+
+**Measured** Measured on 28/10/2026: 24 credits in 4 calls for ITEMS=10 (the quote held 30). Neither program ran.
 
 **Deeper** `prism/creator-vet` - Vet each shortlisted creator before you reach out.
 
 **Pitfalls**
 
-- For creators from one market, add country= (CL, AR, MX, CO, PE, EC, UY, ES or BR): search/creators then finds the TikTok and Instagram creators who post about the query there, instead of matching account names. For other markets use instagram/search/reels with country= or tiktok/search/users with country=.
-- Pass brief= (what you are looking for) to re-rank creators who post about it above brands, shops and repost pages; it adds a small refundable charge.
+- Put two to six topic words in keywords, not a sentence; describe who the creators should be in context= (about their content, not their audience), and send a plain-language sentence as prompt= instead.
+- For creators from one market, add country= with an ISO code (DE, ES, MX, BR and others): a creator is kept only when its declared country or its posts' region matches. data.market says what the run did for that market.
+- Run it with dry_run=true first when the size band is wide: the estimate and the compiled request are free to read, and max_credits caps the run.
+- Shops, businesses and sellers are not creators: use prism/discover with view=accounts for those.
 
 **Code**
 
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
-const creators = await sc("search/creators", { query: "skincare routine", sources: "tiktok,instagram", min_followers: "50000" });
+const creators = await sc("prism/creators", { keywords: "skincare routine", platforms: "tiktok,instagram", min_followers: "50000", depth: "quick", limit: "10", max_credits: "30" });
 ```
 
 ## Instagram creators from one country about a topic
@@ -459,39 +485,43 @@ const creators = await sc("search/creators", { query: "skincare routine", source
 **Inputs**
 
 - `topic`: The topic, ideally as locals phrase it (e.g. `matcha`)
-- `country`: Market code: ES, MX, DE, BR, KR, FR, ZA, NG or KE (e.g. `DE`)
+- `country`: Market code, an ISO country code such as DE, ES, MX or BR (e.g. `DE`)
 
 **Chain**
 
-1. `GET /v1/instagram/search/reels?query=<topic>&country=<country>` - Keeps only reels whose creator declares that market, and fills post.ext.author_country and post.ext.author_followers; filter on author_followers yourself for a follower floor.
+1. `GET /v1/prism/creators?keywords=<topic>&platforms=instagram&country=<country>&depth=quick&limit=10&max_credits=30` - Keeps a creator only when its declared country or its posts' region matches, measures each from its recent posts and returns the follower count with every row, best first in data.items. A larger request answers 202: follow data.next.status_url. An answer that stops on time carries data.next.resume_url: POST it to finish the rest in the background. Add min_followers for a follower floor and dry_run=true to read the estimate first.
 
-**Cost** for one page of reels with each creator looked up: 61 credits held up front (settles 1-61; the unused hold is refunded).
+**Cost** for ten ranked Instagram creators: 30 credits held up front (settles 0-30; the unused hold is refunded).
 
-**Cheaper** `instagram/profile/about` - On a small budget, the instagram-creators-by-country-budget recipe: search with region= at the plain page price, then one instagram/profile/about call per candidate you keep, which returns both the follower count and the declared country.; `search/creators` - Cross-platform creator search with min_followers; with country= (CL, AR, MX, CO, PE, EC, UY, ES, BR) it finds the TikTok and Instagram creators who post about the topic in that market.
+**Measured** Measured on 28/10/2026: 30 credits in 7 calls for ITEMS=10 (the quote held 30). Neither program ran.
+
+**Cheaper** `instagram/profile/about` - On a small budget, the instagram-creators-by-country-budget recipe: search with region= at the plain page price, then one instagram/profile/about call per candidate you keep, which returns both the follower count and the declared country.; `instagram/search/reels` - One page of reels with country= (ES, MX, DE, BR, KR, FR, ZA, NG, KE, AE or SA): it drops other markets and fills post.ext.author_followers, but you read reels, not ranked creators.
 
 **Pitfalls**
 
-- country= supports ES, MX, DE, BR, KR, FR, ZA, NG and KE only; any other code is a free 400.
-- Without country= or include=creator, post.ext.author_followers is null, so a follower floor cannot be applied.
-- Each creator looked up is billed whether it is kept or dropped; quote the creator lookups, not the plain page price.
-- author_country is the country the creator declares, not where the reel was filmed; topics about a place (travel, eSIMs) are often made by visitors.
+- Add platforms=tiktok,instagram to the same call for creators on both platforms; a wide size band is worth a dry_run=true first.
+- Pass context= (who the creators should be, about their content) when the topic alone also matches shops and repost pages.
+- Reel search (instagram/search/reels) with country= supports ES, MX, DE, BR, KR, FR, ZA, NG, KE, AE and SA only; any other code is a free 400. prism/creators takes other ISO codes.
+- Without country= or include=creator, post.ext.author_followers is null on reel search, so a follower floor cannot be applied there.
+- Each creator looked up is billed whether it is kept or dropped; quote the run's estimate, not the plain page price.
+- A declared country is the country the creator declares, not where the post was filmed; topics about a place (travel, eSIMs) are often made by visitors.
 
 **Which one**
 
 | Option | Endpoint | Best for | Cost shape |
 |--------|----------|----------|------------|
-| Reels from creators who declare one market | `instagram/search/reels` | country= keeps only that market's creators (ES, MX, DE, BR, KR, FR, ZA, NG, KE) and fills followers | per page, plus per creator looked up |
+| Ranked creators from one market | `prism/creators` | country= with any ISO code keeps the creators who declare that market, measured and ranked, with followers on every row; platforms= chooses Instagram, TikTok or more | per run, set by the estimate; max_credits caps it |
+| Reels from creators who declare one market | `instagram/search/reels` | country= keeps only that market's reels (ES, MX, DE, BR, KR, FR, ZA, NG, KE, AE, SA) and fills followers | per page, plus per creator looked up |
 | Localised reel search without a guarantee | `instagram/search/reels` | region= adds the market to the query at the plain page price; creators may be from anywhere | per page |
 | Budget: region= reels, then check each candidate | `instagram/profile/about` | one call per shortlisted creator returns followers and declared country together (recipe instagram-creators-by-country-budget) | per page, plus flat per candidate checked |
 | Instagram profile search with declared country | `instagram/search/profiles` | include=about fills author.ext.country on up to twelve rows of a profile search | per page, plus per row filled |
 | TikTok creators by account region | `tiktok/search/users` | country= with a wide list of markets, when TikTok fits the brief | per in-country row returned |
-| Cross-platform creator discovery | `search/creators` | Ranked creators with min_followers; country= (CL, AR, MX, CO, PE, EC, UY, ES, BR) finds the TikTok and Instagram creators who post about the topic in that market | flat per call, plus the searches country= runs |
 
 **Code**
 
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
-const reels = await sc("instagram/search/reels", { query: "matcha", country: "DE" });
+const creators = await sc("prism/creators", { keywords: "matcha", platforms: "instagram", country: "DE", depth: "quick", limit: "10", max_credits: "30" });
 ```
 
 ## Instagram creators from one country on a small budget
@@ -501,7 +531,7 @@ const reels = await sc("instagram/search/reels", { query: "matcha", country: "DE
 **Inputs**
 
 - `topic`: The topic, ideally as locals phrase it (e.g. `matcha`)
-- `country`: Market code for region=: ES, MX, DE, BR, KR, FR, ZA, NG or KE (e.g. `DE`)
+- `country`: Market code for region=: ES, MX, DE, BR, KR, FR, ZA, NG, KE, AE or SA (e.g. `DE`)
 
 **Chain**
 
@@ -515,11 +545,13 @@ const reels = await sc("instagram/search/reels", { query: "matcha", country: "DE
 | reels | `instagram/search/reels` | 1 | 1 | 1 |
 | about | `instagram/profile/about` | 30 | 1 | 30 |
 
-**Deeper** `instagram/search/reels` - country= (the instagram-creators-by-country recipe) drops other markets for you and fills followers in the same call, at a higher price per creator.
+**Measured** Measured on 25/10/2026: 26 credits in 26 calls for ITEMS=25 (the quote held 26). The TypeScript and Python programs both ran.
+
+**Deeper** `prism/creators` - Ranked, measured creators from the market in one call (the instagram-creators-by-country recipe): it keeps only creators who declare the market and puts the follower count on every row, at a higher price per creator.
 
 **Pitfalls**
 
-- region= supports ES, MX, DE, BR, KR, FR, ZA, NG and KE only; any other code is a free 400.
+- region= supports ES, MX, DE, BR, KR, FR, ZA, NG, KE, AE and SA only; any other code is a free 400.
 - Two reels by one creator are one candidate: deduplicate post.author.username before the lookups, and look up only the creators you would keep.
 - author.ext.country is the country the creator declares, and is null when Instagram publishes none; treat a null as unknown, not as a match.
 
@@ -549,6 +581,8 @@ for (const row of reels.data.items.slice(0, 30)) {
 
 **Cost** for one creator: 50 credits held up front (exact; the unused hold is refunded).
 
+**Measured** Measured on 25/10/2026: 50 credits in 1 call (the quote held 50). The TypeScript and Python programs both ran.
+
 **Cheaper** `prism/creator-card` - Just the profile cards and follower totals across platforms, without the vetting.
 
 **Pitfalls**
@@ -576,6 +610,8 @@ const vet = await sc("prism/creator-vet", { handle: "mkbhd", platform: "youtube"
 1. `GET /v1/prism/creator-card?handle=<handle>&platforms=tiktok,instagram,youtube,twitter&verify=true` - verify=true adds an identity verdict per platform (same, possible, different) at the same price.
 
 **Cost** for one handle on four platforms: 5 credits held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 5 credits in 1 call for ITEMS=4 (the quote held 5). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/find-accounts` - When the handle differs by platform: turn a name into ranked candidate accounts.
 
@@ -613,6 +649,8 @@ const cards = await sc("prism/creator-card", { handle: "mrbeast", platforms: "ti
 | videos | `tiktok/profile/videos` | 1 | 1 | 1 |
 | comments | `tiktok/post/comments` | 5 | 1 | 5 |
 
+**Measured** Measured on 25/10/2026: 7 credits in 7 calls for ITEMS=5 (the quote held 7). The TypeScript and Python programs both ran.
+
 **Cheaper** `tiktok/profile/full` - Profile, recent posts and computed engagement metrics in one call, without comments.
 
 **Deeper** `prism/comments` - Every comment on one video, replies nested, in one call.
@@ -649,6 +687,8 @@ for (const row of videos.data.items.slice(0, 5)) {
 
 **Cost** for one name: 17 credits held up front (settles 2-17; the unused hold is refunded).
 
+**Measured** Measured on 25/10/2026: 17 credits in 1 call (the quote held 17). The TypeScript and Python programs both ran.
+
 **Deeper** `prism/creator-card` - Once you know the handle, cards and an identity verdict across platforms.
 
 **Pitfalls**
@@ -682,6 +722,8 @@ const accounts = await sc("prism/find-accounts", { name: "Ogilvy", type: "compan
 |------|----------|------|-----------|------------|
 | profile | `linkedin/profile` | 1 | 5 | 5 |
 | posts | `linkedin/profile/posts` | 1 | 5 | 5 |
+
+**Measured** Measured on 25/10/2026: 10 credits in 2 calls for ITEMS=20 (the quote held 10). The TypeScript and Python programs both ran.
 
 **Cheaper** `linkedin/profile/with-posts` - Profile, counts, recent posts and background in one premium call instead of two.
 
@@ -732,6 +774,8 @@ const posts = await sc("linkedin/profile/posts", { url: "https://www.linkedin.co
 | people | `linkedin/search/people` | 1 | 10 | 10 |
 | background | `linkedin/profile/complete` | 3 | 10 | 30 |
 
+**Measured** Measured on 25/10/2026: 40 credits in 4 calls for ITEMS=3 (the quote held 40). The TypeScript and Python programs both ran.
+
 **Pitfalls**
 
 - On a plain search, author.followers is LinkedIn's rounded display bucket (author.ext.followers_approximate is true); include=profile makes it exact.
@@ -761,6 +805,8 @@ for (const row of people.data.items.slice(0, 3)) {
 1. `POST /v1/prism/profiles` body `{"items":"<items>"}` - One canonical Author per row in input order, with a status and the caller's custom_id echoed.
 
 **Cost** for fifty handles: about 50 credits held up front (settles 1-50; the unused hold is refunded); a batch is priced at a cycled example body, so quote your real list first.
+
+**Measured** Measured on 25/10/2026: 2 credits in 1 call for ITEMS=25 (the quote held 25). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/jobs` - Up to five thousand handles as one background job at the same per-row price.
 
@@ -795,6 +841,8 @@ const profiles = await sc("prism/profiles", undefined, { method: "POST", body: {
 |------|----------|------|-----------|------------|
 | comments | `tiktok/post/comments` | 5 | 3 | 15 |
 
+**Measured** Measured on 25/10/2026: 3 credits in 1 call for ITEMS=25 (the quote held 3). The TypeScript and Python programs both ran.
+
 **Cheaper** `prism/comments` - One call with max=N that pages to N for you, metered per comment page scanned.
 
 **Pitfalls**
@@ -812,7 +860,7 @@ let cursor: string | undefined;
 do {
   const r = await sc("tiktok/post/comments", { url: "https://www.tiktok.com/@stoolpresidente/video/7623818255903329566", sort: "recent", scan_pages: "3", cursor });
   comments.push(...r.data.items);
-  cursor = r.pagination.has_more ? r.pagination.next_cursor : undefined;
+  cursor = r.pagination?.has_more ? r.pagination.next_cursor : undefined;
 } while (cursor && comments.length < 200);
 ```
 
@@ -828,7 +876,7 @@ The quote is not exact yet, so set --max-credits from your quote.
 
 **Inputs**
 
-- `url`: A TikTok, YouTube, Facebook, Reddit, Hacker News or Instagram post URL (e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
+- `url`: A TikTok, YouTube, Facebook, Reddit, Hacker News, Instagram, X, Threads or LinkedIn post URL (e.g. `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
 - `max_comments`: Stop after about this many top-level comments (e.g. `500`)
 
 **Chain**
@@ -836,6 +884,8 @@ The quote is not exact yet, so set --max-credits from your quote.
 1. `GET /v1/prism/comments?url=<url>&max=<max_comments>&replies=false` - Pages the thread server-side to max; replies=true nests replies where the platform has them.
 
 **Cost** for five hundred top-level comments: 10 credits held up front (settles 2-10; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 5 credits in 1 call for ITEMS=25 (the quote held 10). The TypeScript and Python programs both ran.
 
 **Cheaper** `youtube/video/comments` - One page of a single platform's comments, when you only need the first page.
 
@@ -867,6 +917,8 @@ const comments = await sc("prism/comments", { url: "https://www.youtube.com/watc
 
 **Cost** for one page of comments: 1 credit held up front (exact; the unused hold is refunded).
 
+**Measured** Measured on 25/10/2026: 1 credit in 1 call for ITEMS=25 (the quote held 1). The TypeScript and Python programs both ran.
+
 **Deeper** `prism/comment-leads` - Buyer leads from the comments of every post a keyword search returns.
 
 **Pitfalls**
@@ -895,6 +947,8 @@ const comments = await sc("tiktok/post/comments", { url: "https://www.tiktok.com
 1. `GET /v1/youtube/video/transcript?url=<url>`
 
 **Cost** for one video: 3 credits held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 3 credits in 1 call (the quote held 3). The TypeScript and Python programs both ran.
 
 **Deeper** `youtube/transcripts` - Up to a hundred YouTube transcripts in one POST, by bare video id.; `prism/video-intel` - Video detail, stats, top comments and (with include=transcript) the transcript for one video in one call.
 
@@ -933,6 +987,8 @@ const transcript = await sc("youtube/video/transcript", { url: "https://www.yout
 | amazon_reviews | `amazon/reviews` | 1 | 5 | 5 |
 | walmart_search | `walmart/search` | 1 | 5 | 5 |
 | walmart_reviews | `walmart/reviews` | 1 | 5 | 5 |
+
+**Measured** Measured on 25/10/2026: 16 credits in 4 calls for ITEMS=2 (the quote held 16). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/product-reviews` - A themed pros-and-cons report across Amazon, Google Shopping and Trustpilot only.
 
@@ -987,6 +1043,8 @@ const walmart_reviews = await sc("walmart/reviews", { product_id: walmart_search
 | search | `home_depot/search` | 1 | 5 | 5 |
 | reviews | `home_depot/reviews` | 1 | 5 | 5 |
 
+**Measured** Measured on 25/10/2026: 10 credits in 2 calls for ITEMS=2 (the quote held 10). The TypeScript and Python programs both ran.
+
 **Pitfalls**
 
 - home_depot/search is the keyword-to-item-id resolver; never call home_depot/reviews with a guessed item_id.
@@ -1014,6 +1072,8 @@ const reviews = await sc("home_depot/reviews", { item_id: search.data.items[0].p
 1. `GET /v1/prism/product-reviews?query=<product>` - Resolves the product on Amazon, Google Shopping and Trustpilot, then returns per-source ratings, a retailer matrix and themed pros and cons.
 
 **Cost** for one product: 30 credits held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 30 credits in 1 call (the quote held 30). The TypeScript and Python programs both ran.
 
 **Cheaper** `amazon/reviews` - One retailer's reviews when you already have the ASIN.
 
@@ -1049,6 +1109,8 @@ const report = await sc("prism/product-reviews", { query: "AirPods Pro 3" });
 |------|----------|------|-----------|------------|
 | search | `app_store/app-search` | 1 | 5 | 5 |
 | reviews | `app_store/app-reviews` | 1 | 5 | 5 |
+
+**Measured** Measured on 25/10/2026: 10 credits in 2 calls (the quote held 10). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/app-reviews` - Both stores at once, translated, clustered and sentiment-scored.
 
@@ -1086,6 +1148,8 @@ const reviews = await sc("app_store/app-reviews", { sort_by: "most_recent", app_
 | search | `yelp/search` | 1 | 1 | 1 |
 | reviews | `yelp/business/reviews` | 1 | 5 | 5 |
 
+**Measured** Measured on 25/10/2026: 6 credits in 2 calls (the quote held 6). The TypeScript and Python programs both ran.
+
 **Cheaper** `google/business/extended-reviews` - Google's reviews for one business by name, with no search step.
 
 **Pitfalls**
@@ -1114,6 +1178,8 @@ const reviews = await sc("yelp/business/reviews", { id: search.data.items[0].pla
 1. `GET /v1/facebook/adlibrary/company/ads?companyName=<company>&status=ACTIVE` - Active ads in the public Facebook ad library for that advertiser.
 
 **Cost** for one page of ads: 5 credits held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 5 credits in 1 call (the quote held 5). The TypeScript and Python programs both ran.
 
 **Cheaper** `facebook/adlibrary/search/ads` - Keyword search of the ad library when you do not know the advertiser.
 
@@ -1158,6 +1224,8 @@ const ads = await sc("facebook/adlibrary/company/ads", { companyName: "Lululemon
 
 **Cost** Creating is free. Each scheduled run bills 2 credits (`instagram/profile/posts` read plus 1 scheduling credit; `estimated_cost_per_run` on create); 1 run per day ≈ 2 credits/day. Running the read by hand once holds 1 credit.
 
+**Measured** Measured on 25/10/2026: 1 credit in 2 calls (the quote held 1). The TypeScript and Python programs both ran.
+
 **Pitfalls**
 
 - since stops the walk; it does not make the page that reaches it free.
@@ -1191,6 +1259,8 @@ const s1 = await sc("monitors", undefined, { method: "POST", body: {"recipe":"in
 1. `POST /v1/monitors` body `{"recipe":"youtube/channel/videos","params":{"handle":"<handle>","since":"now-7d"},"cadence":"weekly","webhook_url":"<webhook_url>","track":{"metrics":["items[].post.engagement.views"]},"alert_rules":[{"metric":"rows_new","op":"gt","value":0}],"suppress_webhook_unless_alert":true}` - Each weekly run reads the uploads of the last seven days and posts to your webhook only when it holds a video the previous run did not; the first run has nothing to compare and stays quiet.
 
 **Cost** Creating is free. Each scheduled run bills 2 credits (`youtube/channel/videos` read plus 1 scheduling credit; `estimated_cost_per_run` on create); 1 run per week ≈ 2 credits per week. Running the read by hand once holds 1 credit.
+
+**Measured** Measured on 25/10/2026: 1 credit in 2 calls (the quote held 1). The TypeScript and Python programs both ran.
 
 **Pitfalls**
 
@@ -1229,6 +1299,8 @@ const s1 = await sc("monitors", undefined, { method: "POST", body: {"recipe":"yo
 | monitor | `web/monitors` | 1 | 0 | 0 |
 | checks | `web/monitors/{monitor_id}/checks` | 1 | 0 | 0 |
 
+**Measured** Measured on 25/10/2026: 0 credits in 2 calls for ITEMS=25 (the quote held 0). The TypeScript and Python programs both ran.
+
 **Pitfalls**
 
 - Creating is free but every check bills the page read plus an orchestration premium: quote checks per day (1440 / cadence_minutes) times the per-check price.
@@ -1260,6 +1332,8 @@ const checks = await sc(`web/monitors/${monitor.data.monitor_id}/checks`);
 | Step | Endpoint | Runs | Hold each | Hold total |
 |------|----------|------|-----------|------------|
 | stats | `prism/post-stats` | 5 | 100 | 500 |
+
+**Measured** Measured on 25/10/2026: 2 credits in 1 call for ITEMS=25 (the quote held 25). The TypeScript and Python programs both ran.
 
 **Deeper** `prism/jobs` - Up to five thousand URLs as one background job at the same per-URL price, with a webhook when it completes.
 
@@ -1301,6 +1375,8 @@ const stats = await sc("prism/post-stats", undefined, { method: "POST", body: {"
 
 **Cost** for two hundred accounts, two pages each: a cohort query holds its full computed ceiling (`estimated_credits`), which depends on the members, platforms and page budget; see references/cohorts.md. Creating the cohort, uploading members, polling and reading results are free.
 
+**Measured** Measured on 25/10/2026: 4 credits in 24 calls for ITEMS=25. The TypeScript and Python programs both ran.
+
 **Pitfalls**
 
 - Do not search the whole platform (prism/brand-mentions, search/everywhere) or loop each handle's posts endpoint: a cohort query reads only your accounts and caps the spend.
@@ -1331,7 +1407,7 @@ const s5 = await sc(`cohort-queries/${queryId}/results`, undefined, { method: "G
 
 **Inputs**
 
-- `title`: The job title (e.g. `senior data engineer`)
+- `title`: The job title, without seniority words (e.g. `data engineer`)
 - `country_code`: ISO 3166-1 alpha-2 country code (e.g. `de`)
 - `location`: City or country for the listings (e.g. `Germany`)
 
@@ -1347,10 +1423,13 @@ const s5 = await sc(`cohort-queries/${queryId}/results`, undefined, { method: "G
 | salary | `jobs/salary` | 1 | 1 | 1 |
 | listings | `jobs/linkedin/search` | 1 | 10 | 10 |
 
+**Measured** Measured on 25/10/2026: 11 credits in 2 calls for ITEMS=2 (the quote held 11). The TypeScript and Python programs both ran.
+
 **Cheaper** `jobs/salary/titles` - Find the job title the salary data knows before you look it up.
 
 **Pitfalls**
 
+- jobs/salary matches the job title without seniority words: 'senior data engineer' is not found (a refunded 404), 'data engineer' is. Put the level in the listing search, not the salary lookup.
 - Listing rows carry a salary only when the board publishes one; the pay band comes from jobs/salary.
 - The listing searches are premium endpoints, priced well above the salary lookup.
 - jobs/bing/search needs location on its first page; jobs/indeed/search takes country_code.
@@ -1360,8 +1439,8 @@ const s5 = await sc(`cohort-queries/${queryId}/results`, undefined, { method: "G
 
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
-const salary = await sc("jobs/salary", { query: "senior data engineer", country_code: "de" });
-const listings = await sc("jobs/linkedin/search", { query: "senior data engineer", location: "Germany", workplace_types: "remote" });
+const salary = await sc("jobs/salary", { query: "data engineer", country_code: "de" });
+const listings = await sc("jobs/linkedin/search", { query: "data engineer", location: "Germany", workplace_types: "remote" });
 ```
 
 ## A stock's current price and latest headlines
@@ -1385,6 +1464,8 @@ const listings = await sc("jobs/linkedin/search", { query: "senior data engineer
 | ticker | `finance/ticker-search` | 1 | 1 | 1 |
 | quote | `finance/quote` | 1 | 5 | 5 |
 | news | `finance/news` | 1 | 1 | 1 |
+
+**Measured** Measured on 25/10/2026: 7 credits in 3 calls (the quote held 7). The TypeScript and Python programs both ran.
 
 **Pitfalls**
 
@@ -1422,6 +1503,8 @@ const news = await sc("finance/news", { keyword: ticker.data.items[0].quote.id }
 | crawl | `web/crawl` | 1 | 50 | 50 |
 | result | `web/jobs/{job_id}` | 1 | 0 | 0 |
 
+**Measured** Measured on 25/10/2026: 50 credits in 9 calls for ITEMS=25 (the quote held 50). The TypeScript and Python programs both ran.
+
 **Cheaper** `web/map` - List the site's URLs first, then crawl only the paths you need.
 
 **Pitfalls**
@@ -1452,6 +1535,8 @@ const result = await sc(`web/jobs/${crawl.data.job_id}`);
 1. `GET /v1/web/extract?url=<page_url>&prompt=<prompt>`
 
 **Cost** for one page: 5 credits held up front (exact; the unused hold is refunded).
+
+**Measured** Measured on 25/10/2026: 5 credits in 1 call (the quote held 5). The TypeScript and Python programs both ran.
 
 **Cheaper** `web/scrape` - The page as markdown, when you will read it yourself.
 
@@ -1486,6 +1571,8 @@ const extract = await sc("web/extract", { url: "https://example.com/pricing", pr
 |------|----------|------|-----------|------------|
 | posts | `naver/brief` | 1 | 10 | 10 |
 | trend | `naver/search-trend` | 1 | 5 | 5 |
+
+**Measured** Measured on 25/10/2026: 15 credits in 2 calls for ITEMS=2 (the quote held 15). The TypeScript and Python programs both ran.
 
 **Cheaper** `naver/blog/search` - One Naver corpus only (also naver/news/search, naver/cafearticle/search).
 
@@ -1534,6 +1621,8 @@ const trend = await sc("naver/search-trend", { keywords: "불닭볶음면", time
 | trend | `naver/search-trend` | 1 | 5 | 5 |
 | videos | `youtube/search/advanced` | 1 | 1 | 1 |
 
+**Measured** Measured on 25/10/2026: 9 credits in 5 calls for ITEMS=5 (the quote held 9). The TypeScript and Python programs both ran.
+
 **Cheaper** `naver/brief` - One call across the Naver corpora, fewer rows from each.
 
 **Deeper** `prism/korea-gap` - What Korea says about a topic against what the rest of the web says.; `prism/discover` - Every topic and market as one background run (preset=korea), with estimated dates, dropped rows and a call log; the guide is https://www.socialcrawl.dev/docs/prism/discover-research.
@@ -1577,6 +1666,8 @@ const videos = await sc("youtube/search/advanced", { query: "다한증", languag
 |------|----------|------|-----------|------------|
 | discover | `google/search` | 1 | 1 | 1 |
 | read | `web/scrape` | 10 | 1 | 10 |
+
+**Measured** Measured on 25/10/2026: 10 credits in 11 calls for ITEMS=10 (the quote held 11). The TypeScript and Python programs both ran.
 
 **Cheaper** `web/map` - With search=, lists the matching URLs of one site; it returned the same posts as the site: search.
 
@@ -1624,6 +1715,8 @@ for (const row of discover.data.items.slice(0, 10)) {
 | events | `web/scrape` | 1 | 1 | 1 |
 | platforms | `google/search` | 1 | 1 | 1 |
 | pages | `web/scrape` | 10 | 1 | 10 |
+
+**Measured** Measured on 25/10/2026: 12 credits in 12 calls for ITEMS=10 (the quote held 12). The TypeScript and Python programs both ran.
 
 **Deeper** `web/extract` - Clinic, treatment, sale price and list price as fields from each event page.
 

@@ -86,14 +86,14 @@ Starts an async batch scrape job for multiple URLs and returns a SocialCrawl job
 
 | Field | Meaning |
 |---|---|
+| `page.title` | The page title, or null when the page has none. |
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
-| `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.title` |  |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
+| `page.description` | The page description or search snippet, or null when there… |
 
-+19 more (types in the full schema): `page` {scrape_id, status_code, answer, change_tracking, description, highlights, page_count, source_type, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}.
++19 more (types in the full schema): `page` {extraction, fetched_at, final_url, highlights, page_count, scrape_id, source_type, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}.
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/batch-scrape" \
@@ -129,14 +129,14 @@ Starts an async crawl job and returns a SocialCrawl job id (job_...). Poll or ca
 
 | Field | Meaning |
 |---|---|
+| `page.title` | The page title, or null when the page has none. |
 | `page.url` | Requested URL. |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
+| `page.description` | The page description or search snippet, or null when there… |
 | `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
-| `page.title` |  |
 
-+17 more (types in the full schema): `page` {status_code, answer, change_tracking, description, highlights, page_count, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: {job_id string, kind string} (+12 more).
++17 more (types in the full schema): `page` {fetched_at, final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url}. Also in the sample: {job_id string, kind string} (+12 more).
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/crawl" \
@@ -174,12 +174,12 @@ Fetches one web page and returns structured extraction output under the WebPage 
 |---|---|
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
 | `page.extraction` | Structured extraction result when requested. |
 | `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 
-+21 more (types in the full schema): `page` {status_code, answer, change_tracking, highlights}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+2 more).
++23 more (types in the full schema): `page` {final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url} (+4 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/extract" \
@@ -204,7 +204,7 @@ Lists async crawl, batch scrape, and agent jobs for the API key.
 
 **Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {job_id string, kind string, resource string, status string, invalid_urls null, result_ref string, result null, error null, credits_hold number, credits_charged number, created_at string, updated_at string, expires_at string}; `progress` {completed number, total number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.has_more`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/jobs" \
@@ -275,13 +275,13 @@ Discovers URLs for a public site and returns them as a normalized WebPageList.
 | Field | Meaning |
 |---|---|
 | `page.url` | Requested URL. |
+| `page.title` | The page title, or null when the page has none. |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
+| `page.description` | The page description or search snippet, or null when there… |
 | `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
-| `page.title` |  |
 
-+22 more (types in the full schema): `page` {status_code, answer, change_tracking, description}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+3 more). Page-level: `data.dropped`, `data.judged_urls`, `data.skipped_urls`.
++24 more (types in the full schema): `page` {fetched_at, final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier} (+5 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.judged_urls`, `data.skipped_urls`.
 
 **Next** `web/scrape` (`url` ← `data.items[].page.url`) - The full content of each page.
 
@@ -307,7 +307,7 @@ Lists web monitors created by the current API key.
 
 **Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {monitor_id string, url string, mode string, status string, cadence_minutes number, credits_booked number, consecutive_failures number, last_check_at string, next_check_at string, created_at string, updated_at string}; `params` {url string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.has_more`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/monitors" \
@@ -437,7 +437,7 @@ Lists checks recorded for one monitor.
 
 **Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {check_id string, status string, credits_charged number, result null, error null, checked_at string, created_at string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/monitors/wm_5d1p8s3k7/checks" \
@@ -465,12 +465,12 @@ Uploads a document through multipart/form-data and returns parsed web-style cont
 |---|---|
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
 | `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.title` | (seen in a sample response) |
+| `page.title` | The page title, or null when the page has none. (seen in a sample response) |
 
-+22 more (types in the full schema): `page` {scrape_id, status_code, answer, change_tracking}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+3 more).
++24 more (types in the full schema): `page` {fetched_at, final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier} (+5 more).
 
 ```bash
 curl -X POST "https://www.socialcrawl.dev/v1/web/parse" \
@@ -480,17 +480,17 @@ curl -X POST "https://www.socialcrawl.dev/v1/web/parse" \
 
 ## GET /v1/web/scrape - 1-5 credits (request-shaped)
 
-Fetches a public web page and returns clean content, metadata, and optional media in the unified WebPage schema.
+Fetches a public web page and returns clean content, metadata, and optional media in the unified WebPage schema. When the page scrapers cannot open a social platform profile or post (a LinkedIn profile, company page or post; an Instagram, Facebook, TikTok, X or Threads profile or post; a Reddit post, subreddit or user page; a YouTube video or channel), the page is read through that platform's own endpoint, for example /v1/linkedin/profile, at that endpoint's price: 5 credits for LinkedIn, 1 for the others. `page.native` then carries the endpoint (`endpoint`), what it charged (`credits_used`) and its full structured record (`data`). `page.content.markdown`, `html` and `raw_html` are written from that record rather than taken from the site's HTML, and `_warnings` says so. Only markdown, html and rawHtml requests are read this way. A page the scrapers can read keeps the scrape and its price.
 
 **Use when** you want it for a single known URL; for whole sites start a crawl job instead.
 **Cost** price moves with `pdf_parse`, `proxy` · not cached · multi-source (billed once)
-**Pricing** 1 credit for a standard scrape. `proxy=auto`, `proxy=enhanced` and `pdf_parse=true` hold 5 credits and settle to what the fetch actually used, so a page a plain request could read still costs 1. Nothing else moves the price: screenshots, tag filters, `wait_for` and a mobile viewport are included. A page that comes back as the site's own block or error page (HTTP 400 or more), a CAPTCHA, a sign-in wall or an empty shell is returned with `page_state` saying so and a `_warnings` line, and is not charged.
+**Pricing** 1 credit for a standard scrape. `proxy=auto`, `proxy=enhanced` and `pdf_parse=true` hold 5 credits and settle to what the fetch actually used, so a page a plain request could read still costs 1. Nothing else moves the price: screenshots, tag filters, `wait_for` and a mobile viewport are included. A page that comes back as the site's own block or error page (HTTP 400 or more), a CAPTCHA, a sign-in wall or an empty shell is returned with `page_state` saying so and a `_warnings` line, and is not charged. When the page scrapers cannot open a LinkedIn, Instagram, Facebook, Reddit, TikTok, YouTube, X or Threads profile or post, the page is read through that platform's own endpoint and costs that endpoint's price instead: 5 credits for a LinkedIn profile, company page or post, 1 credit for the others. The scrape's own charge is refunded to 0, so you pay the platform price once, and Activity Logs show the platform call as its own row.
 **Paging** none
 
 **Query params**
 
 - `url` (required) - Public URL to fetch. · e.g. `https://example.com`
-- `formats` (optional, string) - Comma-separated output formats such as markdown,screenshot. · e.g. `markdown`
+- `formats` (optional, string) - Comma-separated output formats such as markdown,screenshot. A social platform URL is read through its own endpoint only for markdown, html and rawHtml. · e.g. `markdown`
 - `only_main_content` (optional, boolean) - Strip nav, headers, footers and sidebars and keep the article body. Default true; send false when you need the whole page, including the chrome. A markdown-only scrape of a site the primary scraper cannot fetch is served by a second extractor, which returns the whole page.
 - `wait_for` (optional, integer) - Milliseconds to wait after load before capturing, for pages that render their content in JavaScript. Leave unset unless the page comes back empty or half-built.
 - `mobile` (optional, boolean) - Render in a mobile viewport with a mobile user agent. Use it when the site serves a different layout to phones.
@@ -509,14 +509,14 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 
 | Field | Meaning |
 |---|---|
+| `page.title` | The page title, or null when the page has none. (only when the fallback source serves) |
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
 | `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.scrape_id` | Opaque scrape identifier for follow-up interactions. |
 
-+21 more (types in the full schema): `page` {status_code, answer, change_tracking, highlights}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+2 more).
++25 more (types in the full schema): `page` {fetched_at, final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier} (+6 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/scrape" \
@@ -552,13 +552,13 @@ Searches web, news, and image sources and returns a single normalized list of we
 | Field | Meaning |
 |---|---|
 | `page.url` | Requested URL. |
+| `page.title` | The page title, or null when the page has none. |
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
-| `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
-| `page.final_url` | Final resolved URL after redirects. |
-| `page.title` |  |
+| `page.answer` | The source's answer to a question about the page, when you… |
+| `page.change_tracking` | What changed on the page since the last scrape of it, when… |
+| `page.description` | The page description or search snippet, or null when there… |
 
-+24 more (types in the full schema): `page` {scrape_id, status_code, answer, change_tracking}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url, screenshot_url, video_url} (+5 more). Page-level: `data.dropped`.
++26 more (types in the full schema): `page` {extraction, fetched_at, final_url, highlights, page_count, scrape_id, source_type, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state} (+7 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `web/scrape` (`url` ← `data.items[].page.url`) - The full content of each page.
 
@@ -583,7 +583,7 @@ Lists sessions created by the current API key.
 
 **Response** `WebPageList` rows at `data.items[]` (inferred from a sample): {session_id string, kind string, status string, ttl_seconds number, credits_hold number, credits_billed number, expires_at string, closed_at null, created_at string, updated_at string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.has_more`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/web/sessions" \

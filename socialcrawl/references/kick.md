@@ -37,7 +37,7 @@ Returns detailed information about a specific Kick clip including the title, vie
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
++15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Also in the sample: `post` {url null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kick/clip" \

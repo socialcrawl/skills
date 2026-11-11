@@ -49,10 +49,11 @@ Returns a directory of politicians with at least one STOCK Act disclosure: first
 - `state` (optional, string) - Two-letter USPS state, for example CA or TX. · e.g. `ca`
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 50.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ first_name, last_name, party, state }` (inferred from a sample): {first_name string, last_name string, party string, state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/members" \
@@ -95,10 +96,11 @@ Returns every STOCK Act disclosure for one politician, keyed by last name. Same 
 - `order` (optional, enum: asc | desc) - desc (default) or asc.
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment string, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/us_congress_trades/politician/trades" \
@@ -120,10 +122,11 @@ Returns STOCK Act disclosures filed by members from one US state. Pass the two-l
 - `state` (required) - Two-letter USPS state, for example CA or TX. · e.g. `ca`
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price null, size null, ownership string, chamber string, comment null, reporting_gap number, issuer_name string, issuer_ticker null, issuer_sector null, issuer_country null, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/us_congress_trades/state/trades" \
@@ -182,7 +185,7 @@ Returns companies ranked by disclosed congressional trade count, including Treas
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ issuer, count }` (inferred from a sample): {issuer string, count number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/issuers" \
@@ -200,7 +203,7 @@ Returns total disclosed trades grouped by party (democrat, republican, other).
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ party, trade_count }` (inferred from a sample): {party string, trade_count number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/party" \
@@ -222,7 +225,7 @@ Returns politicians ranked by disclosed trade count, with party.
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ name, party, count }` (inferred from a sample): {name string, party string, count number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/politicians" \
@@ -243,10 +246,11 @@ Returns politicians ranked by average days between the trade date and the public
 - `chamber` (optional, enum: senate | house) - senate or house. · e.g. `senate`
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {name string, party string, state string, avg_gap number, max_gap number, trade_count number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/reporting-gaps" \
@@ -264,7 +268,7 @@ Returns disclosed-trade counts grouped by issuer sector (information-technology,
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ sector, trade_count }` (inferred from a sample): {sector string, trade_count number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/sectors" \
@@ -287,7 +291,7 @@ Returns stock tickers ranked by disclosed congressional trade count, with buy vs
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {ticker string, issuer_name string, count number, buy_count number, sell_count number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/tickers" \
@@ -310,7 +314,7 @@ Returns tickers whose recent disclosed-trade count is well above their historica
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {ticker string, issuer_name string, recent_trades number, historical_avg number, spike_ratio number, politicians string[]}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/unusual" \
@@ -333,7 +337,7 @@ Returns disclosed trade counts, buy vs sell, and total value grouped by day, wee
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {period_start string, trade_count number, buy_count number, sell_count number, total_value number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/stats/volume" \
@@ -379,10 +383,11 @@ Returns STOCK Act disclosures for one stock. Filter by chamber, party, transacti
 - `end_date` (optional, string) - Date upper bound (YYYY-MM-DD).
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment string, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/us_congress_trades/ticker/trades" \
@@ -413,10 +418,11 @@ Returns STOCK Act disclosures across the House and Senate. Filter by ticker (AAP
 - `order` (optional, enum: asc | desc) - desc (default) or asc.
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 20.
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment string, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/trades" \
@@ -436,10 +442,11 @@ Returns STOCK Act disclosures published in the last 48 hours, newest first. Same
 
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 50. · e.g. `20`
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment null, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/trades/latest" \
@@ -459,10 +466,11 @@ Returns STOCK Act disclosures published in the last 7 days, newest first. Same r
 
 - `limit` (optional, integer, 1-100) - Page size, 1 to 100. Default 50. · e.g. `20`
 - `offset` (optional, integer, min 0) - Rows to skip. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {transaction_id string, politician_id string, issuer_id string, pub_date string, filing_date null, tx_date string, tx_type string, tx_type_extended null, value number, price number, size null, ownership string, chamber string, comment null, reporting_gap number, issuer_name string, issuer_ticker string, issuer_sector string, issuer_country string, politician_first_name string, politician_last_name string, politician_party string, politician_state string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/us_congress_trades/trades/recent" \

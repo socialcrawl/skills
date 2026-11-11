@@ -56,9 +56,9 @@ Returns store-level stock for one Sephora sku near a coordinate. Each store has 
 | `product.url` | Direct URL to the product page (seen in a sample response) |
 | `product.availability` | Stock/availability string when surfaced (seen in a sample response) |
 | `product.brand` | Brand name (cleaned). (seen in a sample response) |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… (seen in a sample response) |
+| `product.description` | Product description. (seen in a sample response) |
 
-Also in the sample: `product` {description null, seller null, reviews_count null}; `product.price` {current null, original null, currency null}; `product.rating` {average null, count null}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number}.
+Also in the sample: `product` {seller null, image_urls null, reviews_count null}; `product.price` {current null, original null, currency null}; `product.rating` {average null, count null}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/availability" \
@@ -84,6 +84,7 @@ Returns products from one Sephora brand, 60 per page, each with product id, titl
 - `min_price` (optional, integer, min 0) - Minimum list price in US dollars.
 - `max_price` (optional, integer, min 0) - Maximum list price in US dollars.
 - `min_rating` (optional, integer, 1-5) - Keep products whose average rating is at least this, 1 to 5.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -93,10 +94,10 @@ Returns products from one Sephora brand, 60 per page, each with product id, titl
 | `product.title` | Product title |
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.current` |  |
-| `product.rating.average` |  |
+| `product.price.current` | Current price, in the price currency. |
+| `product.rating.average` | Average rating, normally out of 5. |
 
-+1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count null}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count null}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews. · `sephora/product` (`product_id` ← `data.items[].product.id`) - Get a Sephora product by id or URL.
 
@@ -116,6 +117,8 @@ Returns Sephora's brand directory: each brand's id, short name, and canonical UR
 
 **Response** `Analytics` rows at `data.items[]`, each `{ brandId, shortName, targetUrl }` (inferred from a sample): {brandId string, shortName string, targetUrl string}.
 
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
+
 ```bash
 curl "https://www.socialcrawl.dev/v1/sephora/brands" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
@@ -130,6 +133,8 @@ Returns Sephora's root browse taxonomy: each node's id, display name, and canoni
 **Paging** single page - The upstream returns the complete root taxonomy in one call (13 of 13 nodes, verified live 2026-09-02) and exposes no page parameter.
 
 **Response** `Analytics` rows at `data.items[]` (inferred from a sample): {categoryId string, displayName string, hasChildCategories boolean, hasDropdownMenu boolean, selectedThumbImage string, targetUrl string, thumbImage string}.
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/sephora/categories" \
@@ -152,6 +157,7 @@ Returns products in a Sephora category, 60 per page, each with product id, title
 - `sort_by` (optional, enum: best_selling | top_rated | price_low | price_high | new) - Result ordering: best_selling (default), top_rated, price_low, price_high, or new. On a moisturizer keyword search, new returned the same ids as best_selling, so treat new as unverified.
 - `min_price` (optional, integer, min 0) - Minimum list price in US dollars.
 - `max_price` (optional, integer, min 0) - Maximum list price in US dollars.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -161,10 +167,10 @@ Returns products in a Sephora category, 60 per page, each with product id, title
 | `product.title` | Product title |
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.current` |  |
-| `product.rating.average` |  |
+| `product.price.current` | Current price, in the price currency. |
+| `product.rating.average` | Average rating, normally out of 5. |
 
-+1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count number}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count number}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews. · `sephora/product` (`product_id` ← `data.items[].product.id`) - Get a Sephora product by id or URL.
 
@@ -221,8 +227,8 @@ Returns one Sephora US product: title, brand, description, list price, rating, r
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
 
 +3 more (types in the full schema): `product.price` {current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability string, reviews_count number}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string, size string, ingredients string, loves_count number}.
 
@@ -240,7 +246,7 @@ Returns written customer reviews for a Sephora product, 10 per page by default, 
 
 **Use when** you have a product id and need the review text. The star average is already on GET /v1/sephora/product.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · 10/page by default; set with `limit` · depth unknown · price per N items not proven · typical 1.0-1.4 s
 
 **Query params**
@@ -251,9 +257,8 @@ Returns written customer reviews for a Sephora product, 10 per page by default, 
 - `limit` (optional, integer, 1-100) - Reviews per page, 1 to 100. Default 10.
 - `sort_by` (optional, enum: most_helpful | highest_rating | lowest_rating | oldest | newest) - Review ordering: most_helpful, highest_rating, lowest_rating, oldest, newest.
 - `rating` (optional, integer, 1-5) - Keep only reviews with this star value, 1 to 5.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -267,13 +272,13 @@ Returns written customer reviews for a Sephora product, 10 per page by default, 
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+9 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, location}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++9 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {location}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/reviews" \
@@ -300,6 +305,7 @@ Returns Sephora US products matching a keyword, 60 per page by default, each wit
 - `max_price` (optional, integer, min 0) - Maximum list price in US dollars.
 - `is_new` (optional, boolean) - When true, keep products Sephora flags as new.
 - `category_id` (optional, string) - Optional category id from GET /v1/sephora/categories to narrow the search.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -309,10 +315,10 @@ Returns Sephora US products matching a keyword, 60 per page by default, each wit
 | `product.title` | Product title |
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.current` |  |
-| `product.rating.average` |  |
+| `product.price.current` | Current price, in the price currency. |
+| `product.rating.average` | Average rating, normally out of 5. |
 
-+1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count number}; `product.price` {original number, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count number}; `product.price` {original number, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `sephora/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews.
 
@@ -337,7 +343,7 @@ Returns Sephora search autocomplete suggestions for a partial query, the same te
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ term }` (inferred from a sample): {term string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/search/suggestions" \
@@ -364,12 +370,12 @@ Returns Sephora stores near a latitude,longitude pair, each with store id, name,
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
-| `place.latitude` |  |
-| `place.longitude` |  |
-| `place.phone` |  |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
+| `place.phone` | Phone number as the source prints it. |
 | `place.url` | Website or canonical URL (seen in a sample response) |
 
-Also in the sample: `place` {category string, reviews_count null, price_level null, address string, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext` {distance number, timezone string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`.
+Also in the sample: `place` {category string, reviews_count null, price_level null, address string, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext` {distance number, timezone string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/sephora/stores" \

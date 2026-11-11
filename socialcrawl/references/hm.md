@@ -88,6 +88,7 @@ Returns one page of H&M products for a keyword, 36 per page by default, each wit
 - `sort_by` (optional, enum: relevance | newest | price_low | price_high) - Result ordering: relevance (default), newest, price_low, or price_high.
 - `language` (optional, string) - Catalogue locale as language_region, for example en_us, en_gb, de_de, fr_fr. Omit for the US catalogue. This is not the two-letter locale from GET /v1/hm/countries.
 - `filters` (optional, string) - H&M facet filter string. Example: colorWithNames:black_000000. Combine groups with || and values inside a group with |. Facet ids are listed on every search payload under searchHits.facets.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -100,7 +101,7 @@ Returns one page of H&M products for a keyword, 36 per page by default, each wit
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.availability` | Stock/availability string when surfaced (seen in a sample response) |
 
-Also in the sample: `product` {description null, seller string, reviews_count null}; `product.price` {current number, original null, currency string}; `product.rating` {average null, count null}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.hm` {color string, category_code string, sizes string[], new_arrival boolean}. Page-level: `data.dropped`.
+Also in the sample: `product` {description null, seller string, reviews_count null}; `product.price` {current number, original null, currency string}; `product.rating` {average null, count null}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.hm` {color string, category_code string, sizes string[], new_arrival boolean}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hm/search" \
@@ -123,7 +124,7 @@ Returns H&M search autocomplete suggestions for a partial query, the same terms 
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ query }` (inferred from a sample): {query string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hm/search/suggestions" \
@@ -150,12 +151,12 @@ Returns every H&M store in a market: store code, name, full address, phone, coor
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
-| `place.latitude` |  |
-| `place.longitude` |  |
-| `place.phone` |  |
-| `place.ext.status` |  |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
+| `place.phone` | Phone number as the source prints it. |
+| `place.ext.status` | Open or closed status as the source words it, for example… |
 
-Also in the sample: `place` {url null, category null, reviews_count null, price_level null, address string, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`.
+Also in the sample: `place` {url null, category null, reviews_count null, price_level null, address string, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hm/stores" \

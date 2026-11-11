@@ -35,8 +35,8 @@ Returns a unified NewsArticleList of the top Google News results for a keyword, 
 - `publisher` (optional, string) - Limit results to a single outlet's domain (e.g. 'bbc.com'). Bare domain only, no scheme, no path. Not combinable with location_coordinate or time_range=hour. · e.g. `bbc.com`
 - `from` (optional, string) - Start of an exact publish-date window, as YYYY-MM-DD or a Unix timestamp. Overrides time_range. Not combinable with location_coordinate or time_range=hour. · e.g. `2026-07-01`
 - `to` (optional, string) - End of the publish-date window (inclusive), as YYYY-MM-DD or a Unix timestamp. Defaults to now when only from is set. · e.g. `2026-07-15`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `NewsArticleList` rows at `data.items[]`, each `{ article }` ([full schema](schemas/NewsArticleList.md))
 
@@ -49,7 +49,7 @@ Returns a unified NewsArticleList of the top Google News results for a keyword, 
 | `article.domain` | Host domain of the article |
 | `article.image_url` | Thumbnail image URL |
 
-+3 more (types in the full schema): `article` {rank, snippet, source}. Also in the sample: `article` {placement string}. Page-level: `data.dropped`.
++3 more (types in the full schema): `article` {rank, snippet, source}. Also in the sample: `article` {placement string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_news/search" \

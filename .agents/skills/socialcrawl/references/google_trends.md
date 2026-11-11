@@ -91,7 +91,7 @@ Returns what people in one country or region are searching for right now, with n
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {rank number, title string, search_volume number, increase_percent number, started_at string, ended_at null, active boolean, categories string[], breakdown string[]}; `news[]` {title string, url string, source string, domain string, image_url null, published_at string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_trends/trending" \

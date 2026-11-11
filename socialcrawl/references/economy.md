@@ -70,6 +70,7 @@ Searches individual US federal contract awards (purchase orders, delivery orders
 - `order` (optional, enum: asc | desc) - `desc` (default) or `asc`.
 - `limit` (optional, integer, 1-100) - Awards per page, 1 to 100. Defaults to 25. · e.g. `10`
 - `page` (optional, integer, min 1) - Page number, starting at 1. `page` x `limit` cannot exceed 50,000, so with `limit` 100 the last page is 500 and a deeper page is a refunded 400. The universal `cursor` returned in `pagination.next_cursor` is the simpler way to continue.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -79,7 +80,7 @@ Searches individual US federal contract awards (purchase orders, delivery orders
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {award_id string, generated_id string, type string, recipient_name string, recipient_uei string, amount number, awarding_agency string, awarding_sub_agency string, description string, start_date string, end_date string, url string}; `naics` {code string, description string}; `psc` {code string, description string}; `place_of_performance` {state string, city string, country string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/economy/government-contracts" \
@@ -132,7 +133,7 @@ Returns what a US company imports by sea, from public US customs bill-of-lading 
 - `company` (required) - The US importer's company name, as a brand ('Nike') or as it appears on shipping documents ('Nike Usa'). Endings such as Inc, LLC and USA are ignored when matching. 1 to 200 characters. · e.g. `Nike`
 - `limit` (optional, integer, 1-50) - How many recent shipments to return, newest first, from 1 to 50. Defaults to 25. The price is the same for any value. · e.g. `10`
 
-**Response** `Analytics`. Fields not published yet - call once with a small limit; `/v1/utility/endpoint?id=economy/imports` serves the current contract.
+**Response** `Analytics` object at `data` (inferred from a sample): `company` {name string, country string, country_code string, address string, website string, total_shipments number, shipments_12m number, first_shipment string, most_recent_shipment string, supplier_count number, also_known_as string[]}; `top_suppliers[]` {name string, country string, shipments number, shipments_12m number, weight_kg number, hs_codes string[]}; `hs_codes[]` {code string, description string, chapter string, chapter_description string, shipments number}; `recent_shipments[]` {date string, bill_of_lading string, supplier string} (+15 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/economy/imports" \

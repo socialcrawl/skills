@@ -84,12 +84,12 @@ Returns Gumtree location matches for a place name, postcode, or outcode, each wi
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
-| `place.latitude` |  |
-| `place.longitude` |  |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
 | `place.url` | Website or canonical URL (seen in a sample response) |
-| `place.category` | Primary category… (seen in a sample response) |
+| `place.address` | Street address as the source prints it. (seen in a sample response) |
 
-Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address null, phone null, verified null, description null, image_urls null}; `place.ext` {status string}. Page-level: `data.dropped`.
+Also in the sample: `place` {category null, reviews_count null, price_level null, phone null, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext` {status string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gumtree/locations" \
@@ -122,12 +122,12 @@ Returns the Gumtree location closest to a latitude,longitude pair: location id, 
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
-| `place.latitude` |  |
-| `place.longitude` |  |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
 | `place.url` | Website or canonical URL (seen in a sample response) |
-| `place.category` | Primary category… (seen in a sample response) |
+| `place.address` | Street address as the source prints it. (seen in a sample response) |
 
-Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address null, phone null, verified null, description null, image_urls null}; `place.ext` {status string}.
+Also in the sample: `place` {category null, reviews_count null, price_level null, phone null, verified null, description null, image_urls null}; `place.rating` {value null, max null}; `place.ext` {status string}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gumtree/locations/nearest" \
@@ -159,9 +159,9 @@ Returns one Gumtree listing: title, description, price, images, category, locati
 | `product.title` | Product title |
 | `product.id` | Platform product ID… |
 | `product.url` | Direct URL to the product page |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
-| `product.seller` |  |
+| `product.seller` | Name of the seller. |
 
 +2 more (types in the full schema): `product.price` {currency, current}. Also in the sample: `product` {brand null, availability null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, condition string}; `product.ext.gumtree` {user_id string, public_user_id string, account_id string, seller_type string, category_id string, category string, location string, location_id string}.
 
@@ -196,10 +196,10 @@ Returns listings Gumtree considers similar to a given ad, typically around 6 row
 | `product.id` | Platform product ID… |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.currency` |  |
-| `product.price.current` |  |
+| `product.price.currency` | Currency code of the price. |
+| `product.price.current` | Current price, in the price currency. |
 
-Also in the sample: `product` {description null, seller null, brand null, availability null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}. Page-level: `data.dropped`.
+Also in the sample: `product` {description null, seller null, brand null, availability null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gumtree/product/similar" \
@@ -228,6 +228,7 @@ Returns Gumtree UK classifieds matching a keyword, about 22 per page, each with 
 - `max_price` (optional, string) - Highest asking price in GBP. Requires category_id.
 - `seller_type` (optional, enum: private | trade) - Restrict to private (individual) or trade (dealer) sellers. Requires category_id.
 - `attributes` (optional, string) - Category-specific filters as comma-separated name:value pairs from GET /v1/gumtree/filters, for example common_for_sale_condition:new,vehicle_make:audi. Requires category_id.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -241,10 +242,10 @@ Returns Gumtree UK classifieds matching a keyword, about 22 per page, each with 
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.currency` |  |
-| `product.price.current` |  |
+| `product.price.currency` | Currency code of the price. |
+| `product.price.current` | Current price, in the price currency. |
 
-Also in the sample: `product` {description null, seller null, brand null, availability null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext.gumtree` {seller_type string, category_id string, category string, location string, location_id string}. Page-level: `data.dropped`.
+Also in the sample: `product` {description null, seller null, brand null, availability null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext.gumtree` {seller_type string, category_id string, category string, location string, location_id string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `gumtree/product` (`product_id` ← `data.items[].product.id`) - Get a Gumtree listing by ad id or URL.
 
@@ -269,7 +270,7 @@ Returns Gumtree search autocomplete suggestions for a partial query, each with t
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ query, category_id, category_name, search_query }` (inferred from a sample): {query string, category_id string, category_name string, search_query string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gumtree/search/suggestions" \
@@ -302,8 +303,8 @@ Returns a public Gumtree seller: display name, average rating, rating count, mem
 | Field | Meaning |
 |---|---|
 | `seller.name` | Seller name |
-| `seller.rating.average` |  |
-| `seller.rating.count` |  |
+| `seller.rating.average` | Average rating of the seller, normally out of 5. |
+| `seller.rating.count` | Number of ratings behind the average. |
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gumtree/seller" \
@@ -325,6 +326,7 @@ Returns one page of a seller's active listings, about 20 per page, each with ad 
 - `public_id` (optional, string) - Gumtree seller publicUserId from a listing detail (product.ext.gumtree.public_user_id). Must be paired with seller_id. · e.g. `13b4fddbbabbef26807a535511d79289`
 - `account_id` (optional, string) - Optional Gumtree accountId from a listing detail (product.ext.gumtree.account_id).
 - `page` (optional, integer, 1-1000) - Page number, starting at 1. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -340,10 +342,10 @@ Returns one page of a seller's active listings, about 20 per page, each with ad 
 | `product.id` | Platform product ID… |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.currency` |  |
-| `product.price.current` |  |
+| `product.price.currency` | Currency code of the price. |
+| `product.price.current` | Current price, in the price currency. |
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gumtree/seller/listings" \
@@ -360,6 +362,8 @@ Returns the search terms currently trending on Gumtree UK, a demand signal that 
 **Paging** single page - Upstream returns one fixed list of currently trending search terms.
 
 **Response** `Analytics` rows at `data.items[]`, each `{ query }` (inferred from a sample): {query string}.
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/gumtree/trending" \

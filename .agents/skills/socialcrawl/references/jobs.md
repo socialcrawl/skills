@@ -42,12 +42,12 @@ Returns one Bing-aggregated job: title, company, location, employment type, desc
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
 +16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more).
 
@@ -74,6 +74,7 @@ Returns aggregated job listings from Bing matching a keyword and location, with 
 - `employment_types` (optional, string) - Semicolon-separated: contractor, fulltime, parttime, temporary.
 - `remote_only` (optional, boolean) - When true, only remote listings.
 - `cursor` (optional, string) - Opaque cursor from the previous page.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -84,14 +85,14 @@ Returns aggregated job listings from Bing matching a keyword and location, with 
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
-+16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/bing/search" \
@@ -116,12 +117,12 @@ Returns one Indeed job: title, company, location, description, and apply URL. Us
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
 +16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more).
 
@@ -149,6 +150,7 @@ Returns Indeed job listings matching a keyword, country, and optional city, sort
 - `radius` (optional, integer, min 0) - Distance from location.
 - `radius_type` (optional, enum: km | miles) - km (default) or miles.
 - `cursor` (optional, string) - Opaque cursor from the previous page.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -159,14 +161,14 @@ Returns Indeed job listings matching a keyword, country, and optional city, sort
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
-+16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/indeed/search" \
@@ -191,12 +193,12 @@ Returns one LinkedIn job: title, company, location, employment type, seniority, 
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
 +16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url string, verified null} (+1 more).
 
@@ -220,7 +222,7 @@ Returns LinkedIn companies and schools matching a name, each with a display name
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ displayName, id }` (inferred from a sample): {displayName string, id string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/linkedin/organizations" \
@@ -247,6 +249,7 @@ Returns LinkedIn job listings matching a keyword and optional location, date, em
 - `experience_levels` (optional, string) - Semicolon-separated: intern, entry, associate, midSenior, director.
 - `workplace_types` (optional, string) - Semicolon-separated: remote, hybrid, onSite.
 - `cursor` (optional, string) - Opaque cursor from the previous page.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -256,14 +259,14 @@ Returns LinkedIn job listings matching a keyword and optional location, date, em
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
-+16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url string, verified null} (+1 more). Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url string, verified null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/linkedin/search" \
@@ -331,12 +334,12 @@ Returns one Xing job: title, company, location, employment type, remote option, 
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
 +16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more).
 
@@ -365,6 +368,7 @@ Returns Xing job listings matching a keyword, with optional German-language loca
 - `remote_options` (optional, string) - Semicolon-separated: remote, hybrid, onSite.
 - `minimum_salary` (optional, integer, min 0) - Minimum yearly salary. Listings whose range intersects this floor are returned.
 - `cursor` (optional, string) - Opaque cursor from the previous page.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -374,14 +378,14 @@ Returns Xing job listings matching a keyword, with optional German-language loca
 
 | Field | Meaning |
 |---|---|
-| `job.title` |  |
-| `job.id` |  |
-| `job.url` |  |
-| `job.company.name` |  |
-| `job.apply_url` |  |
-| `job.description` |  |
+| `job.title` | Job title. |
+| `job.id` | The job's id on its source. |
+| `job.url` | URL of the posting. |
+| `job.company.name` | Employer name. |
+| `job.apply_url` | Where to apply. |
+| `job.description` | Full job description. |
 
-+16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`.
++16 more (types in the full schema): `job` {employment_type, experience_level, listed_at, location, remote}; `job.ext` {accepting_applications, applicant_count, board, country_code, industries, job_function, job_provider, linkedin_company_name, salary_currency, salary_max, salary_min}. Also in the sample: `job.company` {id null, url null, verified null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/jobs/xing/search" \

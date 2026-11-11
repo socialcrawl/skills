@@ -36,11 +36,11 @@ Returns public profile information for a Hacker News user (id, username, bio (`a
 | `author.id` | Platform-specific user ID… |
 | `author.username` | User handle or username |
 | `author.bio` | Profile biography or description |
+| `author.joined_at` | When the account was created, as an ISO 8601 date… |
 | `author.likes_count` | Total likes received across the author's content… |
 | `computed.content_category` | Keyword-classified content category… |
-| `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+4 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `author` {joined_at}.
++6 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Also in the sample: `author` {display_name null, avatar_url null, verified null, followers null, following null, posts_count null, url null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hackernews/profile" \
@@ -54,7 +54,7 @@ Searches Hacker News stories, comments, and front-page items via the Algolia HN 
 
 **Use when** you want to find discussions by keyword, then pass a story id to the story endpoint for its details or its comments.
 **Cost** price moves with `label` · cache 120 s
-**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · 30/page by default · depth unknown · price per N items not proven · typical 0.6-3.7 s
 
 **Query params**
@@ -65,9 +65,8 @@ Searches Hacker News stories, comments, and front-page items via the Algolia HN 
 - `hitsPerPage` (optional, integer) - Hits per page (1-1000). Defaults to 30.
 - `page` (optional, integer) - 0-indexed page number for pagination.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -89,7 +88,7 @@ Searches Hacker News stories, comments, and front-page items via the Algolia HN 
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+17 more (types in the full schema): `computed` {estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.content` {thumbnail_url null} (+10 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++18 more (types in the full schema): `computed` {estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.ext` {description}; `post.flags` {deleted}. Also in the sample: `post` {url string} (+11 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 **Next** `hackernews/story/comments` (`id` ← `data.items[].post.id`) - The comment thread on each story. · `hackernews/story` (`id` ← `data.items[].post.id`) - Get a Hacker News story.
 
@@ -122,7 +121,7 @@ Returns story metadata for a single HN item mapped to the unified Post schema: t
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+7 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.flags` {deleted}.
++7 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.content` {media_urls}; `post.engagement` {comments, likes}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.content` {thumbnail_url null, duration_seconds null}; `post.author` {display_name null, avatar_url null, verified null}; `post.engagement` {views null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more).
 
 **Next** `hackernews/story/comments` (`id` ← `data.post.id`) - The comment thread on the story. · `hackernews/profile` (`handle` ← `data.post.author.username`) - Get a Hacker News user profile.
 
@@ -143,8 +142,8 @@ Returns the whole comment tree for a story under `data.items[]`, in the unified 
 **Query params**
 
 - `id` (required) - HN story id (the numeric `objectID`). · e.g. `8863`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -157,7 +156,7 @@ Returns the whole comment tree for a story under `data.items[]`, in the unified 
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+3 more (types in the full schema): `comment.engagement` {likes}; `comment.flags` {deleted}; `computed` {language}. Page-level: `data.comment_recency`, `data.dropped`.
++3 more (types in the full schema): `comment.engagement` {likes}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment` {url string}; `comment.author` {display_name null, avatar_url null, verified null}; `comment.engagement` {replies number}; `comment.flags` {pinned null}; `comment.replies[]` {id string, url string, parent_id string, post_id string, text string}; `comment.replies[].author` {username string, display_name null, avatar_url null, verified null}; `comment.replies[].engagement` {likes null} (+13 more). Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/hackernews/story/comments" \

@@ -113,7 +113,7 @@ Complete usage guide for a single endpoint: every parameter with type, descripti
 
 - Provide at least one of `id`, `url`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): {kind string, id string, path string, method string, platform string, resource string, summary string, description string, pagination null}; `credits` {cost number, label string, tier string, pricing_notes null, billing_rules string[]}; `params` {required array}; `params.one_of[]` {options string[], rule string}; `params.optional[]` {name string, type string, description string, example string, requires null}; `cache` {ttl_seconds number, note string}; `response` {archetype string} (+50 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, id string, path string, method string, platform string, resource string, summary string, description string, delivery null}; `credits` {cost number, label string, tier string, pricing_notes null, billing_rules string[]}; `params` {required array, featured array, constraints array}; `params.one_of[]` {options string[], rule string}; `params.optional[]` {name string, type string, description string, example string, requires null, enum string[]} (+125 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/endpoint" \
@@ -136,7 +136,7 @@ Machine-readable catalog of every active SocialCrawl endpoint: path, method, pla
 - `method` (optional, enum: GET | POST | PATCH | DELETE) - Filter by HTTP method (GET, POST, PATCH or DELETE)
 - `fingerprint` (optional, boolean) - Set to 1 to return only the registry fingerprint (a hash of every endpoint's params, prices and contract facts) and the platform and endpoint counts, to check whether a bundled copy of the catalog is current
 
-**Response** `Analytics` object at `data` (inferred from a sample): {kind string, total number}; `stats` {platforms number, endpoints number, social_platforms number}; `filters` {platform null, search null, method null}; `endpoints[]` {id string, path string, method string, platform string, resource string, summary string, credits number, credits_label string, archetype string, required_params string[], one_of array, optional_params string[], paginated boolean, how_to_use string, docs_url string}.
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, total number}; `stats` {platforms number, endpoints number, social_platforms number}; `filters` {platform string, search null, method null}; `endpoints[]` {id string, path string, method string, platform string, resource string, summary string, credits number, credits_label string, archetype string, required_params array|string[], one_of object[]|array, optional_params string[], paginated boolean, metered boolean, cache_ttl_seconds number, delivery null, how_to_use string} (+1 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/endpoints" \
@@ -165,6 +165,8 @@ Quote what a call will cost before you make it: the exact credits the API holds 
 - Provide at least one of `id`, `plan`.
 
 **Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, id string, method string, valid boolean, hold number, expected_min number, expected_max number, unit string, pricing string, formula string, cached_likely boolean, notes string[], warnings array}; `levers[]` {param string, hold number, effect string}; `normalized_params` {url string, label string}.
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.next_cursor`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/estimate" \
@@ -216,7 +218,7 @@ Describe what you want in plain words, in any language ("last 200 comments on th
 
 - Provide at least one of `task`, `query`.
 
-**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, methodology_version string, platform null, uncertain boolean, reason string, source string, confidence number, notes string[]}; `results[]` {id string, method string, path string, missing array, estimated_credits number, expected_min number, pricing string, confidence number, why string, source string}; `results[].params_filled` {url string}; `alternatives[]` {id string, method string, confidence number, source string}.
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, methodology_version string, platform null, uncertain boolean, reason string, source string, confidence number}; `results[]` {id string, method string, path string, params_filled object, missing string[], one_of_missing object[], estimated_credits number, expected_min number, pricing string, priced_with_examples string[], confidence number, why string, source string}; `alternatives[]` {id string, method string, confidence number, source string} (+1 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/utility/find" \
@@ -281,7 +283,7 @@ Everything needed for a first successful API call in one response: authenticatio
 
 - `platform` (optional, string) - Tailor the first-call example and links to one platform slug · e.g. `tiktok`
 
-**Response** `Analytics` object at `data` (inferred from a sample): {kind string, name string, base_url string}; `auth` {type string, header string, also_accepted string, get_key_url string}; `first_call` {description string, url string, curl string, how_to_use string}; `envelope.success` {success boolean, platform string, endpoint string, data string, credits_used number, credits_remaining number, request_id string, cached boolean}; `envelope.error` {success boolean, credits_used number}; `envelope.error.error` {type string, message string, status number, doc_url string} (+23 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, name string, base_url string}; `auth` {type string, header string, also_accepted string, get_key_url string}; `first_call` {description string, method string, url string, body null, curl string, how_to_use string}; `envelope.success` {success boolean, platform string, endpoint string, data string, credits_used number, request_id string, cached boolean, credits_remaining number}; `envelope.success_list` {success boolean, platform string, endpoint string}; `envelope.success_list.data` {items string[]} (+57 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/quickstart" \
@@ -290,7 +292,7 @@ curl "https://www.socialcrawl.dev/v1/utility/quickstart" \
 
 ## GET /v1/utility/recipes - free (0 credits)
 
-The catalog of task recipes: common jobs (export a video's comments, vet a creator, compare a product's reviews across retailers, watch a competitor's uploads, crawl a site to markdown, and more) as the cheapest chain of calls, with the inputs each needs, which step's rows feed the next (bind), which steps page or run once per row (repeat), any setup call (a monitor, a cohort), pitfalls, cheaper and deeper alternatives, and cost: the whole job's credits for the stated size, computed from current prices, with exact false when a page count had to be guessed. A recipe monitor also shows per_run, one scheduled run. Pass id for one recipe; a utility/plan job id (creator_profile) returns the recipe that documents it. Free to call.
+The catalog of task recipes: common jobs (export a video's comments, vet a creator, compare a product's reviews across retailers, watch a competitor's uploads, crawl a site to markdown, and more) as the cheapest chain of calls, with the inputs each needs, which step's rows feed the next (bind), which steps page or run once per row (repeat), any setup call (a monitor, a cohort), pitfalls, cheaper and deeper alternatives, and cost: the whole job's credits for the stated size, computed from current prices, with exact false when a page count had to be guessed. A recipe monitor also shows per_run, one scheduled run. Every recipe carries last_run: what it really spent the last time we ran it end to end against the API (date, calls, credits, the ITEMS it ran with, and measured, the same in one sentence), or null before its first run. Pass id for one recipe and it also carries code: the whole job as a TypeScript program, a Python program that needs nothing installed, and an n8n workflow, each reading your key from SOCIALCRAWL_API_KEY and the row cap from ITEMS, following async runs and jobs to their end, and printing what it spent. A utility/plan job id (creator_profile) returns the recipe that documents it. Free to call.
 
 **Use when** you want to copy a proven multi-step job and see what it costs before you build it. It runs nothing. Free to call.
 **Cost** cache 1800 s
@@ -298,9 +300,9 @@ The catalog of task recipes: common jobs (export a video's comments, vet a creat
 
 **Query params**
 
-- `id` (optional, string) - One recipe id (export-tiktok-comments). Omit for the whole catalog · e.g. `export-tiktok-comments`
+- `id` (optional, string) - One recipe id (export-tiktok-comments), which adds its runnable code. Omit for the whole catalog · e.g. `export-tiktok-comments`
 
-**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, count number}; `recipes[]` {id string, title string, when string[]}; `recipes[].inputs[]` {name string, description string, example string}; `recipes[].steps[]` {id string, endpoint string, method string, repeat string}; `recipes[].steps[].params` {url string, sort string, scan_pages string}; `recipes[].size` {description string, items number}; `recipes[].cost` {calls number, hold number, expected_min number, expected_max number, exact boolean, floor boolean, for_items number} (+2 more).
+**Response** `Analytics` object at `data` (inferred from a sample): {kind string, version number, count number}; `recipes[]` {id string, title string, when string[]}; `recipes[].inputs[]` {name string, description string, example string}; `recipes[].steps[]` {id string, endpoint string, repeat string, note string, method string}; `recipes[].steps[].params` {url string, sort string, scan_pages string}; `recipes[].size` {description string, items number}; `recipes[].cost` {calls number, hold number, expected_min number, expected_max number, exact boolean, floor boolean} (+17 more).
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/utility/recipes" \

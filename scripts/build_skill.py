@@ -10,6 +10,9 @@ import sys
 import zipfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import held_surfaces  # noqa: E402
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = ROOT / ".agents" / "skills" / "socialcrawl"
@@ -149,7 +152,20 @@ def safe_sync_destination(destination: Path) -> None:
     shutil.copytree(CANONICAL, destination)
 
 
+def held_surface_issues(root: Path) -> list[str]:
+    """Files under `root` that still carry a surface held by held_surfaces.py."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        copy = Path(tmp) / "tree"
+        shutil.copytree(root, copy)
+        changed = held_surfaces.strip_tree(copy)
+    return [f"{path} carries a held surface (scripts/held_surfaces.py)" for path in changed]
+
+
 def build() -> None:
+    # The generator emits everything the registry declares, held work included.
+    held_surfaces.strip_tree(CANONICAL)
     for mirror in MIRRORS:
         safe_sync_destination(mirror)
     PACKAGE.write_bytes(package_bytes())
@@ -182,6 +198,8 @@ def validate() -> list[str]:
             issues.append(f"canonical skill is missing {relative}")
 
     validate_frontmatter(issues)
+    if CANONICAL.is_dir():
+        issues.extend(held_surface_issues(CANONICAL))
     packaged_license = CANONICAL / "LICENSE"
     if (
         root_license.is_file()

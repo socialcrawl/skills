@@ -54,7 +54,9 @@ Returns buyer questions for a Kohl's product, 10 per page by default, each with 
 
 - Provide at least one of `product_id`, `url`.
 
-**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {Id string, CID string, SourceClient string, LastModeratedTime string, LastModificationTime string, ProductId string, AuthorId string, ContentLocale string, TotalInappropriateFeedbackCount number, IsFeatured boolean, HasBestAnswer boolean, TotalAnswerCount number, QuestionSummary string, TotalFeedbackCount number, TotalNegativeFeedbackCount number, TotalPositiveFeedbackCount number, ModerationStatus string, SubmissionId string, SubmissionTime string, UserNickname string, TagDimensionsOrder array, Videos array, AdditionalFieldsOrder array, AnswerIds array|string[], InappropriateFeedbackList array} (+50 more).
+**Response** `Analytics` rows at `data.items[]` (inferred from a sample): {Id string, CID string, SourceClient string, LastModeratedTime string, LastModificationTime string, ProductId string, AuthorId string, ContentLocale string, TotalInappropriateFeedbackCount number, IsFeatured boolean, HasBestAnswer boolean, TotalAnswerCount number, QuestionSummary string, TotalFeedbackCount number, TotalNegativeFeedbackCount number, TotalPositiveFeedbackCount number, ModerationStatus string, SubmissionId string, SubmissionTime string, UserNickname string, TagDimensionsOrder array, Videos array, AdditionalFieldsOrder array, AnswerIds array|string[], InappropriateFeedbackList array} (+49 more).
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/questions" \
@@ -68,7 +70,7 @@ Returns written customer reviews for a Kohl's product, 8 per page by default, ea
 
 **Use when** you already have a product id from search and want the review corpus. Paginate with cursor. A missing product returns an empty list.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 1.4-1.6 s
 
 **Query params**
@@ -77,9 +79,8 @@ Returns written customer reviews for a Kohl's product, 8 per page by default, ea
 - `url` (optional, string) - Kohl's product page URL, for example https://www.kohls.com/product/prd-1695762/gloria-vanderbilt-amanda-tapered-jeans-womens.jsp. The product id is parsed from prd-{id}.
 - `page` (optional, integer, min 1) - Page number, starting at 1. Prefer the universal cursor parameter.
 - `limit` (optional, integer, 1-50) - Reviews per page, 1 to 50. Default 8.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -93,13 +94,13 @@ Returns written customer reviews for a Kohl's product, 8 per page by default, ea
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+10 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, location}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {location}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/reviews" \
@@ -122,6 +123,7 @@ Returns one page of Kohl's products for a keyword, 12 per page by default, each 
 - `limit` (optional, integer, 1-48) - Products per page, 1 to 48. Default 12. Values above 48 are clamped. The origin default of 120 is a half-megabyte facet dump and is not forwarded.
 - `sort_by` (optional, enum: featured | newest | price_low | price_high | rating | percent_off) - Result ordering: featured (default), newest, price_low, price_high, rating, or percent_off.
 - `filters` (optional, string) - Kohl's dimension filter string. Example: Color:Black. Combine with commas. Dimension ids appear on every search payload under payload.dimensions.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -131,10 +133,10 @@ Returns one page of Kohl's products for a keyword, 12 per page by default, each 
 | `product.id` | Platform product ID… |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.rating.average` |  |
-| `product.rating.count` |  |
+| `product.rating.average` | Average rating, normally out of 5. |
+| `product.rating.count` | Number of ratings behind the average. |
 
-Also in the sample: `product` {description null, seller null, brand null, availability string, reviews_count number}; `product.price` {current number, original number, currency string}; `product.variations[]` {id null, title string, url null, category string}; `product.ext.kohls` {colors string[], display_color string, sku string, coupon_eligible boolean, ship boolean}. Page-level: `data.dropped`.
+Also in the sample: `product` {description null, seller null, brand null, availability string, reviews_count number}; `product.price` {current number, original number, currency string}; `product.variations[]` {id null, title string, url null, category string}; `product.ext.kohls` {colors string[], display_color string, sku string, coupon_eligible boolean, ship boolean}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/search" \
@@ -169,11 +171,11 @@ Returns Kohl's stores within a radius of a latitude,longitude pair, each with st
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
 | `place.url` | Website or canonical URL |
-| `place.latitude` |  |
-| `place.longitude` |  |
-| `place.category` | Primary category… (seen in a sample response) |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
+| `place.address` | Street address as the source prints it. (seen in a sample response) |
 
-Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, phone null, verified null, description null, image_urls null}. Page-level: `data.dropped`.
+Also in the sample: `place` {category null, reviews_count null, price_level null, phone null, verified null, description null, image_urls null}; `place.rating` {value null, max null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kohls/stores" \

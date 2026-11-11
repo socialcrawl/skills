@@ -46,12 +46,12 @@ Returns the full canonical `App` record for one Google Play app keyed by its pac
 |---|---|
 | `app.id` | Store app ID… |
 | `app.title` | App title |
-| `app.store` | App marketplace ("google_play" or "app_store") |
-| `app.url` |  |
-| `app.developer.id` |  |
-| `app.developer.name` |  |
+| `app.url` | URL of the app's store page. |
+| `app.developer.id` | The store's id for the developer. |
+| `app.developer.name` | Developer or publisher name. |
+| `app.developer.url` | URL of the developer's page in the store. |
 
-+23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more).
++23 more (types in the full schema): `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, store, subtitle, update_notes, updated_at, version}; `app.developer` {address, email, website}; `app.price` {currency, current, displayed, is_free} (+4 more).
 
 **Next** `google_play/app-reviews` (`app_id` ← `data.app.id`) - Get Google Play reviews for an app.
 
@@ -87,12 +87,12 @@ Returns a unified AppList for a Google Play store chart (top free, top paid, top
 |---|---|
 | `app.id` | Store app ID… |
 | `app.title` | App title |
-| `app.store` | App marketplace ("google_play" or "app_store") |
-| `app.url` |  |
-| `app.developer.id` |  |
-| `app.developer.name` |  |
+| `app.url` | URL of the app's store page. |
+| `app.developer.id` | The store's id for the developer. |
+| `app.developer.name` | Developer or publisher name. |
+| `app.developer.url` | URL of the developer's page in the store. |
 
-+21 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free, original} (+2 more). Never filled: `app.rating.count`, `app.reviews_count`. Page-level: `data.dropped`.
++21 more (types in the full schema): `app` {category, description, icon, minimum_os_version, released_at, size, store, subtitle, update_notes, updated_at, version}; `app.developer` {address, email, website}; `app.price` {currency, current, displayed, is_free, original} (+2 more). Never filled: `app.rating.count`, `app.reviews_count`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Get full Google Play app details.
 
@@ -120,6 +120,7 @@ Searches a real-time, filterable Google Play listings database by app title (and
 - `filters` (optional, string) - Advanced filter expression as a JSON array of clauses, e.g. [["item.rating.value",">",4]]. Must be valid JSON and must be an array: anything else is rejected with a free 400 rather than silently returning an unfiltered page. · e.g. `[["item.rating.value",">",4]]`
 - `country` (optional, string) - Storefront country as an ISO code ('US'), a full name, or a numeric code. Defaults to the US.
 - `language` (optional, string) - Language code (e.g. 'en'). Defaults to 'en'.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `AppList` rows at `data.items[]`, each `{ app }` ([full schema](schemas/AppList.md))
 
@@ -127,12 +128,12 @@ Searches a real-time, filterable Google Play listings database by app title (and
 |---|---|
 | `app.id` | Store app ID… |
 | `app.title` | App title |
-| `app.store` | App marketplace ("google_play" or "app_store") |
-| `app.url` |  |
-| `app.developer.id` |  |
-| `app.developer.name` |  |
+| `app.url` | URL of the app's store page. |
+| `app.developer.id` | The store's id for the developer. |
+| `app.developer.name` | Developer or publisher name. |
+| `app.developer.url` | URL of the developer's page in the store. |
 
-+23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
++23 more (types in the full schema): `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, store, subtitle, update_notes, updated_at, version}; `app.developer` {address, email, website}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `google_play/app-reviews` (`app_id` ← `data.items[].app.id`) - Get Google Play reviews for an app. · `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Get full Google Play app details.
 
@@ -159,9 +160,8 @@ Returns a unified ReviewList of Google Play user reviews for an app, keyed by it
 - `depth` (optional, integer) - Number of reviews to retrieve (default 150, batches of 150, max 600). · e.g. `150`
 - `sort_by` (optional, enum: newest | most_relevant) - Review ordering: `newest` (default) or `most_relevant`. · e.g. `newest`
 - `rating` (optional, integer) - Filter to a single star rating (1-5). Verified working on this store (measured 06/09/2026: `rating=5` returns 150 five-star reviews, `rating=1` returns 150 one-star). The Apple App Store has no equivalent filter upstream.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -175,13 +175,13 @@ Returns a unified ReviewList of Google Play user reviews for an app, keyed by it
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+10 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name, avatar_url}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified null, source null, language null, original_language null, translated null}; `review.author` {url null, location null, reviews_count null} (+28 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {avatar_url}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified null, source null, language null, original_language null, translated null}; `review.author` {url null, location null, reviews_count null} (+28 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_play/app-reviews" \
@@ -210,12 +210,12 @@ Returns a unified AppList of Google Play apps matching a keyword: title, icon, d
 |---|---|
 | `app.id` | Store app ID… |
 | `app.title` | App title |
-| `app.store` | App marketplace ("google_play" or "app_store") |
-| `app.url` |  |
-| `app.developer.id` |  |
-| `app.developer.name` |  |
+| `app.url` | URL of the app's store page. |
+| `app.developer.id` | The store's id for the developer. |
+| `app.developer.name` | Developer or publisher name. |
+| `app.developer.url` | URL of the developer's page in the store. |
 
-+23 more (types in the full schema): `app.developer` {url, address, email, website}; `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, subtitle, update_notes, updated_at, version}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`.
++23 more (types in the full schema): `app` {category, description, icon, minimum_os_version, released_at, reviews_count, size, store, subtitle, update_notes, updated_at, version}; `app.developer` {address, email, website}; `app.price` {currency, current, displayed, is_free} (+4 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `google_play/app-info` (`app_id` ← `data.items[].app.id`) - Full details for each app. · `google_play/app-reviews` (`app_id` ← `data.items[].app.id`) - User reviews of each app.
 
@@ -235,6 +235,8 @@ Returns the list of Google Play app categories used by the `app_category` filter
 
 **Response** `Analytics` rows at `data.items[]` (inferred from a sample): each row a string.
 
+Page-level: `data.categories`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
+
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_play/categories" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
@@ -249,6 +251,8 @@ Returns the languages (name + code) supported by the Google Play App Data endpoi
 **Paging** none
 
 **Response** `Analytics` rows at `data.items[]`, each `{ language_name, language_code }` (inferred from a sample): {language_name string, language_code string}.
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_play/languages" \
@@ -268,6 +272,8 @@ Returns the Google Play storefronts (name + numeric location code + ISO country 
 - `location_type` (optional, enum: country | all) - `country` (default) returns the storefronts the `country` param accepts. `all` returns the full underlying geo tree, including cities, postal codes and neighbourhoods, which all resolve to their parent country. · e.g. `country`
 
 **Response** `Analytics` rows at `data.items[]` (inferred from a sample): {location_code number, location_name string, location_name_parent null, country_iso_code string, location_type string}.
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/google_play/locations" \
@@ -290,7 +296,7 @@ Returns Google Play's search autocomplete suggestions for a keyword stem: the sa
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ term, priority }` (inferred from a sample): {term string, priority number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_play/search-suggestions" \

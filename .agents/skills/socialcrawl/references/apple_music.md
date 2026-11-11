@@ -48,7 +48,7 @@ Returns album metadata: title, artist, artwork, track count, and the Apple Music
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {artist_url, kind, release_info, track_count}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {artist_url, kind, release_info, track_count}. Also in the sample: `post.ext` {hashtags null, mentions null}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/album" \
@@ -84,7 +84,7 @@ Returns artist metadata: id, name, artwork, and the Apple Music artist URL. Pass
 | `author.display_name` | Display name or full name |
 | `computed.content_category` | Keyword-classified content category… |
 
-+4 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++6 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author.bio`, `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/artist" \
@@ -105,8 +105,8 @@ Returns what a country is playing most on Apple Music right now: the Top Songs, 
 - `country` (optional, string) - Country as an ISO 3166-1 alpha-2 code, in any case (`us`, `DE`, `kr`). Apple Music publishes a chart for most countries where it is sold; one it does not is rejected with a free 400. `uk` is read as `gb`. Defaults to `us`. · e.g. `de`
 - `type` (optional, enum: songs | albums | music-videos | playlists) - Which chart: `songs` (the default), `albums`, `music-videos` or `playlists`. · e.g. `songs`
 - `limit` (optional, integer, 1-100) - How many chart positions to return, from the top, 1 to 100. Defaults to 50. · e.g. `10`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -119,7 +119,7 @@ Returns what a country is playing most on Apple Music right now: the Top Songs, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {artist_id, artist_url, content_advisory, genres, kind, release_date}; `post.ext.trend` {chart, chart_title, country_code, rank, updated_at}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {artist_id, artist_url, content_advisory, genres, kind, release_date}; `post.ext.trend` {chart, chart_title, country_code, rank, updated_at}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/apple_music/charts" \
@@ -141,7 +141,7 @@ Returns Apple Music search results for a query. Pass `type` to restrict the resu
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, kind string, title string, subtitle string, album null, url string, duration_ms null, track_number null, disc_number null, artist_name string, explicit boolean, preview_url null, track_count null}; `artwork` {url string, width number, height number, bgColor string, textColor1 string, textColor2 string, textColor3 string, textColor4 string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/search" \
@@ -177,7 +177,7 @@ Returns track metadata: title, artist, duration, preview audio URL, and the Appl
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {explicit, kind, track_number}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {explicit, kind, track_number}. Also in the sample: `post.ext` {hashtags null, mentions null}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/track" \

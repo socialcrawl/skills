@@ -45,10 +45,10 @@ Returns full product detail for a Home Depot item: title, brand, model number, U
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
+| `product.description` | Product description. |
+| `product.features` | Feature bullet points from the product page. |
 
-+10 more (types in the full schema): `product` {features, reviews_count}; `product.ext` {model_number, sku_id, upc}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+2 more).
++10 more (types in the full schema): `product` {image_urls, reviews_count}; `product.ext` {sku_id, model_number, upc}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+2 more).
 
 **Next** `home_depot/reviews` (`item_id` ← `data.product.id`) - Get Home Depot product reviews.
 
@@ -70,9 +70,8 @@ Returns the ten most relevant written customer reviews for a Home Depot product,
 **Query params**
 
 - `item_id` (required) - Home Depot internet number (item id), the numeric id at the end of a homedepot.com product URL: homedepot.com/p/<name>/326680222 is item id 326680222. Pass url instead if you would rather hand over the whole product URL. · e.g. `326680222`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -85,13 +84,13 @@ Returns the ten most relevant written customer reviews for a Home Depot product,
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+11 more (types in the full schema): `review` {verified, title, language}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name, location}; `review.rating` {value}. Also in the sample: `review` {url null, source null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++11 more (types in the full schema): `review` {entity_id, helpful_votes, language, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {location}; `review.rating` {value}. Also in the sample: `review` {url null, source null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/home_depot/reviews" \
@@ -112,6 +111,7 @@ Returns Home Depot products matching a keyword, 24 per page, each with its item 
 - `query` (required) - Free-text product search, for example drill or cordless impact driver. · e.g. `drill`
 - `page` (optional, integer, 1-30) - Page number, 1 to 30. Prefer the universal cursor parameter.
 - `store_id` (optional, string) - Home Depot store number used to localise stock and pickup availability, for example 0723. Prices are Home Depot's online price and do not change with the store. Pass the id exactly as GET /v1/home_depot/stores returns it; rows echo it without the leading zero on search (723).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -122,9 +122,9 @@ Returns Home Depot products matching a keyword, 24 per page, each with its item 
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` |  |
+| `product.reviews_count` | Number of written reviews. |
 
-+9 more (types in the full schema): `product.ext` {availability_type, department, model_number, sku_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+5 more). Page-level: `data.dropped`.
++9 more (types in the full schema): `product.ext` {sku_id, availability_type, department, model_number}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+5 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `home_depot/product` (`item_id` ← `data.items[].product.id`) - Full details for each product. · `home_depot/reviews` (`item_id` ← `data.items[].product.id`) - Get Home Depot product reviews.
 
@@ -154,10 +154,10 @@ Returns Home Depot stores near a US ZIP code, each with its store id, name, full
 | `place.name` | Business / hotel name |
 | `place.url` | Website or canonical URL |
 | `place.category` | Primary category… |
-| `place.latitude` |  |
-| `place.longitude` |  |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
 
-+5 more (types in the full schema): `place` {phone}; `place.ext` {distance_miles, pro_desk_phone, store_hours, tool_rental_phone}. Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, verified null, description null, image_urls null}. Page-level: `data.dropped`.
++5 more (types in the full schema): `place` {phone}; `place.ext` {distance_miles, pro_desk_phone, store_hours, tool_rental_phone}. Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, verified null, description null, image_urls null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/home_depot/stores" \

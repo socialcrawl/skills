@@ -41,7 +41,7 @@ Returns detailed information about a specific Truth Social post including the te
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
++15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Also in the sample: `post` {url null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more).
 
 **Next** `truthsocial/user/posts` (`handle` ← `data.post.author.username`) - List Truth Social user posts. · `truthsocial/profile` (`handle` ← `data.post.author.username`) - Get Truth Social user profile.
 
@@ -74,7 +74,7 @@ Returns public profile information for a Truth Social user including display nam
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+12 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}.
++14 more (types in the full schema): `author` {followers, following, joined_at, likes_count, posts_count, private, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/truthsocial/profile" \
@@ -96,8 +96,8 @@ Returns a list of recent truths posted by a Truth Social user. Each truth includ
 - `user_id` (optional, string) - Truth Social user id. Use this for faster response times. Trumps is 107780257626128497. It is the 'id' field in the profile endpoint.
 - `next_max_id` (optional, string) - Used to paginate to next page
 - `trim` (optional, boolean) - Set to true for a trimmed down version of the response
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -114,7 +114,7 @@ Returns a list of recent truths posted by a Truth Social user. Each truth includ
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `truthsocial/profile` (`handle` ← `data.items[].post.author.username`) - Get Truth Social user profile.
 

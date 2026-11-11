@@ -40,11 +40,11 @@ Returns one Xiaohongshu note from its URL or note id: full body, images or video
 | `post.url` | Direct URL to the post on the source platform |
 | `post.ext.author_id` | The creator's platform-native numeric user id. |
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
-| `post.author.username` | Author username |
 
-+17 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted}; `post.ext` {title, ip_location}. Never filled: `post.author.verified`, `post.engagement.views`.
++17 more (types in the full schema): `post.author` {username, avatar_url, display_name}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.ext` {ip_location}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.engagement.views`.
 
 **Next** `xiaohongshu/post/comments` (`url` ← `data.post.url`) - Get Xiaohongshu note comments. · `xiaohongshu/profile/posts` (`id` ← `data.post.ext.author_id`) - List a Xiaohongshu creator's notes. · `xiaohongshu/profile` (`id` ← `data.post.ext.author_id`) - Get a Xiaohongshu creator.
 
@@ -60,7 +60,7 @@ Returns top level comments on a Xiaohongshu note: text, commenter, likes, reply 
 
 **Use when** you want to read reaction to a note. Reply threads are a separate read and are not included here.
 **Cost** price moves with `limit` · cache 300 s
-**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered.
+**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · 10/page by default, max 20; set with `limit` · depth unknown · N items ≈ N rows x 5 credits · typical 5.5-11 s
 
@@ -70,8 +70,8 @@ Returns top level comments on a Xiaohongshu note: text, commenter, likes, reply 
 - `limit` (optional, integer, 1-20) - Rows to return, 1 to 20. Default 10. Each row costs 5 credits and you are charged only for rows returned.
 - `cursor` (optional, string) - Continuation token from a previous response's pagination block. Omit for the first page.
 - `sort` (optional, enum: relevance | latest | most_liked) - Comment ordering: relevance, latest, or most_liked. Default relevance.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -84,7 +84,7 @@ Returns top level comments on a Xiaohongshu note: text, commenter, likes, reply 
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+9 more (types in the full schema): `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_id, ip_location}; `comment.flags` {deleted, pinned}; `computed` {language}. Never filled: `comment.author.verified`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++9 more (types in the full schema): `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_id, ip_location}; `comment.flags` {deleted, pinned}; `computed` {language}. Never filled: `comment.author.verified`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/xiaohongshu/post/comments" \
@@ -120,7 +120,7 @@ Returns one Xiaohongshu creator: display name, RedNote id (author.username), bio
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+12 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {collects_received, country}. Never filled: `author.joined_at`, `author.private`.
++14 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, collects_received, country, products}. Never filled: `author.joined_at`, `author.private`.
 
 **Next** `xiaohongshu/profile/posts` (`url` ← `data.author.url`) - List a Xiaohongshu creator's notes.
 
@@ -136,7 +136,7 @@ Returns a Xiaohongshu creator's notes, newest first. Each row has a title, a sho
 
 **Use when** you want to read what a creator has published. Summaries are truncated, so open a note for the full text.
 **Cost** price moves with `limit` · cache 900 s
-**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered.
+**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · 10/page by default, max 20; set with `limit` · depth unknown · N items ≈ N rows x 5 credits · typical 6.3-14 s
 
@@ -146,8 +146,8 @@ Returns a Xiaohongshu creator's notes, newest first. Each row has a title, a sho
 - `id` (optional, string) - User id, the author_user_id on a note. Not the RedNote id.
 - `limit` (optional, integer, 1-20) - Rows to return, 1 to 20. Default 10. Each row costs 5 credits and you are charged only for rows returned.
 - `cursor` (optional, string) - Continuation token from a previous response's pagination block. Omit for the first page.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -160,11 +160,11 @@ Returns a Xiaohongshu creator's notes, newest first. Each row has a title, a sho
 | `post.url` | Direct URL to the post on the source platform |
 | `post.ext.author_id` | The creator's platform-native numeric user id. |
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
-| `post.author.username` | Author username |
 
-+17 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted, pinned}; `post.ext` {title}. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`.
++17 more (types in the full schema): `post.author` {username, avatar_url, display_name}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted, pinned}. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `xiaohongshu/post` (`url` ← `data.items[].post.url`) - Get a Xiaohongshu note. · `xiaohongshu/profile` (`id` ← `data.items[].post.ext.author_id`) - Get a Xiaohongshu creator.
 
@@ -180,7 +180,7 @@ Returns Xiaohongshu notes matching a keyword. Each row has a title, a short summ
 
 **Use when** you want to find a topic on Xiaohongshu. Search text is a short summary, so open the note when you need the full body.
 **Cost** price moves with `limit` · cache 120 s
-**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered.
+**Pricing** 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · 10/page by default, max 20; set with `limit` · depth unknown · N items ≈ N rows x 5 credits · typical 5.0-15 s
 
@@ -192,8 +192,8 @@ Returns Xiaohongshu notes matching a keyword. Each row has a title, a short summ
 - `sort` (optional, enum: relevance | latest | most_liked | most_commented | most_collected) - Result ordering: relevance, latest, most_liked, most_commented, or most_collected. Default relevance.
 - `type` (optional, enum: all | image | video) - Note type: all, image, or video. Default all.
 - `published` (optional, enum: all | day | week | half_year) - Recency window: all, day, week, or half_year. Default all.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -202,11 +202,11 @@ Returns Xiaohongshu notes matching a keyword. Each row has a title, a short summ
 | `post.url` | Direct URL to the post on the source platform |
 | `post.ext.author_id` | The creator's platform-native numeric user id. |
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
-| `post.author.username` | Author username |
 
-+17 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted, pinned}; `post.ext` {title}. Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`.
++17 more (types in the full schema): `post.author` {username, avatar_url, display_name}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted, pinned}. Also in the sample: `post.flags` {nsfw null, spoiler null} (+5 more). Never filled: `post.author.verified`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `xiaohongshu/post` (`url` ← `data.items[].post.url`) - Full details and stats for each note. · `xiaohongshu/profile/posts` (`id` ← `data.items[].post.ext.author_id`) - List a Xiaohongshu creator's notes. · `xiaohongshu/profile` (`id` ← `data.items[].post.ext.author_id`) - Get a Xiaohongshu creator.
 
@@ -232,7 +232,7 @@ Returns the live Xiaohongshu hot search board: ranked topics with a hot value. T
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ rank, title, hot_value }` (inferred from a sample): {rank number, title string, hot_value number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/xiaohongshu/trending" \

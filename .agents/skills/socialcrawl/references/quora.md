@@ -38,8 +38,8 @@ Returns Quora answers matching a keyword, including the answer text, author name
 - `query` (required) - Search keywords, for example learn programming. · e.g. `learn programming`
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -52,7 +52,7 @@ Returns Quora answers matching a keyword, including the answer text, author name
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Page-level: `data.dropped`.
++10 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, avatar_url null, verified null}; `post.engagement` {saves null}; `post.flags` {nsfw null, spoiler null} (+3 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/answers" \
@@ -83,7 +83,7 @@ Returns one Quora question from its URL: title, body text, and published date. Q
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.engagement` {comments}; `post.flags` {deleted}.
++5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.engagement` {comments}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, display_name null, avatar_url null, verified null}; `post.engagement` {views null, likes null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/post" \
@@ -105,8 +105,8 @@ Returns posts from Quora Spaces matching a keyword: URL, author, upvotes, commen
 - `query` (required) - Search keywords. · e.g. `learn programming`
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -117,9 +117,9 @@ Returns posts from Quora Spaces matching a keyword: URL, author, upvotes, commen
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
-| `computed.estimated_reach` | Estimated reach based on views or follower count. |
+| `post.content.text` | Post caption, description, or text content (seen in a sample response) |
 
-+8 more (types in the full schema): `computed` {language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, avatar_url null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 
@@ -155,7 +155,7 @@ Returns Quora profiles matching a keyword: display name, profile URL, credential
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-Page-level: `data.dropped`.
++2 more (types in the full schema): `author.ext` {business_hours, products}. Also in the sample: `author` {username string, verified null, following null, posts_count null, likes_count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/profiles" \
@@ -177,8 +177,8 @@ Returns Quora questions matching a keyword: title, URL, answer count, follower c
 - `query` (required) - Search keywords, for example learn programming. · e.g. `learn programming`
 - `time` (optional, enum: all | hour | day | week | month | year) - Recency window: all, hour, day, week, month, or year. Default all.
 - `limit` (optional, integer, 1-10) - Maximum rows to return, 1 to 10. Default 10.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -191,7 +191,7 @@ Returns Quora questions matching a keyword: title, URL, answer count, follower c
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.engagement` {comments}; `post.flags` {deleted}. Page-level: `data.dropped`.
++5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.engagement` {comments}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, display_name null, avatar_url null, verified null}; `post.engagement` {views null, likes null, shares null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 
@@ -218,7 +218,7 @@ Returns Quora Spaces matching a keyword: name, URL, description, member count, a
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {record_type string, url string, title string, text string}; `source_context` {seed_type string, seed_value string, source_url string, loaded_url string, scraped_at string, search_type string, search_time_filter string}; `status` {has_results boolean}; `metrics` {followers number, members number}; `media` {icon_url string}; `space` {id string, tribe_id number, name string, url string, description string}; `space.metrics` {followers number, members number}; `space.media` {icon_url string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/spaces" \
@@ -243,7 +243,7 @@ Returns Quora topics matching a keyword: name, URL, follower count, and topic ph
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {record_type string, url string, title string}; `source_context` {seed_type string, seed_value string, source_url string, loaded_url string, scraped_at string, search_type string, search_time_filter string}; `status` {has_results boolean}; `metrics` {followers number}; `media` {photo_url string}; `flags` {is_following boolean, is_sensitive boolean}; `topic` {id string, tid number, name string, url string}; `topic.metrics` {followers number}; `topic.flags` {is_following boolean, is_sensitive boolean}; `topic.media` {photo_url string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/topics" \

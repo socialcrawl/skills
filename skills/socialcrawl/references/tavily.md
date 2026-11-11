@@ -41,7 +41,7 @@ Multi-page crawl starting from a root URL. Returns each crawled page with its ex
 - `format` (optional, enum: markdown | text) - Output format for extracted content. `markdown` (default) or `text`.
 - `categories` (optional, string) - Comma-separated list of category hints to bias the crawl toward.
 
-**Response** `Analytics`. Fields not published yet - call once with a small limit; `/v1/utility/endpoint?id=tavily/crawl` serves the current contract.
+**Response** `Analytics` object at `data` (from the response contract): {base_url string|null, request_id string|null, response_time number|null, results array, usage object|null}; `results` {favicon string|null, images array|null, raw_content string|null, url string}; `usage` {credits number|null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tavily/crawl" \
@@ -66,7 +66,7 @@ Pulls clean, AI-ready text out of one or more URLs via Tavily's extractor. Pass 
 - `include_favicon` (optional, boolean) - Include the favicon URL for each page.
 - `timeout` (optional, integer) - Per-URL timeout in seconds (1-60).
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=tavily/extract` serves the current contract.
+**Response** `Analytics` object at `data` (from the response contract): {failed_results array|null, request_id string|null, response_time number|null, results array, usage object|null}; `failed_results` {error string|null, url string}; `results` {favicon string|null, images array|null, raw_content string|null, url string}; `usage` {credits number|null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tavily/extract" \
@@ -97,7 +97,7 @@ Returns the sitegraph of a website starting from a root URL: a list of discovere
 - `timeout` (optional, integer) - Maximum time in seconds (10-150).
 - `categories` (optional, string) - Comma-separated list of category hints to bias mapping toward.
 
-**Response** `Analytics`. Fields not published yet - call once with a small limit; `/v1/utility/endpoint?id=tavily/map` serves the current contract.
+**Response** `Analytics` object at `data` (from the response contract): {base_url string|null, request_id string|null, response_time number|null, results array, usage object|null}; `usage` {credits number|null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tavily/map" \
@@ -131,7 +131,7 @@ Runs a web search via Tavily and returns ranked results plus an optional LLM-gen
 - `start_date` (optional, string) - Inclusive lower bound on result publish date (YYYY-MM-DD).
 - `end_date` (optional, string) - Inclusive upper bound on result publish date (YYYY-MM-DD).
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=tavily/search` serves the current contract.
+**Response** `Analytics` object at `data` (from the response contract): {answer string|null, follow_up_questions array|null, images array|null, query string, request_id string|null, response_time number|null, results array, usage object|null}; `results` {content string|null, favicon string|null, published_date string|null, raw_content string|null, score number|null, title string|null, url string}; `usage` {credits number|null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tavily/search" \

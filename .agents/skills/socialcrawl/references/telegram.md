@@ -44,7 +44,7 @@ Returns one public Telegram post by its t.me URL, including the text, publish ti
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+12 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}.
++12 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.ext` {reaction_counts}; `post.flags` {deleted}. Also in the sample: `post.author` {avatar_url null, verified null}; `post.engagement` {comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+3 more).
 
 **Next** `telegram/profile/posts` (`handle` ← `data.post.author.username`) - List Telegram channel posts. · `telegram/profile` (`handle` ← `data.post.author.username`) - Get Telegram channel profile.
 
@@ -77,7 +77,7 @@ Returns a public Telegram channel or group profile including its display name, d
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+7 more (types in the full schema): `author` {followers, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}.
++9 more (types in the full schema): `author` {followers, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Also in the sample: `author` {following null, posts_count null, likes_count null}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/telegram/profile" \
@@ -98,8 +98,8 @@ Returns one page of recent public posts from a Telegram channel or group, newest
 - `handle` (required) - Public Telegram handle, with or without the leading @, or a t.me channel URL · e.g. `telegram`
 - `cursor` (optional, string) - Cursor from the previous page's pagination block. Omit it for the most recent posts.
 - `q` (optional, string) - Words to search for inside the channel, for example `cheap watches`. Returns one page of the newest messages whose text contains every word (put a phrase in double quotes to require it as written), at the same price as a plain page. Telegram's own search also matches other forms of a word (`watch` for `watches`); those messages are left out, because they do not contain the words. A search page has no cursor, so `q` cannot be combined with `cursor`.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -112,7 +112,7 @@ Returns one page of recent public posts from a Telegram channel or group, newest
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+12 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}; `post.ext` {reaction_counts}. Also in the sample: `post.author` {avatar_url null, verified null}; `post.engagement` {comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+1 more). Page-level: `data.dropped`.
++12 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.ext` {reaction_counts}; `post.flags` {deleted}. Also in the sample: `post.author` {avatar_url null, verified null}; `post.engagement` {comments null, shares null, saves null}; `post.flags` {nsfw null, spoiler null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `telegram/post` (`url` ← `data.items[].post.url`) - Get Telegram post.
 
@@ -128,7 +128,7 @@ Finds public Telegram channels by keyword, so you can pick the channels to read 
 
 **Use when** you want to find channels selling or discussing a product or brand, then read them with profile/posts. The index lags behind Telegram, so treat it as discovery, not a live feed.
 **Cost** price moves with `include` · cache 120 s · multi-source (billed once)
-**Pricing** 2 credits for the page. include=details holds 1 credit per channel (at most 10 a page, fewer with limit) and keeps only the channels filled from a fresh lookup, so a page is at most 12 credits; channels served from cache are free, unfilled channels are refunded, and a search that finds no public channel costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 2 credits for the page. include=details holds 1 credit per channel (at most 10 a page, fewer with limit) and keeps only the channels filled from a fresh lookup, so a page is at most 12 credits; channels served from cache are free, unfilled channels are refunded, and a search that finds no public channel costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 2.3-9.6 s
 
 **Query params**
@@ -139,7 +139,7 @@ Finds public Telegram channels by keyword, so you can pick the channels to read 
 - `region` (optional, string) - Two-letter country code (US, AE, IN, KR) whose results to prefer.
 - `limit` (optional, integer, 1-10) - Return at most this many channels from the page (1 to 10). With `include=details` it also lowers the credits held, one per channel.
 - `include` (optional, enum: details) - Set to `details` (one token only) to fill, on every channel in this one call, `author.followers` (the exact subscriber count), `author.bio` (the description), `author.avatar_url`, `author.verified`, and the title where it was null. Holds 1 credit per channel (at most 10 a page) and keeps only the channels filled from a fresh lookup; channels already in cache and channels the lookup cannot fill are refunded, so a page is never more than 12 credits. Read `data.hydration` for the rows, the credits held and kept, and the time. Without it the call is unchanged.
-- **Shared controls** `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- **Shared controls** `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -150,14 +150,14 @@ Finds public Telegram channels by keyword, so you can pick the channels to read 
 
 | Field | Meaning |
 |---|---|
+| `author.ext.search_hit.title` | The hit title as the search index showed it. |
 | `author.id` | Platform-specific user ID… |
 | `author.url` | Direct URL to the profile page |
 | `author.username` | User handle or username |
 | `author.avatar_url` | URL to profile picture (with `include=details`) |
 | `author.bio` | Profile biography or description (with `include=details`) |
-| `author.ext.search_hit.title` |  |
 
-+8 more (types in the full schema): `author` {display_name, followers, verified}; `computed` {relevance}; `author.ext.search_hit` {evidence_url, match, matched_urls, snippet}. Never filled: `author.following`, `author.joined_at`, `author.likes_count`, `author.posts_count`, `author.private`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.relevance`.
++10 more (types in the full schema): `author` {display_name, followers, verified}; `computed` {relevance}; `author.ext` {business_hours, products}; `author.ext.search_hit` {evidence_url, match, matched_urls, snippet}. Never filled: `author.following`, `author.joined_at`, `author.likes_count`, `author.posts_count`, `author.private`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.hydration`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/telegram/search" \

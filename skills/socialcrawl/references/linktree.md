@@ -16,7 +16,7 @@
 
 ## GET /v1/linktree/page - 1 credit (standard)
 
-Returns data from a Linktree page including the user's display name, bio, avatar, and list of links with titles and URLs.
+Returns data from a Linktree page including the user's display name, bio, avatar, and list of links with titles and URLs. Every link is in `author.ext.links` as `{ id, type, title, url }`, where `type` says what kind of link it is, such as CLASSIC, MUSIC, VIDEO or COMMERCE.
 
 **Use when** you want it for linktr.ee pages; lnk.bio, Linkme, Komi, and Pillar pages each have their own endpoint.
 **Cost** cache 900 s
@@ -37,7 +37,7 @@ Returns data from a Linktree page including the user's display name, bio, avatar
 | `author.display_name` | Display name or full name |
 | `computed.content_category` | Keyword-classified content category… |
 
-+4 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
++7 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, links, products}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linktree/page" \

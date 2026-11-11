@@ -35,6 +35,8 @@ Returns the full content-category taxonomy (3,000+ nodes: category_code, categor
 
 **Response** `Analytics` rows at `data.items[]`, each `{ category_code, category_name, category_code_parent }` (inferred from a sample): {category_code number, category_name string, category_code_parent number}.
 
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
+
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/categories" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
@@ -91,6 +93,8 @@ Returns the list of languages (name + ISO code) supported by the Content Analysi
 
 **Response** `Analytics` rows at `data.items[]`, each `{ language_name, language_code }` (inferred from a sample): {language_name string, language_code string}.
 
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
+
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/languages" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
@@ -105,6 +109,8 @@ Returns the list of locations supported by the Content Analysis endpoints. Stati
 **Paging** none
 
 **Response** `Analytics` rows at `data.items[]`, each `{ location_name, country_iso_code }` (inferred from a sample): {location_name string, country_iso_code string}.
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/content_analysis/locations" \
@@ -179,6 +185,8 @@ Returns paginated web citations (news, blogs, ecommerce, message-boards, organiz
 - `filters` (optional, string) - Advanced filter expression as a JSON array (≤8 conditions). Combined with page_type via AND when both are present.
 
 **Response** `Analytics` rows at `data.items[]` (inferred from a sample): {url string, domain string, main_domain string, country string, language string, domain_rank number, spam_score number, fetch_time string, page_types string[], title string, snippet string, rating null, text_category number[], date_published string}; `sentiment` {anger number, happiness number, love number, sadness number, share number, fun number}; `connotation` {positive number, negative number, neutral number}; `_raw` {type string, url string} (+39 more).
+
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/content_analysis/search" \

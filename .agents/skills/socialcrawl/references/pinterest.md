@@ -25,7 +25,7 @@ Returns pins from a Pinterest board, up to 15 per page. Each pin includes its te
 
 **Use when** you have a board URL: about 15 pins a page, cursor for the rest, include=engagement for pin dates at 1 credit a row. user/boards finds the boards.
 **Cost** price moves with `include` · cache 600 s
-**Pricing** 1 credit for the page. include=engagement holds 1 credit per row, at most 15 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 16 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0.
+**Pricing** 1 credit for the page. include=engagement holds 1 credit per row, at most 15 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 16 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 5.2-8.0 s
 
 **Query params**
@@ -35,8 +35,8 @@ Returns pins from a Pinterest board, up to 15 per page. Each pin includes its te
 - `cursor` (optional, string) - Cursor to get the next page of pins. Take it from `pagination.next_cursor` on the previous response.
 - `include` (optional, enum: engagement) - Set to `engagement` (one token only) to fill `post.published_at` and `post.engagement.likes` (plus any save, comment or share count the board row lacked) in this one call on every row the per-pin lookup can read. A row whose `post.url` is an encrypted `/pin/e1_...` link (every pin measured on 19/10/2026) cannot be read: it stays as it was, is refunded, and `_warnings` carries `engagement_unavailable` or `engagement_partial`. Holds 1 credit per row (at most 15, or `limit`) and keeps only the rows filled from a fresh lookup; rows already in cache and rows that could not be filled are refunded, so the most a call can cost is 1 + rows. Adds 4 to 10 seconds on a fresh page (never more than 12) and nothing when the rows are already cached; read `data.hydration` for the rows, the credits held and kept, and the time.
 - `limit` (optional, integer, 1-15) - Take the top N pins of the page (1 to 15). With `include=engagement` it also caps the extra credits at N: `limit=4&include=engagement` costs at most 5. It is not a page size: `next_cursor` still advances past the full page, so pins beyond N on this page are not returned by the next page.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -49,7 +49,7 @@ Returns pins from a Pinterest board, up to 15 per page. Each pin includes its te
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.hydration`.
++14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/board" \
@@ -81,7 +81,7 @@ Returns one Pinterest pin: its text (the description, or the title when the desc
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}.
++15 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/pin" \
@@ -95,7 +95,7 @@ Searches Pinterest for pins matching a keyword. Each pin includes its permalink 
 
 **Use when** you want to discover pins on a topic; add include=engagement for each pin's saves at 1 credit a row, or call pin when you already have one pin URL.
 **Cost** price moves with `include`, `label` · cache 120 s
-**Pricing** 1 credit for the page. include=engagement holds 1 credit per row, at most 25 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 26 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 1 credit for the page. include=engagement holds 1 credit per row, at most 25 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 26 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 3.0-6.9 s
 
 **Query params**
@@ -106,9 +106,8 @@ Searches Pinterest for pins matching a keyword. Each pin includes its permalink 
 - `include` (optional, enum: engagement) - Set to `engagement` (one token only) to fill `post.engagement.saves`, `.likes` (reactions), `.comments` and `.shares` in this one call on every row the per-pin lookup can read. A row whose `post.url` is an encrypted `/pin/e1_...` link (every pin measured on 19/10/2026) cannot be read: it stays null, is refunded, and `_warnings` carries `engagement_unavailable` (no row filled) or `engagement_partial` (some filled). Holds 1 credit per row (at most 25, or `limit`) and keeps only the rows filled from a fresh lookup; rows already in cache and rows that could not be filled are refunded, so the most a call can cost is 1 + rows and the usual bill is lower. Adds 4 to 10 seconds on a fresh page (never more than 12) and nothing when the rows are already cached; read `data.hydration` for the rows, the credits held and kept, and the time.
 - `limit` (optional, integer, 1-25) - Take the top N rows of the page (1 to 25) after the search has run. With `include=engagement` it also caps the extra credits at N: `limit=5&include=engagement` costs at most 6. It is not a page size: `next_cursor` still advances past the full page, so rows beyond N on this page are not returned by the next page.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -130,7 +129,7 @@ Searches Pinterest for pins matching a keyword. Each pin includes its permalink 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+26 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments} (+7 more). Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.relevance`.
++27 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url} (+8 more). Never filled: `post.content.duration_seconds`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.hydration`, `data.labels`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/search" \
@@ -156,7 +155,7 @@ Returns what people in one market are searching for on Pinterest, with no keywor
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {rank number, term string, country string, market string, type string, search_index number, weekly_change number, monthly_change number, yearly_change number, seasonality number, url string, as_of string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/pinterest/trends" \
@@ -177,6 +176,8 @@ Returns how many times each URL (up to 10 per request, comma-separated) has been
 
 **Response** `Analytics` rows at `data.items[]`, each `{ url, saves, _pinterest }` (inferred from a sample): {url string, saves number}; `_pinterest` {url string, count number}.
 
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
+
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/url-stats" \
   --data-urlencode "urls=https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" \
@@ -195,8 +196,8 @@ Returns boards created by a Pinterest user. Each board includes title, descripti
 
 - `handle` (required) - The username of the user to get boards for. (e.g. broadstbullycom from https://www.pinterest.com/broadstbullycom/) · e.g. `pinterest`
 - `trim` (optional, boolean) - Set to true for a trimmed down version of the response
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -209,7 +210,7 @@ Returns boards created by a Pinterest user. Each board includes title, descripti
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+12 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}. Never filled: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`. Page-level: `data.dropped`.
++12 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {likes, views}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {hashtags null, mentions null}. Never filled: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pinterest/user/boards" \

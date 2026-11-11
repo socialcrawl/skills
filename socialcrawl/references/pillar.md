@@ -26,6 +26,9 @@ Returns data from a Pillar page including display name, bio, avatar, and list of
 
 - `url` (required) - Full URL of the Pillar page · e.g. `https://pillar.io/example`
 
+**Constraints**
+
+
 **Response** `Author` object at `data`, `{ author, computed }` ([full schema](schemas/Author.md))
 
 | Field | Meaning |
@@ -37,7 +40,7 @@ Returns data from a Pillar page including display name, bio, avatar, and list of
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+7 more (types in the full schema): `author` {location}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {links}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++9 more (types in the full schema): `author` {location}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, links, products}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/pillar/page" \

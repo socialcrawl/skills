@@ -1,6 +1,6 @@
 # SocialCrawl Reference Index
 
-Built from **69 platforms, 675 endpoints** - the Freshness Check in SKILL.md compares the live `data.stats` against these totals. Pick the platform row, open its file, read the TOC at the top, then only the section you need.
+Built from **75 platforms, 733 endpoints** - the Freshness Check in SKILL.md compares the live `data.stats` against these totals. Pick the platform row, open its file, read the TOC at the top, then only the section you need.
 
 ## Platforms
 
@@ -10,11 +10,11 @@ Built from **69 platforms, 675 endpoints** - the Freshness Check in SKILL.md com
 |----------|-----------|---------|-----------|
 | TikTok | 38 | GET | [tiktok.md](tiktok.md) |
 | TikTok Shop | 6 | GET | [tiktokshop.md](tiktokshop.md) |
-| Instagram | 43 | GET | [instagram.md](instagram.md) |
+| Instagram | 44 | GET | [instagram.md](instagram.md) |
 | YouTube | 30 | GET/POST | [youtube.md](youtube.md) |
-| Facebook | 31 | GET | [facebook.md](facebook.md) |
-| Twitter/X | 17 | GET | [twitter.md](twitter.md) |
-| LinkedIn | 68 | GET | [linkedin.md](linkedin.md) |
+| Facebook | 32 | GET | [facebook.md](facebook.md) |
+| Twitter/X | 18 | GET | [twitter.md](twitter.md) |
+| LinkedIn | 77 | GET | [linkedin.md](linkedin.md) |
 | Reddit | 14 | GET | [reddit.md](reddit.md) |
 | Threads | 6 | GET | [threads.md](threads.md) |
 | Pinterest | 6 | GET | [pinterest.md](pinterest.md) |
@@ -65,7 +65,7 @@ Built from **69 platforms, 675 endpoints** - the Freshness Check in SKILL.md com
 
 | Platform | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| Google (SERP, ads, Business, hotels) | 12 | GET | [google.md](google.md) |
+| Google (SERP, ads, Business, hotels) | 13 | GET | [google.md](google.md) |
 | Google News (news SERP search) | 1 | GET | [google_news.md](google_news.md) |
 | Finance (quotes, history, statements, options, news) | 8 | GET | [finance.md](finance.md) |
 | Economy (consumer, tourism + US federal spend, contracts, import records) | 5 | GET | [economy.md](economy.md) |
@@ -85,16 +85,16 @@ Built from **69 platforms, 675 endpoints** - the Freshness Check in SKILL.md com
 |----------|-----------|---------|-----------|
 | GitHub | 12 | GET | [github.md](github.md) |
 | Hacker News | 4 | GET | [hackernews.md](hackernews.md) |
-| Product Hunt (current launches feed) | 1 | GET | [producthunt.md](producthunt.md) |
+| Product Hunt (current launches feed) | 5 | GET | [producthunt.md](producthunt.md) |
 | Tavily (web search/extract/crawl) | 4 | GET | [tavily.md](tavily.md) |
 | Perplexity (AI research) | 1 | GET | [perplexity.md](perplexity.md) |
-| Polymarket (prediction markets) | 1 | GET | [polymarket.md](polymarket.md) |
+| Polymarket (prediction markets) | 2 | GET | [polymarket.md](polymarket.md) |
 | Content Analysis (brand mentions + sentiment) | 10 | GET | [content_analysis.md](content_analysis.md) |
 | Jobs (LinkedIn/Indeed/Bing/Xing listings + salaries) | 11 | GET | [jobs.md](jobs.md) |
 | US Congress Trades (STOCK Act disclosures + statistics) | 19 | GET | [us_congress_trades.md](us_congress_trades.md) |
 | On-Page (single-URL SEO audit) | 1 | GET | [on_page.md](on_page.md) |
 | Web Scraping (scrape, search, crawl, map, agent, sessions) | 22 | GET/POST/PATCH/DELETE | [web.md](web.md) |
-| Universal Search (all platforms at once) | 5 | GET | [search.md](search.md) |
+| Universal Search (all platforms at once) | 6 | GET/POST | [search.md](search.md) |
 
 **Link-in-bio:**
 
@@ -110,12 +110,23 @@ Built from **69 platforms, 675 endpoints** - the Freshness Check in SKILL.md com
 
 | Surface | Endpoints | Methods | Reference |
 |----------|-----------|---------|-----------|
-| Prism (cross-platform composites) | 50 | GET/POST | [prism.md](prism.md) |
+| Prism (cross-platform composites) | 53 | GET/POST | [prism.md](prism.md) |
 | Utility (API self-discovery, free except ai-detection) | 13 | GET | [utility.md](utility.md) |
 | Monitors (scheduled recipes + webhooks) | - | GET/POST/PATCH/DELETE | [monitors.md](monitors.md) |
 | Cohorts (audience-filtered mention search) | - | GET/POST/PUT/DELETE | [cohorts.md](cohorts.md) |
 
-Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 675 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
+**Other platforms:**
+
+| Platform | Endpoints | Methods | Reference |
+|----------|-----------|---------|-----------|
+| Airbnb | 4 | GET | [airbnb.md](airbnb.md) |
+| Bing | 4 | GET | [bing.md](bing.md) |
+| Booking.com | 3 | GET | [booking.md](booking.md) |
+| DuckDuckGo | 7 | GET | [duckduckgo.md](duckduckgo.md) |
+| Goodreads | 10 | GET | [goodreads.md](goodreads.md) |
+| Weibo | 8 | GET | [weibo.md](weibo.md) |
+
+Prism endpoints (`/v1/prism/*`) fan out across many platforms and fold the legs into one report (URL lookup, comment harvesting, reputation, share-of-voice, AI consensus answers, crisis radar, creator vetting, video/app/product intelligence). A few composites keep their platform's own path (e.g. `{platform}/profile/full`, `reddit/omni-search`) and are documented in that platform's reference. Monitors (`/v1/monitors/*`) re-run any recipe on a cadence and deliver each result to a signed webhook. Cohorts (`/v1/cohorts/*` + `/v1/cohort-queries/*`) invert social listening: you upload a panel of public identities and ask which of *them* posted your keywords. Both are stateful resource families, **not** registry endpoints, so neither is part of the 733 count, and they use POST/PUT/PATCH/DELETE in addition to GET.
 
 **Withdrawn platforms:** SoundCloud is registered but soft-disabled - every endpoint returns `503 SERVICE_UNAVAILABLE` and never bills, pending a re-source. Say withdrawn, not unsupported.
 
@@ -178,6 +189,10 @@ Writing code against the API, or a paging, quote or CSV job: [codegen.md](codege
 
 One line per endpoint for grep, not for reading: `grep -i transcript references/index.md`. Each line is `METHOD platform/resource: keywords`; the section is in `<platform>.md` (`grep -n '^## GET /v1/youtube/video/transcript ' references/youtube.md`).
 
+- GET airbnb/listing: title property type description area coordinates rating review count photos amenities check times inspect
+- GET airbnb/listing/availability: calendar night months available bookable whether stay start end minimum maximum check open dates
+- GET airbnb/listing/reviews: guest rating text language date name location host reply guests liked complained total review ratings
+- GET airbnb/search: listings place name coordinates rating review count photos priced stay total night discount taxes
 - GET aliexpress/categories: category tree parent subcategory ids names calling search hot
 - GET aliexpress/product: url title sale price original currency shop name images sold count com item discovery
 - GET aliexpress/product/shipping: sku fee origin country min max delivery days ship search quote price stock
@@ -209,10 +224,17 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET apple_music/charts: country chart songs albums videos playlists ranked top artist artwork release date genres see
 - GET apple_music/search: query optionally restricted type song album artist find catalog item keyword track url record
 - GET apple_music/track: title artist duration preview audio url song album record sits performer
+- GET bing/rank: check domain ranks deep whether url path search best position matching scanning positions track
+- GET bing/search: organic position title link domain snippet date plus estimate corrected query related searches questions
+- GET bing/suggestions: search partial query completions suggests see people finish keyword ideas autocomplete
+- GET bing/videos: search hosting site channel duration age view count thumbnail find topic across sites
 - GET bluesky/post: text author attachments reply repost quote counts along replies underneath url plus thread price stock
 - GET bluesky/profile: account public display name description avatar follower following post counts join date verified status
 - GET bluesky/search: posts public matching keyword text author reply repost counts post link find people topic
 - GET bluesky/user/posts: feed text author attachments reply repost quote counts account recent passing handle did identifier price stock
+- GET booking/hotel: com property record address coordinates star rating photos amenities check windows details price stay
+- GET booking/hotel/reviews: guest com property score title liked disliked language date name country reply learn guests ratings
+- GET booking/search: com properties destination stay address coordinates star rating review score photos bookable room option
 - GET content_analysis/categories: category taxonomy entry code name parent look trends decode numeric values mentions
 - GET content_analysis/category-trends: mention volume sentiment time series phrase whole code keyword trend entire apparel look categories
 - GET content_analysis/filters: filterable fields allowed filter value type accepts build valid expression calling search summary sentiment
@@ -231,6 +253,13 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET douyin/search: videos matching keyword caption creator likes comments shares saves hashtags music cover image track
 - GET douyin/search/users: creators matching keyword nickname bio follower count total likes received verification label shortlist outreach
 - GET douyin/trending: hot search board live rank topic value view count video time broke see mainland
+- GET duckduckgo/images: search image thumbnail size source domain filterable color type layout license find topic narrow
+- GET duckduckgo/instant-answer: topic heading summary source image direct definition official website related topics quick factual person
+- GET duckduckgo/news: search articles publisher excerpt publication time image see press covering brand topic right now
+- GET duckduckgo/rank: check domain ranks deep whether url path search best position matching scanning positions track
+- GET duckduckgo/search: organic order position title link displayed address domain snippet date plus zero click summary
+- GET duckduckgo/suggestions: search partial query completions suggests see people finish keyword ideas autocomplete
+- GET duckduckgo/videos: search description duration publisher uploader publication time view count thumbnail find topic across hosting
 - GET ebay/product: listing item title brand price condition mpn upc quantity available watchers seller reputation matters
 - GET ebay/search: listings item price seller rating units sold completed items finds ended billing requires private
 - GET economy/consumer-spend: household spending country category yearly food housing transport euro millions person share total compare
@@ -244,6 +273,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET etsy/shop/products: listings listing title price image name walk catalogue paginate until comes back short feed
 - GET facebook/adlibrary/ad: library details creative cta link run dates display format advertiser url likes categories spend
 - GET facebook/adlibrary/ad/transcript: library video spoken words captions available transcribed itself says loud creative spend speech subtitles
+- GET facebook/adlibrary/advertiser: library profile likes verification instagram account advertises followers political standing spend company search see audience
 - GET facebook/adlibrary/company/ads: library running creative status spend targeting info advertiser pageid name find keyword across advertisers
 - GET facebook/adlibrary/search/ads: library matching keyword creative text images sponsor info running status find across advertisers advertiser
 - GET facebook/adlibrary/search/companies: library advertiser matching name handle verification badge follower count find pageid pass company ads
@@ -255,10 +285,10 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET facebook/marketplace/item: listing title description price location condition photos seller availability flags search numeric url
 - GET facebook/marketplace/location/search: locations cities matching term lat lng coordinates turn place name pass
 - GET facebook/marketplace/search: listings near lat lng title price location photo delivery types sold live flags find
-- GET facebook/post: details text comment share counts reactions breakdown media attachments author info url profile posts
+- GET facebook/post: details text comment share counts reactions breakdown media whether video photo author group posted
 - GET facebook/post/comment/replies: author name reply text count creation time comments pass response feedback expansion token
 - GET facebook/post/comments: commenter name comment text count reply creation time discussion feedback expansion token replies
-- GET facebook/post/transcript: video spoken words minutes captions none transcription said caption text engagement speech subtitles stats metrics
+- GET facebook/post/transcript: video spoken words minutes captions none transcription said photo text nothing transcribe check media subtitles
 - GET facebook/profile: public display name image bio follower count url quick snapshot pulling posts photos reels
 - GET facebook/profile/events: upcoming past title link start time venue city rendered line cancelled online flags covers
 - GET facebook/profile/full: recent posts computed analytics plus latest figures engagement rate views followers posting cadence top stats metrics audience
@@ -305,7 +335,18 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET github/repo/top-issues: feature request complaint repository picked reactions much discussed fast users dislike without paging through
 - GET github/search: issues pull requests across match query plus total number matches syntax find many repositories
 - GET github/user/profile-velocity: contribution dossier picture pull requests opened merged outside repositories contribute judge active developer work
+- GET goodreads/author: name photo biography follower count number works birthplace website profile chain books everything written
+- GET goodreads/author/books: average rating review counts publication year edition count sorted popularity title date see readers
+- GET goodreads/book: title authors series description genres average rating star breakdown counts edition details awards current
+- GET goodreads/book/editions: edition format publisher publication date language isbn asin match right find given
+- GET goodreads/book/reviews: reader rating text date likes reviewer sorted popular newest oldest readers actually said filter ratings
+- GET goodreads/lists: listopia tag books ranked rank score votes carry given book voter counts see readers
+- GET goodreads/quotes: book author tag matching keywords text tags likes find lines readers highlight send query
+- GET goodreads/review/comments: readers left text date commenter book reviews passing conversation started ratings
+- GET goodreads/search: books matching title author keyword authors average rating review counts publication year series find
+- GET goodreads/series: reading order books position rating counts plus title description comes back whole lay compare
 - GET google/ad: details ads transparency center creative url copy image advertiser date published company expand since
+- GET google/adlibrary/advertiser: verified identity ads transparency legal name country beside display center confirm company really stands
 - GET google/adlibrary/advertisers/search: library ads transparency center matching name display advertiser country look company brand
 - GET google/business/extended-reviews: multi source place listing including ones sites tripadvisor yelp review text star rating owner ratings
 - GET google/business/info: profile name category star rating address phone coordinates opening hours whether listing claimed look
@@ -390,7 +431,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET instagram/profile/reels/full: views likes comments reel share counts available user count second source exposes plus coverage
 - GET instagram/reels/trending: public shortcode url caption media urls engagement counts shown account sample global trends takes batch stats metrics
 - GET instagram/search: accounts hashtags places mixed matches query payload box shows profiles hashtag location split types
-- GET instagram/search/hashtag: feed flat credits keyword topic discovery reels public posts carrying shortcode url caption media
+- GET instagram/search/hashtag: feed credit ranking paginates keyword topic discovery reels public posts carrying shortcode url caption
 - GET instagram/search/location: locations places matching keyword name coordinates plus title subtitle pass posts facebook place
 - GET instagram/search/mentions: posts tag mention account accounts reel caption merged newest labelled link track tags brand
 - GET instagram/search/music: audio tracks matching keyword artist title cover artwork urls duration usage details find specific batch
@@ -401,6 +442,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET instagram/stories: user active live right now image video urls thumbnail duration capture time author check batch
 - GET instagram/story/download: resolution image video urls metadata specific stories pass author user plus pull media batch
 - GET instagram/tagged: posts user tag given shortcode url caption media urls engagement counts account posted see batch stats metrics
+- GET instagram/trending/searches: search terms itself promoting right now order sections rounded count posts see putting front
 - GET instagram/user/embed: html code public profile author ext ready paste frame loads url plus follower post
 - GET instagram/username-suggestions: suggested available usernames built keyword supply picking new handle invents name ideas look existing
 - GET jobs/bing: job listing aggregated title company location employment type description apply url search passing link
@@ -451,6 +493,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET linkedin/company: tab name description follower count headquarters location website logo look url numeric
 - GET linkedin/company/affiliated-pages: showcase name url speciality follower count logo map parent brand regional product pulling posts
 - GET linkedin/company/also-viewed: people shows name url logo find nearby pass numeric
+- GET linkedin/company/bulk: several profile tab fields names could find enrich companies once calling pass urls slugs batch
 - GET linkedin/company/by-domain: look website owns name description follower count headquarters logo numeric url looks record
 - GET linkedin/company/employees-count: employee optionally location many members employer broken down headcount city country ext headline total
 - GET linkedin/company/insights: aggregate members headcount breakdowns name count pairs covering locations schools job functions skills service
@@ -478,8 +521,10 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET linkedin/profile/comments: member left people posts comment text post sits timestamp track someone activity conversations specific
 - GET linkedin/profile/complete: member experience education skills recommendations background author shape experiences educations item shapes checks enrichment
 - GET linkedin/profile/contact: member public info details exposes publicly websites phone numbers address wechat twitter alongside name
+- GET linkedin/profile/courses: member course name number role school belongs see someone studied beyond degree educations schools
 - GET linkedin/profile/educations: member education history entry school degree field study years attended schooling detail experiences covers
 - GET linkedin/profile/experiences: member work history role job title company dates plus location employment type description wherever
+- GET linkedin/profile/featured: items member features pins section item link preview image title see posts articles links
 - GET linkedin/profile/full: company recent posts computed analytics member latest metrics together engagement rate views followers posting stats audience
 - GET linkedin/profile/honors: member awards award title issuer date description certifications live published work publications
 - GET linkedin/profile/images: member image posts post text links engagement counts publish time photo format videos stats metrics
@@ -488,16 +533,22 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET linkedin/profile/interests/newsletters: member follows name url see follow
 - GET linkedin/profile/interests/schools: member follows school name url search turns university
 - GET linkedin/profile/interests/top-voices: member follows voice profiles name url see follow
+- GET linkedin/profile/languages: member language proficiency labels code level match person requirement without reading whole
+- GET linkedin/profile/organizations: member belongs name position held dates role tied find memberships associations societies experiences
+- GET linkedin/profile/patents: member patent title number issue filing dates pending status inventors check person inventions publications
 - GET linkedin/profile/position-skills: member positions role listed job experiences flat
 - GET linkedin/profile/posted-jobs: member job title hiring company location posting date person url roles listed opening employer
 - GET linkedin/profile/posts: member published text author name comment share counts media publish time person posted themselves
 - GET linkedin/profile/posts/archive: walk member complete post history publish times share counts endpoints cannot metered credits try
+- GET linkedin/profile/projects: member project title description dates link members worked see work person shows outside job
 - GET linkedin/profile/publications: member title publisher publication date description link articles papers books person published posts
 - GET linkedin/profile/reactions: posts member reacted post text original author comment share counts date see person engages
 - GET linkedin/profile/recommendations: member recommender name headline recommendation text date written references set type received given choose
 - GET linkedin/profile/similar: members given groups handle headline url picture find nearby people search filters title company
 - GET linkedin/profile/skills: member listed skill name endorsements shown against score person requirement separately roles experiences
+- GET linkedin/profile/skills/endorsers: endorsed member skill members name headline photo url see vouches pass
 - GET linkedin/profile/stats: member follower connection counts audience size count reach numbers pull whole
+- GET linkedin/profile/test-scores: member name score written date exam assessment person chose show certifications covers licences certificates
 - GET linkedin/profile/top-position: company member current name website headcount industries locations job title find works now canonical
 - GET linkedin/profile/videos: member video posts post text thumbnail links engagement counts date collect person pass url stats metrics
 - GET linkedin/profile/volunteers: member volunteer experiences experience entry role organisation cause dates unpaid community roles paid work
@@ -543,6 +594,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET pinterest/url-stats: save counts external urls many times saved through button measure pull passing since http batch
 - GET pinterest/user/boards: created title description pin count cover image someone handle pass board url pins
 - GET polymarket/research: prediction markets multi query topic ranked well match event title market questions outcome prices
+- GET polymarket/search: prediction markets match term event title market questions outcome prices volume liquidity end date
 - GET prism/adverse-screen: person public social profiles posts flag citing post human review probability category severity level
 - GET prism/ai-visibility: share voice geo monitoring prompt set reruns brand appearance engine plus cited domain ranking
 - GET prism/answers: multi engine consensus question perplexity grok tavily verbatim merged citations agreement matrix answered several
@@ -559,17 +611,19 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET prism/comments: comment post replies nested server paginated completion tiktok youtube facebook reddit hacker news instagram
 - GET prism/creator-card: handle unified author cards across tiktok instagram youtube profile platform followers verified status bio audience
 - GET prism/creator-vet: partnering engagement quality commenter authenticity posting cadence controversy signals optionally across platforms vetting rate stats metrics
+- GET prism/creators: find influencers post niche tiktok instagram youtube linkedin measure rank background run measured recent
+- POST prism/creators: start creator search json body handle exclusions too long url runs background answers run
 - GET prism/crisis-postmortem: post mortem said timeline across web reddit hacker news social origin peak propagation sequence
 - GET prism/crisis-radar: stateless breach check score daily mention volume negative share confirmation severity grade calm watch
 - GET prism/demand-signals: consumer nowcast app review velocity web mention slope reddit commerce levels fused published index
 - GET prism/devtool-pulse: developer brand health repo dossier hacker news reaction reddit chatter dev blog echo snapshot
 - GET prism/discover: search many platforms keywords description keep date window judge row posts background run found
 - POST prism/discover: start run json body groups too long url runs background answers started status estimate
-- POST prism/discover/inputs: store long author once reuse creates stored handles item count expiry charge authors keep
+- POST prism/discover/inputs: store long author exclude once reuse creates handles post ids urls account keys item batch
 - GET prism/earliness: early term appeared platform trends ads relevant post date started whether exist gap days
 - GET prism/earned-media: brand footprint news tech press fresh web clips deduped ranked outlet coverage rollup deduplicated
 - GET prism/employer-brand: company people say working across reddit web youtube naver linkedin voice news plus tone
-- GET prism/find-accounts: turn person company name ranked candidate instagram tiktok linkedin threads request match level confidence
+- GET prism/find-accounts: turn person company name ranked candidate instagram tiktok linkedin threads youtube request match level
 - GET prism/format-lift: hook works creator measured against posts recent compares median small bucket leaves empty see
 - GET prism/handle-audit: should pull scores across platforms ranks best ones projects volume credit cost scored verdict
 - GET prism/investigate: bounded walk socialcrawl turns research goal trail searches profiles comments profile opens comment pulls
@@ -582,6 +636,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET prism/lookup: universal post product url dispatcher video repo link right detail unified response behind social
 - GET prism/mentions: public posts comments mention handle contain link search find account post index
 - GET prism/org-radar: github footprint top repos expanded dossier releases issue load request complaint rolled organization starred
+- POST prism/post-comments: urls across platforms priced comment url send order sent status row rows platform hold batch
 - POST prism/post-stats: mixed platform urls current engagement url failed refunded view comment share save counts batch metrics
 - GET prism/product-reviews: across amazon google shopping trustpilot folded cross marketplace rating themed pros cons report source ratings
 - GET prism/profile/comments: new recent posts newest instagram facebook youtube tiktok naming post since pass watch account
@@ -594,6 +649,10 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET prism/video-intel: url detail stats transcript top comments commenter sample across youtube tiktok rumble instagram everything captions subtitles
 - GET prism/voice: person public posts across threads bluesky truth social time merged recent ordered feed plus
 - GET producthunt/launches: current product hunt featuring now name tagline url maker post dates spot new products
+- GET producthunt/leaderboard: product hunt day week month year since ranked launches rank name tagline link upvotes
+- GET producthunt/product: hunt launch tagline description website followers review count rating launches categories links screenshots latest audience
+- GET producthunt/product/comments: hunt launch discussion flattened order reply parent text votes count pinned flag time commenter
+- GET producthunt/topic: products product hunt name tagline link logo followers review count rating launches latest launch audience
 - GET quora/answers: search matching keyword including answer text author credential upvotes views body question title
 - GET quora/post: question url title body text published date publish time
 - GET quora/posts: search space spaces matching keyword url author upvotes publish time find question answer threads
@@ -622,6 +681,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET rumble/video/transcript: spoken text captions published none empty nothing charged said title description counts subtitles
 - GET search/creators: fused creator discovery across tiktok threads instagram ranked relevance followers verification youtube facebook people audience
 - GET search/everywhere: universal social across platforms ranked clustered set query run parallel reddit youtube tiktok instagram
+- POST search/everywhere: run universal searches background turn watch repeats schedule delivers new rows status ready urls batch
 - GET search/forums: fused forum across reddit hacker news naver 지식in top comments inline hero threads default
 - GET search/multi: query platform price chosen tagged deduped url going further calling several platforms yourself ranked
 - GET search/news: planned multi country query localized fanned across independent indexes deduplicated articles google editions countries
@@ -636,7 +696,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET sephora/search: products keyword matching product title brand price rating image find name ingredient query matches
 - GET sephora/search/suggestions: autocomplete partial query plus few matching products expand keyword run
 - GET sephora/stores: find near coordinate latitude longitude pair name address phone coordinates distance weekly hours store
-- GET snapchat/profile: user account public display name bitmoji avatar url subscriber count bio confirm exists details
+- GET snapchat/profile: user account public display name bitmoji avatar url subscriber count bio publisher hides still
 - GET snapchat/spotlight/comments: snap text display name reaction count nested reply timestamp url comment thread paging cursor
 - GET spotify/album: title artists release date cover art copyright info tracks whole record care song track
 - GET spotify/artist: details name follower count monthly listeners genres related artists url itself tracks albums
@@ -737,6 +797,7 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET twitter/community: details name description member count rules creation date url group itself tweets posted inside
 - GET twitter/community/tweets: recent posted inside text engagement counts author info activity group details stats metrics
 - GET twitter/profile: user account public follower count following tweet bio banner image urls verification status handle batch
+- GET twitter/profile/about: account details plus region based signed username changes breakdown behind blue check whether handle
 - GET twitter/profile/full: recent posts computed analytics account tweets metrics engagement rate views followers posting cadence top stats audience
 - GET twitter/search/hashtag: posts carrying carry checked row text counts media author time plus left track campaign
 - GET twitter/search/mentions: posts mention account reply checked labelled retweet link without default track people say brand
@@ -812,6 +873,14 @@ One line per endpoint for grep, not for reading: `grep -i transcript references/
 - GET web/sessions/{session_id}: interactive browser status expiry time billing details check whether still open sending interactions
 - DELETE web/sessions/{session_id}: close interactive closes browser settles credits still held soon done waiting expire
 - POST web/sessions/{session_id}/execute: interaction running code open browser success stdout stderr exit killed flag final expression value
+- GET weibo/comment/replies: oldest naming answers province posted likes author post comments passing thread
+- GET weibo/post: complete text author time posted repost comment counts topics photos video row shows shortened
+- GET weibo/post/comments: liked newest text time province likes reply count author follower audience reaction chain comment
+- GET weibo/profile: account name bio verification reason follower following post counts location gender birthday date created
+- GET weibo/profile/posts: account newest repost comment counts province country posted topics media posting long shortened chain
+- GET weibo/search: posts back through time public matching keyword topic newest counts province posted topics media
+- GET weibo/search/users: accounts matching name keyword screen bio verification reason post count gender find account chain
+- GET weibo/trending: hot search live topic rank title heat score category new badge joined see china
 - GET xiaohongshu/post: note body images video creator engagement counts url search rows carry short summary stats metrics
 - GET xiaohongshu/post/comments: note top level text commenter likes reply count province reaction threads separate included
 - GET xiaohongshu/profile: creator rednote bio avatar followers following notes posted likes received pull pass url user audience

@@ -43,7 +43,7 @@ Returns one Gab post in the unified Post shape under `data.post`: text, media, a
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {quoted_post, in_reply_to_id, in_reply_to_username, retweeted_post}; `post.flags` {deleted}. Never filled: `post.engagement.saves`, `post.engagement.views`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {in_reply_to_id, in_reply_to_username, quoted_post, retweeted_post}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null} (+4 more). Never filled: `post.engagement.saves`, `post.engagement.views`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gab/post" \
@@ -57,15 +57,15 @@ Returns the comments on a Gab post, up to 25 a page, in the unified Comment shap
 
 **Use when** you want to read the discussion under a Gab post, sorted newest, oldest or top, paging on with next_cursor.
 **Cost** cache 300 s
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · ≈25/page (observed once) · depth unknown · N items ≈ ceil(N/25) x 1 credits
 
 **Query params**
 
 - `url` (required) - Gab post URL (`https://gab.com/<handle>/posts/<id>`). A bare numeric post id is accepted too. · e.g. `https://gab.com/a/posts/117445750063805239`
 - `cursor` (optional, string) - The `next_cursor` value from the previous page (a page number), passed back unchanged.
 - `sort` (optional, enum: newest | oldest | top) - `newest` (the default), `oldest`, or `top` (Gab's own ranking, which favours the most liked comments).
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -78,7 +78,7 @@ Returns the comments on a Gab post, up to 25 a page, in the unified Comment shap
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+8 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed` {language}. Page-level: `data.comment_recency`, `data.dropped`.
++8 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.flags` {pinned null}. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gab/post/comments" \
@@ -109,7 +109,7 @@ Returns a Gab account's public profile in the unified Author shape under `data.a
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.likes_count`.
++13 more (types in the full schema): `author` {followers, following, joined_at, posts_count, private, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author.likes_count`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gab/profile" \
@@ -123,14 +123,14 @@ Searches public Gab posts by keyword, newest first, up to 25 a page, in the unif
 
 **Use when** you want to find what Gab is saying about a topic; to read one account, use gab/user/posts instead.
 **Cost** cache 120 s
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · ≈24/page (observed once) · depth unknown · N items ≈ ceil(N/24) x 1 credits
 
 **Query params**
 
 - `query` (required) - Search terms matched against post text. · e.g. `RNLI`
 - `cursor` (optional, string) - The `next_cursor` value from the previous page (a page number), passed back unchanged.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -143,7 +143,7 @@ Searches public Gab posts by keyword, newest first, up to 25 a page, in the unif
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {quoted_post, in_reply_to_id, in_reply_to_username, retweeted_post}; `post.flags` {deleted}. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {in_reply_to_id, in_reply_to_username, quoted_post, retweeted_post}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null} (+4 more). Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gab/search/posts" \
@@ -157,14 +157,14 @@ Returns a Gab account's timeline, newest first, up to 20 posts a page, in the un
 
 **Use when** you want it for an account's full history by handle, passing next_cursor back as cursor to walk to older posts.
 **Cost** cache 600 s
-**Paging** cursor · page size not measured · depth unknown
+**Paging** cursor · ≈19/page (observed once) · depth unknown · N items ≈ ceil(N/19) x 1 credits
 
 **Query params**
 
 - `handle` (required) - Gab username without the @ (letters, digits and underscores, up to 30 characters), as in gab.com/<handle>. · e.g. `a`
 - `cursor` (optional, string) - The `next_cursor` value from the previous page, passed back unchanged to fetch the next older page.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -177,7 +177,7 @@ Returns a Gab account's timeline, newest first, up to 20 posts a page, in the un
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {quoted_post, in_reply_to_id, in_reply_to_username, retweeted_post}; `post.flags` {deleted}. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`.
++18 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.ext` {in_reply_to_id, in_reply_to_username, quoted_post, retweeted_post}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null} (+4 more). Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gab/user/posts" \

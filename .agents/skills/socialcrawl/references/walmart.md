@@ -41,6 +41,7 @@ Returns products listed in a Walmart category, up to 100 per call, with title, p
 - `facet` (optional, string) - Opaque refinement token taken from a previous response's facet data (for example a brand or category filter).
 - `country` (optional, enum: US | CA) - Walmart marketplace as a two-letter country code: US (walmart.com, default) or CA (walmart.ca). A product id from one marketplace will not resolve in the other.
 - `limit` (optional, integer, 1-100) - Products per page, 1 to 100. Defaults to 40. Enforced by SocialCrawl: the page is trimmed to exactly this many rows. · e.g. `40`
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -51,9 +52,9 @@ Returns products listed in a Walmart category, up to 100 per call, with title, p
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.description` | Product description. |
 
-+9 more (types in the full schema): `product` {description, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`.
++9 more (types in the full schema): `product` {image_urls, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `walmart/reviews` (`product_id` ← `data.items[].product.id`) - Get Walmart product reviews. · `walmart/product` (`product_id` ← `data.items[].product.id`) - Get a Walmart product by id. · `walmart/offers` (`product_id` ← `data.items[].product.id`) - Get every seller offering a Walmart product.
 
@@ -80,14 +81,14 @@ Returns the marketplace offers for a Walmart item: seller name and id, price, cu
 
 | Field | Meaning |
 |---|---|
+| `seller.id` | The seller's id: its domain or a slug of its name. |
 | `seller.name` | Seller name |
+| `seller.url` | URL of the seller's offer page. |
+| `seller.annotation` | Note shown with the offer, for example a special offer. |
+| `seller.availability` | Stock status of the offer as the seller words it. |
 | `seller.condition` | Item condition… |
-| `seller.id` |  |
-| `seller.url` |  |
-| `seller.annotation` |  |
-| `seller.availability` |  |
 
-+4 more (types in the full schema): `seller.price` {base, currency, shipping, total}. Also in the sample: `seller` {domain null}; `seller.price` {tax null}; `seller.rating` {average null, count null}. Page-level: `data.dropped`.
++4 more (types in the full schema): `seller.price` {base, currency, shipping, total}. Also in the sample: `seller` {domain null}; `seller.price` {tax null}; `seller.rating` {average null, count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/walmart/offers" \
@@ -117,9 +118,9 @@ Returns full product detail for a Walmart item: title, brand, model, UPC, both d
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.description` | Product description. |
 
-+11 more (types in the full schema): `product` {description, seller, specifications, variations}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}.
++11 more (types in the full schema): `product` {image_urls, seller, specifications, variations}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}.
 
 **Next** `walmart/reviews` (`product_id` ← `data.product.id`) - Get Walmart product reviews. · `walmart/offers` (`product_id` ← `data.product.id`) - Get every seller offering a Walmart product.
 
@@ -135,7 +136,7 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 
 **Use when** you want what shoppers wrote about a Walmart item. Sort the results yourself, since the sort option does not guarantee an order.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 7.8-7.8 s
 
 **Query params**
@@ -146,9 +147,8 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 - `sort` (optional, enum: relevancy | recent | rating_high_low | rating_low_high) - Which reviews to return: relevancy (default), recent, rating_high_low, or rating_low_high. Changes the selection but does not guarantee the returned page is ordered; sort client-side if you need a strict order. · e.g. `recent`
 - `rating` (optional, integer, 1-5) - Return only reviews with this exact star rating, 1 to 5. Applied exactly.
 - `country` (optional, enum: US | CA) - Walmart marketplace as a two-letter country code: US (walmart.com, default) or CA (walmart.ca). A product id from one marketplace will not resolve in the other.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -161,13 +161,13 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+8 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title}; `review.author` {name}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++8 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/walmart/reviews" \
@@ -195,6 +195,7 @@ Returns Walmart search results for a keyword: title, product id, URL, image, pri
 - `store_id` (optional, string) - Walmart store id, to restrict results to one physical store's assortment.
 - `facet` (optional, string) - Opaque refinement token taken from a previous response's facet data (for example a brand or category filter).
 - `country` (optional, enum: US | CA) - Walmart marketplace as a two-letter country code: US (walmart.com, default) or CA (walmart.ca). A product id from one marketplace will not resolve in the other.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -205,9 +206,9 @@ Returns Walmart search results for a keyword: title, product id, URL, image, pri
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.description` | Product description. |
 
-+9 more (types in the full schema): `product` {description, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`.
++9 more (types in the full schema): `product` {image_urls, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `walmart/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `walmart/reviews` (`product_id` ← `data.items[].product.id`) - Customer reviews of each product. · `walmart/offers` (`product_id` ← `data.items[].product.id`) - Get every seller offering a Walmart product.
 

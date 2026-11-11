@@ -81,7 +81,7 @@ Returns a Naver blog's public card: the blog id, the blog's name (`author.ext.bl
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-+13 more (types in the full schema): `author` {verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {blog_name, blog_no, official_blog, power_blog, topic, visitors_today, visitors_total}. Never filled: `author.bio`, `author.following`, `author.likes_count`, `author.posts_count`.
++15 more (types in the full schema): `author` {verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {blog_name, blog_no, business_hours, official_blog, power_blog, products, topic, visitors_today, visitors_total}. Never filled: `author.bio`, `author.following`, `author.likes_count`, `author.posts_count`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/blog" \
@@ -95,15 +95,15 @@ Returns a Naver blog's posts, newest first, 30 a page: post id, link, title (`po
 
 **Use when** you want to keep a full record of a blog's posts and catch each new one. Use naver/blog/search to find posts by keyword.
 **Cost** cache 600 s
-**Paging** page (native `page`) · page size not measured · depth unknown · typical 1.0-1.3 s
+**Paging** page (native `page`) · ≈30/page (observed once) · depth unknown · N items ≈ ceil(N/30) x 1 credits · typical 1.0-1.3 s
 
 **Query params**
 
 - `handle` (optional, string) - The Naver blog id, e.g. flock8979 (the part after blog.naver.com/). Send this or url. · e.g. `flock8979`
 - `url` (optional, string) - The blog's link, e.g. blog.naver.com/flock8979 or m.blog.naver.com/flock8979. Send this or handle.
 - `page` (optional, integer, 1-1000) - Page number, 30 posts a page (default 1). Prefer `cursor`.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -114,13 +114,13 @@ Returns a Naver blog's posts, newest first, 30 a page: post id, link, title (`po
 | Field | Meaning |
 |---|---|
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 | `post.author.username` | Author username |
-| `computed.content_category` | Keyword-classified content category… |
 
-+11 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.content` {thumbnail_url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}; `post.ext` {title}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.saves`. Page-level: `data.dropped`.
++11 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.content` {thumbnail_url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}; `post.ext` {published_at_epoch number, hashtags null, mentions null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.saves`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/blog/posts" \
@@ -134,8 +134,8 @@ Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns r
 
 **Use when** you want it for long form Korean blog writing, which is where most Korean product reviews and how to guides live.
 **Cost** price moves with `label` · cache 120 s
-**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · price per N items not proven · typical 2.5-6.1 s
+**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · price per N items not proven · typical 2.5-6.1 s
 
 **Query params**
 
@@ -144,9 +144,8 @@ Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns r
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. Page deeper with `sort=date`.
 - `sort` (optional, enum: sim | date) - Sort order. Accepted values: sim|date. Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call. `date` lists the newest first, but Naver serves only the first 1,000 rows of a query (`start` caps at 1000), so on a common word it reaches back hours or days, not months, and on a multi-word query Naver also loosens the match. To cover a longer window, search narrower terms so the newest 1,000 rows span it, and add `since=`: rows dated before it are left off each page.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -162,13 +161,13 @@ Searches naver.com/blog. Korea's dominant long-form blogging platform. Returns r
 | Field | Meaning |
 |---|---|
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
-| `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+17 more (types in the full schema): `computed` {estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {display_name, url}; `post.flags` {deleted}; `post.ext` {title}. Also in the sample: `post.flags` {nsfw null, spoiler null} (+1 more). Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {display_name, url}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null} (+1 more). Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/blog/search" \
@@ -208,8 +207,8 @@ Searches cafe.naver.com. Korea's largest user-community platform (analog of Redd
 
 **Use when** you want it for Korean community discussion; many cafes are members only, so a link may show only a teaser.
 **Cost** price moves with `label` · cache 120 s
-**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · price per N items not proven · typical 5.2-7.8 s
+**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · price per N items not proven · typical 5.2-7.8 s
 
 **Query params**
 
@@ -218,9 +217,8 @@ Searches cafe.naver.com. Korea's largest user-community platform (analog of Redd
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. Page deeper with `sort=date`.
 - `sort` (optional, enum: sim | date) - Sort order. Accepted values: sim|date. Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call. `date` lists the newest first, but Naver serves only the first 1,000 rows of a query (`start` caps at 1000), so on a common word it reaches back hours or days, not months, and on a multi-word query Naver also loosens the match. Cafe rows carry no date, so `since=` cannot narrow them.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -236,13 +234,13 @@ Searches cafe.naver.com. Korea's largest user-community platform (analog of Redd
 | Field | Meaning |
 |---|---|
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
-| `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+16 more (types in the full schema): `computed` {labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {display_name, url}; `post.flags` {deleted}; `post.ext` {title}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++16 more (types in the full schema): `computed` {estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.author` {display_name, url}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/cafearticle/search" \
@@ -256,7 +254,7 @@ Searches terms.naver.com. Naver Knowledge Encyclopedia, a curated reference corp
 
 **Use when** you want it for curated reference definitions, as opposed to kin/search which returns questions asked by the public.
 **Cost** cache 120 s
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.6-2.1 s
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.6-2.1 s
 
 **Query params**
 
@@ -264,10 +262,11 @@ Searches terms.naver.com. Naver Knowledge Encyclopedia, a curated reference corp
 - `display` (optional, integer, 1-100) - Number of items to return per page. Defaults to 10, cap 100; `display=101` returns 400. · e.g. `10`
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. This corpus ignores `sort`, so `sort=date` does not avoid the repeats.
 - `sort` (optional, string) - Sort order. Accepted values: (sort ignored). Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ title, link, description, thumbnail }` (inferred from a sample): {title string, link string, description string, thumbnail string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/encyc/search" \
@@ -301,7 +300,7 @@ Searches Naver Image: image search across crawled Korean web. Returns images und
 
 **Use when** you want to find Korean web images for a query; it returns the image files, not the pages hosting them.
 **Cost** cache 120 s
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.7-2.0 s
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.7-2.0 s
 
 **Query params**
 
@@ -310,8 +309,8 @@ Searches Naver Image: image search across crawled Korean web. Returns images und
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. Page deeper with `sort=date`.
 - `sort` (optional, enum: sim | date) - Sort order. Accepted values: sim|date. Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call. `date` lists the newest first, but Naver serves only the first 1,000 rows of a query (`start` caps at 1000), so on a common word it reaches back hours or days, not months, and on a multi-word query Naver also loosens the match.
 - `filter` (optional, enum: all | large | medium | small) - Restrict to an image size band: `all` (default), `large`, `medium`, or `small`.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -324,7 +323,7 @@ Searches Naver Image: image search across crawled Korean web. Returns images und
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+5 more (types in the full schema): `computed` {language, save_rate}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`.
++5 more (types in the full schema): `computed` {language, save_rate}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.published_at`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/image/search" \
@@ -338,7 +337,7 @@ Searches kin.naver.com. Korea's dominant Q&A community (analog of StackOverflow 
 
 **Use when** you want to read the real questions Korean users ask about a topic, in their own words.
 **Cost** cache 120 s
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 2.5-3.1 s
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 2.5-3.1 s
 
 **Query params**
 
@@ -347,10 +346,11 @@ Searches kin.naver.com. Korea's dominant Q&A community (analog of StackOverflow 
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. Page deeper with `sort=date`.
 - `sort` (optional, enum: sim | date | point) - Sort order. Accepted values: sim|date|point. Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call. `date` lists the newest first, but Naver serves only the first 1,000 rows of a query (`start` caps at 1000), so on a common word it reaches back hours or days, not months, and on a multi-word query Naver also loosens the match.
 - `group` (optional, enum: question) - Send `question` to get one row per question. Naver returns one row per answer, so a question with three matching answers fills three rows; grouped, its best-ranked row stands for it and carries `answers_on_page` and `post.ext.answer_nos`. Grouping is within the page, the price is unchanged, and paging still advances by the rows Naver served.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ title, link, description }` (inferred from a sample): {title string, link string, description string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/kin/search" \
@@ -374,7 +374,7 @@ Searches map.naver.com places. Korean business / point-of-interest catalog. Retu
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {title string, link string, category string, description string, telephone string, address string, roadAddress string, mapx string, mapy string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/local/search" \
@@ -388,8 +388,8 @@ Searches news.naver.com: aggregated Korean news from licensed publishers. Return
 
 **Use when** you want it for Korean press coverage; for news in other markets and languages use google_news/search instead.
 **Cost** price moves with `label` · cache 120 s
-**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · price per N items not proven · typical 2.6-2.7 s
+**Pricing** 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · price per N items not proven · typical 2.6-2.7 s
 
 **Query params**
 
@@ -398,9 +398,8 @@ Searches news.naver.com: aggregated Korean news from licensed publishers. Return
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. Page deeper with `sort=date`.
 - `sort` (optional, enum: sim | date) - Sort order. Accepted values: sim|date. Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call. `date` lists the newest first, but Naver serves only the first 1,000 rows of a query (`start` caps at 1000), so on a common word it reaches back hours or days, not months, and on a multi-word query Naver also loosens the match. `since=` sets `sort=date` and ends the walk at the date, so narrow the query to reach further back.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` · `relevance` (score | filter) · `relevant_to` · `relevance_threshold` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -417,13 +416,13 @@ Searches news.naver.com: aggregated Korean news from licensed publishers. Return
 | Field | Meaning |
 |---|---|
 | `post.content.text` | Post caption, description, or text content |
+| `post.ext.title` | The post title on its own. |
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
-| `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+15 more (types in the full schema): `computed` {estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.flags` {deleted}; `post.ext` {title}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`.
++15 more (types in the full schema): `computed` {engagement_rate, estimated_reach, labels_evidence, language, relevance, save_rate}; `computed.labels` {ai_style, ai_written, injection, intent, mention, niche, quality, sponsored}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.relevance`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/news/search" \
@@ -455,11 +454,11 @@ Returns the Naver Place card of a local business: name, category, address, phone
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
 | `place.url` | Website or canonical URL |
+| `place.address` | Street address as the source prints it. |
+| `place.categories` | Additional categories beyond the primary one. |
 | `place.category` | Primary category… |
-| `place.reviews_count` | Number of ratings |
-| `place.address` |  |
 
-+14 more (types in the full schema): `place` {categories, description, image_urls, latitude, longitude, phone}; `place.ext` {blog_reviews_count, booking_url, keywords, status, status_description, visitor_reviews_count}; `place.rating` {max, value}. Never filled: `place.price_level`, `place.verified`.
++14 more (types in the full schema): `place` {description, image_urls, latitude, longitude, phone, reviews_count}; `place.ext` {blog_reviews_count, booking_url, keywords, status, status_description, visitor_reviews_count}; `place.rating` {max, value}. Never filled: `place.price_level`, `place.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/place" \
@@ -493,7 +492,7 @@ Returns where one Naver Place ranks in the Naver Map result list for up to 10 ke
 - `lng` is a no-op without `lat` - sending it alone is a free 400.
 - `keywords`: at most 10 comma-separated values.
 
-**Response** `Analytics`. Fields not published yet - call it once; `/v1/utility/endpoint?id=naver/place/rank` serves the current contract.
+**Response** `Analytics` object at `data` (inferred from a sample): `place` {id string, name string, url string}; `point` {latitude number, longitude number, source string}; {ads_checked boolean, checked_at string}; `results[]` {query string, found boolean, rank number, rank_label string, ad_rank null, total_results number, scanned number, visitor_reviews_count number, blog_reviews_count number}; `results[].top[]` {rank number, id string, name string, category string, visitor_reviews_count number, blog_reviews_count number, distance number}.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/place/rank" \
@@ -516,9 +515,8 @@ Returns the 20 newest visitor reviews of a Naver Place (or Naver's recommended 2
 - `id` (optional, string) - The Naver Place id, e.g. 11669922 (the number in the place's link). Send this or url. · e.g. `11669922`
 - `url` (optional, string) - The place's link as Naver shows it: m.place.naver.com/hospital/11669922/home, map.naver.com/p/entry/place/11669922, or a naver.me share link. Send this or id.
 - `sort` (optional, enum: recent | recommended) - `recent` (default): newest visits first. `recommended`: Naver's own order. · e.g. `recent`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -535,11 +533,11 @@ Returns the 20 newest visitor reviews of a Naver Place (or Naver's recommended 2
 | `review.text` | Full review body |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
+| `review.url` | URL of the review. |
+| `review.author.name` | Reviewer name. |
+| `review.author.url` | URL of the reviewer's profile. |
 
-+13 more (types in the full schema): `review` {responses, verified, url, images}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name, url, reviews_count}; `review.ext` {naver}. Never filled: `review.author.avatar_url`, `review.author.location`, `review.language`, `review.original_language`, `review.rating.max`, `review.rating.value`, `review.source`, `review.title`, `review.translated`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++13 more (types in the full schema): `computed` {labels_evidence}; `review` {entity_id, helpful_votes, images, responses, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {reviews_count}; `review.ext` {naver}. Never filled: `review.author.avatar_url`, `review.author.location`, `review.language`, `review.original_language`, `review.rating.max`, `review.rating.value`, `review.source`, `review.title`, `review.translated`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/place/reviews" \
@@ -575,11 +573,11 @@ Returns the Naver Map place list for a keyword, as a person at one point sees it
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
 | `place.url` | Website or canonical URL |
+| `place.address` | Street address as the source prints it. |
 | `place.category` | Primary category… |
-| `place.reviews_count` | Number of ratings |
-| `place.address` |  |
+| `place.image_urls` | Image URL, or a list of image URLs, for the place. |
 
-+16 more (types in the full schema): `place` {image_urls, latitude, longitude, phone}; `place.ext` {ad_description, ad_rank, blog_reviews_count, booking_url, distance, is_ad, rank, status, status_description, visitor_reviews_count}; `place.rating` {max, value}. Never filled: `place.description`, `place.price_level`, `place.verified`. Page-level: `data.dropped`.
++16 more (types in the full schema): `place` {latitude, longitude, phone, reviews_count}; `place.ext` {ad_description, ad_rank, blog_reviews_count, booking_url, distance, is_ad, rank, status, status_description, visitor_reviews_count}; `place.rating` {max, value}. Never filled: `place.description`, `place.price_level`, `place.verified`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/place/search" \
@@ -694,7 +692,7 @@ Searches Naver web index: general Korean web search (analog of Google web search
 
 **Use when** you want it for broad Korean web results; google/search does the same job for the global web.
 **Cost** cache 120 s
-**Paging** offset (native `start`) · ≈10/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.8-1.8 s
+**Paging** offset (native `start`) · 10/page by default; set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.8-1.8 s
 
 **Query params**
 
@@ -702,10 +700,11 @@ Searches Naver web index: general Korean web search (analog of Google web search
 - `display` (optional, integer, 1-100) - Number of items to return per page. Defaults to 10, cap 100; `display=101` returns 400. · e.g. `10`
 - `start` (optional, integer, 1-1000) - 1-indexed offset for pagination. Defaults to 1, cap 1000; `start=1001` is a 400 that costs nothing, and the page that reaches rank 1000 is the last one (`has_more: false`). Past rank 100, `sim` and `point` pages repeat Naver's top 100: those rows are removed and counted in `_warnings` (`recycled_rows`), and an emptied page is free. This corpus ignores `sort`, so `sort=date` does not avoid the repeats.
 - `sort` (optional, string) - Sort order. Accepted values: (sort ignored). Defaults to `sim` (relevance) when the corpus supports sort. Values outside this corpus's domain are rejected with a 400 before any upstream call.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ title, link, description }` (inferred from a sample): {title string, link string, description string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/naver/webkr/search" \

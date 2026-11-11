@@ -34,7 +34,7 @@ Returns the AliExpress category tree: parent and subcategory ids and names. Use 
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ category_name, category_id, parent_category_id }` (inferred from a sample): {category_name string, category_id number, parent_category_id number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/aliexpress/categories" \
@@ -69,8 +69,8 @@ Returns one AliExpress product: title, sale price, original price, currency, sho
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
 +2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string}.
 
@@ -134,6 +134,7 @@ Returns products similar to a source product id, or to a keyword if no product i
 - `country` (optional, string) - Ship-to country as a two-letter code. Default US. Changes displayed price and availability. A product that exists for US can return empty for another country.
 - `currency` (optional, string) - ISO 4217 currency for displayed prices. Default USD. Live-validated: USD GBP CAD EUR UAH MXN TRY RUB BRL AUD INR JPY IDR SEK KRW ILS THB CLP VND.
 - `language` (optional, string) - Copy language as an ISO code. Default EN. Live-validated: EN RU PT ES FR ID IT TH JA AR VI TR DE HE KO NL PL MX CL IN.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -147,10 +148,10 @@ Returns products similar to a source product id, or to a keyword if no product i
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
-+2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, positive_rate string, shop_url string}. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, positive_rate string, shop_url string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL.
 
@@ -170,7 +171,7 @@ Returns currently featured promotion names and product counts. Pass promo_name t
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ promo_name, promo_desc, product_num }` (inferred from a sample): {promo_name string, promo_desc string, product_num number}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/aliexpress/promo" \
@@ -183,7 +184,7 @@ Returns written customer reviews for an AliExpress product, 20 per page, each wi
 
 **Use when** you have a product id and need the review text. A product with no reviews comes back empty and is not billed.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** page (native `page`) · 20/page by default · depth unknown · price per N items not proven · typical 1.1-1.2 s
 
@@ -196,9 +197,8 @@ Returns written customer reviews for an AliExpress product, 20 per page, each wi
 - `sort_by` (optional, enum: default | newest) - Review ordering: default or newest.
 - `country` (optional, string) - Reviewer country when filter=local. Default US.
 - `language` (optional, string) - Copy language as an ISO code. Default EN. Live-validated: EN RU PT ES FR ID IT TH JA AR VI TR DE HE KO NL PL MX CL IN.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -214,11 +214,11 @@ Returns written customer reviews for an AliExpress product, 20 per page, each wi
 | `review.text` | Full review body |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 | `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
-| `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+7 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review.author` {name, location}; `review.rating` {value}. Also in the sample: `review` {entity_id null, url null, title null, verified null, source null, language null, original_language string, translated boolean}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++7 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {location}; `review.rating` {value}. Also in the sample: `review` {entity_id null, url null, title null, verified null, source null, language null, original_language string, translated boolean}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/aliexpress/reviews" \
@@ -248,6 +248,7 @@ Returns AliExpress products matching a keyword, 10 per page by default (max 50).
 - `country` (optional, string) - Ship-to country as a two-letter code. Default US. Changes displayed price and availability. A product that exists for US can return empty for another country.
 - `currency` (optional, string) - ISO 4217 currency for displayed prices. Default USD. Live-validated: USD GBP CAD EUR UAH MXN TRY RUB BRL AUD INR JPY IDR SEK KRW ILS THB CLP VND.
 - `language` (optional, string) - Copy language as an ISO code. Default EN. Live-validated: EN RU PT ES FR ID IT TH JA AR VI TR DE HE KO NL PL MX CL IN.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -257,10 +258,10 @@ Returns AliExpress products matching a keyword, 10 per page by default (max 50).
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
-+2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string}. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL. · `aliexpress/product/similar` (`product_id` ← `data.items[].product.id`) - Get similar AliExpress products.
 
@@ -291,6 +292,7 @@ Returns currently hot AliExpress products, optionally filtered by keyword or cat
 - `country` (optional, string) - Ship-to country as a two-letter code. Default US. Changes displayed price and availability. A product that exists for US can return empty for another country.
 - `currency` (optional, string) - ISO 4217 currency for displayed prices. Default USD. Live-validated: USD GBP CAD EUR UAH MXN TRY RUB BRL AUD INR JPY IDR SEK KRW ILS THB CLP VND.
 - `language` (optional, string) - Copy language as an ISO code. Default EN. Live-validated: EN RU PT ES FR ID IT TH JA AR VI TR DE HE KO NL PL MX CL IN.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -300,10 +302,10 @@ Returns currently hot AliExpress products, optionally filtered by keyword or cat
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
-+2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string, positive_rate string}. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, shop_url string, positive_rate string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL. · `aliexpress/product/similar` (`product_id` ← `data.items[].product.id`) - Get similar AliExpress products.
 
@@ -331,6 +333,7 @@ Returns products in a named AliExpress promotion. Promotion names come from GET 
 - `country` (optional, string) - Ship-to country as a two-letter code. Default US. Changes displayed price and availability. A product that exists for US can return empty for another country.
 - `currency` (optional, string) - ISO 4217 currency for displayed prices. Default USD. Live-validated: USD GBP CAD EUR UAH MXN TRY RUB BRL AUD INR JPY IDR SEK KRW ILS THB CLP VND.
 - `language` (optional, string) - Copy language as an ISO code. Default EN. Live-validated: EN RU PT ES FR ID IT TH JA AR VI TR DE HE KO NL PL MX CL IN.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -340,10 +343,10 @@ Returns products in a named AliExpress promotion. Promotion names come from GET 
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
-+2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, positive_rate string, shop_url string}. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, sold_count number, sku_id string}; `product.ext.aliexpress` {commission_rate string, discount string, category string, subcategory string, positive_rate string, shop_url string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `aliexpress/reviews` (`product_id` ← `data.items[].product.id`) - Get AliExpress product reviews. · `aliexpress/product` (`product_id` ← `data.items[].product.id`) - Get an AliExpress product by id or URL. · `aliexpress/product/similar` (`product_id` ← `data.items[].product.id`) - Get similar AliExpress products.
 

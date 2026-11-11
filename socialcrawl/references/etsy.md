@@ -46,9 +46,9 @@ Returns one Etsy listing: title, description, price, currency, images, shop name
 | `product.id` | Platform product ID… |
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
-| `product.seller` |  |
+| `product.seller` | Name of the seller. |
 
 +2 more (types in the full schema): `product.price` {currency, current}. Also in the sample: `product` {brand null, availability string, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, available_quantity number}; `product.ext.etsy` {favorites number, is_bestseller boolean, is_top_rated boolean, materials string[], taxonomy_path string, when_made string, user_id string}.
 
@@ -88,10 +88,10 @@ Returns listings Etsy considers similar to a given product, typically around 12 
 | `product.id` | Platform product ID… |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` |  |
-| `product.seller` |  |
+| `product.reviews_count` | Number of written reviews. |
+| `product.seller` | Name of the seller. |
 
-+5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, brand null, availability string}; `product.ext` {seller_id string, available_quantity number}; `product.ext.etsy` {is_handmade boolean}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, brand null, availability string}; `product.ext` {seller_id string, available_quantity number}; `product.ext.etsy` {is_handmade boolean}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/etsy/product/similar" \
@@ -113,7 +113,7 @@ Returns Etsy's search autocomplete suggestions for a partial query, the same ter
 
 **Response** `SearchResult` rows at `data.items[]`, each `{ query, search_types, search_type_names, categories }` (inferred from a sample): {query string, search_types array, search_type_names array, categories array}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/etsy/search/suggestions" \
@@ -137,6 +137,7 @@ Returns one page of listings from an Etsy shop, 36 per page, each with listing i
 - `limit` (optional, integer, 1-36) - Listings per page, 1 to 36. Default 36.
 - `sort_by` (optional, enum: most_recent | price_low | price_high) - Result ordering: most_recent (default), price_low, or price_high.
 - `currency` (optional, string) - ISO 4217 currency code for displayed prices. Default USD.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Constraints**
 
@@ -150,10 +151,10 @@ Returns one page of listings from an Etsy shop, 36 per page, each with listing i
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
-+2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string}. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {description null, brand null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {seller_id string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `etsy/product` (`product_id` ← `data.items[].product.id`) - Get an Etsy listing by id or URL.
 

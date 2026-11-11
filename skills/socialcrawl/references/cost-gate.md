@@ -2,7 +2,7 @@
 
 Read this for the full preflight (see the gate levels below). Endpoint headings are useful lookup labels, but a number in a heading can be a unit, floor, or upfront ceiling. Calculate the total from the exact query parameters or JSON body that will be sent.
 
-**Prices changed.** Many endpoints that used to cost one flat price now hold more when an opt-in parameter is set: `label=`, `relevant_to=`, `include=`, `limit=`, `max_pages=`, `scan_pages=`, `country=`, `urls=`. A plain call (none of those) costs what it always did. Never reuse a remembered flat price for a call that carries one of them; recompute it with the recipes below. The full rule for every metered endpoint is in [pricing.md](pricing.md#metered-and-custom-priced-endpoints).
+**Prices changed.** Many endpoints that used to cost one flat price now hold more when an opt-in parameter is set: `label=`, `relevant_to=`, `include=`, `limit=`, `max_pages=`, `max_items=`, `max_credits=`, `scan_pages=`, `country=`, `urls=`. A plain call (none of those) costs what it always did. Never reuse a remembered flat price for a call that carries one of them; recompute it with the recipes below. The full rule for every metered endpoint is in [pricing.md](pricing.md#metered-and-custom-priced-endpoints).
 
 ## Gate levels
 
@@ -48,7 +48,7 @@ Do not call a paid endpoint until you can fill every line. If the exact total ca
 - Prefer the cheapest endpoint that provides the required fields. Optional enrichment, extra pages, replies, transcripts, engines, countries, judgments and recurring schedules all widen cost.
 - For a scheduled monitor, show both cost per run and estimated monthly cost. Management calls are free, but runs are not.
 - For a `prism/discover` schedule, show `max_credits_per_run` x runs per month at its `every` (1h ≈ 720, 1d = 30, 7d ≈ 4) and suggest a `max_credits_per_month`; where `/v1/utility/estimate` exists, `dry_run: true` with `schedule` shows one run's estimate, free.
-- A **walk** is not a request. Paging a list to completion multiplies the page cost by the page count; `coverage=full` on the Instagram follow lists reaches the hundreds. See [Multi-page walks](#multi-page-walks-coveragefull) and [Search walks](#search-walks-max_pages-and-seen).
+- A **walk** is not a request. Paging a list to completion multiplies the page cost by the page count; `coverage=full` on the Instagram follow lists reaches the hundreds. See [Multi-page walks](#multi-page-walks-coveragefull) and [Walks in one call](#walks-in-one-call-max_items-max_credits-max_pages-seen).
 - **A band is a range, not a quote.** A band that starts at 0 can settle at 0, because its pages bill only when they return rows: the mention and hashtag searches, `tiktokshop/sales`, `search/multi`, `prism/comment-leads` (and `prism/mentions` refunds a page with no verified row). The top of a wide band is a cap, not the expected charge: see `prism/discover`, `prism/profiles`, `prism/profile/comments` and `trustpilot/reviews/history` below.
 - An `include=` token on a list endpoint is **row hydration**: it holds credits per row on top of the page and refunds to rows filled. Never quote the heading cost for a call that carries one. See [Row hydration](#row-hydration-include).
 
@@ -144,16 +144,18 @@ Worked examples:
 | `POST /v1/cohorts/{cohortId}/queries` | Holds the full ceiling: per queried member, bluesky / threads / twitch 1, linkedin 5 (fixed), twitter / tiktok / kwai / truth-social 1 x `max_pages_per_identity`, instagram / youtube 2 x `max_pages_per_identity`. Refused free (400) when `max_credits` is below it. Neither `/v1/utility/estimate` nor a cohort `dry_run=1` computes it, so work it out with [cohorts.md](cohorts.md#pricing). | Charges successful pages only; dead handles, 404s, upstream errors and cancelled work cost 0; `reserved - actual` is refunded once at the terminal state. |
 | `POST /v1/web/monitors` | Creation costs 0. Each finished check bills `max(1, the credits that check used) + 1`, so at least 2, failed checks included (`credits_booked` on the monitor is always 1 and is not a quote). A 5-minute cadence means 288 checks per day. | Billing repeats until paused or deleted. A check that finds too few credits is skipped at 0. |
 
-## Search walks (`max_pages` and `seen`)
+## Walks in one call (`max_items`, `max_credits`, `max_pages`, `seen`)
 
-Twelve search endpoints walk pages in one call: `tiktok/search`, `tiktok/search/top`, `tiktok/search/hashtag`, `instagram/search/reels`, `instagram/search/hashtag`, `youtube/search`, `youtube/search/advanced`, `youtube/search/hashtag`, `twitter/search/tweets`, `threads/search`, `reddit/search`, `facebook/search/posts`.
+Every list endpoint walks pages in one call when asked: `max_items=N` (1 to 5000, walk until N rows), `max_credits=N` (1 to 100000, never spend past N) and `max_pages=N` (1 to 50; 50 when `max_items` or `max_credits` is sent alone). Twelve search endpoints also take the row filters and `seen`: `tiktok/search`, `tiktok/search/top`, `tiktok/search/hashtag`, `instagram/search/reels`, `instagram/search/hashtag`, `youtube/search`, `youtube/search/advanced`, `youtube/search/hashtag`, `twitter/search/tweets`, `threads/search`, `reddit/search`, `facebook/search/posts`.
 
-- `max_pages=N` (1 to 5) bills each page walked as one ordinary call to that endpoint, with every opt-in on it (`include=`, `label=`, `relevant_to=`). Worst case: `N x one page's hold`. A cached page is 0. The walk can stop early (`data.walk.stopped`: `end`, `max_pages`, `time_budget`, `page_error`), and unwalked pages are never charged.
+- Each page walked bills as one ordinary call to that endpoint, with every opt-in on it (`include=`, `label=`, `relevant_to=`). Worst case: `max_pages x one page's hold`, or `max_credits` when that is lower: a page starts only while what is spent plus that page's price (or the most a page of the walk has cost) still fits. A cached page is 0. The walk can stop early (`data.walk.stopped`: `end`, `max_items`, `max_credits`, `max_pages`, `time_budget`, `page_error`), and unwalked pages are never charged.
+- When the user names a budget, pass it as `max_credits`: the cap is enforced by the API, not by your arithmetic. A `max_credits` below one page's price is a free 400 whose `error.details.page_credits` names that price.
+- `max_items` returns the last page whole, so the answer can hold up to one page more than asked; the user paid for those rows, so keep them.
 - Row filters (`min_views`, `max_age_days`, `country`) do not lower a page's own price; they only stop a join from looking up rows that will be dropped.
 - `seen=<id>` removes rows already received under that id in the last 24 hours and prices the page at `ceil(page credits x new rows / rows on the page)`. A page of only repeats is 0. Join credits (`include=`) are charged only for new rows and are never discounted.
 - On `instagram/search/reels`, a walk looks each creator up once: `max_pages=2&country=ES` measured 2 pages, 45 reels kept, 78 credits.
 
-Example: `GET /v1/instagram/search/hashtag?hashtag=...&max_pages=3&seen=wk1` holds up to `3 x 5 = 15`. A page of 20 rows with 12 already seen costs `ceil(5 x 8 / 20) = 2`.
+Example: `GET /v1/instagram/search/hashtag?hashtag=...&max_pages=3&seen=wk1` holds up to `3 x 5 = 15`; the same call with `max_items=100&max_credits=12` stops after at most two pages (`2 x 5 = 10`, a third would pass 12). A page of 20 rows with 12 already seen costs `ceil(5 x 8 / 20) = 2`.
 
 ## Comment scans (`scan_pages`, `sort`)
 
@@ -209,6 +211,7 @@ Bound the spend with the row cap param where the endpoint offers one — on thos
 |---|---|---|---|---|---|---|
 | `GET /v1/facebook/adlibrary/company/ads` | `include=audience` | 5 | 1 | 35 | **35** | up to 30 rows; `limit` is not a row cap |
 | `GET /v1/facebook/events` | `include=details` | 1 | 1 | 13 | **13** | up to 12 rows; `limit` is not a row cap |
+| `GET /v1/facebook/post` | `include=group` | 1 | 1 | 2 | **2** | up to 1 rows; `limit` is not a row cap |
 | `GET /v1/facebook/profile/events` | `include=details` | 1 | 1 | 9 | **9** | up to 8 rows; `limit` is not a row cap |
 | `GET /v1/facebook/profile/photos` | `include=details` | 1 | 1 | 9 | **9** | up to 8 rows; `limit` is not a row cap |
 | `GET /v1/facebook/profile/posts` | `include=engagement` | 1 | 1 | 4 | **4** | up to 3 rows; `limit` is not a row cap |
@@ -220,12 +223,13 @@ Bound the spend with the row cap param where the endpoint offers one — on thos
 | `GET /v1/instagram/profile/posts` | `include=audio` | 1 | 1 | 13 | **13** | up to 12 rows; `limit` is not a row cap |
 | `GET /v1/instagram/profile/posts` | `include=tags` | 1 | 1 | 13 | **13** | up to 12 rows; `limit` is not a row cap |
 | `GET /v1/instagram/profile/reels` | `include=audio` | 1 | 1 | 13 | **13** | up to 12 rows; `limit` is not a row cap |
-| `GET /v1/instagram/search/hashtag` | `include=country` | 5 | 1 | 35 | **35** | up to 30 rows; `limit` is not a row cap |
+| `GET /v1/instagram/search/hashtag` | `include=country` | 1 | 1 | 31 | **31** | up to 30 rows; `limit` is not a row cap |
 | `GET /v1/instagram/search/popular` | `include=engagement` | 1 | 1 | 13 | **13** | `limit` caps rows + credits (max 12) |
 | `GET /v1/instagram/search/profiles` | `include=about` | 1 | 2 | 17 | **25** | `limit` caps rows + credits (max 12); **defaults to top 8** |
 | `GET /v1/instagram/search/reels` | `include=creator` | 1 | 2 | 61 | **61** | up to 30 rows; `limit` is not a row cap |
 | `GET /v1/instagram/search/reels` | `include=country` | 1 | 1 | 31 | **31** | up to 30 rows; `limit` is not a row cap |
 | `GET /v1/instagram/similar` | `include=profile` | 5 | 1 | 25 | **85** | `limit` caps rows + credits (max 80); **defaults to top 20** |
+| `GET /v1/linkedin/company` | `include=about` | 5 | 3 | 8 | **8** | up to 1 rows; `limit` is not a row cap |
 | `GET /v1/linkedin/company/people` | `include=profile` | 10 | 4 | 50 | **50** | `limit` caps rows + credits (max 10) |
 | `GET /v1/linkedin/post/reactions` | `include=profile` | 10 | 4 | 50 | **50** | `limit` caps rows + credits (max 10) |
 | `GET /v1/linkedin/search/people` | `include=profile` | 10 | 4 | 50 | **50** | `limit` caps rows + credits (max 10) |
@@ -237,7 +241,20 @@ Bound the spend with the row cap param where the endpoint offers one — on thos
 | `GET /v1/threads/search/users` | `include=profile` | 1 | 1 | 13 | **13** | `limit` caps rows + credits (max 12) |
 | `GET /v1/threads/user/posts` | `include=engagement` | 1 | 1 | 16 | **16** | up to 15 rows; `limit` is not a row cap |
 | `GET /v1/tiktok/adlibrary/search` | `include=ad` | 5 | 1 | 17 | **17** | `limit` caps rows + credits (max 12) |
+| `GET /v1/tiktok/collection/videos` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/effect/videos` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/location/posts` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/playlist/videos` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/post` | `include=exact_counts` | 1 | 2 | 3 | **3** | up to 1 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/profile` | `include=account` | 1 | 2 | 3 | **3** | up to 1 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/profile/videos` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/search` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/search/hashtag` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/search/top` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
 | `GET /v1/tiktok/search/users` | `include=profile` | 1 | 1 | 31 | **31** | `limit` caps rows + credits (max 30) |
+| `GET /v1/tiktok/song/videos` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/trending` | `include=exact_counts` | 5 | 2 | 25 | **25** | up to 10 rows; `limit` is not a row cap |
+| `GET /v1/tiktok/user/liked` | `include=exact_counts` | 1 | 2 | 21 | **21** | up to 10 rows; `limit` is not a row cap |
 | `GET /v1/tiktokshop/product` | `include=details` | 1 | 3 | 4 | **4** | up to 1 rows; `limit` is not a row cap |
 | `GET /v1/youtube/channel/lives` | `include=engagement` | 1 | 1 per id, max 5 per 50 ids | 6 | **6** | up to 50 rows; `limit` is not a row cap |
 | `GET /v1/youtube/channel/lives` | `include=channel` | 1 | 1 | 2 | **2** | up to 1 rows; `limit` is not a row cap |
@@ -253,6 +270,7 @@ Bound the spend with the row cap param where the endpoint offers one — on thos
 | `GET /v1/youtube/search/hashtag` | `include=engagement` | 1 | 1 per id, max 5 per 50 ids | 6 | **6** | up to 50 rows; `limit` is not a row cap |
 | `GET /v1/youtube/search/hashtag` | `include=channel` | 1 | 1 per id, max 5 per 50 ids | 6 | **6** | up to 50 rows; `limit` is not a row cap |
 | `GET /v1/youtube/shorts/trending` | `include=channel` | 5 | 1 per id, max 5 per 50 ids | 15 | **15** | up to 100 rows; `limit` is not a row cap |
+| `GET /v1/youtube/video` | `include=availability` | 1 | 2 | 3 | **3** | up to 1 rows; `limit` is not a row cap |
 | `GET /v1/youtube/video/related` | `include=engagement` | 1 | 1 per id, max 5 per 50 ids | 6 | **6** | up to 50 rows; `limit` is not a row cap |
 | `GET /v1/youtube/video/related` | `include=channel` | 1 | 1 per id, max 5 per 50 ids | 6 | **6** | up to 50 rows; `limit` is not a row cap |
 | `GET /v1/youtube/videos/trending` | `include=channel` | 1 | 1 per id, max 5 per 50 ids | 6 | **6** | up to 50 rows; `limit` is not a row cap |

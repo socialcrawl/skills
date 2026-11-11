@@ -19,7 +19,7 @@
 
 ## GET /v1/snapchat/profile - 1 credit (standard)
 
-Returns public profile information for a Snapchat user including display name, Bitmoji avatar URL, subscriber count, and bio description.
+Returns public profile information for a Snapchat user including display name, Bitmoji avatar URL, subscriber count, and bio description. Publishers that hide their subscriber count on their profile (many news and media accounts) still get the real number in `followers`, read from Snapchat's public search and matched on the account's business profile id. When that number cannot be read, `followers` is null rather than 0. The handle is the account's username, which can differ from the brand name (Le Figaro is `lefigarofr`).
 
 **Use when** you want to confirm a Snapchat account exists and read its public details.
 **Cost** cache 900 s
@@ -40,7 +40,7 @@ Returns public profile information for a Snapchat user including display name, B
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, posts_count, verified, joined_at, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.likes_count`.
++12 more (types in the full schema): `author` {followers, following, joined_at, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Also in the sample: `author` {private boolean}. Never filled: `author.likes_count`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/profile" \
@@ -60,8 +60,8 @@ Returns comments on a Snapchat Spotlight snap. Each comment includes text, displ
 
 - `url` (required) - Full URL of the Snapchat Spotlight snap. · e.g. `https://www.snapchat.com/@lilah4823/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYY2pvZnd0ZXVmAZ8fgG8pAZ8ff-_IAAAAAQ`
 - `cursor` (optional, string) - Cursor from the previous response to fetch the next page.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `CommentList` rows at `data.items[]`, each `{ comment, computed }` ([full schema](schemas/CommentList.md))
 
@@ -74,7 +74,7 @@ Returns comments on a Snapchat Spotlight snap. Each comment includes text, displ
 | `comment.author.display_name` | Comment author display name |
 | `comment.engagement.likes` | Like / upvote count |
 
-+3 more (types in the full schema): `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.avatar_url`, `comment.author.username`, `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`.
++3 more (types in the full schema): `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.avatar_url`, `comment.author.username`, `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/spotlight/comments" \

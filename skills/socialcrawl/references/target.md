@@ -30,6 +30,8 @@ Returns Target's top-level browse taxonomy: each node's id, display name, parent
 
 **Response** `Analytics` rows at `data.items[]` (inferred from a sample): `seo_data` {canonical_url string, seo_h1 string, image_path string}; {type string, name string, parent_id string, node_id string}.
 
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.items`, `data.next_cursor`, `data.total`.
+
 ```bash
 curl "https://www.socialcrawl.dev/v1/target/categories" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
@@ -47,6 +49,7 @@ Returns products listed in a Target category, 24 per page, each with title, bran
 
 - `category_id` (required) - Target category node id, for example hz89j for Kitchen & Dining. Ids come from GET /v1/target/categories, and also appear in the category URLs on target.com (/c/<name>/-/N-<id>). · e.g. `hz89j`
 - `page` (optional, integer, 1-100) - Page number, starting at 1. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -56,10 +59,10 @@ Returns products listed in a Target category, 24 per page, each with title, bran
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.price.current` |  |
-| `product.price.original` |  |
+| `product.price.current` | Current price, in the price currency. |
+| `product.price.original` | Price before any discount, in the price currency. |
 
-+2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, image_urls string[], availability null, reviews_count null, features string[]}; `product.price` {currency string}. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, image_urls string[], availability null, reviews_count null, features string[]}; `product.price` {currency string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `target/product` (`tcin` ← `data.items[].product.id`) - Full details for each product. · `target/reviews` (`tcin` ← `data.items[].product.id`) - Get Target product reviews.
 
@@ -89,8 +92,8 @@ Returns full product detail for a Target item: title, brand, description, highli
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.description` |  |
-| `product.reviews_count` |  |
+| `product.description` | Product description. |
+| `product.reviews_count` | Number of written reviews. |
 
 +4 more (types in the full schema): `product.price` {current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, image_urls string[], availability string, features string[]}; `product.price` {currency string}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.rating_distribution` {star_1 number, star_2 number, star_3 number, star_4 number, star_5 number}.
 
@@ -108,16 +111,15 @@ Returns written customer reviews for a Target product, 10 per page, each with th
 
 **Use when** you want the review text itself. For just the star distribution, one call to the product endpoint is cheaper than paging reviews.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 2.0-2.6 s
 
 **Query params**
 
 - `tcin` (required) - Target catalogue id (TCIN), the numeric id at the end of a target.com product URL: target.com/p/<name>/-/A-92148487 is TCIN 92148487. Target rolls a colour or size variant up to its parent product, so the id returned by GET /v1/target/product can differ from the one you sent; the id you asked for is preserved at product.ext.requested_id. · e.g. `92146817`
 - `page` (optional, integer, 1-500) - Page number, starting at 1. Prefer the universal cursor parameter.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -130,13 +132,13 @@ Returns written customer reviews for a Target product, 10 per page, each with th
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
 
-+11 more (types in the full schema): `review` {verified, title, images}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review` {url null, source null, language null, original_language null}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++11 more (types in the full schema): `review` {entity_id, helpful_votes, images, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review` {url null, source null, language null, original_language null}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/target/reviews" \
@@ -162,12 +164,12 @@ Returns Target stores near a ZIP code, city, or state, each with its store id, n
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
-| `place.phone` |  |
+| `place.phone` | Phone number as the source prints it. |
 | `place.url` | Website or canonical URL (seen in a sample response) |
+| `place.address` | Street address as the source prints it. (seen in a sample response) |
 | `place.category` | Primary category… (seen in a sample response) |
-| `place.price_level` | Price band ("inexpensive" / "$$" / null) (seen in a sample response) |
 
-Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, address string, latitude null, longitude null, verified null, description null, image_urls null}; `place.ext` {distance number, status string, timezone string}; `place.ext.hours[]` {date string, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`.
+Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, latitude null, longitude null, verified null, description null, image_urls null}; `place.ext` {distance number, status string, timezone string}; `place.ext.hours[]` {date string, day_name string, is_open boolean, opens_at string, closes_at string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/target/stores" \

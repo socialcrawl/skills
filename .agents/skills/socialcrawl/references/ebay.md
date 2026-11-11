@@ -37,9 +37,9 @@ Returns full detail for a single eBay listing: title, brand, price, original pri
 | `product.title` | Product title |
 | `product.id` | Platform product ID… |
 | `product.brand` | Brand name (cleaned). |
-| `product.description` |  |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.description` | Product description. |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
 +2 more (types in the full schema): `product.price` {current, original}. Also in the sample: `product` {url string, image_urls null, availability null, reviews_count null}; `product.rating` {average null, count null}; `product.ext` {sold_count number, condition string, available_quantity number}; `product.ext.seller_reputation` {feedback_percentage number, feedback_count number, top_rated boolean, items_sold number, joined string, url string}; `product.ext.seller_reputation.detailed_ratings` {accurate_description number, reasonable_shipping_cost number} (+2 more).
 
@@ -69,6 +69,7 @@ Returns eBay listings matching a keyword, 60 per page on an active search, each 
 - `min_price` (optional, string) - Lowest price to include. Applied by eBay and approximate, so filter on product.price.current if you need a hard bound.
 - `max_price` (optional, string) - Highest price to include. Applied by eBay and approximate, so filter on product.price.current if you need a hard bound.
 - `aspects` (optional, string) - Category-specific item aspect filter taken from a previous response, for example Brand:Apple.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -78,10 +79,10 @@ Returns eBay listings matching a keyword, 60 per page on an active search, each 
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` |  |
-| `product.seller` |  |
+| `product.reviews_count` | Number of written reviews. |
+| `product.seller` | Name of the seller. |
 
-+5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, brand null, availability null}; `product.ext` {sold_count number, condition string, buying_format string}; `product.ext.seller_reputation` {feedback_percentage number, feedback_count number, top_rated boolean, items_sold null, joined null, url null, detailed_ratings null}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, brand null, availability null}; `product.ext` {sold_count number, condition string, buying_format string}; `product.ext.seller_reputation` {feedback_percentage number, feedback_count number, top_rated boolean, items_sold null, joined null, url null, detailed_ratings null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `ebay/product` (`product_id` ← `data.items[].product.id`) - Get an eBay listing by item id.
 

@@ -10,12 +10,12 @@ Every field the 2 field-mapped endpoints returning `Comment` can carry, with pat
 | `comment.author.verified` | boolean\|null | Whether the account carries TikTok's verification badge. The source sends a badge label rather than a flag, and the API writes false when no label is present, so false can also mean the source sent no verification signal. |
 | `comment.engagement.likes` | number\|null | Like / upvote count |
 | `comment.engagement.replies` | number\|null | Reply / child-comment count. `0` when the upstream structurally reports the count and the comment has no replies; `null` only when the upstream does not surface a reply count at all. |
-| `comment.ext.lookup.comments_scanned` | number\|null | (seen in a sample response) |
-| `comment.ext.lookup.found_via` | string\|null | (seen in a sample response) |
-| `comment.ext.lookup.pages_fetched` | number\|null | (seen in a sample response) |
-| `comment.ext.lookup.position_hint` | string\|null | (seen in a sample response) |
-| `comment.ext.lookup.post_comment_count` | number\|null | (seen in a sample response) |
-| `comment.ext.lookup.sort_basis` | string\|null | (seen in a sample response) |
+| `comment.ext.lookup.comments_scanned` | number | How many comments were read. (seen in a sample response) |
+| `comment.ext.lookup.found_via` | string | How the comment was found, such as `id_scan`. (seen in a sample response) |
+| `comment.ext.lookup.pages_fetched` | number | How many pages of comments were read. (seen in a sample response) |
+| `comment.ext.lookup.position_hint` | string | A cursor that resumes the scan at this comment. (seen in a sample response) |
+| `comment.ext.lookup.post_comment_count` | number | The post's total comment count. (seen in a sample response) |
+| `comment.ext.lookup.sort_basis` | string | The sort order the scan used. (seen in a sample response) |
 | `comment.ext.published_at_epoch` | number\|null | Raw Unix epoch for `published_at` (present only when the upstream sent a numeric epoch that was normalised to the ISO 8601 string). |
 | `comment.flags.deleted` | boolean | Whether the comment is tombstoned (always present, even when false) |
 | `comment.flags.pinned` | boolean\|null | Pinned flag (null when platform does not surface) |

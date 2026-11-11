@@ -37,7 +37,7 @@ Returns data from a Komi page including display name, bio, avatar, and list of l
 | `author.display_name` | Display name or full name |
 | `author.external_url` | Bio link / external website URL when surfaced by the… |
 
-+5 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
++7 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/komi/page" \

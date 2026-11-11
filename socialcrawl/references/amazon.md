@@ -35,6 +35,7 @@ Returns ranked Amazon Best Seller listings for a category: ASIN, title, price, r
 - `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). · e.g. `US`
 - `type` (optional, enum: BEST_SELLERS | NEW_RELEASES | MOVERS_AND_SHAKERS | MOST_WISHED_FOR | GIFT_IDEAS) - List type: BEST_SELLERS (default), NEW_RELEASES, MOST_WISHED_FOR, GIFT_IDEAS, or MOVERS_AND_SHAKERS. MOVERS_AND_SHAKERS currently returns an empty list at 0 credits on US, GB and DE, because Amazon itself shows no Movers and Shakers rows. A category with no list of the requested type also returns empty and free. · e.g. `BEST_SELLERS`
 - `page` (optional, integer, 1-100) - Page number, starting at 1. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -44,10 +45,10 @@ Returns ranked Amazon Best Seller listings for a category: ASIN, title, price, r
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.currency` |  |
-| `product.price.current` |  |
+| `product.price.currency` | Currency code of the price. |
+| `product.price.current` | Current price, in the price currency. |
 
-+2 more (types in the full schema): `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.description`, `product.price.original`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
++2 more (types in the full schema): `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.description`, `product.price.original`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `amazon/reviews` (`asin` ← `data.items[].product.id`) - Get Amazon product reviews. · `amazon/product` (`asin` ← `data.items[].product.id`) - Get an Amazon product by ASIN. · `amazon/sellers` (`asin` ← `data.items[].product.id`) - Get Amazon sellers and offers for a product.
 
@@ -77,10 +78,10 @@ Returns Amazon deals currently on the deals page: title, deal price, list price,
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.price.currency` |  |
-| `product.price.current` |  |
+| `product.price.currency` | Currency code of the price. |
+| `product.price.current` | Current price, in the price currency. |
 
-+1 more (types in the full schema): `product.price` {original}. Never filled: `product.availability`, `product.brand`, `product.description`, `product.rating.average`, `product.rating.count`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.price` {original}. Never filled: `product.availability`, `product.brand`, `product.description`, `product.rating.average`, `product.rating.count`, `product.reviews_count`, `product.seller`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `amazon/product` (`asin` ← `data.items[].product.id`) - Full details for each product. · `amazon/reviews` (`asin` ← `data.items[].product.id`) - Get Amazon product reviews. · `amazon/sellers` (`asin` ← `data.items[].product.id`) - Get Amazon sellers and offers for a product.
 
@@ -111,9 +112,9 @@ Returns full product detail for an Amazon ASIN: title, brand, description, price
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.description` | Product description. |
 
-+9 more (types in the full schema): `product` {description, specifications, variations}; `product.ext` {bought_past_month}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.reviews_count`, `product.seller`.
++9 more (types in the full schema): `product` {image_urls, specifications, variations}; `product.ext` {bought_past_month}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.reviews_count`, `product.seller`.
 
 **Next** `amazon/reviews` (`asin` ← `data.product.id`) - Customer reviews of the product. · `amazon/sellers` (`asin` ← `data.product.id`) - Get Amazon sellers and offers for a product.
 
@@ -137,6 +138,7 @@ Returns organic Amazon search results for a keyword: title, price, list price, r
 - `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Non-US marketplaces are best-effort; an occasional timeout is refunded. · e.g. `US`
 - `depth` (optional, integer) - Maximum number of products to return in ONE call (default 20, max 700). Use it when you would rather make a single large request than paginate: it selects a different, slower search backend whose latency grows with depth, and a timeout is auto-refunded. Leave it unset for the fast default page size, which is the better choice for keyword→ASIN resolution. A depth of 1 to 3 falls back to the fast default page when the slower backend times out, so that answer has at most `depth` rows and carries `data.details.depth_truncated: true`. When the slower backend answers it may return more rows than `depth` (it returns its whole first page), as before.
 - `page` (optional, integer, 1-100) - Page number, starting at 1. Prefer the universal cursor parameter.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -147,9 +149,9 @@ Returns organic Amazon search results for a keyword: title, price, list price, r
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced (only when the fallback source serves) |
 | `product.brand` | Brand name (cleaned). (only when the fallback source serves) |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.description` | Product description. (only when the fallback source serves) |
 
-+10 more (types in the full schema): `product` {description, specifications, variations}; `product.ext` {bought_past_month, bought_past_month_label}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.reviews_count`, `product.seller`. Page-level: `data.dropped`.
++10 more (types in the full schema): `product` {image_urls, specifications, variations}; `product.ext` {bought_past_month, bought_past_month_label}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.reviews_count`, `product.seller`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `amazon/reviews` (`asin` ← `data.items[].product.id`) - Customer reviews of each product. · `amazon/product` (`asin` ← `data.items[].product.id`) - Get an Amazon product by ASIN. · `amazon/sellers` (`asin` ← `data.items[].product.id`) - Get Amazon sellers and offers for a product.
 
@@ -172,9 +174,8 @@ Returns Amazon's top customer reviews for a product (by ASIN), usually 10 per ca
 
 - `asin` (required) - 10-character Amazon ASIN (the product identifier). · e.g. `B0BTYCRJSS`
 - `country` (optional, enum: US | GB | CA | DE | FR | IT | ES | JP | IN | MX | BR | AU | NL) - Amazon marketplace as an ISO 3166-1 alpha-2 country code (default US). Supported: US, GB, CA, DE, FR, IT, ES, JP, IN, MX, BR, AU, NL. Amazon shows reviews across a product's whole variant family, so a review row can originate from a sibling ASIN; review.entity_id is always the ASIN you requested. · e.g. `US`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -187,13 +188,13 @@ Returns Amazon's top customer reviews for a product (by ASIN), usually 10 per ca
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
+| `review.url` | URL of the review. |
+| `review.author.name` | Reviewer name. |
 
-+16 more (types in the full schema): `review` {verified, title, url, images}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {name, url, avatar_url, location, reviews_count}; `review.rating` {max, value}. Never filled: `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++16 more (types in the full schema): `review.author` {url, avatar_url, location, reviews_count}; `computed` {labels_evidence}; `review` {entity_id, helpful_votes, images, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Never filled: `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/amazon/reviews" \
@@ -218,12 +219,12 @@ Returns one Amazon seller by seller id: name, store URL, rating, ratings count, 
 
 | Field | Meaning |
 |---|---|
+| `seller.id` | The seller's id: its domain or a slug of its name. |
 | `seller.name` | Seller name |
-| `seller.id` |  |
-| `seller.url` |  |
-| `seller.domain` |  |
-| `seller.rating.average` |  |
-| `seller.rating.count` |  |
+| `seller.url` | URL of the seller's offer page. |
+| `seller.domain` | Domain of the seller's site. |
+| `seller.rating.average` | Average rating of the seller, normally out of 5. |
+| `seller.rating.count` | Number of ratings behind the average. |
 
 Never filled: `seller.annotation`, `seller.availability`, `seller.condition`, `seller.price.base`, `seller.price.currency`, `seller.price.shipping`, `seller.price.tax`, `seller.price.total`.
 
@@ -250,14 +251,14 @@ Returns every seller offering a given Amazon ASIN: seller name, price, rating, a
 
 | Field | Meaning |
 |---|---|
+| `seller.id` | The seller's id: its domain or a slug of its name. |
 | `seller.name` | Seller name |
+| `seller.url` | URL of the seller's offer page. |
+| `seller.annotation` | Note shown with the offer, for example a special offer. |
 | `seller.condition` | Item condition… |
-| `seller.id` |  |
-| `seller.url` |  |
-| `seller.annotation` |  |
-| `seller.price.base` |  |
+| `seller.price.base` | Item price before tax and shipping, in the price currency. |
 
-+4 more (types in the full schema): `seller.price` {currency, total}; `seller.rating` {average, count}. Never filled: `seller.availability`, `seller.domain`, `seller.price.shipping`, `seller.price.tax`. Page-level: `data.dropped`.
++4 more (types in the full schema): `seller.price` {currency, total}; `seller.rating` {average, count}. Never filled: `seller.availability`, `seller.domain`, `seller.price.shipping`, `seller.price.tax`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `amazon/seller` (`seller_id` ← `data.items[].seller.id`) - Each seller's profile and rating.
 
@@ -290,7 +291,7 @@ Returns product listings from an Amazon shop or storefront page including produc
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+12 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {thumbnail_url}; `post.flags` {deleted}; `post.ext` {amazon_shop_curations, amazon_shop_lists, amazon_shop_socials, amazon_shop_trending_picks}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++12 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {thumbnail_url}; `post.ext` {amazon_shop_curations, amazon_shop_lists, amazon_shop_socials, amazon_shop_trending_picks}; `post.flags` {deleted}. Also in the sample: `post.ext` {hashtags null, mentions null}. Never filled: `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/amazon/shop" \

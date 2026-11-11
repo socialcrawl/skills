@@ -71,7 +71,7 @@ Returns daily OHLCV bars for one instrument across an explicit date range, as a 
 | `bar.date` | Session date, absolute UTC ISO-8601 |
 | `bar.dividend` | Cash dividend per share going ex on this date; null on an… |
 
-+7 more (types in the full schema): `bar` {high, interval, low, open, split_ratio, symbol, volume}.
++7 more (types in the full schema): `bar` {high, interval, low, open, split_ratio, symbol, volume}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/history" \
@@ -100,12 +100,12 @@ Returns a unified QuoteList snapshot of the global markets overview: the major r
 |---|---|
 | `quote.id` | Instrument identifier: re-feed into /v1/finance/quote… |
 | `quote.name` | Display name… |
+| `quote.url` | URL of the quote page on the source. |
 | `quote.currency` | Price currency (null for asset pairs) |
 | `quote.ticker` | Ticker symbol (null for forex/crypto asset pairs) |
 | `quote.type` | Instrument class: stock \| etf \| index \| crypto \| forex \|… |
-| `quote.url` |  |
 
-Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}; `quote.ext` {section string}. Page-level: `data.dropped`.
+Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}; `quote.ext` {section string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/finance/markets" \
@@ -124,8 +124,8 @@ Returns recent news articles for one financial instrument as a unified NewsArtic
 
 - `keyword` (required) - Instrument ticker. A bare symbol ('AAPL', '005930.KS') or the 'TICKER:EXCHANGE' form from ticker-search ('AAPL:NASDAQ'); the exchange suffix is ignored. · e.g. `AAPL`
 - `limit` (optional, integer, 1-50) - Maximum articles to return, 1 to 50. Defaults to the upstream batch size.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Response** `NewsArticleList` rows at `data.items[]`, each `{ article }` ([full schema](schemas/NewsArticleList.md))
 
@@ -138,7 +138,7 @@ Returns recent news articles for one financial instrument as a unified NewsArtic
 | `article.placement` | Source list: "news_search" or "top_stories" |
 | `article.rank` | Result rank (news_search items only; null on top_stories) |
 
-+1 more (types in the full schema): `article` {source}. Also in the sample: `article` {domain string, snippet null, image_url string}. Page-level: `data.dropped`.
++1 more (types in the full schema): `article` {source}. Also in the sample: `article` {domain string, snippet null, image_url string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/news" \
@@ -164,13 +164,13 @@ Returns one expiry's option chain as a flat unified OptionContractList: calls an
 | Field | Meaning |
 |---|---|
 | `option_contract.id` | OCC contract symbol |
-| `option_contract.expiry` | Expiry date, absolute UTC |
-| `option_contract.implied_volatility` | Implied volatility as a decimal fraction |
-| `option_contract.in_the_money` | Whether the contract is currently in the money |
-| `option_contract.open_interest` | Contracts outstanding |
-| `option_contract.strike` | Strike price |
+| `option_contract.ask` | Lowest price a seller is asking for the contract. |
+| `option_contract.bid` | Highest price a buyer is offering for the contract. |
+| `option_contract.change` | Absolute change in the last price since the previous close. |
+| `option_contract.contract_size` | Number of underlying shares one contract covers, as a… |
+| `option_contract.contract_symbol` | The contract's own OCC symbol. |
 
-+12 more (types in the full schema): `option_contract` {symbol, type, ask, bid, change, contract_size, contract_symbol, currency, last_price, last_trade_date, percent_change, volume}.
++12 more (types in the full schema): `option_contract` {currency, expiry, implied_volatility, in_the_money, last_price, last_trade_date, open_interest, percent_change, strike, symbol, type, volume}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/options" \
@@ -198,10 +198,10 @@ Returns ONE rich, unified Quote for a financial instrument keyed by its `keyword
 |---|---|
 | `quote.id` | Instrument identifier: re-feed into /v1/finance/quote… |
 | `quote.name` | Display name… |
+| `quote.url` | URL of the quote page on the source. |
 | `quote.currency` | Price currency (null for asset pairs) |
 | `quote.ticker` | Ticker symbol (null for forex/crypto asset pairs) |
 | `quote.type` | Instrument class: stock \| etf \| index \| crypto \| forex \|… |
-| `quote.url` |  |
 
 Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}; `quote.graph[]` {timestamp string, value number, volume number}; `quote.financials.quarterly[]` {type string, timestamp string, revenue number} (+88 more).
 
@@ -229,13 +229,13 @@ Returns income-statement, balance-sheet and cash-flow line items per reporting p
 | Field | Meaning |
 |---|---|
 | `financial_statement.id` | Stable row id ("<symbol>:<statement>:<period_end>") |
-| `financial_statement.currency` | Reporting currency |
-| `financial_statement.period_end` | Fiscal period END, absolute UTC. |
-| `financial_statement.period_type` | quarterly \| annual \| ttm |
-| `financial_statement.statement` | income \| balance_sheet \| cash_flow \| combined |
-| `financial_statement.cash_and_short_term_investments` |  |
+| `financial_statement.cash_and_short_term_investments` | Cash and short term investments at period end, in the… |
+| `financial_statement.cash_and_short_term_investments_delta` | Change from the previous period, as a percentage. |
+| `financial_statement.cash_from_financing` | Net cash from financing activities, in the statement… |
+| `financial_statement.cash_from_financing_delta` | Change from the previous period, as a percentage. |
+| `financial_statement.cash_from_investing` | Net cash from investing activities, in the statement… |
 
-+31 more (types in the full schema): `financial_statement` {cash_and_short_term_investments_delta, cash_from_financing, cash_from_financing_delta, cash_from_investing, cash_from_investing_delta, cash_from_operations, cash_from_operations_delta, earnings_per_share, earnings_per_share_delta, ebitda, ebitda_delta, effective_tax_rate, free_cash_flow, free_cash_flow_delta, net_change_in_cash, net_change_in_cash_delta, net_income, net_income_delta, net_profit_margin} (+12 more).
++31 more (types in the full schema): `financial_statement` {cash_from_investing_delta, cash_from_operations, cash_from_operations_delta, currency, earnings_per_share, earnings_per_share_delta, ebitda, ebitda_delta, effective_tax_rate, free_cash_flow, free_cash_flow_delta, net_change_in_cash, net_change_in_cash_delta, net_income, net_income_delta, net_profit_margin, net_profit_margin_delta, operating_expense, operating_expense_delta} (+12 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/statements" \
@@ -264,12 +264,12 @@ Searches Google Finance for financial instruments matching a name and returns a 
 |---|---|
 | `quote.id` | Instrument identifier: re-feed into /v1/finance/quote… |
 | `quote.name` | Display name… |
+| `quote.url` | URL of the quote page on the source. |
 | `quote.currency` | Price currency (null for asset pairs) |
 | `quote.ticker` | Ticker symbol (null for forex/crypto asset pairs) |
 | `quote.type` | Instrument class: stock \| etf \| index \| crypto \| forex \|… |
-| `quote.url` |  |
 
-Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}. Page-level: `data.dropped`.
+Also in the sample: `quote` {exchange string, pair null, metrics null}; `quote.price` {current number, previous_close number, delta number, percentage_delta number, trend string, day_low null, day_high null, year_low null, year_high null, timestamp string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/ticker-search" \

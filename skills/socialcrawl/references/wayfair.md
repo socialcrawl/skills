@@ -40,9 +40,9 @@ Returns full product detail for a Wayfair item: name, brand, manufacturer, curre
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` |  |
+| `product.reviews_count` | Number of written reviews. |
 
-+5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, availability string}; `product.specifications[]` {group null, name string, value string}.
 
 **Next** `wayfair/reviews` (`sku` ← `data.product.id`) - Get Wayfair product reviews.
 
@@ -58,7 +58,7 @@ Returns written customer reviews for a Wayfair product, 10 per page, each with t
 
 **Use when** you want to read what buyers actually said about a product. Pages do not overlap and the total is stable, so a full crawl is predictable.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 11-12 s
 
 **Query params**
@@ -68,9 +68,8 @@ Returns written customer reviews for a Wayfair product, 10 per page, each with t
 - `page` (optional, integer, 1-500) - Page number, starting at 1. Prefer the universal cursor parameter.
 - `sort_order` (optional, enum: relevance | helpful | date_ascending | date_descending | rating_ascending | rating_descending) - Review ordering: relevance (default), helpful, date_ascending, date_descending, rating_ascending, or rating_descending.
 - `star` (optional, integer, 1-5) - Return only reviews with this star rating, 1 to 5.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -85,11 +84,11 @@ Returns written customer reviews for a Wayfair product, 10 per page, each with t
 | `review.text` | Full review body |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 | `review.entity_id` | ID of the reviewed entity… |
-| `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+9 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review.author` {name, location}; `review` {images, language}; `review.rating` {value}. Also in the sample: `review` {url null, title null, helpful_votes null, verified boolean, source null, original_language null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++9 more (types in the full schema): `review` {images, language}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {location}; `review.rating` {value}. Also in the sample: `review` {url null, title null, helpful_votes null, verified boolean, source null, original_language null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/wayfair/reviews" \
@@ -116,6 +115,7 @@ Returns Wayfair products matching a keyword, 48 per page by default, each with i
 - `max_price` (optional, string) - Highest price to include. Applied by Wayfair and approximate, so filter on product.price.current if you need a hard bound.
 - `color` (optional, string) - Restrict results to one colour family, for example grey.
 - `in_stock` (optional, boolean) - Set true to return only products Wayfair can ship now.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -125,10 +125,10 @@ Returns Wayfair products matching a keyword, 48 per page by default, each with i
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
+| `product.description` | Product description. |
+| `product.features` | Feature bullet points from the product page. |
 
-+7 more (types in the full schema): `product` {features, reviews_count}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}. Page-level: `data.dropped`.
++7 more (types in the full schema): `product` {image_urls, reviews_count}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `wayfair/reviews` (`sku` ← `data.items[].product.id`) - Get Wayfair product reviews. · `wayfair/product` (`sku` ← `data.items[].product.id`) - Get a Wayfair product by SKU.
 

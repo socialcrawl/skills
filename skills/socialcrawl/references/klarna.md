@@ -91,6 +91,7 @@ Returns products in a Klarna category, 48 per page by default, each with product
 - `price_range` (optional, string) - Price filter as min-max, for example 50-500, or 50- for 50 and above.
 - `filter` (optional, string) - Facet filter as keyID-valueID from GET /v1/klarna/category/filters.
 - `category_path_id` (optional, string) - Sub-category path id as keyID-valueID.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -100,10 +101,10 @@ Returns products in a Klarna category, 48 per page by default, each with product
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
 
-+5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -205,8 +206,8 @@ Returns one Klarna shopping product: title, description, brand, rating, review c
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.description` |  |
-| `product.reviews_count` |  |
+| `product.description` | Product description. |
+| `product.reviews_count` | Number of written reviews. |
 
 +2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {seller string, image_urls null, availability null}; `product.price` {current null, original null, currency null}.
 
@@ -240,10 +241,10 @@ Returns two Klarna products side by side: title, brand, rating, lowest price, an
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
 
-+5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -280,10 +281,10 @@ Returns the merchant offers Klarna compared for one product, each with seller na
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
-| `product.seller` |  |
-| `product.price.currency` |  |
+| `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
 
-+1 more (types in the full schema): `product.price` {current}. Also in the sample: `product` {description null, brand string, image_urls null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, requested_id string}. Page-level: `data.dropped`.
++1 more (types in the full schema): `product.price` {current}. Also in the sample: `product` {description null, brand string, image_urls null, reviews_count null}; `product.price` {original null}; `product.rating` {average null, count null}; `product.ext` {seller_id string, requested_id string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/price-history` (`product_id` ← `data.items[].product.id`) - Get Klarna price history for a product.
 
@@ -326,7 +327,7 @@ Returns written user reviews aggregated across merchants, 10 per page by default
 
 **Use when** you have a product id and need the review text. The star average is already on GET /v1/klarna/product.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor (native `nextBatchId`) · default page size not measured; set with `limit` · depth unknown · typical 0.7-0.9 s
 
 **Query params**
@@ -336,9 +337,8 @@ Returns written user reviews aggregated across merchants, 10 per page by default
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 - `limit` (optional, integer, 1-50) - Reviews per page, 1 to 50. Default 10.
 - `nextBatchId` (optional, integer, min 0) - Pagination token from the previous page. Prefer the universal cursor parameter.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -352,13 +352,13 @@ Returns written user reviews aggregated across merchants, 10 per page by default
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
+| `review.url` | URL of the review. |
+| `review.author.name` | Reviewer name. |
 
-+12 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, source}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {verified boolean, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++12 more (types in the full schema): `computed` {labels_evidence}; `review` {entity_id, helpful_votes, language, source}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {verified boolean, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/reviews" \
@@ -398,7 +398,7 @@ Returns professional and expert reviews for a Klarna product, 10 per page, each 
 
 **Use when** you need expert reviews rather than user reviews.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor (native `nextBatchId`) · default page size not measured; set with `limit` · depth unknown · typical 0.6-0.9 s
 
 **Query params**
@@ -408,9 +408,8 @@ Returns professional and expert reviews for a Klarna product, 10 per page, each 
 - `region` (optional, enum: usa | uk | germany | sweden | france | italy | spain | netherlands | austria | ireland | norway | finland | denmark) - Shopping region: usa (default), uk, germany, sweden, france, italy, spain, netherlands, austria, ireland, norway, finland, denmark. Changes currency, language, and the merchant set.
 - `limit` (optional, integer, 1-50) - Reviews per page, 1 to 50. Default 10.
 - `nextBatchId` (optional, integer, min 0) - Pagination token from the previous page. Prefer the universal cursor parameter.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -424,13 +423,13 @@ Returns professional and expert reviews for a Klarna product, 10 per page, each 
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.helpful_votes` | Helpful-vote count (Amazon; null elsewhere) |
+| `review.url` | URL of the review. |
+| `review.author.name` | Reviewer name. |
 
-+12 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language, source}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {verified boolean, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++12 more (types in the full schema): `computed` {labels_evidence}; `review` {entity_id, helpful_votes, language, source}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {verified boolean, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/reviews/pro" \
@@ -459,10 +458,10 @@ Returns Klarna shopping products matching a keyword, 20 per call, each with prod
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
 
-+5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/pro` (`product_id` ← `data.items[].product.id`) - Get Klarna professional reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL.
 
@@ -487,7 +486,7 @@ Returns Klarna search autocomplete: matching products plus category and feature 
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, name string, url string, categoryName string, outOfStock boolean, condition string, type string}; `lowestPrice` {amount string, currency string}; `image` {id string, url null, path string, description string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/klarna/search/suggestions" \
@@ -532,6 +531,7 @@ Returns products sold by one Klarna retailer, 25 per page by default. Pagination
 - `offset` (optional, integer, min 0) - Row offset, starting at 0. Prefer the universal cursor parameter.
 - `sort_by` (optional, enum: popularity | price_low | price_high | trend | name | rating | price_drop) - Result ordering: popularity (default), price_low, price_high, trend, name, rating, or price_drop.
 - `price_range` (optional, string) - Price filter as min-max, for example 50-500, or 50- for 50 and above.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -541,10 +541,10 @@ Returns products sold by one Klarna retailer, 25 per page by default. Pagination
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
 
-+5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -571,19 +571,20 @@ Returns Klarna's retailer directory, 24 per page, each with store UUID, display 
 - `cashback` (optional, boolean) - When true, keep stores that offer cashback.
 - `shop_in_app` (optional, boolean) - When true, keep stores available in the Klarna app.
 - `klarna_at_checkout` (optional, boolean) - When true, keep stores with Klarna at checkout.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `SellerList` rows at `data.items[]`, each `{ seller }` ([full schema](schemas/SellerList.md))
 
 | Field | Meaning |
 |---|---|
+| `seller.id` | The seller's id: its domain or a slug of its name. |
 | `seller.name` | Seller name |
-| `seller.id` |  |
-| `seller.url` |  |
+| `seller.url` | URL of the seller's offer page. |
+| `seller.annotation` | Note shown with the offer, for example a special offer. (seen in a sample response) |
+| `seller.availability` | Stock status of the offer as the seller words it. (seen in a sample response) |
 | `seller.condition` | Item condition… (seen in a sample response) |
-| `seller.annotation` | (seen in a sample response) |
-| `seller.availability` | (seen in a sample response) |
 
-Also in the sample: `seller` {domain null}; `seller.price` {base null, tax null, shipping null, total null, currency null}; `seller.rating` {average null, count null}. Page-level: `data.dropped`.
+Also in the sample: `seller` {domain null}; `seller.price` {base null, tax null, shipping null, total null, currency null}; `seller.rating` {average null, count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/klarna/stores" \

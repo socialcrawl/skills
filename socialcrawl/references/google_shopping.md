@@ -71,8 +71,8 @@ Returns the full detail for a single Google Shopping product: title, description
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.description` |  |
-| `product.reviews_count` |  |
+| `product.description` | Product description. |
+| `product.reviews_count` | Number of written reviews. |
 
 +2 more (types in the full schema): `product.rating` {average, count}. Also in the sample: `product` {seller null, image_urls string[], availability null}; `product.price` {current null, original null, currency null}; `product.specifications[]` {group null, name string, value string}.
 
@@ -109,11 +109,11 @@ Searches Google Shopping for products matching a keyword. Returns a unified Prod
 | `product.id` | Platform product ID… |
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
-| `product.description` |  |
-| `product.reviews_count` |  |
-| `product.seller` |  |
+| `product.description` | Product description. |
+| `product.reviews_count` | Number of written reviews. |
+| `product.seller` | Name of the seller. |
 
-+5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {brand null, image_urls string[], availability null}; `product.ext` {gid string, data_docid string}. Page-level: `data.dropped`.
++5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {brand null, image_urls string[], availability null}; `product.ext` {gid string, data_docid string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `google_shopping/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `google_shopping/sellers` (`product_id` ← `data.items[].product.id`) - The stores selling each product, with prices. · `google_shopping/price-history` (`product_id` ← `data.items[].product.id`) - Get Google Shopping price history for a product.
 
@@ -140,9 +140,8 @@ Returns a unified ReviewList for a Google Shopping product, aggregated across re
 - `depth` (optional, integer) - Number of reviews to retrieve (default 10, multiples of 10, max 8000).
 - `country` (optional, string) - Country as an ISO code ('US', 'GB') or full name ('United States'). Defaults to United States.
 - `language` (optional, string) - Language code. Defaults to en.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -155,13 +154,13 @@ Returns a unified ReviewList for a Google Shopping product, aggregated across re
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
+| `review.url` | URL of the review. |
+| `review.author.name` | Reviewer name. |
 
-+10 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review` {title, url, source}; `review.author` {name}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {helpful_votes null, verified null, language null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `computed` {labels_evidence}; `review` {entity_id, source}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {helpful_votes null, verified null, language null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_shopping/reviews" \
@@ -194,13 +193,13 @@ Returns the list of sellers/offers for a single Google Shopping product: seller 
 | Field | Meaning |
 |---|---|
 | `seller.name` | Seller name |
+| `seller.url` | URL of the seller's offer page. |
+| `seller.annotation` | Note shown with the offer, for example a special offer. |
+| `seller.availability` | Stock status of the offer as the seller words it. |
 | `seller.condition` | Item condition… |
-| `seller.url` |  |
-| `seller.annotation` |  |
-| `seller.availability` |  |
-| `seller.domain` |  |
+| `seller.domain` | Domain of the seller's site. |
 
-+7 more (types in the full schema): `seller.price` {base, currency, shipping, tax, total}; `seller.rating` {average, count}. Also in the sample: `seller` {id string}. Page-level: `data.dropped`.
++7 more (types in the full schema): `seller.price` {base, currency, shipping, tax, total}; `seller.rating` {average, count}. Also in the sample: `seller` {id string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_shopping/sellers" \

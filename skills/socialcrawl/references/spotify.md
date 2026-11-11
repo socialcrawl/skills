@@ -47,7 +47,7 @@ Returns album metadata: artists, release date, cover art, copyright info, tracks
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+7 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {thumbnail_url}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++7 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.ext` {hashtags null, mentions null}. Never filled: `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/album" \
@@ -83,7 +83,7 @@ Returns artist metadata: id, name, followers, genres, and related artists. Pass 
 | `author.display_name` | Display name or full name |
 | `author.followers` | Follower or subscriber count as an integer. |
 
-+6 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {monthly_listeners}. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++8 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, monthly_listeners, products}. Also in the sample: `author` {url string}. Never filled: `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/artist" \
@@ -119,7 +119,7 @@ Returns podcast metadata. Spotify calls podcasts `shows` internally, so Spotify 
 | `author.display_name` | Display name or full name |
 | `computed.content_category` | Keyword-classified content category… |
 
-+6 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `author.ext` {average_rating, total_ratings}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `author.ext` {average_rating, business_hours, products, total_ratings}. Also in the sample: `author` {url string}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.verified`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/podcast" \
@@ -140,8 +140,8 @@ Returns episodes for a Spotify podcast. Pass the `cursor` from the previous resp
 - `id` (optional, string) - Spotify podcast (show) ID.
 - `url` (optional, string) - Spotify podcast (show) URL. · e.g. `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk`
 - `cursor` (optional, integer) - Cursor returned by the previous response. Omit for page 1.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -158,7 +158,7 @@ Returns episodes for a Spotify podcast. Pass the `cursor` from the previous resp
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post` {url string}. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}. Also in the sample: `post` {url string}. Never filled: `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/podcast/episodes" \
@@ -180,7 +180,7 @@ Searches Spotify playlists matching a query. Note (DR-MS-09): the upstream curre
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {id string, __typename string, attributes array, description string, format string, name string, uri string}; `images[].extractedColors.colorDark` {hex string, isFallback boolean}; `images[].sources[]` {height number, url string, width number}; `ownerV2` {__typename string}; `ownerV2.data` {__typename string, name string, uri string, username string}; `ownerV2.data.avatar.sources[]` {height number, url string, width number}; `visualIdentity.squareCoverImage` {__typename string}; `visualIdentity.squareCoverImage.extractedColorSet.encoreBaseSetTextColor` {alpha number, blue number, green number, red number} (+60 more).
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/search" \
@@ -216,7 +216,7 @@ Returns track metadata: artists, album info, duration, playability, and sharing 
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Also in the sample: `post` {url string}; `post.ext` {hashtags null, mentions null}. Never filled: `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/spotify/track" \

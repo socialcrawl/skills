@@ -43,12 +43,12 @@ Returns a unified Place for one Yelp business: name, alias URL, unrounded star r
 |---|---|
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
+| `place.address` | Street address as the source prints it. |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
 | `place.price_level` | Price band ("inexpensive" / "$$" / null) |
-| `place.reviews_count` | Number of ratings |
-| `place.address` |  |
-| `place.latitude` |  |
 
-+2 more (types in the full schema): `place` {longitude}; `place.rating` {value}. Also in the sample: `place` {url string, category string, phone null, verified null, description null, image_urls string[], categories string[]}; `place.rating` {max number}; `place.ext` {timezone string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}.
++2 more (types in the full schema): `place` {reviews_count}; `place.rating` {value}. Also in the sample: `place` {url string, category string, phone null, verified null, description null, image_urls string[], categories string[]}; `place.rating` {max number}; `place.ext` {timezone string}; `place.ext.hours[]` {date null, day_name string, is_open boolean, opens_at string, closes_at string}.
 
 **Next** `yelp/business/reviews` (`id` ← `data.place.id`) - Get Yelp reviews for a business.
 
@@ -64,7 +64,7 @@ Returns a unified ReviewList of customer reviews for a Yelp business, keyed by t
 
 **Use when** Use it after business/info to page the review thread. Page 2 does not overlap page 1.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 2.4-2.5 s
 
 **Query params**
@@ -72,9 +72,8 @@ Returns a unified ReviewList of customer reviews for a Yelp business, keyed by t
 - `id` (optional, string) - Yelp business encid, the 22-character opaque id (for example zj8Lq1T8KIC5zwFief15jg for Prince Street Pizza). Alias slugs such as prince-street-pizza-new-york-2 are not accepted on this surface: they come back as not found. · e.g. `zj8Lq1T8KIC5zwFief15jg`
 - `url` (optional, string) - Yelp business URL. Only URLs whose /biz/ segment is the 22-character encid resolve. Alias URLs such as https://www.yelp.com/biz/prince-street-pizza-new-york-2 come back as not found.
 - `cursor` (optional, string) - Opaque cursor from the previous page's next_cursor. Omit on page 1.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -90,11 +89,11 @@ Returns a unified ReviewList of customer reviews for a Yelp business, keyed by t
 | `review.text` | Full review body |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 | `review.entity_id` | ID of the reviewed entity… |
-| `computed.labels.incentivized` | incentivized: does the reviewer say they got the product… (with `label=incentivized`) |
 
-+10 more (types in the full schema): `computed.labels` {injection, issue, reports, sentiment}; `review.author` {name, avatar_url, location, reviews_count}; `review` {language}; `review.rating` {value}. Also in the sample: `review` {url string, title null, helpful_votes number, verified null, source null, original_language null, translated null}; `review.rating` {max number}; `review.author` {url string} (+6 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++10 more (types in the full schema): `review` {language}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {avatar_url, location, reviews_count}; `review.rating` {value}. Also in the sample: `review` {url string, title null, helpful_votes number, verified null, source null, original_language null, translated null}; `review.rating` {max number}; `review.author` {url string} (+6 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/yelp/business/reviews" \
@@ -108,7 +107,7 @@ Searches Yelp businesses by term and location. Returns a unified PlaceList of 10
 
 **Use when** you want to find businesses before business/info. query and location are required. If the provider reports a non-zero total with no rows, the call fails and is refunded.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** cursor · page size not measured · depth unknown · typical 1.8-2.0 s
+**Paging** cursor · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.8-2.0 s
 
 **Query params**
 
@@ -117,6 +116,7 @@ Searches Yelp businesses by term and location. Returns a unified PlaceList of 10
 - `cursor` (optional, string) - Cursor from the previous page's next_cursor. Omit on page 1. Pages hold 10 regular businesses (plus any sponsored ones when ads=true); the cursor is a numeric offset such as 10.
 - `sort` (optional, enum: recommended | rating | review_count) - Result order. Only recommended (the default, Yelp's recommended order) is served. rating and review_count are refused with a free 400: no source can order Yelp search by them. To rank by rating or review count, sort the returned items by place.rating.value or place.reviews_count yourself.
 - `ads` (optional, boolean) - When true, sponsored businesses are added after the page's regular results. They are not marked as sponsored. Default false.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `PlaceList` rows at `data.items[]`, each `{ place }` ([full schema](schemas/PlaceList.md))
 
@@ -125,11 +125,11 @@ Searches Yelp businesses by term and location. Returns a unified PlaceList of 10
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
 | `place.url` | Website or canonical URL (only when the fallback source serves) |
-| `place.price_level` | Price band ("inexpensive" / "$$" / null) |
-| `place.reviews_count` | Number of ratings |
-| `place.address` |  |
+| `place.address` | Street address as the source prints it. |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
 
-+3 more (types in the full schema): `place` {latitude, longitude}; `place.rating` {value}. Page-level: `data.dropped`.
++3 more (types in the full schema): `place` {price_level, reviews_count}; `place.rating` {value}. Also in the sample: `place` {category string, phone null, verified null, description null, image_urls string[], categories string[]}; `place.rating` {max number}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `yelp/business/reviews` (`id` ← `data.items[].place.id`) - Get Yelp reviews for a business. · `yelp/business/info` (`id` ← `data.items[].place.id`) - Get a Yelp business by encid.
 
@@ -146,7 +146,7 @@ Same search and the same PlaceList as GET /v1/yelp/search: same required query +
 
 **Use when** you want the fuller search card. Same required params as /v1/yelp/search.
 **Cost** cache 120 s · multi-source (billed once)
-**Paging** cursor · page size not measured · depth unknown · typical 1.6-17 s
+**Paging** cursor · ≈10/page (observed once) · depth unknown · N items ≈ ceil(N/10) x 1 credits · typical 1.6-17 s
 
 **Query params**
 
@@ -155,6 +155,7 @@ Same search and the same PlaceList as GET /v1/yelp/search: same required query +
 - `cursor` (optional, string) - Cursor from the previous page's next_cursor. Omit on page 1. Pages hold 10 regular businesses (plus any sponsored ones when ads=true); the cursor is a numeric offset such as 10.
 - `sort` (optional, enum: recommended | rating | review_count) - Result order. Only recommended (the default, Yelp's recommended order) is served. rating and review_count are refused with a free 400: no source can order Yelp search by them. To rank by rating or review count, sort the returned items by place.rating.value or place.reviews_count yourself.
 - `ads` (optional, boolean) - When true, sponsored businesses are added after the page's regular results. They are not marked as sponsored. Default false.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `PlaceList` rows at `data.items[]`, each `{ place }` ([full schema](schemas/PlaceList.md))
 
@@ -163,11 +164,11 @@ Same search and the same PlaceList as GET /v1/yelp/search: same required query +
 | `place.id` | Place ID… |
 | `place.name` | Business / hotel name |
 | `place.url` | Website or canonical URL (only when the fallback source serves) |
-| `place.price_level` | Price band ("inexpensive" / "$$" / null) |
-| `place.reviews_count` | Number of ratings |
-| `place.address` |  |
+| `place.address` | Street address as the source prints it. |
+| `place.latitude` | Latitude in decimal degrees. |
+| `place.longitude` | Longitude in decimal degrees. |
 
-+3 more (types in the full schema): `place` {latitude, longitude}; `place.rating` {value}. Page-level: `data.dropped`.
++3 more (types in the full schema): `place` {price_level, reviews_count}; `place.rating` {value}. Also in the sample: `place` {category string, phone null, verified null, description null, image_urls string[], categories string[]}; `place.rating` {max number}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `yelp/business/reviews` (`id` ← `data.items[].place.id`) - Customer reviews of each business. · `yelp/business/info` (`id` ← `data.items[].place.id`) - Get a Yelp business by encid.
 
@@ -193,7 +194,7 @@ Returns Yelp typeahead rows for a query in a location: category, common, chain, 
 
 **Response** `SearchResult` rows at `data.items[]` (inferred from a sample): {title string, subtitle null, type string, numCheckins null, isBookmarked null, isTypeahead boolean, nameParam string, redirectUrl string, ajaxData null, query string, refinements null, __typename string}; `thumbnail` {type null, key null, color null, __typename string}.
 
-Page-level: `data.dropped`.
+Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/yelp/search/suggestions" \

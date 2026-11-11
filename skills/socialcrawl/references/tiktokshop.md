@@ -32,7 +32,7 @@ Returns detailed information about a TikTok Shop product: price and discount, ra
 
 - `url` (optional, string) - Full URL of the TikTok Shop product page (`www.tiktok.com/shop/pdp/...` or `shop.tiktok.com/.../pdp/...`). Provide this or `product_id`. · e.g. `https://www.tiktok.com/shop/pdp/goli-ashwagandha-gummies-with-vitamin-d-ksm-66-vegan-non-gmo/1729587769570529799`
 - `product_id` (optional, string) - Numeric TikTok Shop product id, as returned in `product.id` by tiktokshop/search, tiktokshop/products and tiktokshop/user/showcase. Provide this or `url`. · e.g. `1729587769570529799`
-- `region` (optional, enum: US | GB | ID | MY | TH | SG | VN | PH) - ISO 3166-1 alpha-2 region for the lookup. Default US. Served: US, SG, MY, TH, VN, PH. GB and ID are temporarily unavailable (503, no charge). Other values are rejected before billing.
+- `region` (optional, enum: US | GB | ID | MY | TH | SG | VN | PH) - ISO 3166-1 alpha-2 region for the lookup. Default US. Served: US, GB, ID, SG, MY, TH, VN, PH. Other values are rejected before billing.
 - `include` (optional, enum: details) - Set to `details` (one token only) to add the listing description (`product.description`), brand, specifications, and the shipping fee, free-shipping flag, delivery estimate and official-shop badge (`shop_identity`) under `product.ext.tiktokshop` when the plain call came back without them. 3 extra credits, kept only when a description comes back; a repeat within the cache window is 0. Adds about 5 to 15 seconds when a lookup runs; read `data.hydration` for the credits held and kept and the time.
 
 **Constraints**
@@ -48,9 +48,9 @@ Returns detailed information about a TikTok Shop product: price and discount, ra
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
 | `product.brand` | Brand name (cleaned). |
-| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.description` | Product description. |
 
-+20 more (types in the full schema): `product` {description, reviews_count, seller, specifications, variations}; `product.ext` {seller_id, sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}; `product.ext.tiktokshop` {delivery_days_max, delivery_days_min, delivery_estimate, free_shipping, shipping_fee} (+1 more). Page-level: `data.hydration`.
++20 more (types in the full schema): `product` {image_urls, reviews_count, seller, specifications, variations}; `product.ext` {seller_id, sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}; `product.ext.tiktokshop` {delivery_days_max, delivery_days_min, delivery_estimate, free_shipping, shipping_fee} (+1 more). Page-level: `data.hydration`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktokshop/product" \
@@ -64,7 +64,7 @@ Returns reviews for a TikTok Shop product. Each review includes rating, text, au
 
 **Use when** you want to read what buyers actually said, since product gives only the rating and review count, and page through the whole review corpus with the cursor.
 **Cost** price moves with `label` · cache 300 s
-**Pricing** 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Pricing** 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** page (native `page`) · ≈10/page (observed once) · depth unknown · price per N items not proven · typical 1.6-2.4 s
 
 **Query params**
@@ -73,9 +73,8 @@ Returns reviews for a TikTok Shop product. Each review includes rating, text, au
 - `product_id` (optional, string) - The ID of the product (required if url is not provided)
 - `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - ISO 3166-1 alpha-2 region for the product (e.g. `US`). Important when the product is regionally scoped.
 - `page` (optional, integer, min 1) - Page number to retrieve, 10 reviews per page. Prefer passing back `pagination.next_cursor`, which carries the same position and stays correct if the underlying paging mechanism changes.
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -89,13 +88,13 @@ Returns reviews for a TikTok Shop product. Each review includes rating, text, au
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
+| `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.verified` | Verified-purchase flag (Amazon; null elsewhere) |
 
-+15 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, images}; `review.author` {name, avatar_url, location}; `review.rating` {max, value}; `review.ext.tiktokshop` {is_incentivized_review, reviewer_id, sku_specification}. Never filled: `review.author.reviews_count`, `review.author.url`, `review.helpful_votes`, `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`, `review.url`. Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++15 more (types in the full schema): `review` {entity_id, images, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {avatar_url, location}; `review.rating` {max, value}; `review.ext.tiktokshop` {is_incentivized_review, reviewer_id, sku_specification}. Never filled: `review.author.reviews_count`, `review.author.url`, `review.helpful_votes`, `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`, `review.url`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktokshop/product/reviews" \
@@ -115,8 +114,9 @@ Returns the products listed on one TikTok Shop storefront: title, images, canoni
 
 - `url` (required) - Full URL of the TikTok Shop page · e.g. `https://www.tiktok.com/shop/store/goli-nutrition/7495794203056835079`
 - `sort_by` (optional, enum: top | new_releases) - Sort products by best-selling (`top`) or newest (`new_releases`). Defaults to `top`.
-- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to get shop products from. A storefront is only reachable from its own market, so a GB shop needs `region=GB`; the default is US.
+- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to get shop products from. A storefront is only reachable from its own market, so a GB shop needs `region=GB`; the default is US. Prices are decimal amounts in the major unit of `price.currency`, and each row's price belongs to the SKU in `product.ext.sku_id`. Outside the US, TikTok prices each shopper session separately, so a product's price, and the SKU it is shown for, can differ between calls; those responses carry a `session_priced` entry in `data._warnings`.
 - `cursor` (optional, string) - Pagination cursor. Pass back `pagination.next_cursor` from the previous response.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -126,10 +126,10 @@ Returns the products listed on one TikTok Shop storefront: title, images, canoni
 | `product.title` | Product title |
 | `product.id` | Platform product ID… |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` |  |
-| `product.seller` |  |
+| `product.reviews_count` | Number of written reviews. |
+| `product.seller` | Name of the seller. |
 
-+9 more (types in the full schema): `product.ext` {seller_id, sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.description`. Page-level: `data.dropped`.
++9 more (types in the full schema): `product.ext` {seller_id, sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.description`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `tiktokshop/product` (`url` ← `data.items[].product.url`) - Get TikTok Shop product details.
 
@@ -174,7 +174,8 @@ Searches TikTok Shop across every storefront for products matching a keyword, in
 
 - `query` (required) - Search keyword or phrase to find TikTok Shop products · e.g. `phone case`
 - `page` (optional, integer, min 1) - Page number to retrieve. Prefer passing back `pagination.next_cursor`, which carries the same position.
-- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to search shop products in. Results, prices and currency follow the market; defaults to US. `price.current` and `price.original` are always decimal amounts in the major unit of `price.currency` in every region (10.90 means 10.90 EUR). Outside the US, TikTok prices each shopper session separately, so a product's price can differ between calls and `price.original` appears only when that session was offered a promotion; those responses carry a `session_priced` entry in `data._warnings`.
+- `region` (optional, enum: US | GB | DE | FR | IT | ID | MY | MX | PH | SG | ES | TH | VN | BR | JP | IE) - Region to search shop products in. Results, prices and currency follow the market; defaults to US. `price.current` and `price.original` are always decimal amounts in the major unit of `price.currency` in every region (10.90 means 10.90 EUR). Outside the US, TikTok prices each shopper session separately, so a product's price can differ between calls and `price.original` appears only when that session was offered a promotion; those responses carry a `session_priced` entry in `data._warnings`. Search rows do not name the SKU a price belongs to (`product.ext.sku_id` is null); `tiktokshop/products` on the seller's storefront names it.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -183,11 +184,11 @@ Searches TikTok Shop across every storefront for products matching a keyword, in
 | `product.url` | Direct URL to the product page |
 | `product.title` | Product title |
 | `product.id` | Platform product ID… |
+| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.description` |  |
-| `product.reviews_count` |  |
+| `product.reviews_count` | Number of written reviews. |
 
-+9 more (types in the full schema): `product` {seller}; `product.ext` {seller_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.ext.sku_id`. Page-level: `data.dropped`.
++9 more (types in the full schema): `product` {seller}; `product.ext` {seller_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.ext.sku_id`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `tiktokshop/product/reviews` (`url` ← `data.items[].product.url`) - Buyer reviews of each product. · `tiktokshop/product` (`url` ← `data.items[].product.url`) - Full details for each product.
 
@@ -210,6 +211,7 @@ Fetches products featured in a TikTok user's public showcase: the products a cre
 - `handle` (required) - The handle of the user · e.g. `mrtiktokreviews`
 - `region` (optional, enum: US) - Region the lookup is served from. Currently US only (an upstream limitation; other regions are rejected before billing). Support for more regions is planned upstream but has no date.
 - `cursor` (optional, string) - The `next_cursor` from the previous page. A cursor from deep in a large showcase stays valid for 7 days; an expired one is a free 400, and the walk restarts from the first page.
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `ProductList` rows at `data.items[]`, each `{ product }` ([full schema](schemas/ProductList.md))
 
@@ -219,10 +221,10 @@ Fetches products featured in a TikTok user's public showcase: the products a cre
 | `product.title` | Product title |
 | `product.id` | Platform product ID… |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` |  |
-| `product.ext.seller_id` |  |
+| `product.reviews_count` | Number of written reviews. |
+| `product.ext.seller_id` | The seller's id on the retailer. |
 
-+8 more (types in the full schema): `product.ext` {sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `post` {id string, url string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds null}; `post.author` {username string, display_name null, avatar_url null, verified null}; `post.engagement` {views null} (+42 more). Never filled: `product.availability`, `product.brand`, `product.description`, `product.seller`. Page-level: `data.dropped`.
++8 more (types in the full schema): `product.ext` {sku_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `post` {id string, url string}; `post.content` {text string, media_urls string, thumbnail_url string, duration_seconds null}; `post.author` {username string, display_name null, avatar_url null, verified null}; `post.engagement` {views null} (+42 more). Never filled: `product.availability`, `product.brand`, `product.description`, `product.seller`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `tiktokshop/product` (`url` ← `data.items[].product.url`) - Get TikTok Shop product details.
 

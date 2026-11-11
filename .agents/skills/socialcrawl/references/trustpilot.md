@@ -20,10 +20,10 @@
 
 ## GET /v1/trustpilot/business-search - 1 credit (standard)
 
-Searches Trustpilot for businesses (companies) matching a keyword. Returns a unified AuthorList: each result is a business profile with its display name, Trustpilot domain (`username`/`id`), own website (`external_url`), Trustpilot review-page URL (`url`), and total Trustpilot review count (`posts_count`). Use the returned domain to pull that business's reviews via /v1/trustpilot/reviews. Note: search matches BUSINESSES, not products: a domain-shaped query returns no results. Read from a task-based upstream; the async lifecycle is handled server-side, so this is an ordinary synchronous request (first calls take ~15-45s, then serve from cache).
+Searches Trustpilot for businesses (companies) matching a keyword. Returns a unified AuthorList: each result is a business profile with its display name, Trustpilot domain (`username`/`id`), own website (`external_url`), Trustpilot review-page URL (`url`), and total Trustpilot review count (`posts_count`). Use the returned domain to pull that business's reviews via /v1/trustpilot/reviews. Note: search matches BUSINESSES, not products: a domain-shaped query returns no results. An uncached call usually takes 10 to 20 seconds; repeats are served from cache.
 
 **Use when** you want to find a company's Trustpilot domain, which the reviews endpoint needs. It matches businesses, not products.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Paging** single page - Depth-based fan-out: page size is controlled by depth, one call.
 
 **Query params**
@@ -40,9 +40,9 @@ Searches Trustpilot for businesses (companies) matching a keyword. Returns a uni
 | `author.display_name` | Display name or full name |
 | `author.external_url` | Bio link / external website URL when surfaced by the… |
 | `author.posts_count` | Total number of posts / videos / tracks / episodes |
-| `author.url` | Direct URL to the profile page (seen in a sample response) |
+| `author.ext.business_hours` | The page's opening hours as the source reports them. |
 
-Also in the sample: `author` {avatar_url null, bio null, verified null, followers null, following null, likes_count null}. Page-level: `data.dropped`.
++1 more (types in the full schema): `author.ext` {products}. Also in the sample: `author` {avatar_url null, bio null, verified null, followers null, following null, likes_count null, url string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/trustpilot/business-search" \
@@ -64,9 +64,8 @@ Returns a unified ReviewList of customer reviews for a business on Trustpilot, k
 - `domain` (required) - The business's domain on Trustpilot (e.g. 'www.nike.com' or 'booking.com'), from business-search. · e.g. `www.nike.com`
 - `depth` (optional, integer) - Number of reviews to retrieve (default 20, multiples of 20, max 200). There is no pagination beyond 200. · e.g. `20`
 - `sort` (optional, enum: recency | relevance) - Review ordering: `recency` (newest first, default) or `relevance`. · e.g. `recency`
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality)
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -80,13 +79,13 @@ Returns a unified ReviewList of customer reviews for a business on Trustpilot, k
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
+| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
-| `review.entity_id` | ID of the reviewed entity… |
-| `review.verified` | Verified-purchase flag (Amazon; null elsewhere) |
+| `review.url` | URL of the review. |
+| `review.author.name` | Reviewer name. |
 
-+15 more (types in the full schema): `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review` {title, url, language}; `review.author` {name, url, avatar_url, location, reviews_count}; `review.rating` {max, value}. Also in the sample: `review` {helpful_votes null, source null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.estimate`, `data.held_back`, `data.labels`.
++15 more (types in the full schema): `review.author` {url, avatar_url, location, reviews_count}; `computed` {labels_evidence}; `review` {entity_id, language, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review` {helpful_votes null, source null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/trustpilot/reviews" \

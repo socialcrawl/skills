@@ -41,7 +41,7 @@ Returns public Kwai post details: caption, video and cover URLs, view/like/comme
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Also in the sample: `post.ext` {hashtags string[], mentions string[]}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
 
 **Next** `kwai/user/posts` (`handle` ← `data.post.author.username`) - List a Kwai user's posts. · `kwai/profile` (`handle` ← `data.post.author.username`) - Get a Kwai user profile.
 
@@ -78,7 +78,7 @@ Returns public profile data for a Kwai user: username, bio, avatar, verification
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
 
-+11 more (types in the full schema): `author` {followers, following, likes_count, posts_count, verified, private}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}. Never filled: `author.joined_at`.
++13 more (types in the full schema): `author` {followers, following, likes_count, posts_count, private, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author.joined_at`.
 
 **Next** `kwai/user/posts` (`handle` ← `data.author.username`) - List a Kwai user's posts.
 
@@ -102,8 +102,8 @@ Returns a paginated list of public Kwai posts for a user: captions, media URLs, 
 - `url` (optional, string) - Kwai profile URL
 - `cursor` (optional, string) - Cursor from the previous response for the next page
 - `count` (optional, integer) - Number of posts to return (max 50)
-- `since` (optional, string) - Only rows published on or after this date: YYYY-MM-DD (midnight UTC) or an ISO 8601 timestamp. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
-- `until` (optional, string) - Only rows published on or before this date: YYYY-MM-DD (that whole UTC day is included) or an ISO 8601 timestamp. Newer rows are left off each page and the walk does not stop, so older pages follow. A row with no date is kept. Aliases: [date window](api-overview.md#incremental-sync-since-stop_at_id).
+- `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
+- **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
@@ -120,7 +120,7 @@ Returns a paginated list of public Kwai posts for a user: captions, media URLs, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`.
++16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kwai/user/posts" \
