@@ -97,6 +97,24 @@ class AuthorExtLocationsItem(TypedDict, total=False):
     label: Optional[str]
     is_headquarters: Optional[bool]
 
+class AuthorExtMemberPreviewItem(TypedDict, total=False):
+    id: str
+    avatar_url: Optional[str]
+
+class AuthorExtAffiliatedPagesItem(TypedDict, total=False):
+    name: Optional[str]
+    url: str
+    industry: Optional[str]
+    location: Optional[str]
+    logo_url: Optional[str]
+
+class AuthorExtSimilarPagesItem(TypedDict, total=False):
+    name: Optional[str]
+    url: str
+    industry: Optional[str]
+    location: Optional[str]
+    logo_url: Optional[str]
+
 class AuthorExtHashtagsItem(TypedDict, total=False):
     name: str
     follower_count: Optional[float]
@@ -256,6 +274,8 @@ class AuthorExt(TypedDict, total=False):
     contacts: Optional[List[AuthorExtContactsItem]]
     contact_email: Optional[str]
     public_phone: Optional[str]
+    public_email_source: Optional[str]
+    public_phone_source: Optional[str]
     similar_source: Optional[str]
     instagram_username: Optional[str]
     similar_via: Optional[str]
@@ -276,6 +296,7 @@ class AuthorExt(TypedDict, total=False):
     website: Optional[str]
     cover_url: Optional[str]
     page_active: Optional[bool]
+    board_count: Optional[float]
     employee_count: Optional[float]
     employee_count_range: Optional[AuthorExtEmployeeCountRange]
     founded_year: Optional[float]
@@ -285,6 +306,9 @@ class AuthorExt(TypedDict, total=False):
     industries: Optional[List[str]]
     headquarters: Optional[AuthorExtHeadquarters]
     locations: Optional[List[AuthorExtLocationsItem]]
+    member_preview: Optional[List[AuthorExtMemberPreviewItem]]
+    affiliated_pages: Optional[List[AuthorExtAffiliatedPagesItem]]
+    similar_pages: Optional[List[AuthorExtSimilarPagesItem]]
     hashtags: Optional[List[AuthorExtHashtagsItem]]
     funding: Optional[AuthorExtFunding]
     founded_on: Optional[AuthorExtFoundedOn]
@@ -306,6 +330,8 @@ class AuthorExt(TypedDict, total=False):
     rating: Optional[str]
     rating_count: Optional[float]
     talking_about_count: Optional[float]
+    owner_name: Optional[str]
+    owner_confirmed: Optional[bool]
     business_hours: Any
     links: Optional[List[Union[str, AuthorExtLinksItem]]]
     ad_library_page_id: Optional[str]
@@ -368,6 +394,13 @@ class AuthorExt(TypedDict, total=False):
     weekly_contributions: Optional[float]
     rules_text: Optional[str]
     language: Optional[str]
+    stars: Optional[float]
+    forks: Optional[float]
+    open_issues: Optional[float]
+    name: Optional[str]
+    full_name: Optional[str]
+    pushed_at: Optional[str]
+    programming_language: Optional[str]
     post_karma: Optional[float]
     comment_karma: Optional[float]
     awardee_karma: Optional[float]
@@ -426,6 +459,7 @@ class PostAuthor(TypedDict, total=False):
     display_name: Optional[str]
     avatar_url: Optional[str]
     verified: Optional[bool]
+    url: Optional[str]
 
 class PostEngagement(TypedDict, total=False):
     views: Optional[float]
@@ -444,6 +478,71 @@ class PostFlags(TypedDict, total=False):
     shares_hidden: Optional[bool]
     views_hidden: Optional[bool]
     saves_hidden: Optional[bool]
+
+class PostExtTracksItem(TypedDict, total=False):
+    id: Optional[str]
+    title: Optional[str]
+    artists: List[str]
+    duration_seconds: Optional[float]
+    explicit: Optional[bool]
+    url: Optional[str]
+
+class PostExtStackoverflow(TypedDict, total=False):
+    is_answered: bool
+    accepted_answer_id: str
+    last_activity_at: str
+    last_edit_at: str
+    closed_reason: str
+    author_user_id: str
+    author_reputation: float
+    content_license: str
+
+class PostExtWikipedia(TypedDict, total=False):
+    language: str
+    is_disambiguation: bool
+    revision_id: str
+    updated_at: str
+    length_bytes: float
+    word_count: float
+
+class PostExtNpm(TypedDict, total=False):
+    version: str
+    license: str
+    homepage: str
+    repository_url: str
+    keywords: List[str]
+    maintainers: List[str]
+    published_at: str
+    dependencies: Any
+    peer_dependencies: Any
+    engines: Any
+    tarball_url: str
+    integrity: str
+    unpacked_size_bytes: float
+    file_count: float
+    downloads_weekly: float
+    downloads_monthly: float
+    dependents: float
+
+class PostExtPypiFilesItem(TypedDict, total=False):
+    filename: str
+    url: str
+    size_bytes: float
+    sha256: str
+    package_type: str
+    python_version: str
+    requires_python: str
+    yanked: bool
+    uploaded_at: str
+
+class PostExtPypi(TypedDict, total=False):
+    version: str
+    requires_python: str
+    requires_dist: List[str]
+    project_urls: Any
+    license: str
+    yanked: bool
+    files: List[PostExtPypiFilesItem]
 
 class PostExtCoauthorsItem(TypedDict, total=False):
     id: str
@@ -865,14 +964,32 @@ class PostExt(TypedDict, total=False):
     music_title: Optional[str]
     music_artist: Optional[str]
     music_is_original: Optional[bool]
+    tracks: Optional[List[PostExtTracksItem]]
+    genre: Optional[str]
+    stackoverflow: Optional[PostExtStackoverflow]
+    wikipedia: Optional[PostExtWikipedia]
+    npm: Optional[PostExtNpm]
+    pypi: Optional[PostExtPypi]
     author_id: Optional[str]
     author_url: Optional[str]
     author_followers: Optional[float]
+    author_bio_link: Optional[str]
+    author_bio: Optional[str]
+    author_cover_url: Optional[str]
+    author_keywords: Optional[str]
+    author_verified_type: Optional[str]
+    author_media_count: Optional[float]
+    author_private: Optional[bool]
+    client: Optional[str]
     author_following: Optional[float]
     author_posts_count: Optional[float]
+    author_likes_count: Optional[float]
+    author_sec_uid: Optional[str]
     author_location: Optional[str]
     in_reply_to_id: Optional[str]
     in_reply_to_username: Optional[str]
+    in_reply_to_url: Optional[str]
+    in_reply_to_published_at: Optional[str]
     conversation_id: Optional[str]
     author_country: Optional[str]
     author_public_email: Optional[str]
@@ -892,6 +1009,19 @@ class PostExt(TypedDict, total=False):
     removed: Optional[bool]
     removed_by: Optional[str]
     type: Optional[str]
+    state: Optional[str]
+    state_reason: Optional[str]
+    closed_at: Optional[str]
+    merged_at: Optional[str]
+    merged: Optional[bool]
+    draft: Optional[bool]
+    stars: Optional[float]
+    forks: Optional[float]
+    open_issues: Optional[float]
+    name: Optional[str]
+    full_name: Optional[str]
+    pushed_at: Optional[str]
+    programming_language: Optional[str]
     content_type: Optional[str]
     ticker_symbols: Optional[List[str]]
     video_view_count: Optional[float]
@@ -926,10 +1056,14 @@ class PostExt(TypedDict, total=False):
     top_comments: Optional[List[PostExtTopCommentsItem]]
     hashtags: Optional[List[str]]
     mentions: Optional[List[str]]
+    google_post_id: Optional[str]
+    cta_text: Optional[str]
+    cta_url: Optional[str]
     mentioned_user_ids: Optional[List[str]]
     quoted_post: Optional[PostExtQuotedPost]
     retweeted_post: Optional[PostExtRetweetedPost]
     quote_count: Optional[float]
+    article_url: Optional[str]
     all_media_urls: Optional[List[str]]
     reaction_counts: Optional[List[PostExtReactionCountsItem]]
     share_urn: Optional[str]
@@ -1017,6 +1151,7 @@ class PostExt(TypedDict, total=False):
     story_expires_at: Optional[str]
     numeric_id: Optional[float]
     outbound_url: Optional[str]
+    search_result_id: Optional[str]
     group: Optional[PostExtGroup]
 
 class Post(TypedDict, total=False):
@@ -1059,6 +1194,7 @@ class CommentAuthor(TypedDict, total=False):
     display_name: Optional[str]
     avatar_url: Optional[str]
     verified: Optional[bool]
+    url: Optional[str]
 
 class CommentEngagement(TypedDict, total=False):
     likes: Optional[float]
@@ -1069,9 +1205,26 @@ class CommentFlags(TypedDict, total=False):
     deleted: bool
     liked_by_creator: Optional[bool]
 
+class CommentExtMediaItem(TypedDict, total=False):
+    type: Literal["sticker", "gif", "image", "video"]
+    url: Optional[str]
+    width: Optional[float]
+    height: Optional[float]
+
 class CommentExtReactionCountsItem(TypedDict, total=False):
     type: str
     count: float
+    emoji: Optional[str]
+    emoji_id: Optional[str]
+    count_text: str
+
+class CommentExtStackoverflow(TypedDict, total=False):
+    is_accepted: bool
+    last_activity_at: str
+    last_edit_at: str
+    author_user_id: str
+    author_reputation: float
+    content_license: str
 
 class CommentExtPreviewRepliesItemAuthorChannelId(TypedDict, total=False):
     value: str
@@ -1109,10 +1262,13 @@ class CommentExt(TypedDict, total=False):
     feedback_id: Optional[str]
     expansion_token: Optional[str]
     author_id: Optional[str]
+    author_profile_token: Optional[str]
+    media: Optional[List[CommentExtMediaItem]]
     ip_location: Optional[str]
     urn: Optional[str]
     reaction_counts: Optional[List[CommentExtReactionCountsItem]]
     is_edited: Optional[bool]
+    stackoverflow: Optional[CommentExtStackoverflow]
     previous_replies_token: Optional[str]
     author_headline: Optional[str]
     author_type: Optional[str]
@@ -1144,6 +1300,7 @@ class CommentExt(TypedDict, total=False):
     author_following: Optional[float]
     author_posts_count: Optional[float]
     author_location: Optional[str]
+    author_sec_uid: Optional[str]
     quote_count: Optional[float]
     views: Optional[float]
     saves: Optional[float]
@@ -1161,8 +1318,14 @@ class Comment(TypedDict, total=False):
     ext: Optional[CommentExt]
     replies: Optional[List[Any]]
 
+class CommentListItemsItemComputedCountry(TypedDict, total=False):
+    value: str
+    source: str
+    confidence: float
+
 class CommentListItemsItemComputed(TypedDict, total=False):
     language: Optional[str]
+    country: Optional[CommentListItemsItemComputedCountry]
     labels: Optional[Dict[str, Any]]
     labels_evidence: Optional[Dict[str, Any]]
 
@@ -1488,6 +1651,110 @@ class ProductExtKohls(TypedDict, total=False):
     coupon_eligible: bool
     ship: bool
 
+class ProductExtSteamPlatforms(TypedDict, total=False):
+    windows: bool
+    mac: bool
+    linux: bool
+
+class ProductExtSteam(TypedDict, total=False):
+    type: str
+    metascore: float
+    is_free: bool
+    developers: List[str]
+    publishers: List[str]
+    genres: List[str]
+    release_date: str
+    coming_soon: bool
+    required_age: float
+    platforms: ProductExtSteamPlatforms
+    metacritic_score: float
+    metacritic_url: str
+    recommendations: float
+    achievements: float
+    discount_percent: float
+    price_formatted: str
+    website: str
+    controller_support: str
+    supported_languages: str
+    detailed_description: str
+
+class ProductExtShopifyVariantsItem(TypedDict, total=False):
+    id: str
+    title: str
+    sku: str
+    price: float
+    compare_at_price: float
+    available: bool
+
+class ProductExtShopify(TypedDict, total=False):
+    handle: str
+    product_type: str
+    variants: List[ProductExtShopifyVariantsItem]
+
+class ProductExtIkea(TypedDict, total=False):
+    item_no: str
+    measure: str
+    category: List[str]
+    discount_percent: float
+
+class ProductExtKroger(TypedDict, total=False):
+    size: str
+    store_id: str
+
+class ProductExtSprouts(TypedDict, total=False):
+    upc: str
+    size: str
+    store_id: str
+
+class ProductExtBestbuyStoreAvailability(TypedDict, total=False):
+    status: str
+    quantity: float
+    in_stock: bool
+    pickup_available: bool
+
+class ProductExtBestbuy(TypedDict, total=False):
+    sku: str
+    size: str
+    store_id: str
+    seller: str
+    sponsored: bool
+    store_availability: ProductExtBestbuyStoreAvailability
+
+class ProductExtIdealoOffersItem(TypedDict, total=False):
+    seller: str
+    price: float
+    currency: str
+    delivery: str
+    url: str
+
+class ProductExtIdealo(TypedDict, total=False):
+    offer_count: float
+    offers: List[ProductExtIdealoOffersItem]
+
+class ProductExtBingOffersItem(TypedDict, total=False):
+    seller: Optional[str]
+    price: Optional[float]
+    price_label: Optional[str]
+    currency: Optional[str]
+    url: Optional[str]
+    free_shipping: Optional[bool]
+
+class ProductExtBing(TypedDict, total=False):
+    price_label: Optional[str]
+    reviews_label: Optional[str]
+    offers: Optional[List[ProductExtBingOffersItem]]
+
+class ProductExtGooglePlay(TypedDict, total=False):
+    section: Optional[str]
+    type: Optional[str]
+    author: Optional[str]
+    category: Optional[str]
+    content_rating: Optional[str]
+    trailer_url: Optional[str]
+    series: Optional[str]
+    price_label: Optional[str]
+    original_price_label: Optional[str]
+
 class ProductExtGumtree(TypedDict, total=False):
     user_id: str
     public_user_id: str
@@ -1548,11 +1815,16 @@ class ProductExt(TypedDict, total=False):
     sold_count: Optional[float]
     bought_past_month: Optional[float]
     bought_past_month_label: Optional[str]
+    menu_section: Optional[str]
+    popular: Optional[bool]
+    google_id: Optional[str]
+    price_label: Optional[str]
     catalog_id: Optional[str]
     requested_id: Optional[str]
     rating_distribution: Optional[ProductExtRatingDistribution]
     store_inventory: Optional[List[ProductExtStoreInventoryItem]]
     promotion: Optional[ProductExtPromotion]
+    delivery_note: Optional[str]
     price_note: Optional[str]
     condition: Optional[str]
     available_quantity: Optional[float]
@@ -1566,6 +1838,15 @@ class ProductExt(TypedDict, total=False):
     sephora: Optional[ProductExtSephora]
     hm: Optional[ProductExtHm]
     kohls: Optional[ProductExtKohls]
+    steam: Optional[ProductExtSteam]
+    shopify: Optional[ProductExtShopify]
+    ikea: Optional[ProductExtIkea]
+    kroger: Optional[ProductExtKroger]
+    sprouts: Optional[ProductExtSprouts]
+    bestbuy: Optional[ProductExtBestbuy]
+    idealo: Optional[ProductExtIdealo]
+    bing: Optional[ProductExtBing]
+    google_play: Optional[ProductExtGooglePlay]
     gumtree: Optional[ProductExtGumtree]
     sku_id: Optional[str]
     aliexpress: Optional[ProductExtAliexpress]
@@ -1658,6 +1939,80 @@ class ReviewExtNaver(TypedDict, total=False):
     keywords: Optional[List[str]]
     dedupe_key: Optional[str]
 
+class ReviewExtSubRatings(TypedDict, total=False):
+    value: Optional[float]
+    service: Optional[float]
+    food: Optional[float]
+    atmosphere: Optional[float]
+
+class ReviewExtGoogle(TypedDict, total=False):
+    local_guide: Optional[bool]
+    local_guide_level: Optional[float]
+    author_id: Optional[str]
+    edited_at: Optional[str]
+    aspects: Any
+    original_text: Optional[str]
+
+class ReviewExtWalmartAspectsItem(TypedDict, total=False):
+    id: Optional[str]
+    polarity: Optional[str]
+
+class ReviewExtWalmart(TypedDict, total=False):
+    not_helpful_votes: Optional[float]
+    top_reviewer: Optional[bool]
+    badges: Optional[List[str]]
+    incentivized: Optional[bool]
+    seller: Optional[str]
+    aspects: Optional[List[ReviewExtWalmartAspectsItem]]
+
+class ReviewExtTripadvisorPhotosItem(TypedDict, total=False):
+    url: Optional[str]
+    caption: Optional[str]
+
+class ReviewExtTripadvisor(TypedDict, total=False):
+    written_at: Optional[str]
+    author_username: Optional[str]
+    author_verified: Optional[bool]
+    author_hometown_id: Optional[str]
+    photos: Optional[List[ReviewExtTripadvisorPhotosItem]]
+
+class ReviewExtYelpVotes(TypedDict, total=False):
+    useful: Optional[float]
+    funny: Optional[float]
+    cool: Optional[float]
+
+class ReviewExtYelpReactions(TypedDict, total=False):
+    helpful: Optional[float]
+    thanks: Optional[float]
+    love_this: Optional[float]
+    oh_no: Optional[float]
+
+class ReviewExtYelpPhotosItem(TypedDict, total=False):
+    url: Optional[str]
+    caption: Optional[str]
+    helpful_count: Optional[float]
+
+class ReviewExtYelpAuthor(TypedDict, total=False):
+    friends: Optional[float]
+    photos_count: Optional[float]
+    elite: Optional[bool]
+    elite_year: Optional[str]
+
+class ReviewExtYelp(TypedDict, total=False):
+    votes: Optional[ReviewExtYelpVotes]
+    reactions: Optional[ReviewExtYelpReactions]
+    photos: Optional[List[ReviewExtYelpPhotosItem]]
+    author: Optional[ReviewExtYelpAuthor]
+
+class ReviewExtPlace(TypedDict, total=False):
+    name: Optional[str]
+    address: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
+    category: Optional[str]
+    data_id: Optional[str]
+    cid: Optional[str]
+
 class ReviewExt(TypedDict, total=False):
     appdata: Optional[ReviewExtAppdata]
     tiktokshop: Optional[ReviewExtTiktokshop]
@@ -1667,6 +2022,14 @@ class ReviewExt(TypedDict, total=False):
     stay_check_out: Optional[str]
     stay_nights: Optional[float]
     room_type: Optional[str]
+    published_relative: Optional[str]
+    visit_month: Optional[str]
+    sub_ratings: Optional[ReviewExtSubRatings]
+    google: Optional[ReviewExtGoogle]
+    walmart: Optional[ReviewExtWalmart]
+    tripadvisor: Optional[ReviewExtTripadvisor]
+    yelp: Optional[ReviewExtYelp]
+    place: Optional[ReviewExtPlace]
 
 class Review(TypedDict, total=False):
     id: str
@@ -1687,8 +2050,13 @@ class Review(TypedDict, total=False):
     published_at: Optional[Union[str, float]]
     ext: Optional[ReviewExt]
 
+class ReviewListItemsItemComputed(TypedDict, total=False):
+    labels: Optional[Dict[str, Any]]
+    labels_evidence: Optional[Dict[str, Any]]
+
 class ReviewListItemsItem(TypedDict, total=False):
     review: Review
+    computed: ReviewListItemsItemComputed
 
 class ReviewList(TypedDict, total=False):
     items: List[ReviewListItemsItem]
@@ -1778,11 +2146,120 @@ class PlaceExtPeopleAlsoSearchItem(TypedDict, total=False):
     title: Optional[str]
     rating: Optional[PlaceExtPeopleAlsoSearchItemRating]
 
+class PlaceExtPopularDishesItem(TypedDict, total=False):
+    name: Optional[str]
+    rating: Optional[float]
+    reviews_count: Optional[float]
+    photos_count: Optional[float]
+    image: Optional[str]
+
+class PlaceExtFaqsItem(TypedDict, total=False):
+    question: Optional[str]
+    answer: Optional[str]
+    answered_at: Optional[str]
+
+class PlaceExtPopularTimesLive(TypedDict, total=False):
+    status: Optional[str]
+    hour: Optional[float]
+    busyness_score: Optional[float]
+    usual_busyness_score: Optional[float]
+    time_spent: Optional[str]
+
+class PlaceExtPopularTimes(TypedDict, total=False):
+    current_day: Optional[str]
+    live: Optional[PlaceExtPopularTimesLive]
+    by_day: Optional[Dict[str, Any]]
+
+class PlaceExtReviewSnippetsItemAuthor(TypedDict, total=False):
+    name: Optional[str]
+    avatar_url: Optional[str]
+
+class PlaceExtReviewSnippetsItem(TypedDict, total=False):
+    id: Optional[str]
+    text: Optional[str]
+    rating: Optional[float]
+    date: Optional[str]
+    url: Optional[str]
+    author: Optional[PlaceExtReviewSnippetsItemAuthor]
+
+class PlaceExtAddressParts(TypedDict, total=False):
+    street: Optional[str]
+    neighborhood: Optional[str]
+    districts: Optional[List[str]]
+    areas_of_interest: Optional[List[str]]
+    county: Optional[str]
+    country: Optional[str]
+
+class PlaceExtGuidesItem(TypedDict, total=False):
+    title: Optional[str]
+    description: Optional[str]
+    item_count: Optional[float]
+
+class PlaceExtPhotosItem(TypedDict, total=False):
+    url: Optional[str]
+    category: Optional[str]
+    source: Optional[str]
+
 class PlaceExtCategoryRatingsItem(TypedDict, total=False):
     category: Optional[str]
     label: Optional[str]
     value: Optional[float]
     max: Optional[float]
+
+class PlaceExtFacilityGroupsItem(TypedDict, total=False):
+    name: Optional[str]
+    facilities: Optional[List[str]]
+
+class PlaceExtCategoryScoresItem(TypedDict, total=False):
+    category: Optional[str]
+    traveller_type: Optional[str]
+    score: Optional[float]
+    review_count: Optional[float]
+
+class PlaceExtFeaturedReviewsItem(TypedDict, total=False):
+    id: Optional[str]
+    author: Optional[str]
+    author_country: Optional[str]
+    score: Optional[float]
+    title: Optional[str]
+    positive: Optional[str]
+    negative: Optional[str]
+    language: Optional[str]
+    traveller_type: Optional[str]
+    room_name: Optional[str]
+
+class PlaceExtQuestionsAndAnswersItem(TypedDict, total=False):
+    question: Optional[str]
+    answer: Optional[str]
+    asked_on: Optional[str]
+    answered_on: Optional[str]
+
+class PlaceExtPoliciesChildRulesItem(TypedDict, total=False):
+    age_from: Optional[float]
+    age_to: Optional[float]
+    bed_type: Optional[str]
+    price: Optional[str]
+    price_type: Optional[str]
+    price_mode: Optional[str]
+
+class PlaceExtPolicies(TypedDict, total=False):
+    checkin_from: Optional[str]
+    checkin_until: Optional[str]
+    checkout_from: Optional[str]
+    checkout_until: Optional[str]
+    minimum_checkin_age: Optional[float]
+    pets_allowed: Optional[str]
+    pets_charge: Optional[str]
+    children_allowed: Optional[bool]
+    minimum_child_age: Optional[float]
+    cribs_allowed: Optional[bool]
+    extra_beds_allowed: Optional[bool]
+    child_rules: Optional[List[PlaceExtPoliciesChildRulesItem]]
+    damage_deposit: Optional[str]
+    damage_deposit_amount: Optional[float]
+    damage_deposit_currency: Optional[str]
+    accepted_payment_methods: Optional[List[str]]
+    cash_accepted: Optional[bool]
 
 class PlaceExtHostProfile(TypedDict, total=False):
     id: Optional[str]
@@ -1805,25 +2282,160 @@ class PlaceExtRoomsItem(TypedDict, total=False):
     bed_configuration: Optional[str]
     image_urls: Optional[List[str]]
 
+class PlaceExtListingPriceHistoryItem(TypedDict, total=False):
+    date: Optional[str]
+    price: Optional[float]
+    event: Optional[str]
+    source: Optional[str]
+
+class PlaceExtListingTaxHistoryItem(TypedDict, total=False):
+    year: Optional[float]
+    tax: Optional[float]
+    assessment: Optional[float]
+
+class PlaceExtListingAgent(TypedDict, total=False):
+    name: Optional[str]
+    phone: Optional[str]
+    brokerage: Optional[str]
+    brokerage_phone: Optional[str]
+
+class PlaceExtListingOpenHousesItem(TypedDict, total=False):
+    start: Optional[str]
+    end: Optional[str]
+
+class PlaceExtListingSchoolsItem(TypedDict, total=False):
+    name: Optional[str]
+    rating: Optional[float]
+    parent_rating: Optional[float]
+    grades: Optional[str]
+    level: Optional[str]
+    type: Optional[str]
+    distance_miles: Optional[float]
+    students: Optional[float]
+    student_teacher_ratio: Optional[float]
+    district: Optional[str]
+    link: Optional[str]
+    assigned: Optional[bool]
+
+class PlaceExtListingNearbyAreas(TypedDict, total=False):
+    cities: Optional[List[str]]
+    neighborhoods: Optional[List[str]]
+    zipcodes: Optional[List[str]]
+
+class PlaceExtListingNearbyPlacesItem(TypedDict, total=False):
+    name: Optional[str]
+    categories: Optional[List[str]]
+    distance_miles: Optional[float]
+    address: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
+    phone: Optional[str]
+    website: Optional[str]
+
+class PlaceExtListingFloorPlansItem(TypedDict, total=False):
+    name: Optional[str]
+    image: Optional[str]
+
+class PlaceExtListingPropertyFactsItem(TypedDict, total=False):
+    group: Optional[str]
+    label: str
+    value: str
+
+class PlaceExtListing(TypedDict, total=False):
+    price: Optional[float]
+    currency: Optional[str]
+    status: Optional[str]
+    beds: Optional[float]
+    baths: Optional[float]
+    sqft: Optional[float]
+    lot_sqft: Optional[float]
+    year_built: Optional[float]
+    home_type: Optional[str]
+    estimate: Optional[float]
+    rent_estimate: Optional[float]
+    days_on_market: Optional[float]
+    listed_at: Optional[str]
+    sold_at: Optional[str]
+    hoa_fee: Optional[float]
+    broker: Optional[str]
+    price_history: Optional[List[PlaceExtListingPriceHistoryItem]]
+    tax_history: Optional[List[PlaceExtListingTaxHistoryItem]]
+    mls_id: Optional[str]
+    agent: Optional[PlaceExtListingAgent]
+    parcel_number: Optional[str]
+    open_houses: Optional[List[PlaceExtListingOpenHousesItem]]
+    price_per_sqft: Optional[float]
+    price_cut: Optional[str]
+    highlights: Optional[List[str]]
+    views_count: Optional[float]
+    saves_count: Optional[float]
+    schools: Optional[List[PlaceExtListingSchoolsItem]]
+    nearby_areas: Optional[PlaceExtListingNearbyAreas]
+    nearby_places: Optional[List[PlaceExtListingNearbyPlacesItem]]
+    floor_plans: Optional[List[PlaceExtListingFloorPlansItem]]
+    listing_types: Optional[List[str]]
+    subdivision: Optional[str]
+    property_facts: Optional[List[PlaceExtListingPropertyFactsItem]]
+
+class PlaceExtApartmentsRentByBedroomItem(TypedDict, total=False):
+    beds: Optional[float]
+    beds_text: Optional[str]
+    price_from: Optional[float]
+    price_text: Optional[str]
+
+class PlaceExtApartments(TypedDict, total=False):
+    price_max: Optional[float]
+    availability: Optional[str]
+    rent_by_bedroom: Optional[List[PlaceExtApartmentsRentByBedroomItem]]
+    specials: Optional[str]
+    amenities: Optional[List[str]]
+
 class PlaceExt(TypedDict, total=False):
     distance: Optional[float]
     status: Optional[str]
     timezone: Optional[str]
     hours: Optional[List[PlaceExtHoursItem]]
+    pro_desk_phone: Optional[str]
+    diets: Optional[List[str]]
+    meal_types: Optional[List[str]]
+    tool_rental_phone: Optional[str]
     place_id: Optional[str]
     attributes: Optional[PlaceExtAttributes]
     rating_distribution: Optional[Dict[str, Any]]
     people_also_search: Optional[List[PlaceExtPeopleAlsoSearchItem]]
     menu_url: Optional[str]
+    neighborhoods: Optional[List[str]]
+    specialties: Optional[str]
+    history: Optional[str]
+    year_established: Optional[float]
+    popular_dishes: Optional[List[PlaceExtPopularDishesItem]]
+    faqs: Optional[List[PlaceExtFaqsItem]]
     domain: Optional[str]
     maps_url: Optional[str]
+    popular_times: Optional[PlaceExtPopularTimes]
+    rating_source: Optional[str]
+    weekly_hours: Optional[Dict[str, Any]]
+    amenities: Optional[List[str]]
+    yelp_id: Optional[str]
+    order_url: Optional[str]
+    average_stay_minutes: Optional[float]
+    review_snippets: Optional[List[PlaceExtReviewSnippetsItem]]
+    address_parts: Optional[PlaceExtAddressParts]
+    category_ids: Optional[List[str]]
+    guides: Optional[List[PlaceExtGuidesItem]]
+    photos: Optional[List[PlaceExtPhotosItem]]
     rank: Optional[float]
     city: Optional[str]
     postal_code: Optional[str]
     region: Optional[str]
     country_code: Optional[str]
+    business_status: Optional[str]
+    temporarily_closed: Optional[bool]
+    data_id: Optional[str]
+    knowledge_graph_id: Optional[str]
     posts_count: Optional[float]
     website: Optional[str]
+    closed: Optional[bool]
     facebook_places_id: Optional[str]
     business_username: Optional[str]
     is_ad: Optional[bool]
@@ -1835,6 +2447,11 @@ class PlaceExt(TypedDict, total=False):
     booking_url: Optional[str]
     keywords: Optional[List[str]]
     category_ratings: Optional[List[PlaceExtCategoryRatingsItem]]
+    facility_groups: Optional[List[PlaceExtFacilityGroupsItem]]
+    category_scores: Optional[List[PlaceExtCategoryScoresItem]]
+    featured_reviews: Optional[List[PlaceExtFeaturedReviewsItem]]
+    questions_and_answers: Optional[List[PlaceExtQuestionsAndAnswersItem]]
+    policies: Optional[PlaceExtPolicies]
     room_type: Optional[str]
     capacity: Optional[float]
     subtitle: Optional[str]
@@ -1844,6 +2461,8 @@ class PlaceExt(TypedDict, total=False):
     host_profile: Optional[PlaceExtHostProfile]
     rooms: Optional[List[PlaceExtRoomsItem]]
     languages_spoken: Optional[List[str]]
+    listing: Optional[PlaceExtListing]
+    apartments: Optional[PlaceExtApartments]
 
 class Place(TypedDict, total=False):
     id: str
@@ -2223,6 +2842,8 @@ class BarListItemsItemBar(TypedDict, total=False):
     split_ratio: Optional[str]
     currency: Optional[str]
     interval: Optional[str]
+    exchange: Optional[str]
+    timezone: Optional[str]
 
 class BarListItemsItem(TypedDict, total=False):
     bar: BarListItemsItemBar
@@ -2316,9 +2937,19 @@ class JobCompany(TypedDict, total=False):
     url: Optional[str]
     verified: Optional[bool]
 
+class JobExtAttributesItem(TypedDict, total=False):
+    key: str
+    label: str
+
+class JobExtApplyOptionsItem(TypedDict, total=False):
+    title: str
+    url: str
+
 class JobExt(TypedDict, total=False):
     is_promote: Optional[bool]
     applicant_count: Optional[float]
+    applicants_text: Optional[str]
+    company_logo_url: Optional[str]
     skills: Optional[List[str]]
     job_provider: Optional[str]
     salary_min: Optional[float]
@@ -2330,6 +2961,14 @@ class JobExt(TypedDict, total=False):
     job_function: Optional[str]
     accepting_applications: Optional[bool]
     board: Optional[str]
+    salary_interval: Optional[str]
+    company_rating: Optional[float]
+    workplace_types: Optional[List[str]]
+    attributes: Optional[List[JobExtAttributesItem]]
+    total_compensation_min: Optional[float]
+    total_compensation_max: Optional[float]
+    apply_options: Optional[List[JobExtApplyOptionsItem]]
+    posted_label: Optional[str]
 
 class Job(TypedDict, total=False):
     id: str

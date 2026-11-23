@@ -61,9 +61,10 @@ Returns a unified ReviewList of customer reviews for a business on Trustpilot, k
 
 **Query params**
 
-- `domain` (required) - The business's domain on Trustpilot (e.g. 'www.nike.com' or 'booking.com'), from business-search. · e.g. `www.nike.com`
+- `domain` (required) - The business's domain on Trustpilot (e.g. 'www.nike.com' or 'booking.com'), from business-search. Send domain, or url instead of it. · e.g. `www.nike.com`
 - `depth` (optional, integer) - Number of reviews to retrieve (default 20, multiples of 20, max 200). There is no pagination beyond 200. · e.g. `20`
 - `sort` (optional, enum: recency | relevance) - Review ordering: `recency` (newest first, default) or `relevance`. · e.g. `recency`
+- `url` (optional, string) - Instead of domain: the business's Trustpilot review page, for example https://www.trustpilot.com/review/www.notion.so (any Trustpilot country site). It is read as its domain, answers the same and shares the cache entry. Send domain or url, not both.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -95,7 +96,7 @@ curl -G "https://www.socialcrawl.dev/v1/trustpilot/reviews" \
 
 ## POST /v1/trustpilot/reviews/history - 6-10,005 credits (request-shaped)
 
-Starts a background job (202) that collects up to `depth` reviews (1 to 10000) for one Trustpilot domain. The body takes only `domain` and `depth`; any other field is a free 400. The 202 returns `data.job_id`, `status`, `credits_hold` (depth + 5), `credits_charged` (null until the job settles) and `expires_at` (7 days). A run that cannot start is a refunded 502. On settlement you pay 5 plus 1 per review collected, even when the run stopped early; the rest is refunded. Read a page with GET /v1/trustpilot/reviews/history/{job_id}?offset=&limit=. GET /v1/trustpilot/reviews is unchanged and still returns at most 200 reviews.
+Starts a background job (202) that collects up to `depth` reviews (1 to 10000) for one Trustpilot domain. The body takes only `domain` and `depth`; any other field is a free 400. The 202 returns `data.job_id`, `status`, `credits_hold` (depth + 5), `credits_charged` (null until the job settles) and `expires_at` (7 days). A run that cannot start is a refunded 502. On settlement you pay 5 plus 1 per review collected, even when the run stopped early; the rest is refunded. Read a page with GET /v1/trustpilot/reviews/history/{job_id}?offset=&limit=; each settled page also carries `data.job` with the final `status` and `credits_charged`. GET /v1/trustpilot/reviews is unchanged and still returns at most 200 reviews.
 
 **Use when** you need more of a company's review history than GET /v1/trustpilot/reviews returns (200 at most); read the reviews later by job id with offset and limit. **Not for** a quick look at a company's latest reviews (trustpilot/reviews) or reviews of one product (Amazon or Google Shopping reviews).
 **Cost** price depends on how many items the request sends or returns · not cached

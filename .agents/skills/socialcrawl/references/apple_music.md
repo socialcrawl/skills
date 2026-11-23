@@ -177,7 +177,7 @@ Returns track metadata: title, artist, duration, preview audio URL, and the Appl
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+11 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.apple_music` {explicit, kind, track_number}. Also in the sample: `post.ext` {hashtags null, mentions null}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`.
++10 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, media_urls}; `post.flags` {deleted}; `post.ext.apple_music` {explicit, kind, track_number}. Also in the sample: `post.ext` {hashtags null, mentions null}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.thumbnail_url`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/apple_music/track" \

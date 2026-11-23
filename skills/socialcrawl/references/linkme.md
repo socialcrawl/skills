@@ -33,11 +33,11 @@ Returns data from a Linkme page including display name, bio, avatar, and list of
 | `author.id` | Platform-specific user ID… |
 | `author.username` | User handle or username |
 | `author.avatar_url` | URL to profile picture |
-| `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
-| `author.followers` | Follower or subscriber count as an integer. |
+| `author.posts_count` | Total number of posts / videos / tracks / episodes |
+| `author.verified` | Whether the account is verified |
 
-+9 more (types in the full schema): `author` {posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author._links`, `author.following`, `author.likes_count`, `author.url`.
++7 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author._links`, `author.following`, `author.likes_count`, `author.url`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `author.bio`, `author.followers`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/linkme/page" \

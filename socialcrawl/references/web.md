@@ -172,14 +172,14 @@ Fetches one web page and returns structured extraction output under the WebPage 
 
 | Field | Meaning |
 |---|---|
+| `page.title` | The page title, or null when the page has none. |
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.answer` | The source's answer to a question about the page, when you… |
 | `page.change_tracking` | What changed on the page since the last scrape of it, when… |
 | `page.extraction` | Structured extraction result when requested. |
-| `page.fetched_at` | Fetch timestamp when reported. |
 
-+23 more (types in the full schema): `page` {final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier}; `page.media` {audio_url} (+4 more).
++24 more (types in the full schema): `page` {fetched_at, final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier} (+5 more).
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/web/extract" \
@@ -463,12 +463,12 @@ Uploads a document through multipart/form-data and returns parsed web-style cont
 
 | Field | Meaning |
 |---|---|
+| `page.title` | The page title, or null when the page has none. |
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.answer` | The source's answer to a question about the page, when you… |
 | `page.change_tracking` | What changed on the page since the last scrape of it, when… |
 | `page.extraction` | Structured extraction result when requested. |
-| `page.title` | The page title, or null when the page has none. (seen in a sample response) |
 
 +24 more (types in the full schema): `page` {fetched_at, final_url, highlights, page_count, scrape_id, status_code, total_page_count}; `page.content` {html, markdown, raw_html, summary}; `page.extraction_check` {checked, confirmed, found_in_text, removed, unverified}; `page.fetch` {cache_state, cached_at, proxy_tier} (+5 more).
 
@@ -480,7 +480,7 @@ curl -X POST "https://www.socialcrawl.dev/v1/web/parse" \
 
 ## GET /v1/web/scrape - 1-5 credits (request-shaped)
 
-Fetches a public web page and returns clean content, metadata, and optional media in the unified WebPage schema. When the page scrapers cannot open a social platform profile or post (a LinkedIn profile, company page or post; an Instagram, Facebook, TikTok, X or Threads profile or post; a Reddit post, subreddit or user page; a YouTube video or channel), the page is read through that platform's own endpoint, for example /v1/linkedin/profile, at that endpoint's price: 5 credits for LinkedIn, 1 for the others. `page.native` then carries the endpoint (`endpoint`), what it charged (`credits_used`) and its full structured record (`data`). `page.content.markdown`, `html` and `raw_html` are written from that record rather than taken from the site's HTML, and `_warnings` says so. Only markdown, html and rawHtml requests are read this way. A page the scrapers can read keeps the scrape and its price.
+Fetches a public web page and returns clean content, metadata, and optional media in the unified WebPage schema. When the page scrapers cannot open a social platform profile or post (a LinkedIn profile, company page or post; an Instagram, Facebook, TikTok, X or Threads profile or post; a Reddit post, subreddit or user page; a YouTube video or channel), the page is read through that platform's own endpoint, for example /v1/linkedin/profile, at that endpoint's price: 5 credits for LinkedIn, 1 for the others. `page.native` then carries the endpoint (`endpoint`), what it charged (`credits_used`) and its full structured record (`data`). `page.content.markdown`, `html` and `raw_html` are written from that record rather than taken from the site's HTML, and `_warnings` says so. Only markdown, html and rawHtml requests are read this way. A page the scrapers can read keeps the scrape and its price. When neither page scraper can open an ordinary page, a further source can still read a request for one format, markdown or html; a page read that way carries no screenshot, raw html or page metadata.
 
 **Use when** you want it for a single known URL; for whole sites start a crawl job instead.
 **Cost** price moves with `pdf_parse`, `proxy` · not cached · multi-source (billed once)
@@ -489,18 +489,19 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 
 **Query params**
 
-- `url` (required) - Public URL to fetch. · e.g. `https://example.com`
+- `url` (required) - Public URL to fetch. A Google redirect link (google.com/url?q=...) is fetched as the page it points to; one whose destination Google will not resolve is a 400 INVALID_REQUEST, not charged. · e.g. `https://example.com`
 - `formats` (optional, string) - Comma-separated output formats such as markdown,screenshot. A social platform URL is read through its own endpoint only for markdown, html and rawHtml. · e.g. `markdown`
-- `only_main_content` (optional, boolean) - Strip nav, headers, footers and sidebars and keep the article body. Default true; send false when you need the whole page, including the chrome. A markdown-only scrape of a site the primary scraper cannot fetch is served by a second extractor, which returns the whole page.
-- `wait_for` (optional, integer) - Milliseconds to wait after load before capturing, for pages that render their content in JavaScript. Leave unset unless the page comes back empty or half-built.
+- `only_main_content` (optional, boolean) - Strip nav, headers, footers and sidebars and keep the article body. Default true; send false when you need the whole page, including the chrome. With the default, lines of a site framework's own page data (large JSON objects such as a docs site's configuration) are dropped from the markdown too. A markdown-only scrape of a site the primary scraper cannot fetch is served by a second extractor, which returns the whole page.
+- `wait_for` (optional, integer) - Milliseconds to wait after load before capturing, for pages that render their content in JavaScript, e.g. 3000. Leave unset unless the page comes back empty or half-built: a page with under 500 characters of text says so in `_warnings`. It does not help a page whose content loads only after a click or a choice on the page.
 - `mobile` (optional, boolean) - Render in a mobile viewport with a mobile user agent. Use it when the site serves a different layout to phones.
 - `timeout` (optional, integer) - Hard cap on the page load in milliseconds, 1 to 30000. A page that exceeds it fails and is refunded rather than returning a partial capture.
 - `max_age` (optional, integer) - Accept an upstream-cached copy up to this many milliseconds old, which is faster and still one credit. Default 172800000 (48 hours), or 0 (a live fetch) with `proxy=auto` or `proxy=enhanced`; send 0 to force a live fetch. A cached copy of a page that failed (HTTP 400 or more) is never served: it is fetched again, live.
 - `location_country` (optional, string) - ISO 3166-1 alpha-2 country code to fetch from, e.g. 'us' or 'de'. Use it for geo-varying pages such as pricing or availability.
+- `accept_language` (optional, string) - The languages to ask the site for, in order of preference: language tags such as 'ko-KR', a comma-separated list such as 'ko-KR,ko,en', or an Accept-Language value such as 'ko-KR,ko;q=0.9'. Use it when a site that has several languages serves you the wrong one. The site decides which language it serves; a site with one language ignores it. Pair it with location_country when the site picks its language by country.
 - `screenshot_full_page` (optional, boolean) - When a screenshot format is requested, capture the entire scrollable page instead of the visible viewport.
 - `include_tags` (optional, string) - CSV of CSS selectors or HTML tags to keep, e.g. 'article,main'. Everything outside them is dropped. Use it to pin extraction to a known container.
 - `exclude_tags` (optional, string) - CSV of CSS selectors or HTML tags to drop, e.g. 'nav,footer,.cookie-banner'. Applied after include_tags.
-- `proxy` (optional, enum: basic | auto | enhanced) - Proxy tier: basic (the default), auto (a plain request first, then a stronger one if the site blocks it), or enhanced. Use auto when a plain scrape returns a block or CAPTCHA page. auto and enhanced read the page live unless you set max_age.
+- `proxy` (optional, enum: basic | auto | enhanced) - Proxy tier: basic (the default), auto (a plain request first, then the enhanced proxy if the site blocks it or answers with a bot check), or enhanced. Use auto when a plain scrape returns a block or CAPTCHA page. auto and enhanced read the page live unless you set max_age. `page.fetch.proxy_tier` says which proxy the page was read with, and with auto a `_warnings` line says why. A stronger proxy gets past blocks; it does not render JavaScript, so it does not fill a page that loads its content late.
 - `pdf_parse` (optional, boolean) - Parse the target as a PDF and return its extracted text. Send it when the URL points at a PDF rather than an HTML page.
 - `block_ads` (optional, boolean) - Block ad and tracker requests, which is faster and quieter. Default true.
 - `remove_base64_images` (optional, boolean) - Drop inline base64-encoded images from the returned content instead of carrying them in the payload. Default true.
@@ -509,7 +510,7 @@ Fetches a public web page and returns clean content, metadata, and optional medi
 
 | Field | Meaning |
 |---|---|
-| `page.title` | The page title, or null when the page has none. (only when the fallback source serves) |
+| `page.title` | The page title, or null when the page has none. |
 | `page.published_at` | When the page was published: an ISO 8601 instant, or a… |
 | `page.url` | Requested URL. |
 | `page.answer` | The source's answer to a question about the page, when you… |
@@ -526,10 +527,10 @@ curl -G "https://www.socialcrawl.dev/v1/web/scrape" \
 
 ## GET /v1/web/search - 2-120 credits (request-shaped)
 
-Searches web, news, and image sources and returns a single normalized list of web page results.
+Searches web, news, and image sources and returns a single normalized list of web page results. When the primary index cannot answer, a second web index serves a web or news search in the same shape and at the same price: url, title, description, source_type and the news publish time are filled, rows are ranked by that index, and with sort_by_date the news rows are ordered newest first. It does not serve images, categories, location, include_content, more than 20 results a source or a time_range other than qdr:d, qdr:w, qdr:m and qdr:y.
 
 **Use when** you do not know yet which URLs you need; once you have a URL, scrape it.
-**Cost** price moves with `include_content` · cache 120 s
+**Cost** price moves with `include_content` · cache 120 s · multi-source (billed once)
 **Pricing** 2 credits per 10 results, so `limit` up to 10 costs 2, 11-20 costs 4, and the 100 maximum costs 20. `include_content=true` adds 1 credit per result, because it scrapes each result page as well as reading the SERP row - that is what takes a 100-result content search to the 120-credit ceiling. The hold settles down to the work actually done.
 **Paging** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
@@ -658,7 +659,7 @@ curl -X DELETE "https://www.socialcrawl.dev/v1/web/sessions/ws_3g7x1v5m2" \
 
 ## POST /v1/web/sessions/{session_id}/execute - free (0 credits)
 
-Runs code in an existing browser session and returns the execution result.
+Runs code in an existing browser session and returns the execution result. A body without `code` is a free 400 `INVALID_REQUEST`, and so is a script the session refuses. A closed or expired session is a free 404 `RESOURCE_NOT_FOUND` saying the session is no longer active: open a new one with POST /v1/web/sessions.
 
 **Use when** you want to drive a live page through the Playwright page, browser and chromium globals. With node the value lands in result; bash and python print to stdout.
 **Cost** not cached

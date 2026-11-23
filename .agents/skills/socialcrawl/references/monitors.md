@@ -28,6 +28,8 @@ Monitors are **not** registry endpoints. They live at `/v1/monitors/*`, use meth
 - **Each executed run:** the recipe's price for the monitor's frozen params **+ 1 credit** scheduling premium. The recipe price comes from the same pricer `/v1` uses (static tier, flat `cost`, or the metered price computed from the params), with `now-<N>d` / `now-<N>h` tokens resolved first. Look the recipe price up in that endpoint's reference / [cost-gate.md](cost-gate.md). Examples: `instagram/audio/reels` (1) = **2 per run**; `search/everywhere` (20) = **21 per run**; `prism/reputation` (30) = **31 per run**.
 - **`estimated_cost_per_run`** (create and GET responses) = that price + 1. **`estimated_monthly_cost`** = cost per run x runs/month: `hourly` 730, `daily` 30, `weekly` 4, cron = round(30 days / its shortest interval between firings, floored at 1 hour).
 - **Recipes whose platform calls bill themselves** (`search/multi`, `tiktokshop/sales`, `twitter/search/hashtag`, `facebook/search/hashtag`, `twitter/search/mentions`, `facebook/search/mentions`, `instagram/search/mentions` and `tiktok/search/mentions`): each run makes those platform calls **as the API key that created the monitor**, and each call bills its own page price (shown per call in `/v1/credits/transactions`) on top of the 1-credit premium. `estimated_cost_per_run` shows only the premium, so quote the recipe's own per-call price x platforms from its reference as well. If that key is revoked or expired, every run fails, unbilled, with a `skip_reason` saying so: recreate the monitor with a live key.
+- **`legs_billed_separately`** (create, dry-run quote and GET) is `true` on exactly those recipes. Their quote's `formula` and the create answer's `warnings[]` say the sources are billed on top and not included in `estimated_cost_per_run` / `estimated_monthly_cost`.
+- **Monthly credit cap (`max_credits_per_month`, optional, off by default).** Whole credits, 1 to 10,000,000. The run that would take the monitor past the cap in the current calendar month (UTC) is **skipped and not charged**, and the monitor pauses with `paused_because: "monthly_cap"`; it resumes by itself on its own next slot after the 1st (UTC). The quote adds `monthly_cap` and `runs_until_cap` (= floor(cap / cost per run)). A free 400 when the cap is below one run's price ("Set it to at least N") and on recipes with `legs_billed_separately: true` (the cap could not count their sources: put a credit limit on the API key instead). Set or remove it later with `PATCH` (`null` removes it).
 - The run is charged upfront (cost + 1), then reconciled:
 
 | Run outcome | `status` | Charged |
@@ -52,11 +54,11 @@ Set by the **highest credit pack the account has ever bought**; if the plan look
 | --- | --- | --- | --- | --- |
 | 3 | 10 | 25 | 100 | 500 |
 
-Over the cap: `403 MONITOR_LIMIT_REACHED`, e.g. "Active-monitor limit reached (10 on the Starter plan). Pause or delete a monitor to free a slot."
+Over the cap: `403 MONITOR_LIMIT_REACHED`, e.g. "Active-monitor limit reached (10 on the Starter plan). Pause or delete a monitor to free a slot, or buy the Growth pack to raise the limit to 25: https://www.socialcrawl.dev/pricing". Below Enterprise the message names the next pack and its limit; tell the user both options. A `dry_run=1` create always answers **200 with the quote**; when the real create would be refused at the cap today it adds `data.would_be_refused` (`{ type: "MONITOR_LIMIT_REACHED", message, slots: { unit: "active_monitors" | "list_subjects", used, adding, limit, plan } }`, where `message` is the real 403's text). Check it before telling the user the monitor can be created.
 
 ## Cadence and timing
 
-- `"hourly"`: next top of the hour, UTC.
+- `"hourly"`: every hour at the monitor's **own minute of the hour**, fixed at create, so hourly monitors are spread across the hour (not all at :00). The first run is within an hour of create; `next_run_at` in a dry-run quote shows the top of the hour.
 - `"daily"`: every 24 h from the creation instant (not midnight). First run = create time + 24 h.
 - `"weekly"`: every 7 days from the creation instant. First run = create time + 7 days.
 - `{ "cron": "<5 fields>" }`: UTC. Fields minute hour day-of-month month day-of-week (0 = Sunday). Supports `*`, numbers, lists `a,b`, ranges `a-b`, steps `*/n` / `a-b/n`. **No names** (`MON`, `JAN`), no `@daily`, no seconds field. If both day fields are restricted, either matching fires (standard cron). Must fire at least once in the next 366 days. 1 to 120 chars.
@@ -81,6 +83,8 @@ Body (JSON). Unknown top-level keys are ignored; unknown keys inside `track` are
 | `webhook_format` | `"full"` \| `"rows"` | no (default `"full"`) | `"rows"` requires `track`. Not allowed without `webhook_url`. |
 | `webhook_rows` | `"all"` \| `"new"` | no (default `"all"`) | `"new"` delivers only the list rows this monitor has never seen, so a row that comes back after dropping off the page is not sent again (see [Webhook delivery](#webhook-delivery)). Requires `track` with at least one `items[].` metric and a resolvable `row_key` (`search/everywhere` rows key themselves). Not allowed without `webhook_url`. Every tracked number is still stored. |
 | `webhook_secret` | string, 8-200 | no | Your own signing secret. Otherwise a `whsec_` + 48-hex secret is generated. Not allowed without `webhook_url`. |
+| `max_credits_per_month` | integer 1-10,000,000 \| `null` | no (default no cap) | Monthly credit cap, see [Billing](#billing). |
+| `email_digest` | `"off"` \| `"daily"` | no (default `"off"`) | `"daily"` puts the monitor's runs in the owner's daily digest email (08:00 UTC). A monitor with it on has a second destination, so it keeps running when its webhook stops (see [Webhook delivery](#webhook-delivery)). |
 | `name` | string, 1-200 | no | Default `"<recipe> monitor"`. |
 | `alert_rules` | array | no (default `[]`) | `[{ "metric", "op", "value", "window"? }]`. See [Alert rules](#alert-rules). |
 | `suppress_webhook_unless_alert` | boolean | no (default `false`) | Deliver only runs where at least one rule fired. |
@@ -242,7 +246,7 @@ curl "https://www.socialcrawl.dev/v1/monitors?status=all&limit=50" \
 
 404 `RESOURCE_NOT_FOUND` if it does not exist or belongs to another account (existence is never leaked). The signing secret is never returned.
 
-Monitor fields: `id`, `name`, `recipe`, `params`, `cadence`, `status` (`active` | `paused`), `output_schema`, `alert_rules`, `suppress_webhook_unless_alert`, `track` (`{metrics, row_key, max_rows}` or `null`), `webhook_format`, `webhook` (`{ url, status: "active" | "paused", failure_count, last_delivery_at, signing_secret_hint: "whsec_…" }` or `null` when download-only), `estimated_cost_per_run`, `estimated_monthly_cost` (recomputed at read time from current pricing), `runs_total`, `credits_spent`, `next_run_at`, `created_at`, `updated_at`.
+Monitor fields: `id`, `name`, `recipe`, `params`, `cadence`, `status` (`active` | `paused`), `output_schema`, `alert_rules`, `suppress_webhook_unless_alert`, `track` (`{metrics, row_key, max_rows}` or `null`), `webhook_format`, `webhook` (`{ url, status: "active" | "paused", failure_count, last_delivery_at, signing_secret_hint: "whsec_…" }` or `null` when download-only), `estimated_cost_per_run`, `estimated_monthly_cost` (recomputed at read time from current pricing), `max_credits_per_month` (or `null`), `email_digest`, `paused_because` (`monthly_cap` = stopped at its cap until the 1st, `consecutive_skips` = three slots in a row skipped for a low balance, `webhook_failing` = its only destination is a webhook that stopped answering; `null` while active and after your own pause), `legs_billed_separately`, `runs_total`, `credits_spent`, `next_run_at`, `created_at`, `updated_at`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/monitors/$MONITOR_ID" \
@@ -296,18 +300,19 @@ curl "https://www.socialcrawl.dev/v1/monitors/$MONITOR_ID/timeseries?metric=tota
 
 Streams the stored numbers as a file, 0 credits. One line per run x row x metric, oldest run first, same 1,000-run bound.
 - `format` (optional, `csv` | `ndjson`, default `csv`)
+- `shape` (optional, `long` | `rows`, default `long`). `shape=rows` is the spreadsheet layout: one line per run and row, one column per metric, header `run_at_utc,row_id,<metric>...`, with `run_at_utc` written `DD/MM/YYYY HH:mm` (UTC); a row without a metric has an empty cell.
 - `from` / `to` (optional, ISO 8601; an unparseable date is a 400)
 
-CSV header `t,row_id,metric,value,abs_change,pct_change` (empty cell = null); NDJSON has the same keys. `Content-Disposition: attachment; filename="monitor-<id>.<format>"`. A legacy monitor exports the same numeric leaves `/timeseries` finds, under row `_`; if its stored bodies have no numeric leaf, 400 "The stored results of this monitor have no numeric fields to export. Create a monitor with track to store and export per-row numbers."
+`shape=long` CSV header `t,row_id,metric,value,abs_change,pct_change` (empty cell = null); NDJSON has the same keys. CSV text cells that start with `=`, `+`, `-` or `@` get a leading apostrophe so a spreadsheet does not run them as formulas. `Content-Disposition: attachment; filename="monitor-<id>.<format>"`. A legacy monitor exports the same numeric leaves `/timeseries` finds, under row `_`; if its stored bodies have no numeric leaf, 400 "The stored results of this monitor have no numeric fields to export. Create a monitor with track to store and export per-row numbers."
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/monitors/$MONITOR_ID/export?format=csv" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY" -o monitor.csv
 ```
 
-## PATCH /v1/monitors/{id}: pause / resume
+## PATCH /v1/monitors/{id}: pause / resume, cap, digest
 
-Body: exactly `{ "status": "paused" }` or `{ "status": "active" }` (anything else: 400 "status must be active or paused."). Nothing else about a monitor can be edited; to change recipe, params, cadence, track, rules or webhook, delete and recreate. Response `{ "id", "status" }`. A paused monitor does not run or bill and does not count toward the cap. On resume it runs at the next sweep (missed slots are not replayed).
+Body: any of `status` (`"active"` | `"paused"`), `max_credits_per_month` (integer, or `null` to remove the cap) and `email_digest` (`"off"` | `"daily"`), alone or together. An empty body is a 400 ("Send status (active or paused), max_credits_per_month, email_digest (off or daily), or any of them together."); a bad value is a 400 naming the field. Nothing else about a monitor can be edited; to change recipe, params, cadence, track, rules or webhook, delete and recreate. Response carries `id`, `status`, `paused_because`, `max_credits_per_month` and `email_digest`. Resuming a monitor that paused itself because its webhook stopped answering turns its webhook back on. A paused monitor does not run or bill and does not count toward the cap. On resume it runs at the next sweep (missed slots are not replayed).
 
 ```bash
 curl -X PATCH "https://www.socialcrawl.dev/v1/monitors/$MONITOR_ID" \
@@ -388,16 +393,19 @@ def verify(raw_body: bytes, header: str, secret: str, tolerance=300) -> bool:
     return hmac.compare_digest(p.get("v1", ""), expected)
 ```
 
-**Retries and auto-pause.** Up to 6 attempts per run (initial + 5 retries, exponential backoff). Any non-2xx or timeout is a failed attempt. A run whose attempts are all exhausted counts as one failed delivery; a successful delivery resets the count to 0. After **10 consecutive failed deliveries the webhook (not the monitor) is paused**: the monitor keeps running and billing every slot, but delivers nothing. `GET /v1/monitors/{id}` shows `webhook.status: "paused"` and `failure_count`. There is no API to re-activate a paused webhook: pause the monitor to stop billing, then delete and recreate it with a working URL. Deliveries are at-least-once; de-duplicate on `run_id`.
+**Retries and auto-pause.** Up to 6 attempts per run (initial + 5 retries, exponential backoff). Any non-2xx or timeout is a failed attempt. A run whose attempts are all exhausted counts as one failed delivery; a successful delivery resets the count to 0. After **10 consecutive failed deliveries the webhook is paused** (`webhook.status: "paused"`, `failure_count` on `GET /v1/monitors/{id}`). What happens to the monitor depends on whether the webhook was its only destination:
+- **Webhook is the only destination:** the monitor pauses too (`status: "paused"`, `paused_because: "webhook_failing"`), so it stops billing. Fix the endpoint, then `PATCH {"status": "active"}`: resuming turns the webhook back on.
+- **The monitor also has `email_digest: "daily"`:** it keeps running and billing every slot into the digest while the webhook delivers nothing. Deliveries are at-least-once; de-duplicate on `run_id`.
 
 ## Errors
 
-Monitors routes answer errors as `{ "error": { "type", "message" } }` (a body-validation 400 also carries `issues[]`).
+Monitors routes answer errors in the standard envelope: `success: false`, `error.type`, `error.message` (a body-validation 400 also carries `error.issues[]`), plus `status`, `doc_url`, `retryable`, `credits_used` and `request_id`.
 
 | Status | `type` | When |
 | --- | --- | --- |
 | 400 | `INVALID_REQUEST` | Invalid JSON; schema violation; unknown / disabled / non-GET recipe; missing required params ("Missing required parameter(s) for '<recipe>': handle."); a param `/v1` would refuse ("params for '<recipe>': ... The monitor was not created ..."); bad `track` path / `row_key`; alert metric not in `track.metrics`; `webhook_url` missing without `track`; `webhook_secret`/`webhook_format`/`webhook_rows` without `webhook_url`; `rows` without `track`; `webhook_rows: "new"` without an `items[].` metric; webhook URL not https / not public / >2048; bad cadence (`INVALID_CRON: ...`, `INVALID_CADENCE: ...`); bad `include` / `status` / `limit` query ("Invalid query."); bad PATCH body; export date or format; legacy export with no numbers. All free. |
-| 403 | `MONITOR_LIMIT_REACHED` | Active-monitor cap reached for the plan. |
+| 400 | `INVALID_REQUEST` | `max_credits_per_month` below one run's price, or set on a recipe with `legs_billed_separately: true`; `email_digest` not `off`/`daily`. |
+| 403 | `MONITOR_LIMIT_REACHED` | Active-monitor cap reached for the plan (a dry run answers 200 and reports it in `data.would_be_refused`). |
 | 404 | `RESOURCE_NOT_FOUND` | "Monitor not found." (missing or another account's). |
 | 401 / 429 / 503 | `MISSING_API_KEY`, `INVALID_API_KEY` / `CONCURRENCY_LIMIT` / `SERVICE_UNAVAILABLE` | Same `x-api-key` and concurrency middleware as `/v1` (standard `/v1` error envelope; honor `Retry-After` on 429). |
 
@@ -408,4 +416,4 @@ Monitors routes answer errors as `{ "error": { "type", "message" } }` (a body-va
 3. Tell the user `estimated_cost_per_run` and `estimated_monthly_cost`, and that the first run is at `next_run_at` (daily = 24 h after create), not now. Runs that record nothing (an error, an empty page, no tracked number) are refunded; an insufficient balance skips the slot at 0.
 4. After the first slot, check `GET /runs?include=numbers` (or `include=result`): a `failed` run's `skip_reason` says why, and `legs` shows which step answered.
 5. Webhook users: store `webhook_secret` from the create response immediately; verify every delivery; de-dupe on `run_id`.
-6. To stop spending: `PATCH {"status":"paused"}` or `DELETE` (DELETE erases history; export first).
+6. To bound spending, set `max_credits_per_month` (create or PATCH); to stop it, `PATCH {"status":"paused"}` or `DELETE` (DELETE erases history; export first). A monitor whose `paused_because` is set was paused by the system: tell the user why and what resumes it.

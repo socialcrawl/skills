@@ -52,7 +52,7 @@ Returns Quora answers matching a keyword, including the answer text, author name
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+10 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, avatar_url null, verified null}; `post.engagement` {saves null}; `post.flags` {nsfw null, spoiler null} (+3 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares, views}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, avatar_url null, verified null}; `post.engagement` {saves null}; `post.flags` {nsfw null, spoiler null, pinned null} (+2 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.author.url`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/quora/answers" \
@@ -119,7 +119,7 @@ Returns posts from Quora Spaces matching a keyword: URL, author, upvotes, commen
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `post.content.text` | Post caption, description, or text content (seen in a sample response) |
 
-+9 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, avatar_url null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null} (+1 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++8 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.content` {media_urls null, thumbnail_url null, duration_seconds null}; `post.author` {username null, avatar_url null, verified null}; `post.engagement` {views null, saves null}; `post.flags` {nsfw null, spoiler null, pinned null}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.author.url`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `quora/post` (`url` ← `data.items[].post.url`) - Get a Quora question.
 

@@ -51,10 +51,10 @@ Returns products listed in a Walmart category, up to 100 per call, with title, p
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
-| `product.brand` | Brand name (cleaned). |
 | `product.description` | Product description. |
+| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+9 more (types in the full schema): `product` {image_urls, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++8 more (types in the full schema): `product` {seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.brand`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `walmart/reviews` (`product_id` ← `data.items[].product.id`) - Get Walmart product reviews. · `walmart/product` (`product_id` ← `data.items[].product.id`) - Get a Walmart product by id. · `walmart/offers` (`product_id` ← `data.items[].product.id`) - Get every seller offering a Walmart product.
 
@@ -98,7 +98,7 @@ curl -G "https://www.socialcrawl.dev/v1/walmart/offers" \
 
 ## GET /v1/walmart/product - 5 credits (advanced)
 
-Returns full product detail for a Walmart item: title, brand, model, UPC, both descriptions, current and list price, rating with its 1-5 star breakdown, recommended percentage, image gallery, specifications, availability, seller, condition, and return-policy window. Accepts either the numeric item id from a walmart.com/ip/ URL or Walmart's alphanumeric catalog id. For this product's written reviews call GET /v1/walmart/reviews with the same id; for every seller offering it, GET /v1/walmart/offers.
+Returns full product detail for a Walmart item: title, brand, model, UPC, both descriptions, current and list price, rating with its 1-5 star breakdown, recommended percentage, image gallery, specifications, availability, seller, condition, and return-policy window. Accepts either the numeric item id from a walmart.com/ip/ URL or Walmart's alphanumeric catalog id. For this product's written reviews call GET /v1/walmart/reviews with the same id; for every seller offering it, GET /v1/walmart/offers. When the first sources cannot answer, a further source serves numeric item ids on walmart.com; on those records the UPC, specifications, star breakdown, variants, catalog id and seller id are null.
 
 **Use when** you have a Walmart item id and need full product detail. For written reviews use reviews, and for other sellers use offers.
 **Cost** cache 600 s · multi-source (billed once)
@@ -132,20 +132,22 @@ curl -G "https://www.socialcrawl.dev/v1/walmart/product" \
 
 ## GET /v1/walmart/reviews - 5-9 credits (request-shaped)
 
-Returns written customer reviews for a Walmart product, up to 50 per call, each with the full review text, star rating, author, date, helpful-vote count, verified-purchase flag, and any reviewer photos. Filter to a single star rating with the rating parameter, which is applied exactly. The sort parameter changes which reviews Walmart returns but does NOT currently guarantee the returned page is ordered: measured against the live source, rating_high_low and rating_low_high return the same set, and recent is not strictly newest-first. Sort client-side if you need a guaranteed order. Consecutive pages can also repeat a small number of reviews, because the underlying review feed shifts between calls, so de-duplicate by review id when crawling.
+Returns written customer reviews for a Walmart product, up to 50 per call, each with the full review text, star rating, author, date, helpful-vote count, verified-purchase flag, and any reviewer photos. Filter to a single star rating with the rating parameter, which is applied exactly. The sort parameter changes which reviews Walmart returns but does NOT currently guarantee the returned page is ordered: measured against the live source, rating_high_low and rating_low_high return the same set, and recent is not strictly newest-first. Sort client-side if you need a guaranteed order. Consecutive pages can also repeat a small number of reviews, because the underlying review feed shifts between calls, so de-duplicate by review id when crawling. sort=oldest walks a product's reviews from the very first one, sort=most_helpful ranks by helpful votes, aspect narrows to one frequent-mention topic and verified_only=true to verified purchases; these four return ten reviews a page with the filtered total, and limit can only lower that.
 
 **Use when** you want what shoppers wrote about a Walmart item. Sort the results yourself, since the sort option does not guarantee an order.
-**Cost** price moves with `label` · cache 300 s
+**Cost** price moves with `label` · cache 300 s · multi-source (billed once)
 **Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
-**Paging** page (native `page`) · default page size not measured; set with `limit` · depth unknown · typical 7.8-7.8 s
+**Paging** page (native `page`) · ≈10/page (observed); set with `limit` · depth unknown · price per N items not proven · typical 7.8-7.8 s
 
 **Query params**
 
 - `product_id` (required) - Walmart product id, numeric or alphanumeric. The same id accepted by GET /v1/walmart/product. · e.g. `17835006350`
 - `page` (optional, integer, 1-100) - Page number, starting at 1. Prefer the universal cursor parameter.
 - `limit` (optional, integer, 1-50) - Reviews per page, 1 to 50. Defaults to 10. Honoured exactly. · e.g. `50`
-- `sort` (optional, enum: relevancy | recent | rating_high_low | rating_low_high) - Which reviews to return: relevancy (default), recent, rating_high_low, or rating_low_high. Changes the selection but does not guarantee the returned page is ordered; sort client-side if you need a strict order. · e.g. `recent`
+- `sort` (optional, enum: relevancy | recent | rating_high_low | rating_low_high | oldest | most_helpful) - Which reviews to return: relevancy (default), recent, rating_high_low, rating_low_high, oldest (from the product's first review), or most_helpful. relevancy to rating_low_high change the selection but do not guarantee the returned page is ordered; sort client-side if you need a strict order. oldest and most_helpful return ten reviews a page, numbered on that page size. · e.g. `recent`
 - `rating` (optional, integer, 1-5) - Return only reviews with this exact star rating, 1 to 5. Applied exactly.
+- `aspect` (optional, string) - Return only reviews that mention one topic, given as its Walmart topic id (for example 180 for Noise Cancellation on AirPods). Ten reviews a page.
+- `verified_only` (optional, boolean) - true returns only reviews from verified purchases. Ten reviews a page.
 - `country` (optional, enum: US | CA) - Walmart marketplace as a two-letter country code: US (walmart.com, default) or CA (walmart.ca). A product id from one marketplace will not resolve in the other.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
@@ -167,7 +169,7 @@ Returns written customer reviews for a Walmart product, up to 50 per call, each 
 | `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 
-+8 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, language null, original_language null, translated null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
++8 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {value}. Also in the sample: `review` {url null, verified boolean, source null, original_language null, translated null, images null}; `review.rating` {max number}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+1 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `review.language`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/walmart/reviews" \
@@ -177,7 +179,7 @@ curl -G "https://www.socialcrawl.dev/v1/walmart/reviews" \
 
 ## GET /v1/walmart/search - 5 credits (advanced)
 
-Returns Walmart search results for a keyword: title, product id, URL, image, price, rating, review count, availability, seller, and shipping and pickup flags per product, with optional price, location, and store filters. A small number of rows carry no price even when in stock, in which case product.price.current is null rather than zero; call GET /v1/walmart/product with the returned product id for a guaranteed price. Also serves as the keyword-to-product-id resolver for the rest of the Walmart API.
+Returns Walmart search results for a keyword: title, product id, URL, image, price, rating, review count, availability, seller, and shipping and pickup flags per product, with optional price, location, and store filters. A small number of rows carry no price even when in stock, in which case product.price.current is null rather than zero; call GET /v1/walmart/product with the returned product id for a guaranteed price. Also serves as the keyword-to-product-id resolver for the rest of the Walmart API. When the first sources cannot answer, a plain keyword search on walmart.com (no sort or filter) can be served by a further source; on those rows the catalog id, seller id and variations are null.
 
 **Use when** you want to turn a keyword into the product ids the rest of the Walmart API takes. Rows carry prices, and an in-stock row without one reports null rather than zero.
 **Cost** cache 120 s · multi-source (billed once)
@@ -205,10 +207,10 @@ Returns Walmart search results for a keyword: title, product id, URL, image, pri
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.availability` | Stock/availability string when surfaced |
-| `product.brand` | Brand name (cleaned). |
 | `product.description` | Product description. |
+| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+9 more (types in the full schema): `product` {image_urls, seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++7 more (types in the full schema): `product` {seller}; `product.ext` {catalog_id, seller_id}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {reviews_count null}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.brand`, `product.price.original`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `walmart/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `walmart/reviews` (`product_id` ← `data.items[].product.id`) - Customer reviews of each product. · `walmart/offers` (`product_id` ← `data.items[].product.id`) - Get every seller offering a Walmart product.
 

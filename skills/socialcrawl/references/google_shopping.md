@@ -86,7 +86,7 @@ curl -G "https://www.socialcrawl.dev/v1/google_shopping/product" \
 
 ## GET /v1/google_shopping/product-search - 5 credits (advanced)
 
-Searches Google Shopping for products matching a keyword. Returns a unified ProductList with title, seller, price (current/original/currency), rating, image URLs, and the opaque product identifiers (id, ext.gid, ext.data_docid) required to fetch product detail, reviews, or sellers. Read from a task-based upstream; the async lifecycle is handled server-side, so this is an ordinary synchronous request. First calls take ~20-30s, then serve from cache. When the first source is slow (past about 25s), a second source answers instead, with the same product ids; on those calls `rating.count` is null.
+Searches Google Shopping for products matching a keyword. Returns a unified ProductList with title, seller, price (current/original/currency), rating, image URLs, and the opaque product identifiers (id, ext.gid, ext.data_docid) required to fetch product detail, reviews, or sellers. Read from a task-based upstream; the async lifecycle is handled server-side, so this is an ordinary synchronous request. First calls take ~20-30s, then serve from cache. When the first source is slow (past about 25s), a second source answers instead with the same product ids, and a third if that one fails; on calls the third source serves, `rating.count` is null.
 
 **Use when** Use it as the entry point for Google Shopping, since product, reviews, and sellers all need an id it returns.
 **Cost** cache 120 s · multi-source (billed once)
@@ -109,11 +109,11 @@ Searches Google Shopping for products matching a keyword. Returns a unified Prod
 | `product.id` | Platform product ID… |
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
-| `product.description` | Product description. |
-| `product.reviews_count` | Number of written reviews. |
 | `product.seller` | Name of the seller. |
+| `product.price.currency` | Currency code of the price. |
+| `product.price.current` | Current price, in the price currency. |
 
-+5 more (types in the full schema): `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {brand null, image_urls string[], availability null}; `product.ext` {gid string, data_docid string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++3 more (types in the full schema): `product.price` {original}; `product.rating` {average, count}. Also in the sample: `product` {brand null, image_urls string[], availability null}; `product.ext` {gid string, data_docid string}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.description`, `product.reviews_count`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `google_shopping/product` (`product_id` ← `data.items[].product.id`) - Full details for each product. · `google_shopping/sellers` (`product_id` ← `data.items[].product.id`) - The stores selling each product, with prices. · `google_shopping/price-history` (`product_id` ← `data.items[].product.id`) - Get Google Shopping price history for a product.
 
@@ -157,10 +157,10 @@ Returns a unified ReviewList for a Google Shopping product, aggregated across re
 | `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
-| `review.url` | URL of the review. |
 | `review.author.name` | Reviewer name. |
+| `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 
-+10 more (types in the full schema): `computed` {labels_evidence}; `review` {entity_id, source}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {helpful_votes null, verified null, language null, original_language null, translated null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
++9 more (types in the full schema): `review` {entity_id, source}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review.author` {avatar_url null, url null, location null, reviews_count null}; `review` {helpful_votes null, verified null, language null, original_language null, translated null, images null} (+1 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `review.url`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/google_shopping/reviews" \

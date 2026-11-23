@@ -130,10 +130,10 @@ curl -G "https://www.socialcrawl.dev/v1/airbnb/listing/reviews" \
 
 ## GET /v1/airbnb/search - 1 credit (standard)
 
-Returns up to 18 Airbnb listings a page for a place, each with its name, coordinates, rating out of 5, review count, photos and priced stay in place.hotel.prices (the total, the per-night price, the total before any discount, and taxes and fees). Without check_in and check_out the search prices Airbnb's own default stay, echoed back in data.check_in and data.check_out. Pass the returned cursor for the next page.
+Returns up to 18 Airbnb listings a page for a place, each with its name, coordinates, rating out of 5, review count, photos and priced stay in place.hotel.prices (the total, the per-night price, the total before any discount, and taxes and fees). Without check_in and check_out the search prices Airbnb's own default stay, echoed back in data.check_in and data.check_out. Narrow the listings with Airbnb's own filters: room_type, minimum bedrooms, beds and bathrooms, property_types, amenities, accessibility_features, host_languages, instant_book, self_check_in, guest_favorite, luxe, or a map box (bbox); a value Airbnb does not take is a free 400, and there is no price filter. Airbnb reorders its results from call to call, so a later page can leave out a listing an earlier page returned; data._warnings says when it does. Pass the returned cursor for the next page.
 
 **Use when** you want to compare stays in an area. Add check_in and check_out to price your dates, or you get Airbnb's default stay.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · ≈18/page (observed once) · depth unknown · N items ≈ ceil(N/18) x 1 credits
 
@@ -146,6 +146,19 @@ Returns up to 18 Airbnb listings a page for a place, each with its name, coordin
 - `children` (optional, integer, 0-15) - Children, 0 to 15.
 - `infants` (optional, integer, 0-5) - Infants, 0 to 5.
 - `pets` (optional, integer, 0-5) - Pets, 0 to 5.
+- `room_type` (optional, enum: entire_home | private_room) - entire_home or private_room.
+- `bedrooms` (optional, integer, 1-50) - At least this many bedrooms, 1 to 50.
+- `beds` (optional, integer, 1-50) - At least this many beds, 1 to 50.
+- `bathrooms` (optional, integer, 1-50) - At least this many bathrooms, 1 to 50.
+- `property_types` (optional, string) - Comma-separated: house, apartment, guesthouse, hotel. Send hotel on its own.
+- `amenities` (optional, string) - Comma-separated, every one required: wifi, kitchen, washer, dryer, air_conditioning, heating, dedicated_workspace, tv, hair_dryer, iron, pool, hot_tub, free_parking, ev_charger, crib, king_bed, gym, bbq_grill, breakfast, indoor_fireplace, smoking_allowed, waterfront, smoke_alarm, carbon_monoxide_alarm.
+- `accessibility_features` (optional, string) - Comma-separated, every one required: step_free_access, wide_guest_entrance, disabled_parking_spot, step_free_bedroom_access, wide_bedroom_entrance, step_free_bathroom_access, wide_bathroom_entrance, step_free_shower, shower_or_bath_chair, shower_grab_bar, toilet_grab_bar, ceiling_or_mobile_hoist.
+- `host_languages` (optional, string) - Comma-separated two-letter codes of languages the host speaks: en, fr, es, de, pt, it, nl, ru, pl, cs, hu, sv, da, no, fi, el, tr, uk, ar, he, hi, id, th, vi, zh, ja, ko.
+- `instant_book` (optional, boolean) - true for listings you can book without waiting for the host.
+- `self_check_in` (optional, boolean) - true for listings with self check-in.
+- `guest_favorite` (optional, boolean) - true for Guest favorites only.
+- `luxe` (optional, boolean) - true for Airbnb Luxe listings only.
+- `bbox` (optional, string) - A map box to search inside, west,north,east,south in decimal degrees, for example -9.16,38.73,-9.13,38.70.
 - `cursor` (optional, string) - Continuation token from a previous response's pagination block, passed back with the same parameters. Omit for the first page.
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 

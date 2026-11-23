@@ -97,7 +97,7 @@ Returns products from one Sephora brand, 60 per page, each with product id, titl
 | `product.price.current` | Current price, in the price currency. |
 | `product.rating.average` | Average rating, normally out of 5. |
 
-+1 more (types in the full schema): `product.rating` {count}. Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count null}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
+Also in the sample: `product` {url string, description null, seller string, availability string, reviews_count null}; `product.price` {original null, currency string}; `product.ext.sephora` {sku string}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.rating.count`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `sephora/reviews` (`product_id` ← `data.items[].product.id`) - Get Sephora product reviews. · `sephora/product` (`product_id` ← `data.items[].product.id`) - Get a Sephora product by id or URL.
 

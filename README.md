@@ -2,10 +2,10 @@
 
 # @socialcrawl
 
-**Give your AI agent access to 75 social, commerce + research platforms through a single API**
+**Give your AI agent access to 95 social, commerce + research platforms through a single API**
 
-[![Platforms](https://img.shields.io/badge/Platforms-75-blue?style=flat-square)](https://socialcrawl.dev)
-[![Endpoints](https://img.shields.io/badge/Endpoints-733-green?style=flat-square)](https://socialcrawl.dev/docs)
+[![Platforms](https://img.shields.io/badge/Platforms-95-blue?style=flat-square)](https://socialcrawl.dev)
+[![Endpoints](https://img.shields.io/badge/Endpoints-802-green?style=flat-square)](https://socialcrawl.dev/docs)
 [![skills.sh](https://img.shields.io/badge/skills.sh-listed-black?style=flat-square)](https://skills.sh)
 [![Agents](https://img.shields.io/badge/Agents-40+-blueviolet?style=flat-square)](https://skills.sh)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
@@ -32,7 +32,7 @@ One API key. One consistent response format. Every platform. Every response is w
 - Generates working code snippets that call the SocialCrawl API
 - Answers questions about endpoints, parameters, and capabilities
 - Scrapes, crawls, and monitors arbitrary web pages, and drives interactive browser sessions (`/v1/web/*`)
-- Gives exact per-endpoint pricing for all 733 endpoints — cost, tier, cache TTL, and the full rule behind every metered endpoint (bundled pricing reference)
+- Gives exact per-endpoint pricing for all 802 endpoints — cost, tier, cache TTL, and the full rule behind every metered endpoint (bundled pricing reference)
 - Quotes the cost before spending your credits, and reports the real charge afterwards
 - Checks your credit balance
 
@@ -195,42 +195,42 @@ Every response follows a unified envelope:
 | Platform | Endpoints | Data Available |
 |----------|-----------|----------------|
 | **LinkedIn** | 77 | Profiles (incl. languages, projects, patents, organizations, courses, test scores, featured, skill endorsers) & company pages (incl. bulk lookup of up to 25) (incl. company by domain, also-viewed, employee counts), posts (deep `profile/posts` metered up to 200), reposts, reactions, comments & replies, articles with comments/reactions, profile activity/articles/posted jobs/similar profiles/interests (newsletters, schools, top voices), complete-profile and all-in-one bundles, people search (incl. by search URL), company/hashtag search, profile sub-resources (experience, education, skills, certifications…), the complete post-history archive walk (metered per post), jobs (search, company jobs, details, hiring team), company insights, groups, transcripts, Ad Library, profile-360 |
-| **Prism** | 53 | Cross-platform composites — creator search by topic, market and measured views (`prism/creators`), comments under up to 25 post URLs (`prism/post-comments`), URL lookup, comment harvesting and comment leads, batch comment/profile lookup (plus async bulk `prism/jobs` up to 5,000 items), find-accounts (name → ranked public accounts), mentions, handle-audit, adverse screening, brief check, brand mentions, demand signals, AI visibility, crisis radar/post-mortem, reputation, share-of-voice, trend board, earliness, format lift, audience language, creator vetting & creator cards, org radar, Korea gap, AI consensus answers, video/app/product intelligence |
+| **Prism** | 54 | Cross-platform composites — creator search by topic, market and measured views (`prism/creators`), comments under up to 25 post URLs (`prism/post-comments`), URL lookup, comment harvesting and comment leads, batch comment/profile lookup (plus async bulk `prism/jobs` up to 5,000 items), find-accounts (name → ranked public accounts), mentions, handle-audit, adverse screening, brief check, brand mentions, demand signals, AI visibility, crisis radar/post-mortem, reputation, share-of-voice, trend board, earliness, format lift, audience language, creator vetting & creator cards, org radar, Korea gap, AI consensus answers, video/app/product intelligence |
 | **Instagram** | 44 | Profiles, promoted trending searches, account transparency (profile/about), posts, reels, comments & comment replies, highlights, stories, tagged & location feeds, on-screen text extraction, followers/following, similar accounts, post likers, reshare stats, one-call reels/posts feeds with share counts, engagement analytics, universal + popular-post search, reels/hashtag/profile/location/music search, trending, transcripts, profile-360 |
 | **TikTok** | 38 | Profiles, videos, comments & replies, on-screen text extraction, keyword/hashtag/user/music search + suggestions, hashtag details, trending, audience, followers, similar accounts, liked videos, playlists & collections, place feeds, effects, live, songs, transcripts, Ad Library, profile-360 |
-| **Facebook** | 32 | Pages, Ad Library advertiser profiles and placement/category filters, groups & group posts, posts, comments, photos, reels (incl. full reels feed with view counts), events, Marketplace, keyword search over posts/videos/pages/people/groups, transcripts, full Ad Library |
-| **YouTube** | 30 | Channels, videos, shorts, comments & replies, sponsors, playlists & items, community posts, search (advanced + autocomplete), trending, live streams, channel contact email lookup, media files (audio/video/subtitles/thumbnails), transcripts, batch videos/channels/transcripts, profile-360 |
+| **Facebook** | 33 | Pages, Ad Library advertiser profiles and placement/category filters, groups & group posts, posts, comments, photos, reels (incl. full reels feed with view counts), events, Marketplace, keyword search over posts/videos/pages/people/groups, transcripts, full Ad Library; group events and event details |
+| **YouTube** | 32 | Channels, videos, shorts, comments & replies, sponsors, playlists & items, community posts, search (advanced + autocomplete), trending, live streams, channel contact email lookup, media files (audio/video/subtitles/thumbnails), transcripts, batch videos/channels/transcripts, profile-360; channel search, podcasts, lives and playlists with sorts |
 | **Web Scraping** | 22 | Scrape, web search, site map, LLM extract, async crawl/batch-scrape/agent jobs with per-page error feeds, change monitors, interactive browser sessions, document parse |
 | **US Congress Trades** | 19 | US Congress STOCK Act disclosures — trade feeds (all/48h/7d), members, per-politician and per-ticker stats and trades, state delegations, and the full statistics suite (party, sectors, issuers, volume, unusual activity, buy/sell ratio, late filings) |
 | **Goodreads** | 10 | Books with the 1-5 star breakdown, reviews filtered by rating/language/phrase (with `label=`), review comments, editions, search, authors and their books, quotes, series, Listopia lists |
 | **Weibo** | 8 | Accounts (gender, birthday, IP location), posts, comments and replies, account search, the hot-search list, post search back for years with `since`/`until` |
 | **DuckDuckGo** | 7 | Web, news, image and video search, instant answers, suggestions, and `rank` (scans 200 positions for one domain) |
 | **Airbnb** | 4 | Listing search, listings with category ratings and the host profile, guest reviews (with `label=`), a night-by-night availability calendar for up to 12 months |
-| **Bing** | 4 | First results page with related searches and People Also Ask, `rank`, videos, suggestions |
-| **Booking.com** | 3 | Property search, properties, guest reviews that keep liked and disliked apart (with `label=`) |
+| **Bing** | 7 | First results page with related searches and People Also Ask, `rank`, images, videos, shopping search and product offers, suggestions |
+| **Booking.com** | 4 | Property search, properties, guest reviews that keep liked and disliked apart (with `label=`); room options and prices |
 | **Economy** | 5 | Consumer and tourism indicators, US federal spending and contracts, and import records |
 | **Klarna** | 18 | Product details and every merchant offer, keyword search + suggestions, user and professional reviews with score overviews, price history, product comparison, category browsing with filters/keywords/buying guides, store listings |
-| **Tripadvisor** | 16 | Hotels, restaurants, attractions and cruise ships — search and full detail for each, traveler reviews with owner replies, place lookup by URL, destination autocomplete, experience types |
+| **Tripadvisor** | 15 | Hotels, restaurants, attractions and cruise ships: search and full detail, traveler reviews up to 500 deep (visit month, traveller type, sub-ratings, owner replies), place lookup |
 | **Twitter/X** | 18 | Profiles, "About this account" (region, signup source, username changes, verification), tweets and replies, tweet & user search, user media, followers, following, retweeters, communities, video transcripts, AI search via Grok, profile-360 |
-| **Naver** | 20 | Korea's #1 portal — blog, news, encyclopedia, cafe, KiN, local, image, web search, errata & adult classifiers, Data Lab search-trend & shopping-insight series, brief |
+| **Naver** | 21 | Korea's #1 portal — blog, news, encyclopedia, cafe, KiN, local, image, web search, errata & adult classifiers, Data Lab search-trend & shopping-insight series, brief |
 | **Reddit** | 14 | Subreddits, post detail, comments, user profiles with post and comment history, keyword/comment/media search, subreddit discovery, transcripts, omni-search VoC sweep |
-| **GitHub** | 12 | Users, repos, issues, PRs, READMEs, releases, search, repo dossier, user profile-velocity |
+| **GitHub** | 13 | Users, repos, issues, PRs, READMEs, releases, search, repo dossier, user profile-velocity; repository search with GitHub qualifiers |
 | **Gumtree** | 11 | UK classifieds — listing search and details, similar listings, seller profiles and their ads, search suggestions, trending searches, category tree with filters, location lookup |
-| **Jobs** | 11 | Job search and listing detail across LinkedIn, Indeed, Bing and Xing, LinkedIn organization-id resolution, and salary ranges by title and country |
+| **Jobs** | 18 | Company job boards (Greenhouse, Lever, Ashby, Workday, up to 100 roles a call), Google Jobs, Levels.fyi, LinkedIn, Indeed (with filters), Bing and Xing search and listing detail, LinkedIn organization-id resolution, salary ranges by title |
 | **Sephora** | 11 | Product details, reviews, keyword search + suggestions, category tree browsing, brand listings and per-brand products, store lookup, per-SKU in-store availability |
 | **Content Analysis** | 10 | Cross-web brand mentions, sentiment, rating distributions, phrase/category trends |
-| **Google** | 13 | Web search, Ads Transparency (incl. advertiser profiles), Business Profile (info, reviews, updates, Q&A), Travel hotels |
+| **Google** | 23 | Web search, images, patents, AI Overviews, autocomplete, keyword volume, Ads Transparency (incl. advertiser profiles), Business Profile (info, reviews with topics and async full history, contributor reviews, popular times, photos, menu, updates, Q&A), Travel hotels |
 | **AliExpress** | 9 | Product details, keyword search, similar products, reviews, per-SKU shipping, hot products, featured promotions, category tree |
 | **Apple App Store** | 9 | App search, search suggestions, app details, reviews, charts, listings database, reference data |
-| **Google Play** | 9 | App search, search suggestions, app details, reviews, charts, listings database, reference data |
-| **Amazon** | 8 | Product search, ASIN details, reviews, sellers, shop pages, Best Sellers charts, current deals, seller profiles — ~13 marketplaces |
+| **Google Play** | 11 | App search, search suggestions, app details, reviews, charts, listings database, reference data |
+| **Amazon** | 9 | Product search, ASIN details, reviews, sellers, shop pages, Best Sellers charts, current deals, seller profiles — ~13 marketplaces; search suggestions |
 | **Douyin** | 8 | China's TikTok — video search, creator profiles and feeds, video detail, comments and comment replies, creator search, hot-search board (mostly metered per row) |
 | **Finance** | 8 | Instrument quotes, ticker search, markets overview, instrument news, daily price history, company financial statements, options chains |
 | **G2** | 7 | Software marketplace — product pages, reviews, category listings and the category index, vendor profiles and their catalogue, product URL index |
 | **Quora** | 7 | Question search and detail, answer search, Space post search, profile search, Space/topic search |
 | **H&M** | 6 | Keyword search + suggestions, store listings by country, countries/languages, category tree, per-product supplier and factory disclosure |
-| **Pinterest** | 6 | Pins, boards, search, URL save-counts, Pinterest Trends by market |
-| **Spotify** | 6 | Artists, tracks, albums, podcasts, episodes, search |
+| **Pinterest** | 7 | Pins, boards, search, URL save-counts, Pinterest Trends by market; profiles |
+| **Spotify** | 7 | Artists, tracks, albums, podcasts, episodes, search; playlists |
 | **Threads** | 6 | Profiles, posts, post comments, keyword search, user search |
 | **Utility** | 13 | Free API self-discovery — quickstart, endpoint catalogue, per-endpoint usage guide, cross-cutting capabilities (which params work where and what they cost), goal-to-call plans, LLM context payload. 0 credits, served from the live registry |
 | **Xiaohongshu** | 6 | RED (Little Red Book) — note search, the hot/trending board, single note with full body, top-level note comments, creator profiles and their notes (5 credits per returned row) |
@@ -242,16 +242,16 @@ Every response follows a unified envelope:
 | **TikTok Shop** | 6 | Products, reviews, listings, search, creator showcases |
 | **Universal Search** | 6 | One query fanned out across up to 23 sources on 18 platforms (20 credits per search; stored runs, lists, watches and `more`); `search/multi` (each platform's native search in one call, metered as the sum of the pages); forums lane; multi-country news lane (metered); creator-discovery lane across TikTok/Threads/Instagram |
 | **Walmart** | 5 | Product details, reviews, keyword search, category browsing, seller offers |
-| **Yelp** | 5 | Business profiles by encid, business reviews, business search (compact and full-card), search suggestions |
-| **Bluesky** | 4 | Profiles, posts, keyword post search |
+| **Yelp** | 5 | Business profiles (by encid, name slug or any /biz/ link: phone, website, amenities, neighbourhoods), reviews with sort, filters, up to 49 a page, hidden "not recommended" reviews and `review.ext.yelp`, async full review history, business search with `bbox` tiling |
+| **Bluesky** | 5 | Profiles, posts, keyword post search; followers, feed filters and cursor |
 | **Etsy** | 4 | Listings by id or URL, a shop's catalogue, similar listings, search suggestions |
-| **Hacker News** | 4 | Story search, story, comment tree, profile |
+| **Hacker News** | 5 | Story search, story, comment tree, profile; front-page story lists |
 | **Home Depot** | 4 | Keyword search, product details by item id or URL (store/zip-aware pricing), reviews, store lookup by ZIP |
 | **Tavily** | 4 | Web search (with LLM answer), URL extraction, sitemap, full crawl |
 | **Twitch** | 4 | Profiles, clips, videos, schedules |
 | **Google Trends** | 3 | Interest-over-time (explore), rising/breakout related queries, Trending Now by location |
 | **Kwai** | 3 | Profiles, posts |
-| **Telegram** | 4 | Public channel profiles, channel post feeds, single post lookup |
+| **Telegram** | 5 | Public channel profiles, channel post feeds, single post lookup; post comments |
 | **Truth Social** | 3 | Profiles, posts |
 | **Gab** | 5 | Profiles, a user's posts, single posts with comments, post search |
 | **Wayfair** | 3 | Product search, product details by SKU, reviews |
@@ -269,8 +269,28 @@ Every response follows a unified envelope:
 | **Pillar** | 1 | Link pages |
 | **Polymarket** | 2 | Prediction-market research (multi-query fan-out + ranking) and market search |
 | **Product Hunt** | 5 | The public launches feed (optionally by topic), daily/weekly/monthly/yearly leaderboards back to 2013, product pages, launch comments, topics |
+| **Stack Overflow** | 4 | Question search, questions, answers and comments |
+| **Zillow** | 3 | Property search, listing detail (MLS number, price per sq ft, agent, parcel, open houses, price cuts, schools, floor plans), location lookup |
+| **Apartments.com** | 2 | Rental search and property detail |
+| **Apple Maps** | 2 | Place search and place detail with review excerpts, address parts, categories, guides and photo categories |
+| **idealo Italy** | 2 | Price-comparison search and product offers |
+| **npm Registry** | 2 | Package search and package detail |
+| **Realtor.com** | 2 | Property search and listing detail |
+| **Redfin** | 2 | Property search that walks to your `limit` with photos and descriptions, listing detail (detail groups behind `include=details`) |
+| **Sprouts** | 2 | Product search and product detail |
+| **Steam** | 2 | Game search and app detail |
+| **Wikipedia** | 2 | Article search and article text |
+| **Yandex** | 2 | Web and image search |
+| **Baidu** | 1 | Web search results page |
+| **Best Buy** | 1 | Product detail |
+| **Homes.com** | 1 | Property detail |
+| **IKEA** | 1 | Product search |
+| **Kroger** | 1 | Product search |
+| **PyPI** | 1 | Project detail |
+| **SoundCloud** | 1 | Track detail |
+| **Yahoo Search** | 1 | Web search results page |
 
-**Total: 733 endpoints across 75 platforms** — plus two stateful families that are not counted in the endpoint total: **Monitors** (`/v1/monitors/*`, scheduled recipe runs with webhook delivery) and **Cohorts** (`/v1/cohorts/*`, audience-filtered mention search over a panel you upload).
+**Total: 802 endpoints across 95 platforms** — plus two stateful families that are not counted in the endpoint total: **Monitors** (`/v1/monitors/*`, scheduled recipe runs with webhook delivery) and **Cohorts** (`/v1/cohorts/*`, audience-filtered mention search over a panel you upload).
 
 ## Credit System
 
@@ -278,10 +298,10 @@ Every API call costs credits based on its complexity:
 
 | Tier | Cost | Endpoints | Examples |
 |------|------|-----------|----------|
-| **Standard** | 1 credit | 267 | Profiles, posts, search, comments, Naver corpora, GitHub, HN, Tavily, Perplexity, reference data |
+| **Standard** | 1 credit | 325 | Profiles, posts, search, comments, Naver corpora, GitHub, HN, Tavily, Perplexity, reference data |
 | **Advanced** | 5 credits | 182 | Audience demographics, ad libraries, trending, app data, retail catalogs, business/place reviews, Google + Naver trends, LinkedIn social graph + jobs, Instagram relationship/discovery data |
 | **Premium** | 10 credits | 25 | Video transcripts, LinkedIn people/job search + reactions, app listings search, web agent jobs |
-| **Custom (flat / request-shaped)** | varies by request | 259 | Free discovery, fixed composites, per-row batches, per-probe AI visibility, per-page crawl and search, browser sessions, and recurring monitors |
+| **Custom (flat / request-shaped)** | varies by request | 270 | Free discovery, fixed composites, per-row batches, per-probe AI visibility, per-page crawl and search, browser sessions, and recurring monitors |
 
 ### Pricing
 
@@ -324,7 +344,7 @@ socialcrawl/
     ├── errors.md          # Every error code and what to do next
     ├── api-overview.md    # Auth, envelope, schemas, pagination, walks, caching, idempotency, events, notifications
     ├── cost-gate.md       # Mandatory request-level pricing formulas and preflight format
-    ├── pricing.md         # Exact credit cost and rule for every one of the 733 endpoints + credit packs
+    ├── pricing.md         # Exact credit cost and rule for every one of the 802 endpoints + credit packs
     ├── recipes.md         # Multi-step jobs with cost, pitfalls and code
     ├── codegen.md         # TypeScript and Python clients and the helper scripts
     ├── prism.md           # Cross-platform Prism composites, Discover and creator search (/v1/prism/*)
@@ -333,7 +353,7 @@ socialcrawl/
     ├── monitors.md        # Scheduled recipe runs + webhook delivery (/v1/monitors/*)
     ├── cohorts.md         # Audience-filtered mention search over a panel you upload (/v1/cohorts/*)
     ├── schemas/           # Full field lists of every canonical archetype
-    └── <platform>.md      # 75 platform references, one per platform (tiktok.md, instagram.md, weibo.md, ...)
+    └── <platform>.md      # 95 platform references, one per platform (tiktok.md, instagram.md, weibo.md, ...)
 ```
 
 The skill reads the appropriate reference file for each platform on demand, keeping context usage minimal.

@@ -88,13 +88,13 @@ Returns reviews for a TikTok Shop product. Each review includes rating, text, au
 | Field | Meaning |
 |---|---|
 | `review.text` | Full review body |
-| `review.title` | Review headline. |
 | `review.id` | Review ID (parsed from the review URL when not first-class) |
 | `review.published_at` | Review creation timestamp as an ISO 8601 UTC string… |
 | `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
+| `review.entity_id` | ID of the reviewed entity… |
 
-+15 more (types in the full schema): `review` {entity_id, images, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {avatar_url, location}; `review.rating` {max, value}; `review.ext.tiktokshop` {is_incentivized_review, reviewer_id, sku_specification}. Never filled: `review.author.reviews_count`, `review.author.url`, `review.helpful_votes`, `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`, `review.url`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
++13 more (types in the full schema): `review` {verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {avatar_url, location}; `review.rating` {max, value}; `review.ext.tiktokshop` {is_incentivized_review, reviewer_id, sku_specification}. Never filled: `review.author.reviews_count`, `review.author.url`, `review.helpful_votes`, `review.language`, `review.original_language`, `review.responses`, `review.source`, `review.translated`, `review.url`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `review.images`, `review.title`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktokshop/product/reviews" \
@@ -184,11 +184,11 @@ Searches TikTok Shop across every storefront for products matching a keyword, in
 | `product.url` | Direct URL to the product page |
 | `product.title` | Product title |
 | `product.id` | Platform product ID… |
-| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
-| `product.reviews_count` | Number of written reviews. |
+| `product.seller` | Name of the seller. |
+| `product.ext.seller_id` | The seller's id on the retailer. |
 
-+9 more (types in the full schema): `product` {seller}; `product.ext` {seller_id, sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average, count}. Never filled: `product.availability`, `product.brand`, `product.ext.sku_id`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++6 more (types in the full schema): `product.ext` {sold_count, tiktokshop}; `product.price` {currency, current, original}; `product.rating` {average}. Never filled: `product.availability`, `product.brand`, `product.ext.sku_id`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.description`, `product.rating.count`, `product.reviews_count`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `tiktokshop/product/reviews` (`url` ← `data.items[].product.url`) - Buyer reviews of each product. · `tiktokshop/product` (`url` ← `data.items[].product.url`) - Full details for each product.
 

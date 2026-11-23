@@ -145,11 +145,11 @@ curl -G "https://www.socialcrawl.dev/v1/app_store/app-listings-search" \
 
 ## GET /v1/app_store/app-reviews - 5-9 credits (request-shaped)
 
-Returns a unified ReviewList of Apple App Store user reviews for an app, keyed by its numeric `app_id` (on every review's `entity_id`). Each review carries the star rating, full text, review title, reviewer name, and publish date: on the SAME canonical `Review` shape used by Amazon, Google Shopping, and Trustpilot. Apple reviews have no avatar, helpful-vote count, or developer responses (those are null). `depth` returns reviews in batches of 50 (max 500; a 500-review pull takes around 40s). Apple's review feed cannot be filtered by star rating upstream, so `rating` is rejected here with a free 400 rather than silently returning the unfiltered feed: request a larger `depth` and filter on `review.rating.value`, or use /v1/google_play/app-reviews where the filter is real.
+Returns a unified ReviewList of Apple App Store user reviews for an app, keyed by its numeric `app_id` (on every review's `entity_id`). Each review carries the star rating, full text, review title, reviewer name, and publish date: on the SAME canonical `Review` shape used by Amazon, Google Shopping, and Trustpilot. Apple reviews have no avatar, helpful-vote count, or developer responses (those are null), and `url` is null because the App Store publishes no page for a single review (Google Play rows carry one); cite the app's store page from /v1/app_store/app-info. `depth` returns reviews in batches of 50 (max 500; a 500-review pull takes around 40s). Apple's review feed cannot be filtered by star rating upstream, so `rating` is rejected here with a free 400 rather than silently returning the unfiltered feed: request a larger `depth` and filter on `review.rating.value`, or use /v1/google_play/app-reviews where the filter is real.
 
 **Use when** you want to read what users say about one app; reviews come back in batches of 50, up to 600 in total. **Not for** both stores at once with themes and sentiment over time (prism/app-reviews).
-**Cost** price moves with `label` · cache 300 s
-**Pricing** 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
+**Cost** price moves with `label` · cache 300 s · multi-source (billed once)
+**Pricing** 5 credits a call at any `depth` up to 500: one call returns every batch of 50 it asks for. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free.
 **Paging** single page - Depth-based fan-out: page size is controlled by depth, one call.
 
 **Query params**
@@ -158,7 +158,7 @@ Returns a unified ReviewList of Apple App Store user reviews for an app, keyed b
 - `country` (optional, string) - Storefront country as an ISO code ('US'), a full name, or a numeric code. Defaults to the US.
 - `language` (optional, string) - Language code (e.g. 'en'). Defaults to 'en'.
 - `depth` (optional, integer) - Number of reviews to retrieve (default 50, batches of 50, max 500). Above 500 is clamped, not rejected. Apple's feed stops there; Google Play reaches 600. · e.g. `50`
-- `sort_by` (optional, enum: most_recent | most_helpful) - Review ordering: `most_recent` (default) or `most_helpful`. · e.g. `most_recent`
+- `sort_by` (optional, enum: most_recent | most_helpful) - Review ordering: `most_recent` (default) or `most_helpful`. Google Play's `newest` and the spellings `mostRecent` and `mostHelpful` are read as these, with a `_warnings` line. · e.g. `most_recent`
 - `rating` (optional, integer) - Not supported on this store: Apple's review feed cannot be filtered by star rating upstream, so this is rejected with a free 400 rather than silently returning the unfiltered feed. Filter on `review.rating.value` client-side, or use /v1/google_play/app-reviews.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off the page, and the page that reaches one ends the walk: `next_cursor` is not returned and `pagination.stopped_at` is `since`. Sending it sets the newest-first sort shown in this endpoint's sort parameter (any other sort value is a free 400). The page still costs what a page costs, so you pay for the pages you walk and no more. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `label` (sentiment | issue | reports | incentivized | injection; paid: reports, incentivized, injection) · `label_evidence` (1) · `reports` → [labels](api-overview.md#labels-relevance-and-quality); `until` → [date window](api-overview.md#date-window-since-until)
@@ -181,7 +181,7 @@ Returns a unified ReviewList of Apple App Store user reviews for an app, keyed b
 | `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 
-+10 more (types in the full schema): `review` {entity_id, helpful_votes}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.author` {avatar_url}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified null, source null, language null, original_language null, translated null}; `review.author` {url null, location null, reviews_count null} (+18 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
++8 more (types in the full schema): `review` {entity_id}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review` {url null, verified null, source null, language null, original_language null, translated null, images null, responses null}; `review.author` {url null, location null, reviews_count null} (+16 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `review.author.avatar_url`, `review.helpful_votes`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/app_store/app-reviews" \
@@ -194,15 +194,18 @@ curl -G "https://www.socialcrawl.dev/v1/app_store/app-reviews" \
 Returns a unified AppList of Apple App Store apps matching a keyword: title, icon, developer, category, rating, price/is_free, and store URL on every item, on the same canonical `App` shape used across every app marketplace (`app.store` = "app_store"). `app.rank` is the position of the app in the results (1 is the first). Detail-only fields (description, screenshots, similar apps) are null on search items; fetch /v1/app_store/app-info for the full record. Served from the Apple App Store catalogue: a first, uncached call is task-polled upstream and typically takes 3 to 15s, with a review pull at high `depth` reaching 40s. Set a client timeout of at least 60s.
 
 **Use when** you want to find an app's numeric id by keyword; description, screenshots, and developer come from app-info.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Paging** single page - Depth-based fan-out: page size is controlled by depth, one call.
 
 **Query params**
 
 - `query` (required) - Search keyword (e.g. 'photo editor'). · e.g. `photo editor`
-- `country` (optional, string) - Storefront country as an ISO code ('US'), a full name ('United States'), or a numeric location code ('2840'). Defaults to the US. · e.g. `United States`
+- `country` (optional, string) - Storefront country as an ISO code ('US'), a full name ('United States'), or a numeric location code ('2840'). Defaults to the US, except that a query written in Hangul searches the Korean store (KR, ko) and one with Japanese kana the Japanese store (JP, ja) when neither `country` nor `language` is sent; `_warnings` says so. · e.g. `United States`
 - `language` (optional, string) - Language code (e.g. 'en'). Defaults to 'en'.
 - `depth` (optional, integer) - Number of results to retrieve (default 100, rounded up to multiples of 100, max 300). · e.g. `100`
+- `device` (optional, enum: iphone | ipad | mac) - Which store to search: iphone (the default), ipad for iPad apps, or mac for Mac apps. Mac rows link to the app's Mac store page.
+- `category_id` (optional, integer) - Only apps listed in this App Store genre, as their main category or an additional one (each item's app.categories includes it): Apple's numeric genre id, for example 6008 for Photo & Video (the number in the store's genre page URL, .../genre/ios-photo-video/id6008).
+- `search_by` (optional, enum: app | developer) - app (the default) matches the query against app names and descriptions; developer matches it against developer names only, so query=spotify returns Spotify's own apps.
 
 **Response** `AppList` rows at `data.items[]`, each `{ app }` ([full schema](schemas/AppList.md))
 

@@ -49,7 +49,7 @@ Returns the replies under one Weibo comment, oldest first, each naming the comme
 | `comment.post_id` | ID of the post this comment belongs to |
 | `comment.author.avatar_url` | URL to comment author profile picture |
 
-+10 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_followers, author_id, author_url, ip_location}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++13 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_followers, author_id, author_url, ip_location}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/weibo/comment/replies" \
@@ -117,7 +117,7 @@ Returns the comments on a Weibo post, most liked first (hot) or newest first (la
 | `comment.post_id` | ID of the post this comment belongs to |
 | `comment.author.avatar_url` | URL to comment author profile picture |
 
-+10 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_followers, author_id, author_url, ip_location}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++13 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_followers, author_id, author_url, ip_location}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/weibo/post/comments" \

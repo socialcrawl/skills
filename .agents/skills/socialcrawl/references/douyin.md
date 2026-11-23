@@ -29,7 +29,7 @@ Returns the reply thread under one Douyin comment: text, replier, like count, IP
 
 **Use when** a comment shows a non-zero reply count and you need the conversation, not just the opening line.
 **Cost** price moves with `limit` · cache 300 s
-**Pricing** 5 credits per reply RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the replies actually delivered. Only a comment with a non-zero `engagement.replies` has a thread, so check that on the parent row before spending a call here With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 5 credits per reply RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the replies actually delivered. Only a comment with a non-zero `engagement.replies` has a thread, so check that on the parent row before spending a call here. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · default page size not measured; set with `limit` · depth unknown · typical 5.1-6.3 s
 
@@ -53,7 +53,7 @@ Returns the reply thread under one Douyin comment: text, replier, like count, IP
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+8 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++11 more (types in the full schema): `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.flags.pinned`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/douyin/comment/replies" \
@@ -123,7 +123,7 @@ Returns top-level comments on a Douyin video: text, commenter, like count, reply
 | `comment.author.avatar_url` | URL to comment author profile picture |
 | `comment.author.display_name` | Comment author display name |
 
-+6 more (types in the full schema): `comment.author` {verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++9 more (types in the full schema): `comment.author` {verified}; `comment.engagement` {likes, replies}; `comment.ext` {author_id}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.username`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/douyin/post/comments" \
@@ -263,7 +263,7 @@ Returns Douyin creators matching a keyword: nickname, Douyin ID, bio, follower c
 
 **Use when** you want to shortlist creators for outreach. Narrow by follower band or account type before you spend calls on full profiles.
 **Cost** price moves with `limit` · cache 120 s
-**Pricing** 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · 10/page by default, max 25; set with `limit` · depth unknown · N items ≈ N rows x 5 credits · typical 4.3-5.1 s
 

@@ -71,10 +71,10 @@ Returns public profile information for a Truth Social user including display nam
 | `author.url` | Direct URL to the profile page |
 | `author.username` | User handle or username |
 | `author.avatar_url` | URL to profile picture |
-| `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
+| `author.followers` | Follower or subscriber count as an integer. |
 
-+14 more (types in the full schema): `author` {followers, following, joined_at, likes_count, posts_count, private, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}.
++12 more (types in the full schema): `author` {following, joined_at, posts_count, private, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `author.bio`, `author.likes_count`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/truthsocial/profile" \
@@ -114,7 +114,7 @@ Returns a list of recent truths posted by a Truth Social user. Each truth includ
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+14 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.engagement.saves`, `post.engagement.views`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++13 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}. Also in the sample: `post.flags` {nsfw null, spoiler null, pinned null}. Never filled: `post.engagement.saves`, `post.engagement.views`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.duration_seconds`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `truthsocial/profile` (`handle` ← `data.items[].post.author.username`) - Get Truth Social user profile.
 

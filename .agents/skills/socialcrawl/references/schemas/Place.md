@@ -1,28 +1,47 @@
 # Place fields
 
-Every field the 13 field-mapped endpoints returning `Place` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 19 field-mapped endpoints returning `Place` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `place.address` | string\|null | Street address as the source prints it. |
 | `place.categories` | array\|null | Additional categories beyond the primary one. |
 | `place.category` | string\|null | Primary category (e.g. "Coffee shop", "Hotel") |
-| `place.description` | string\|null | Description of the place. |
+| `place.description` | string\|null | Description of the place. (on some endpoints only when the fallback source serves) |
+| `place.ext.apartments` | object\|null |  |
+| `place.ext.attributes` | object\|null | The place's attributes: what it offers and what it does not, grouped by kind. (only when the fallback source serves) |
 | `place.ext.blog_reviews_count` | number\|null | Number of blog reviews. Naver only. |
 | `place.ext.booking_url` | string\|null | URL to book at the place. |
 | `place.ext.business_username` | string\|null | `/v1/instagram/location` only: the username of the Instagram business account linked to the place, or null when none is linked. |
 | `place.ext.capacity` | number\|null |  |
 | `place.ext.category_ratings` | array\|null |  |
 | `place.ext.city` | string\|null | City part of the address as Google publishes it. |
+| `place.ext.closed` | boolean\|null |  |
 | `place.ext.country_code` | string\|null | Country as an ISO 3166-1 alpha-2 code. |
+| `place.ext.diets` | array\|null | A restaurant's dietary options as Tripadvisor lists them, for example Vegetarian friendly or Gluten free options. |
 | `place.ext.exact_location` | boolean\|null |  |
 | `place.ext.facebook_places_id` | string\|null | `/v1/instagram/location` only: the Facebook Places id of the same place. |
+| `place.ext.faqs` | array\|null | Questions people asked about the business, with the answer and when it was given. (only when the fallback source serves) |
+| `place.ext.history` | string\|null | The business's history as it tells it on its page. |
 | `place.ext.host_profile` | object\|null |  |
 | `place.ext.hours` | array\|null | Opening hours by day. |
 | `place.ext.keywords` | array\|null | Keywords the place is tagged with. Naver only. |
 | `place.ext.languages_spoken` | array\|null |  |
+| `place.ext.listing` | object\|null |  |
 | `place.ext.listing_price_note` | string\|null |  |
-| `place.ext.place_id` | string\|null | Google Maps place id (ChIJ...). place.id holds the cid. (seen in a sample response) |
+| `place.ext.listing.agent` | object\|null | (with `include=details`) |
+| `place.ext.listing.nearby_places` | array\|null | (with `include=details`) |
+| `place.ext.listing.open_houses` | array\|null | (with `include=details`) |
+| `place.ext.listing.property_facts` | array\|null | (with `include=details`) |
+| `place.ext.listing.saves_count` | number\|null | (with `include=details`) |
+| `place.ext.listing.schools` | array\|null | (with `include=details`) |
+| `place.ext.listing.views_count` | number\|null | (with `include=details`) |
+| `place.ext.meal_types` | array\|null | The meals a restaurant serves as Tripadvisor lists them, for example Lunch or Dinner. |
+| `place.ext.menu_url` | string\|null | URL of the place's menu. (only when the fallback source serves) |
+| `place.ext.neighborhoods` | array\|null | Neighbourhoods the source lists for the place, for example Nolita. (only when the fallback source serves) |
+| `place.ext.place_id` | string\|null | Google Maps place id (ChIJ...). place.id holds the cid. |
+| `place.ext.popular_dishes` | array\|null | The dishes the page lists as popular, each with its rating and how many reviews and photos mention it. (only when the fallback source serves) |
+| `place.ext.popular_times` | object\|null | How busy the place is, on GET /v1/google/business/popular-times: the live reading and each day's hours. |
 | `place.ext.postal_code` | string\|null | Postal code part of the address. |
 | `place.ext.posts_count` | number\|null | `/v1/instagram/location` only: the number of public posts Instagram counts at the place. |
 | `place.ext.rating_distribution.1` | number\|null | (seen in a sample response) |
@@ -32,11 +51,13 @@ Every field the 13 field-mapped endpoints returning `Place` can carry, with path
 | `place.ext.rating_distribution.5` | number\|null | (seen in a sample response) |
 | `place.ext.room_type` | string\|null |  |
 | `place.ext.rooms` | array\|null |  |
+| `place.ext.specialties` | string\|null | The business's own description of what it specialises in, as on its page. |
 | `place.ext.status` | string\|null | Open or closed status as the source words it, for example Open. |
 | `place.ext.status_description` | string\|null | The line under status, for example the next opening time. Naver only. |
 | `place.ext.timezone` | string\|null | IANA timezone of the place, for example America/New_York. (seen in a sample response) |
 | `place.ext.visitor_reviews_count` | number\|null | Number of visitor reviews. Naver only. |
-| `place.ext.website` | string\|null | `/v1/instagram/location` only: the venue's own website (`place.url` is its Instagram page). |
+| `place.ext.website` | string\|null | `/v1/instagram/location` only: the venue's own website (`place.url` is its Instagram page). (on some endpoints only when the fallback source serves) |
+| `place.ext.year_established` | number\|null | The year the business was established. |
 | `place.hotel.amenities` | array\|null | Amenities the hotel lists. |
 | `place.hotel.check_in_time` | string\|null | Check in time as the hotel prints it. |
 | `place.hotel.check_out_time` | string\|null | Check out time as the hotel prints it. |
@@ -49,10 +70,10 @@ Every field the 13 field-mapped endpoints returning `Place` can carry, with path
 | `place.latitude` | number\|null | Latitude in decimal degrees. |
 | `place.longitude` | number\|null | Longitude in decimal degrees. |
 | `place.name` | string\|null | Business / hotel name |
-| `place.phone` | string\|null | Phone number as the source prints it. |
+| `place.phone` | string\|null | Phone number as the source prints it. (on some endpoints only when the fallback source serves) |
 | `place.price_level` | string\|null | Price band ("inexpensive" / "$$" / null) |
-| `place.rating.max` | number\|null | Highest possible rating value, normally 5. |
+| `place.rating.max` | number\|null | Highest possible rating value, normally 5. (on some endpoints only when the fallback source serves) |
 | `place.rating.value` | number\|null | Average rating from 0 to the rating max. |
 | `place.reviews_count` | number\|null | Number of ratings |
-| `place.url` | string\|null | Website or canonical URL |
-| `place.verified` | boolean\|null | Claimed-business flag (Google is_claimed) |
+| `place.url` | string\|null | Website or canonical URL (on some endpoints only when the fallback source serves) |
+| `place.verified` | boolean\|null | Claimed-business flag (Google is_claimed) (on some endpoints only when the fallback source serves) |

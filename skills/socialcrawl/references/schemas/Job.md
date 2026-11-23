@@ -1,6 +1,6 @@
 # Job fields
 
-Every field the 5 field-mapped endpoints returning `Job` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 6 field-mapped endpoints returning `Job` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|

@@ -131,10 +131,10 @@ curl -G "https://www.socialcrawl.dev/v1/duckduckgo/rank" \
 
 ## GET /v1/duckduckgo/search - 1 credit (standard)
 
-Returns DuckDuckGo's organic results in order, each with its position (counting across pages), title, link, displayed address, domain, snippet and date, plus the zero-click summary box when DuckDuckGo shows one. Pass the returned cursor for the next page; DuckDuckGo lists about 200 results for a search at most.
+Returns DuckDuckGo's organic results in order, each with its position (counting across pages), title, link, displayed address, domain, snippet and date, plus the zero-click summary box when DuckDuckGo shows one. Pass the returned cursor for the next page; DuckDuckGo lists about 200 results for a search at most. A first page read from the backup source carries no date, site name or zero-click box and no cursor: send the request again for a page that continues.
 
 **Use when** you want it for web results from a search engine outside Google. A search lists about 200 results at most.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Empty results** An upstream 404 means "zero items", not "not found" - you get `200 {items: []}` and a refund.
 **Paging** cursor · ≈10/page (observed once); set with `limit` · depth unknown · N items ≈ ceil(N/10) x 1 credits
 

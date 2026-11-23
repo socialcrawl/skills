@@ -84,7 +84,7 @@ Returns top level comments on a Xiaohongshu note: text, commenter, likes, reply 
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+9 more (types in the full schema): `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_id, ip_location}; `comment.flags` {deleted, pinned}; `computed` {language}. Never filled: `comment.author.verified`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++12 more (types in the full schema): `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_id, ip_location}; `comment.flags` {deleted, pinned}; `computed` {language}; `computed.country` {confidence, source, value}. Never filled: `comment.author.verified`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/xiaohongshu/post/comments" \

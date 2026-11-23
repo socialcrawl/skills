@@ -241,10 +241,10 @@ Returns two Klarna products side by side: title, brand, rating, lowest price, an
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.reviews_count` | Number of written reviews. |
 
-+5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++4 more (types in the full schema): `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller string, availability null}; `product.price` {original null}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.description`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL. · `klarna/product/offers` (`product_id` ← `data.items[].product.id`) - List merchant offers for a Klarna product.
 
@@ -457,11 +457,11 @@ Returns Klarna shopping products matching a keyword, 20 per call, each with prod
 | `product.id` | Platform product ID… |
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
-| `product.brand` | Brand name (cleaned). |
 | `product.description` | Product description. |
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
+| `product.reviews_count` | Number of written reviews. |
 
-+5 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.price` {original null}; `product.ext` {condition string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++4 more (types in the full schema): `product.price` {currency, current}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}; `product.price` {original null}; `product.ext` {condition string}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.brand`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `klarna/reviews` (`product_id` ← `data.items[].product.id`) - Get Klarna user reviews for a product. · `klarna/reviews/pro` (`product_id` ← `data.items[].product.id`) - Get Klarna professional reviews for a product. · `klarna/reviews/overview` (`product_id` ← `data.items[].product.id`) - Get Klarna review totals and score distributions. · `klarna/product` (`product_id` ← `data.items[].product.id`) - Get a Klarna product by id or URL.
 

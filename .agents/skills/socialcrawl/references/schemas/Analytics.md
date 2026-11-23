@@ -12,9 +12,9 @@ Every field the 2 field-mapped endpoints returning `Analytics` can carry, with p
 | `page.content.summary` | string\|null | Generated summary. |
 | `page.description` | string\|null | The page description or search snippet, or null when there is none. |
 | `page.extraction` | unknown\|null | Structured extraction result when requested. The schema you send decides its keys, so it has no fixed shape. On `web/extract` every value is checked against the page text: a placeholder such as 'Not specified', or a value the page does not state, comes back as null and is listed in `extraction_check.removed`. |
-| `page.fetch.cache_state` | string\|null | Upstream cache state when reported. |
-| `page.fetch.cached_at` | string\|null | Upstream cache timestamp when reported. |
-| `page.fetch.proxy_tier` | string\|null | Proxy tier used for the fetch. |
+| `page.fetch.cache_state` | string\|null | The page scraper's own cache: `hit` when it served a copy it fetched earlier (see `max_age`), `miss` when it fetched the page now. It is not SocialCrawl's response cache, which is the envelope's `cached` flag. A `hit` here is still a charged call when `cached` is false. |
+| `page.fetch.cached_at` | string\|null | When the page scraper fetched the copy it served, when `cache_state` is `hit`. |
+| `page.fetch.proxy_tier` | string\|null | The proxy the fetch used: `basic` (a plain request) or `enhanced` (the stronger proxy, used with `proxy=enhanced`, or by `proxy=auto` when the site blocked the plain request). Null when the page was read by a source that does not report a proxy. |
 | `page.fetched_at` | string\|null | Fetch timestamp when reported. |
 | `page.final_url` | string\|null | Final resolved URL after redirects. |
 | `page.highlights` | unknown\|null | The passages the source picked out of the page, when you asked for the `highlights` format. Null otherwise. Its shape follows the format, so it has no single fixed shape. |
@@ -25,7 +25,7 @@ Every field the 2 field-mapped endpoints returning `Analytics` can carry, with p
 | `page.published_at` | string\|null | When the page was published: an ISO 8601 instant, or a YYYY-MM-DD date when only the day is printed. From the page's own article:published_time meta tag on a scrape, and from the news date or that tag on a search row. Null when the page states none. |
 | `page.scrape_id` | string\|null | Opaque scrape identifier for follow-up interactions. |
 | `page.source_type` | string\|null | Which kind of result a search row is: `web`, `news` or `image`. Null when the result is not a search row. |
-| `page.status_code` | number\|null | HTTP status code observed while fetching the page. |
-| `page.title` | string\|null | The page title, or null when the page has none. Sent on search and map results and on a parsed document. |
+| `page.status_code` | number\|null | The target site's own HTTP status for the page, such as 200, 404 or 430. It is not the status of your SocialCrawl call: a `web/scrape` that answers `success: true` can carry `status_code: 404`, which means the site answered with its error page. Such a page is returned with a `_warnings` line and is not charged. |
+| `page.title` | string\|null | The page title, or null when the page has none. Sent on scraped pages, on search and map results and on a parsed document. |
 | `page.total_page_count` | number\|null | How many pages the document has in all, or null when the source does not report it. |
 | `page.url` | string | Requested URL. |

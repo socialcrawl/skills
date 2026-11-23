@@ -20,10 +20,10 @@ Wayfair catalog data: keyword search, product detail by SKU, and customer review
 
 ## GET /v1/wayfair/product - 5 credits (advanced)
 
-Returns full product detail for a Wayfair item: name, brand, manufacturer, current price, star rating, written-review count, stock status, the image gallery, colour and size variants, shipping estimate, return window, and a specification table combining Wayfair's highlights with its full dimension list. Note that the review count here counts the selected variant while the count on GET /v1/wayfair/search counts the whole catalogue entry, so the two legitimately differ for the same SKU. For the review text itself call GET /v1/wayfair/reviews.
+Returns full product detail for a Wayfair item: name, brand, manufacturer, current price, star rating, written-review count, stock status, the image gallery, colour and size variants, shipping estimate, return window, and a specification table combining Wayfair's highlights with its full dimension list. Note that the review count here counts the selected variant while the count on GET /v1/wayfair/search counts the whole catalogue entry, so the two legitimately differ for the same SKU. For the review text itself call GET /v1/wayfair/reviews. When the first source cannot answer, a further source can serve a wayfair.com SKU; on those records the brand, list price, stock status, gallery beyond the main image, variants, shipping and specifications are null. On a few products the first source sends Wayfair's site title instead of a product name; that is never published, and the name is read from the further source, or is null when it cannot answer.
 
 **Use when** you have a SKU and need full detail. The review count here covers the selected variant, not the whole catalogue entry.
-**Cost** cache 600 s
+**Cost** cache 600 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -98,10 +98,10 @@ curl -G "https://www.socialcrawl.dev/v1/wayfair/reviews" \
 
 ## GET /v1/wayfair/search - 5 credits (advanced)
 
-Returns Wayfair products matching a keyword, 48 per page by default, each with its SKU, name, brand, current and list price, star rating, review count, product URL, image, a short product description, and attribute highlights such as swivel or adjustable height. Feed a returned SKU into GET /v1/wayfair/product for full detail or GET /v1/wayfair/reviews for customer reviews. Two things to expect when crawling: consecutive pages repeat roughly a quarter of their rows because Wayfair reorders results between calls, so de-duplicate on product.id; and the result total Wayfair reports drifts between pages, so it is not returned here. Paginate until a page comes back empty.
+Returns Wayfair products matching a keyword, 48 per page by default, each with its SKU, name, brand, current and list price, star rating, review count, product URL, image, a short product description, and attribute highlights such as swivel or adjustable height. Feed a returned SKU into GET /v1/wayfair/product for full detail or GET /v1/wayfair/reviews for customer reviews. Two things to expect when crawling: consecutive pages repeat roughly a quarter of their rows because Wayfair reorders results between calls, so de-duplicate on product.id; and the result total Wayfair reports drifts between pages, so it is not returned here. Paginate until a page comes back empty. When the first source cannot answer, a plain keyword search on wayfair.com (no sort, page size or filter) can be served by a further source; on those rows the description, attribute highlights and shipping details are null.
 
 **Use when** you want to find SKUs to feed the product and reviews endpoints. Consecutive pages repeat some rows, so de-duplicate by product id when paging.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Paging** page (native `page`) · ≈48/page (observed once) · depth unknown · N items ≈ ceil(N/48) x 5 credits · typical 8.6-11 s
 
 **Query params**
@@ -125,10 +125,10 @@ Returns Wayfair products matching a keyword, 48 per page by default, each with i
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
 | `product.brand` | Brand name (cleaned). |
-| `product.description` | Product description. |
 | `product.features` | Feature bullet points from the product page. |
+| `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 
-+7 more (types in the full schema): `product` {image_urls, reviews_count}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++6 more (types in the full schema): `product` {reviews_count}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, availability string}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.description`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `wayfair/reviews` (`sku` ← `data.items[].product.id`) - Get Wayfair product reviews. · `wayfair/product` (`sku` ← `data.items[].product.id`) - Get a Wayfair product by SKU.
 

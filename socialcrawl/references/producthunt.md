@@ -147,7 +147,7 @@ Returns the discussion under a product's launch, threads flattened in order with
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+9 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_url}; `comment.flags` {deleted, pinned}; `computed` {language}. Never filled: `comment.author.verified`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++12 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name}; `comment.engagement` {likes, replies}; `comment.ext` {author_url}; `comment.flags` {deleted, pinned}; `computed` {language}; `computed.country` {confidence, source, value}. Never filled: `comment.author.verified`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/producthunt/product/comments" \

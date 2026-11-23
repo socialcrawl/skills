@@ -10,38 +10,38 @@
 |----------|------|---------|----------|
 | [GET /v1/tiktok/adlibrary/ad](#get-v1tiktokadlibraryad---5-credits-advanced) | 5 credits (advanced) | Returns one TikTok Ad Library ad: creative video, title, advertiser account, landing… | Use it when you already have an ad id or library URL; use adlibrary/search to find ads… |
 | [GET /v1/tiktok/adlibrary/search](#get-v1tiktokadlibrarysearch---5-17-credits-request-shaped) | 5-17 credits (request-shaped) | Returns TikTok Ad Library ads matching a keyword or advertiser name, each with creative… | Use it to find ads by query or advertiser_name; pass an ad id from the results to… |
-| [GET /v1/tiktok/ads/top](#get-v1tiktokadstop---10-100-credits-request-shaped) | 10-100 credits (request-shaped) | Returns TikTok's Creative Center leaderboard of top-performing ads for a market and time… | Use it to find ad creative that actually performed. It is one window with no cursor, so… |
-| [GET /v1/tiktok/collection/videos](#get-v1tiktokcollectionvideos---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns the public videos inside a TikTok collection, each with caption, play like… | Use it when you have a collection URL and want the videos saved there, paging with… |
+| [GET /v1/tiktok/ads/top](#get-v1tiktokadstop---10-400-credits-request-shaped) | 10-400 credits (request-shaped) | Returns TikTok's Creative Center leaderboard of top-performing ads for a market and time… | Use it to find ad creative that actually performed. It is one window with no cursor, so… |
+| [GET /v1/tiktok/collection/videos](#get-v1tiktokcollectionvideos---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns the public videos inside a TikTok collection, each with caption, play like… | Use it when you have a collection URL and want the videos saved there, paging with… |
 | [GET /v1/tiktok/comment](#get-v1tiktokcomment---2-6-credits-request-shaped) | 2-6 credits (request-shaped) | Returns one TikTok comment with its current like count, reply count, pinned flag… | Use it to re-check a single known comment without paging the whole section; use… |
-| [GET /v1/tiktok/effect/videos](#get-v1tiktokeffectvideos---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns public TikTok videos created with a camera effect, each with engagement counts… | Use it with an effect id from effects, and send the cursor back unchanged. TikTok picks… |
+| [GET /v1/tiktok/effect/videos](#get-v1tiktokeffectvideos---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns public TikTok videos created with a camera effect, each with engagement counts… | Use it with an effect id from effects, and send the cursor back unchanged. TikTok picks… |
 | [GET /v1/tiktok/effects](#get-v1tiktokeffects---1-credit-standard) | 1 credit (standard) | Returns TikTok camera effects by id, each with its name, its designer, the views of… | Use it to look several effects up in one call, and match results by the returned id… |
 | [GET /v1/tiktok/hashtag](#get-v1tiktokhashtag---1-credit-standard) | 1 credit (standard) | Returns TikTok's own record for a hashtag, with its display name, its description where… | Use it to size a tag before pulling its posts. Pass the tag name and the id lookup… |
 | [GET /v1/tiktok/hashtags/popular](#get-v1tiktokhashtagspopular---6-96-credits-request-shaped) | 6-96 credits (request-shaped) | Returns TikTok's trending-hashtag board for one of 27 markets over 7, 30 or 90 days… | Use it for seed-free trend collection by market. One board is three hashtags; pass… |
-| [GET /v1/tiktok/location/posts](#get-v1tiktoklocationposts---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns public TikTok videos tagged at a place, each with engagement counts, caption… | Use it with TikTok's own place id from a place page URL. An unknown place is a refunded… |
-| [GET /v1/tiktok/playlist/videos](#get-v1tiktokplaylistvideos---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns the videos inside one of a creator's profile playlists, in playlist order, each… | Use it with a playlist id from profile/playlists. Send the cursor back unchanged… |
-| [GET /v1/tiktok/post](#get-v1tiktokpost---1-3-credits-request-shaped) | 1-3 credits (request-shaped) | Returns one TikTok video in full: caption, engagement counts, author, sound, video… | Use it when you already have a video URL and want that single video's numbers, rather… |
+| [GET /v1/tiktok/location/posts](#get-v1tiktoklocationposts---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns public TikTok videos tagged at a place, each with engagement counts, caption… | Use it with TikTok's own place id from a place page URL. An unknown place is a refunded… |
+| [GET /v1/tiktok/playlist/videos](#get-v1tiktokplaylistvideos---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns the videos inside one of a creator's profile playlists, in playlist order, each… | Use it with a playlist id from profile/playlists. Send the cursor back unchanged… |
+| [GET /v1/tiktok/post](#get-v1tiktokpost---1-2-credits-request-shaped) | 1-2 credits (request-shaped) | Returns one TikTok video in full: caption, engagement counts, author, sound, video… | Use it when you already have a video URL and want that single video's numbers, rather… |
 | [GET /v1/tiktok/post/comments](#get-v1tiktokpostcomments---1-7-credits-request-shaped) | 1-7 credits (request-shaped) | Returns a page of comments on one TikTok video, each with the commenter's username… | Use it to read a video's comment section; to expand one thread, take a comment's id and… |
 | [GET /v1/tiktok/post/transcript](#get-v1tiktokposttranscript---10-credits-premium) | 10 credits (premium) | Returns the spoken text of a TikTok video from its captions, with an option to fall back… | Use it when you need what was said rather than the numbers; post gives you the video's… |
-| [GET /v1/tiktok/profile](#get-v1tiktokprofile---1-3-credits-request-shaped) | 1-3 credits (request-shaped) | Returns a TikTok account's public profile: display name, bio, follower count on… | Use it when you have a handle and want a quick snapshot of an account before pulling its… |
+| [GET /v1/tiktok/profile](#get-v1tiktokprofile---1-2-credits-request-shaped) | 1-2 credits (request-shaped) | Returns a TikTok account's public profile: display name, bio, follower count on… | Use it when you have a handle and want a quick snapshot of an account before pulling its… |
 | [GET /v1/tiktok/profile/full](#get-v1tiktokprofilefull---5-credits-custom) | 5 credits (custom) | Returns a TikTok profile plus its latest 10 videos and computed stats: engagement rate… | Use it instead of profile when you want the account, its recent posts, and the… |
 | [GET /v1/tiktok/profile/playlists](#get-v1tiktokprofileplaylists---1-credit-standard) | 1 credit (standard) | Returns the playlists a TikTok creator has published on their profile, each with its… | Use it to find a playlist id before calling playlist/videos. TikTok does not publish a… |
 | [GET /v1/tiktok/profile/region](#get-v1tiktokprofileregion---1-credit-standard) | 1 credit (standard) | Returns the two letter country code for a public TikTok profile, for example US or MX. | Use it when all you need is an account's country, for routing or de-duplicating by… |
-| [GET /v1/tiktok/profile/videos](#get-v1tiktokprofilevideos---1-25-credits-request-shaped) | 1-25 credits (request-shaped) | Returns a page of an account's recent public videos, each with caption, view, like… | Use it to list what one account has posted and page through it. Results come back in the… |
-| [GET /v1/tiktok/search](#get-v1tiktoksearch---1-62-credits-request-shaped) | 1-62 credits (request-shaped) | Returns TikTok videos matching a keyword, each with caption, view and like counts… | Use it for a video keyword search you can page and sort. region= only sets the proxy… |
-| [GET /v1/tiktok/search/hashtag](#get-v1tiktoksearchhashtag---1-25-credits-request-shaped) | 1-25 credits (request-shaped) | Returns TikTok videos posted under a given hashtag, each with caption, view, like… | Use it to track one tag such as a campaign or challenge; use search when you want a free… |
+| [GET /v1/tiktok/profile/videos](#get-v1tiktokprofilevideos---1-15-credits-request-shaped) | 1-15 credits (request-shaped) | Returns a page of an account's recent public videos, each with caption, view, like… | Use it to list what one account has posted and page through it. Results come back in the… |
+| [GET /v1/tiktok/search](#get-v1tiktoksearch---1-52-credits-request-shaped) | 1-52 credits (request-shaped) | Returns TikTok videos matching a keyword, each with caption, view and like counts… | Use it for a video keyword search you can page and sort. region= only sets the proxy… |
+| [GET /v1/tiktok/search/hashtag](#get-v1tiktoksearchhashtag---1-15-credits-request-shaped) | 1-15 credits (request-shaped) | Returns TikTok videos posted under a given hashtag, each with caption, view, like… | Use it to track one tag such as a campaign or challenge; use search when you want a free… |
 | [GET /v1/tiktok/search/mentions](#get-v1tiktoksearchmentions---0-2-credits-request-shaped) | 0-2 credits (request-shaped) | Returns TikTok videos by other accounts that mention an account, matched on the account… | Use it to track mentions of a creator or brand on TikTok, which has no mentions feed… |
 | [GET /v1/tiktok/search/music](#get-v1tiktoksearchmusic---1-credit-standard) | 1 credit (standard) | Returns TikTok sounds matching a keyword, each with title, artist, duration, cover art… | Use it to size a sound trend, or to join a TikTok sound to Apple Music, Spotify and… |
 | [GET /v1/tiktok/search/suggestions](#get-v1tiktoksearchsuggestions---1-credit-standard) | 1 credit (standard) | Returns the autocomplete suggestions TikTok's own search box shows for a partial query… | Use it for keyword research, or to expand a seed term before running search or search/top. |
-| [GET /v1/tiktok/search/top](#get-v1tiktoksearchtop---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns the videos TikTok ranks highest for a keyword on its Top tab, each with caption… | Use it for TikTok's own relevance ranking. region= only sets the proxy; filter on… |
+| [GET /v1/tiktok/search/top](#get-v1tiktoksearchtop---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns the videos TikTok ranks highest for a keyword on its Top tab, each with caption… | Use it for TikTok's own relevance ranking. region= only sets the proxy; filter on… |
 | [GET /v1/tiktok/search/users](#get-v1tiktoksearchusers---1-100-credits-request-shaped) | 1-100 credits (request-shaped) | Returns TikTok accounts for a search term with username, name, avatar, followers… | Use it to find accounts by name or topic. Add country=KR (or US, DE, …) when you need… |
 | [GET /v1/tiktok/similar](#get-v1tiktoksimilar---5-credits-advanced) | 5 credits (advanced) | Returns about 30 creators similar to a TikTok account, from TikTok's suggestions or… | Use it to find lookalike creators for one you already know; it returns a single fixed… |
 | [GET /v1/tiktok/song](#get-v1tiktoksong---1-credit-standard) | 1 credit (standard) | Returns one TikTok sound's details: title, artist, duration, how many videos use it, and… | Use it when you have a sound's clipId and want the sound itself; song/videos returns the… |
-| [GET /v1/tiktok/song/videos](#get-v1tiktoksongvideos---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns videos that use a given TikTok sound, each with caption, author details, and… | Use it to see how a sound is being used and page through those videos; song returns only… |
-| [GET /v1/tiktok/trending](#get-v1tiktoktrending---5-25-credits-request-shaped) | 5-25 credits (request-shaped) | Returns a page of popular TikTok videos with caption, view and like counts, author and… | Use it with feed=local for videos mostly from one country (57% measured). The default… |
+| [GET /v1/tiktok/song/videos](#get-v1tiktoksongvideos---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns videos that use a given TikTok sound, each with caption, author details, and… | Use it to see how a sound is being used and page through those videos; song returns only… |
+| [GET /v1/tiktok/trending](#get-v1tiktoktrending---5-15-credits-request-shaped) | 5-15 credits (request-shaped) | Returns a page of popular TikTok videos with caption, view and like counts, author and… | Use it with feed=local for videos mostly from one country (57% measured). The default… |
 | [GET /v1/tiktok/user/audience](#get-v1tiktokuseraudience---5-credits-advanced) | 5 credits (advanced) | Returns where a creator's followers are: the top countries in their audience, with… | Use it for audience geography only. Age and gender are not available publicly on TikTok… |
 | [GET /v1/tiktok/user/followers](#get-v1tiktokuserfollowers---1-credit-standard) | 1 credit (standard) | Returns a page of accounts that follow a TikTok user, each with username, display name… | Use it to list who follows an account and page through them; user/following returns the… |
 | [GET /v1/tiktok/user/following](#get-v1tiktokuserfollowing---1-credit-standard) | 1 credit (standard) | Returns a page of accounts a TikTok user follows, each with username, display name… | Use it to list who an account follows and page through them; user/followers returns the… |
-| [GET /v1/tiktok/user/liked](#get-v1tiktokuserliked---1-21-credits-request-shaped) | 1-21 credits (request-shaped) | Returns the videos a TikTok account has liked, newest first, each carrying its own third… | Use it for what an account likes, not for who liked a post: that direction does not… |
+| [GET /v1/tiktok/user/liked](#get-v1tiktokuserliked---1-11-credits-request-shaped) | 1-11 credits (request-shaped) | Returns the videos a TikTok account has liked, newest first, each carrying its own third… | Use it for what an account likes, not for who liked a post: that direction does not… |
 | [GET /v1/tiktok/user/live](#get-v1tiktokuserlive---1-credit-standard) | 1 credit (standard) | Returns a TikTok account's live room in the platform's own shape: cover image, title… | Use it to read a creator's live room state, but check status and start time yourself… |
 | [GET /v1/tiktok/video/comment/replies](#get-v1tiktokvideocommentreplies---1-5-credits-request-shaped) | 1-5 credits (request-shaped) | Returns the replies under a single TikTok comment, with each reply's text, author… | Use it after post/comments: pass the comment_id it returned together with the same video… |
 | [GET /v1/tiktok/video/screen-text](#get-v1tiktokvideoscreen-text---5-10-credits-request-shaped) | 5-10 credits (request-shaped) | Returns the text shown on the video itself: native text stickers plus AI OCR of the… | Use it for the on-screen overlay text; the caption lives on post and the spoken words on… |
@@ -86,7 +86,7 @@ Returns one ad from the TikTok Ad Library: creative video, title, advertiser Tik
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+33 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, shares}; `post.flags` {deleted}; `post.ext.ad` {audit_status, brand_name, country_code, estimated_audience, image_urls} (+14 more). Never filled: `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++29 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.flags` {deleted}; `post.ext.ad` {audit_status, brand_name, country_code, estimated_audience, image_urls, is_active, landing_page, last_shown_date, objectives} (+10 more). Never filled: `post.engagement.saves`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.duration_seconds`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.shares`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/adlibrary/ad" \
@@ -143,13 +143,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/adlibrary/search" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/ads/top - 10-100 credits (request-shaped)
+## GET /v1/tiktok/ads/top - 10-400 credits (request-shaped)
 
-Returns TikTok's own leaderboard of top-performing ads for a market and time window, with the performance signals TikTok publishes and nothing else does: `ext.ad.ctr` is the click-through rate, `ext.ad.rank` is the ad's position on the board, `ext.ad.cost_score` and `ext.ad.like_tier` are TikTok's own banded cost and engagement tiers, and `engagement.likes` is the real like count. Each row carries the ad's video at `content.media_urls` (720p, with 540p and 360p renditions on `ext.ad`), the cover image, the duration, the advertiser at `author.username`, and the campaign objective and industry at `ext.ad.objective` / `ext.ad.industry`. **This is a different surface from `/v1/tiktok/adlibrary/search`.** That endpoint reads the EU Commercial Content Library, which carries who an ad was targeted at across 33 EU/EEA countries but publishes no performance data; this one reads the global Creative Center board across 24 markets including the US, Korea, Japan and Brazil, and publishes performance but no targeting. Use this one to find creative that worked, and that one to find who an advertiser bought. **There is no publish date**: TikTok does not attach one to the board, so `published_at` is null on every row rather than filled with the time you called. `brandName` is absent on roughly half of live rows because TikTok attributes some top ads to no brand, so `author.username` is null there too. **2-second and 6-second view rates:** `order_by=play_2s_rate` and `order_by=play_6s_rate` rank the board by TikTok's own view-rate figures, which TikTok uses for the ranking and does not publish as numbers. What TikTok publishes for each ad is its second-by-second audience retention curve: send `include=retention` and every row carries `ext.ad.retention` (one `{second, value}` point per second, the share of viewers still watching, 1 at second 0), with `ext.ad.retention_2s` and `ext.ad.retention_6s` the points at second 2 and second 6 (null when the ad is shorter than that). These are TikTok's curve values, not the figure it sorts by, so the board's order and the 6-second points do not always agree. `include=retention` reads up to 20 ads per call, usually takes 20 to 35 seconds, and cannot be combined with `keyword` or `industry`. **Pricing is metered at 1 credit per ad RETURNED, with a minimum of 10** — the board is served in blocks of ten, so a smaller `limit` still costs ten.
+Returns TikTok's own leaderboard of top-performing ads for a market and time window, with the performance signals TikTok publishes and nothing else does: `ext.ad.ctr` is the click-through rate, `ext.ad.rank` is the ad's position on the board, `ext.ad.cost_score` and `ext.ad.like_tier` are TikTok's own banded cost and engagement tiers, and `engagement.likes` is the real like count. Each row carries the ad's video at `content.media_urls` (720p, with 540p and 360p renditions on `ext.ad`), the cover image, the duration, the advertiser at `author.username`, and the campaign objective and industry at `ext.ad.objective` / `ext.ad.industry`. **This is a different surface from `/v1/tiktok/adlibrary/search`.** That endpoint reads the EU Commercial Content Library, which carries who an ad was targeted at across 33 EU/EEA countries but publishes no performance data; this one reads the global Creative Center board across 24 markets including the US, Korea, Japan and Brazil, and publishes performance but no targeting. Use this one to find creative that worked, and that one to find who an advertiser bought. **There is no publish date**: TikTok does not attach one to the board, so `published_at` is null on every row rather than filled with the time you called. `brandName` is absent on roughly half of live rows because TikTok attributes some top ads to no brand, so `author.username` is null there too. **2-second and 6-second view rates:** `order_by=play_2s_rate` and `order_by=play_6s_rate` rank the board by TikTok's own view-rate figures, which TikTok uses for the ranking and does not publish as numbers. What TikTok publishes for each ad is its second-by-second audience retention curve: send `include=retention` and every row carries `ext.ad.retention` (one `{second, value}` point per second, the share of viewers still watching, 1 at second 0), with `ext.ad.retention_2s` and `ext.ad.retention_6s` the points at second 2 and second 6 (null when the ad is shorter than that). These are TikTok's curve values, not the figure it sorts by, so the board's order and the 6-second points do not always agree. `include=retention` reads up to 20 ads per call, usually takes 20 to 35 seconds, and cannot be combined with `keyword` or `industry`. **How many ads match:** send `include=total` and the call reads the board to its end and puts the number of distinct ads on it in `data.total`, for the keyword, market, window and filters you sent; `data.items` still carries the first `limit` of them. Without it the response carries no total, and a board bigger than `limit` comes back a few rows short of `limit`. **Pricing is metered at 1 credit per ad RETURNED, with a minimum of 10** — the board is served in blocks of ten, so a smaller `limit` still costs ten. With `include=total` it is 1 credit per ad counted, minimum 10.
 
 **Use when** you want to find ad creative that actually performed. It is one window with no cursor, so set limit for depth and change country, period, or order_by for a different board.
 **Cost** price moves with `include`, `limit` · cache 1800 s · multi-source (billed once)
-**Pricing** 1 credit per ad returned, minimum 10 credits. A limit of 20 holds 20 credits and settles down to the number of ads that actually came back; a filter combination with no board costs nothing. With include=retention, 2 credits per ad that carries a retention curve (minimum 20), and 1 per ad TikTok serves no curve for.
+**Pricing** 1 credit per ad returned, minimum 10 credits. A limit of 20 holds 20 credits and settles down to the number of ads that actually came back; a filter combination with no board costs nothing. With include=retention, 2 credits per ad that carries a retention curve (minimum 20), and 1 per ad TikTok serves no curve for. With include=total, 1 credit per ad counted on the board, minimum 10 and at most 400: the call holds 400 and settles to the count, and a board with no ads costs nothing.
 **Paging** single page - The Creative Center board is a ranked leaderboard with no cursor. `limit` controls how far down the ranking you read; change `period`, `country` or the filters for a different board.
 
 **Query params**
@@ -160,16 +160,16 @@ Returns TikTok's own leaderboard of top-performing ads for a market and time win
 - `ad_format` (optional, enum: All ad types | Spark ads | Non-Spark ads) - Restrict to Spark ads (ads boosted from an organic post) or Non-Spark ads. Defaults to all.
 - `ad_language` (optional, enum: en | ja | zh | vi | th | pt | id) - Filter by the language of the ad copy.
 - `like_tier` (optional, enum: 1 | 2 | 3 | 4 | 5) - TikTok's engagement percentile band, 1 (top) to 5. Use it to read further down the ranking without raising limit.
-- `industry` (optional, string) - Creative Center sub-category label, for example 'Skincare' or 'Cosmetics'. Use a sub-category, not a top-level group: the board returns nothing for the broad groups such as 'Financial Services' or 'Education'. Omit for all industries.
+- `industry` (optional, string) - Creative Center sub-category label, for example 'Skincare', 'Cosmetics' or 'Puzzle Games', from TikTok's fixed list of labels (case does not matter). Use a sub-category, not a top-level group: the board returns nothing for the broad groups such as 'Financial Services (13000000000)' or 'Education (10000000000)'. A label that is not on the list is refused with a 400 at no charge, and the error lists every accepted label. Omit for all industries.
 - `keyword` (optional, string) - Search the board by brand or product keyword.
-- `limit` (optional, integer, 1-100) - How many ads to return, 1-100, default 20. The board is served in blocks of ten, so any limit below 10 still costs 10 credits. With include=retention, 1-20.
-- `include` (optional, string) - Send `retention` to add each ad's second-by-second audience retention curve (`ext.ad.retention`) and its points at second 2 and second 6 (`ext.ad.retention_2s`, `ext.ad.retention_6s`). 2 credits per ad that carries a curve, minimum 20; up to 20 ads per call; usually 20 to 35 seconds; not combinable with keyword or industry.
+- `limit` (optional, integer, 1-100) - How many ads to return, 1-100, default 20. The board is served in blocks of ten, so any limit below 10 still costs 10 credits. When the board holds more ads than `limit`, a call can return a few fewer than you asked for, because TikTok repeats some ads across its pages and each ad comes back once. To know how many ads match, send include=total. With include=retention, 1-20.
+- `include` (optional, string) - Send `retention` to add each ad's second-by-second audience retention curve (`ext.ad.retention`) and its points at second 2 and second 6 (`ext.ad.retention_2s`, `ext.ad.retention_6s`). 2 credits per ad that carries a curve, minimum 20; up to 20 ads per call; usually 20 to 35 seconds; not combinable with keyword or industry. Send `total` to read the whole board and get the number of distinct ads on it in `data.total` (works with keyword, industry and every filter); 1 credit per ad counted, minimum 10, at most 400, usually 5 to 15 seconds. One token per call.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
 **Constraints**
 
-- `include`: at most 1 comma-separated values; each value one of retention.
+- `include`: at most 1 comma-separated values; each value one of retention | total.
 
 **Response** `PostList` rows at `data.items[]`, each `{ computed, post }` ([full schema](schemas/PostList.md))
 
@@ -182,7 +182,7 @@ Returns TikTok's own leaderboard of top-performing ads for a market and time win
 | `computed.content_category` | Keyword-classified content category… |
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+28 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes}; `post.flags` {deleted}; `post.ext.ad` {ad_format, cost_score, country_code, ctr, industry, is_spark_ad, landing_page_url, language, like_tier} (+9 more). Never filled: `post.author.avatar_url`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++23 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `post.author` {display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {likes}; `post.flags` {deleted}; `post.ext.ad` {cost_score, country_code, ctr, industry, objective, period_days, rank, video_id, video_url_360p} (+4 more). Never filled: `post.author.avatar_url`, `post.engagement.comments`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`, `post.published_at`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.ext.ad.ad_format`, `post.ext.ad.is_spark_ad`, `post.ext.ad.landing_page_url`, `post.ext.ad.language`, `post.ext.ad.like_tier`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 **Next** `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -191,20 +191,20 @@ curl "https://www.socialcrawl.dev/v1/tiktok/ads/top" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/collection/videos - 1-21 credits (request-shaped)
+## GET /v1/tiktok/collection/videos - 1-11 credits (request-shaped)
 
 Returns the public videos inside a TikTok collection. Each video includes caption, play/like/comment/share/save counts, author, and a playable URL. Page with max_cursor.
 
 **Use when** you have a collection URL and want the videos saved there, paging with max_cursor.
-**Cost** price depends on how many items the request sends or returns · cache 600 s
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Cost** price depends on how many items the request sends or returns · cache 600 s · multi-source (billed once)
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor (native `max_cursor`) · page size not measured · depth unknown · typical 1.9-2.3 s
 
 **Query params**
 
 - `url` (required) - Full URL of the TikTok collection. · e.g. `https://www.tiktok.com/@kibblemaster808/collection/Want-to-go-7665668414573546258`
 - `max_cursor` (optional, string) - Cursor from the previous response to fetch the next page of collection videos.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -219,7 +219,7 @@ Returns the public videos inside a TikTok collection. Each video includes captio
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+17 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id}; `post.flags` {deleted}. Also in the sample: `post.ext` {published_at_epoch number}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
++22 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_following, author_id, author_likes_count} (+3 more). Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -265,7 +265,7 @@ Resolves a single TikTok comment to a live comment object (current like count, r
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+10 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {published_at_epoch}; `comment.flags` {deleted, pinned}; `computed` {language}. Also in the sample: `comment.ext.lookup` {found_via string, pages_fetched number, comments_scanned number, sort_basis string, position_hint string}. Page-level: `data.lookup`, `data.matches`.
++13 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.ext` {published_at_epoch}; `comment.flags` {deleted, pinned}; `computed` {language}; `computed.country` {confidence, source, value}. Also in the sample: `comment.ext.lookup` {found_via string, pages_fetched number, comments_scanned number, sort_basis string, position_hint string}. Page-level: `data.lookup`, `data.matches`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/comment" \
@@ -273,13 +273,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/comment" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/effect/videos - 1-21 credits (request-shaped)
+## GET /v1/tiktok/effect/videos - 1-11 credits (request-shaped)
 
 Returns public videos created with a TikTok effect, with full engagement counts and author details on every row. TikTok chooses its own page size here and it does not track the number you ask for, so send the `cursor` from the previous response back unchanged rather than adding up the rows you have received. An effect id TikTok does not recognise returns `404 RESOURCE_NOT_FOUND` and is refunded.
 
 **Use when** Use it with an effect id from effects, and send the cursor back unchanged. TikTok picks its own page size here and ignores the one you ask for.
 **Cost** price depends on how many items the request sends or returns · cache 600 s
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · ≈32/page (observed once) · depth unknown · price per N items not proven · typical 1.9-2.5 s
 
 **Query params**
@@ -287,7 +287,7 @@ Returns public videos created with a TikTok effect, with full engagement counts 
 - `effect_id` (required) - TikTok effect id, as returned by /v1/tiktok/effects. · e.g. `1108584`
 - `cursor` (optional, string) - Cursor from the previous response to fetch the next page of videos.
 - `region` (optional, string) - Two-letter country code for the proxy location. Defaults to US.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -409,20 +409,20 @@ Returns the hashtags TikTok itself ranks as trending in a market over the last 7
 | `computed.engagement_rate` | Computed engagement rate (0..1). |
 | `computed.estimated_reach` | Estimated reach based on views or follower count. |
 
-+14 more (types in the full schema): `computed` {language, save_rate}; `post.flags` {deleted}; `post.ext.trend` {boards, country_code, industry, industry_id, industry_label, period_days, popularity_curve, posts, rank, top_creators, views}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views` (+4 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++11 more (types in the full schema): `computed` {language, save_rate}; `post.flags` {deleted}; `post.ext.trend` {boards, country_code, period_days, popularity_curve, posts, rank, top_creators, views}. Never filled: `post.author.avatar_url`, `post.author.display_name`, `post.author.username`, `post.author.verified`, `post.content.duration_seconds`, `post.content.media_urls`, `post.content.thumbnail_url`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.engagement.views` (+4 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.ext.trend.industry`, `post.ext.trend.industry_id`, `post.ext.trend.industry_label`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl "https://www.socialcrawl.dev/v1/tiktok/hashtags/popular" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/location/posts - 1-21 credits (request-shaped)
+## GET /v1/tiktok/location/posts - 1-11 credits (request-shaped)
 
 Returns public videos tagged at a TikTok place, twenty per page, with full engagement counts and author details on every row. `location_id` is TikTok's own place id, the number that appears in a place page URL. A place id TikTok does not recognise returns `404 RESOURCE_NOT_FOUND` and is refunded, which is distinct from a real place that simply has no recent posts: that returns an empty list.
 
 **Use when** Use it with TikTok's own place id from a place page URL. An unknown place is a refunded not found, while a real place with nothing recent returns an empty list.
-**Cost** price depends on how many items the request sends or returns · cache 600 s
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Cost** price depends on how many items the request sends or returns · cache 600 s · multi-source (billed once)
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · ≈20/page (observed once) · depth unknown · price per N items not proven · typical 1.9-3.4 s
 
 **Query params**
@@ -430,7 +430,7 @@ Returns public videos tagged at a TikTok place, twenty per page, with full engag
 - `location_id` (required) - TikTok place id, as it appears in the place page URL. · e.g. `22535865202815278`
 - `cursor` (optional, string) - Cursor from the previous response to fetch the next page of videos.
 - `region` (optional, string) - Two-letter country code for the proxy location. Defaults to US.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -455,13 +455,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/location/posts" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/playlist/videos - 1-21 credits (request-shaped)
+## GET /v1/tiktok/playlist/videos - 1-11 credits (request-shaped)
 
 Returns the videos inside one of a creator's profile playlists, in playlist order, ten per page. Each video carries the full set of engagement counts, the caption, the author, and a playable URL. Get the `playlist_id` from `/v1/tiktok/profile/playlists`. Page with `cursor`: the value the previous response returned must be sent back unchanged, because it is the upstream's own item index and is not always the number of rows you have already received.
 
 **Use when** Use it with a playlist id from profile/playlists. Send the cursor back unchanged, because it is the upstream's item index and not a count of the rows you hold.
 **Cost** price depends on how many items the request sends or returns · cache 600 s
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · page size not measured · depth unknown · typical 1.4-1.6 s
 
 **Query params**
@@ -470,7 +470,7 @@ Returns the videos inside one of a creator's profile playlists, in playlist orde
 - `handle` (optional, string) - TikTok username of the playlist owner, without the @ symbol. · e.g. `chipotle`
 - `user_id` (optional, string) - TikTok numeric user ID of the playlist owner. Use this for faster responses.
 - `cursor` (optional, string) - Cursor from the previous response to fetch the next page of videos.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -500,13 +500,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/playlist/videos" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/post - 1-3 credits (request-shaped)
+## GET /v1/tiktok/post - 1-2 credits (request-shaped)
 
-Returns detailed information about a specific TikTok video including view count, like count, comment count, share count, caption, music info, author details, and video metadata. When the creator added on-screen text with TikTok's built-in text tool, the overlay text is returned in `data.post.ext.on_screen_texts` (absent when the video has none: text burned in with an external editor is not detectable from post data). The counts on `post.engagement` are the figures TikTok shows, rounded above 10,000. Send `include=exact_counts` for the exact ones: the post is read as usual, then `post.engagement` gets the exact counts and `post.ext.counts_approximate` is `false`. +2 credits, kept only when the exact counts come back; about 6 s more. Otherwise the post comes back as usual, the flag `true`, `exact_counts_unavailable` on `data._warnings`, at the base price.
+Returns detailed information about a specific TikTok video including view count, like count, comment count, share count, caption, music info, author details, and video metadata. When the creator added on-screen text with TikTok's built-in text tool, the overlay text is returned in `data.post.ext.on_screen_texts` (absent when the video has none: text burned in with an external editor is not detectable from post data). The counts on `post.engagement` are the figures TikTok shows, rounded above 10,000. Send `include=exact_counts` for the exact ones: the post is read as usual, then `post.engagement` gets the exact counts and `post.ext.counts_approximate` is `false`. +1 credit, kept only when the exact counts come back; about 6 s more. Otherwise the post comes back as usual, the flag `true`, `exact_counts_unavailable` on `data._warnings`, at the base price.
 
 **Use when** you already have a video URL and want that single video's numbers, rather than a list from profile/videos or search.
 **Cost** price depends on how many items the request sends or returns · cache 600 s · multi-source (billed once)
-**Pricing** 1 credit per call; include=exact_counts: +2, kept only when the exact counts come back.
+**Pricing** 1 credit per call; include=exact_counts: +1, kept only when the exact counts come back.
 **Paging** none
 
 **Query params**
@@ -515,7 +515,7 @@ Returns detailed information about a specific TikTok video including view count,
 - `region` (optional, string) - Two-letter country code for the proxy region (US, GB, FR, PH). The primary source does not take a region, so it is honoured only when a fallback source serves the request; a region-locked video (commonly from the Philippines) that fails on the primary is retried on the fallback with this value.
 - `trim` (optional, boolean) - Accepted for compatibility; the response is already the canonical shape, so this flag has no effect.
 - `download_media` (optional, boolean) - Set to true to also download the video/images and get back durable hosted media URLs under `data.post.ext.download_media_urls` (`[{ post_id, cdn_url, type, cached }]`). Use these for archiving; the raw `media_urls` are short-lived signed CDN links that expire. Adds a few seconds of latency while the media is fetched. Availability is source-dependent and most responses will not carry it: when the serving source cannot host durable copies the field is absent, the response carries a `data._warnings` note saying so, and `data.post.content.media_urls` still carries the media.
-- `include` (optional, string) - `exact_counts`: the exact view, like, comment, share and save counts, +2 credits kept only when they come back; adds about 6 s.
+- `include` (optional, string) - `exact_counts`: the exact view, like, comment, share and save counts, +1 credit kept only when they come back; adds about 6 s.
 
 **Response** `Post` object at `data`, `{ computed, post }` ([full schema](schemas/Post.md))
 
@@ -528,7 +528,7 @@ Returns detailed information about a specific TikTok video including view count,
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `post.url` | Direct URL to the post on the source platform |
 
-+24 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, download_count, region} (+5 more). Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.hydration`.
++29 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_following, author_id} (+10 more). Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.hydration`.
 
 **Next** `tiktok/profile` (`handle` ← `data.post.author.username`) - The creator's profile: followers, likes and bio. · `tiktok/song/videos` (`clipId` ← `data.post.ext.music_id`) - Other videos that use the same sound. · `tiktok/profile/videos` (`handle` ← `data.post.author.username`) - List TikTok user videos. · `tiktok/song` (`clipId` ← `data.post.ext.music_id`) - Get TikTok song details.
 
@@ -540,7 +540,7 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/post" \
 
 ## GET /v1/tiktok/post/comments - 1-7 credits (request-shaped)
 
-Returns a list of comments on a specific TikTok video. Each comment includes the author username, comment text, like count, reply count, and creation timestamp.
+Returns a list of comments on a specific TikTok video. Each comment includes the author username, comment text, like count, reply count, and creation timestamp. The list holds top-level comments only, while `data.total` is TikTok's comment count, which counts replies as well, so a finished list usually holds fewer rows than `data.total`; when it does, `data._warnings` says so with the numbers. Read the replies under a comment with /v1/tiktok/video/comment/replies, or get the whole thread with replies nested in one call from /v1/prism/comments.
 
 **Use when** you want to read a video's comment section; to expand one thread, take a comment's id and call video/comment/replies.
 **Cost** price moves with `label`, `scan_pages` · cache 300 s · multi-source (billed once)
@@ -576,7 +576,7 @@ Returns a list of comments on a specific TikTok video. Each comment includes the
 | `comment.post_id` | 100% | ID of the post this comment belongs to |
 | `comment.author.avatar_url` | 100% | URL to comment author profile picture |
 
-+16 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {pinned, deleted}; `computed` {labels_evidence, language}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.parent_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.scan`, `data.walk`.
++20 more (types in the full schema): `comment.author` {display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {pinned, deleted}; `computed` {labels_evidence, language}; `comment.ext` {author_sec_uid}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}; `computed.country` {confidence, source} (+1 more). Never filled: `comment.parent_id`, `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.scan`, `data.walk`.
 
 **Next** `tiktok/video/comment/replies` (`comment_id` ← `data.items[].comment.id`; carry `url`) - The replies under each comment, sent with the same video url.
 
@@ -599,7 +599,7 @@ Returns the transcript of a TikTok video. Supports auto-generated captions and A
 - `url` (required) - Full URL of the TikTok video · e.g. `https://www.tiktok.com/@stoolpresidente/video/7499229683859426602`
 - `language` (optional, string) - Language of the transcript. 2 letter language code, ie 'en', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh'. Selects the caption track, and is passed to AI transcription of a longer video as the spoken language. Without it, AI transcription detects the language itself and can mistake a less common one for English, so set it when you know the language. If AI transcription of a longer video cannot transcribe the language you set, the request returns 404 RESOURCE_NOT_FOUND with `error.details.reason: language_unsupported` at 0 credits rather than a transcript in another language; retrying returns the same result.
 - `use_ai_as_fallback` (optional, string) - Set to 'true' to fall back to AI transcription when the video has no captions. Included in the endpoint's 10 credits (no surcharge). AI transcription covers videos up to 10 minutes (600 seconds): a longer video with no captions returns 400 INVALID_REQUEST with `error.details.reason: video_too_long`, `duration_seconds` and `max_seconds`, free and deterministic, so retrying returns the same answer.
-- `moments` (optional, string) - Optional CSV of moment kinds to find: brand, sponsor_read, product_demo, call_to_action. Returns data.moments = [{ kind, start_ms, end_ms, quote }] when the transcript has timestamps. Today it does not add credits.
+- `moments` (optional, string) - Optional CSV of moment kinds to find: brand, sponsor_read, product_demo, call_to_action. Returns data.moments = [{ kind, start_ms, end_ms, quote }] when the transcript has timestamps. Today it does not add credits. The step has a time limit: on a very long transcript (above about 7,000 segments, typically a multi-hour stream) or when the judging cannot finish in time, the transcript is returned without data.moments and data._warnings carries moments_unavailable.
 - `brand` (optional, string) - Optional, with moments=. The company or product to look for, so a namesake is not counted.
 - `q` (optional, string) - Optional question about the video, up to 300 characters, for example q=what discount code do they give. Returns data.moments = [{ kind: "answers_query", start_ms, end_ms, quote }] for each stretch of about six transcript lines that states the answer: a stretch that only shares the topic is left out, and a question the video never answers returns an empty list. The quote is one line copied from the transcript and the times come from the segments. Send moments= or q=, not both. If the step cannot run, the transcript is returned without data.moments and data._warnings carries moments_unavailable. Today it does not add credits.
 
@@ -617,13 +617,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/post/transcript" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/profile - 1-3 credits (request-shaped)
+## GET /v1/tiktok/profile - 1-2 credits (request-shaped)
 
 Returns public profile information for a TikTok user: follower count, following count, total likes, bio, avatar URL, verification status, and the ISO 3166-1 alpha-2 region of the account at `author.location` (the same leaf `/v1/tiktok/profile/region` returns, included here so you do not need a second call). `author.followers` is the unrounded integer when the source exposes it. When only the public rounded figure is available, the same integer field is returned and `author.ext.followers_approximate` is true. Pass either `handle` or `user_id`. Profiles behind TikTok's 'audience controls' (a login/age wall in the browser) now return their profile record normally; their posts are readable through `/v1/tiktok/profile/videos` with the same handle. A profile with no publicly readable record still returns `404 RESOURCE_NOT_FOUND` with `error.details.reason` set to `account_private`. A handle the platform reports as unused returns the same status with `reason` set to `account_gone`; because TikTok numeric ids are permanent, re-running the lookup with `user_id` tells a renamed account from a removed one. `author.location` can be absent when the region source is unavailable; the rest of the profile is still returned. TikTok keeps two live sets of profile counters, one for its app and one for its website (`statsV2`), and they can differ by a few percent in either direction. `author.followers`, `author.following`, `author.likes_count` and `author.posts_count` come from the app set by default; send `counts=web` to get the website set instead, at the same price. `author.ext.counts_source` names the set a response carries (`app` or `web`); a `counts=web` call answers with `app` when the website record could not be read. `include=account` adds `author.joined_at` (the creation date), `author.ext.joined_at_timestamp` and `author.ext.posting_region` (the country its recent videos were posted from) for 2 credits, about 2 seconds, refunded with `account_unavailable` on `data._warnings` when the lookup fails.
 
 **Use when** you have a handle and want a quick snapshot of an account before pulling its videos or followers.
 **Cost** price moves with `include` · cache 900 s · multi-source (billed once)
-**Pricing** 1 credit per call. `include=account` holds 2 more and keeps them only when the account's creation date or posting region comes back, so a call with it is at most 3 credits; a lookup that fails and an account looked up recently (served from cache) are refunded. A call that fails, or a handle that does not exist, costs nothing.
+**Pricing** 1 credit per call. `include=account` holds 1 more and keeps it only when the account's creation date or posting region comes back, so a call with it is at most 2 credits; a lookup that fails and an account looked up recently (served from cache) are refunded. A call that fails, or a handle that does not exist, costs nothing.
 **Paging** none
 
 **Query params**
@@ -631,7 +631,7 @@ Returns public profile information for a TikTok user: follower count, following 
 - `handle` (optional, string) - TikTok username without the @ symbol. · e.g. `charlidamelio`
 - `user_id` (optional, string) - TikTok numeric user ID. Use this for faster responses.
 - `counts` (optional, enum: app | web) - `app` (default) or `web`. `web` returns the follower, following, likes and video counts TikTok's website shows (`statsV2` `followerCount`, `followingCount`, `heartCount`, `videoCount`) in place of the app's counters. Same price. `author.ext.counts_source` confirms which set was returned.
-- `include` (optional, string) - Comma list. `account` adds author.joined_at (the account's creation date), author.ext.joined_at_timestamp and author.ext.posting_region for 2 extra credits, refunded when the lookup fails
+- `include` (optional, string) - Comma list. `account` adds author.joined_at (the account's creation date), author.ext.joined_at_timestamp and author.ext.posting_region for 1 extra credit, refunded when the lookup fails
 
 **Constraints**
 
@@ -758,13 +758,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/profile/region" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/profile/videos - 1-25 credits (request-shaped)
+## GET /v1/tiktok/profile/videos - 1-15 credits (request-shaped)
 
 Returns a paginated list of recent public videos posted by a TikTok user. Each video includes view count, like count, comment count, share count, caption, and thumbnail URL. `post.ext.region` is the ISO 3166-1 alpha-2 country TikTok registers that video to, normally the creator's account country when they posted. It is not the viewer's country, and a video with no registered country has it null. `post.ext.matched_song_id` is the catalogue song TikTok matched the row's sound to, present when it made a match: an official clip and the original sounds creators upload with it have different `post.ext.music_id` values and one `matched_song_id`, so group on it to count a song's uses (it is not a clipId for `/v1/tiktok/song/videos`). The creator's account country on its own is `author.location` from `/v1/tiktok/profile`. Profiles with TikTok 'audience controls' enabled (a login/age wall in the browser) are supported when looked up by `handle`; page-1 order on those gated accounts may follow recency rather than pinned-first.
 
 **Use when** you want to list what one account has posted and page through it. Results come back in the source order, so sort_by does not reorder them. To find videos from many accounts by keyword, use search.
 **Cost** price moves with `label` · cache 600 s · multi-source (billed once)
-**Pricing** 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor (native `max_cursor`) · 10/page · depth unknown · price per N items not proven · typical 2.9-6.1 s
 
 **Query params**
@@ -779,7 +779,7 @@ Returns a paginated list of recent public videos posted by a TikTok user. Each v
 - `format` (optional, enum: stationery) - Optional. stationery files each video into wedding, birthday, birth, sympathy, seasonal greeting, or leaves it ungrouped. data.format_buckets gives the counts, the ungrouped share, and a by-day count when the page spans more than one day. A null save count stays null. brief= skips the walk when the page is not about that subject. No extra credits.
 - `brief` (optional, string) - Optional, with format=stationery. The subject these videos should be about. When the page is not about it, data.format_buckets.skip_creator is true and the videos are not filed.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until); `stop_at_id` → [incremental sync](api-overview.md#incremental-sync-since-stop_at_id)
 
 **Constraints**
@@ -802,7 +802,7 @@ Returns a paginated list of recent public videos posted by a TikTok user. Each v
 | `post.author.avatar_url` | 100% | URL to author profile picture |
 | `post.author.display_name` | 100% | Author display name |
 
-+32 more (types in the full schema): `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {pinned}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language} (+13 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.format_buckets`, `data.held_back`, `data.hydration`, `data.labels`, `data.walk`.
++36 more (types in the full schema): `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_id, download_count, music_id}; `post.flags` {pinned}; `post` {url}; `computed` {content_category, engagement_rate, estimated_reach, labels_evidence, language} (+17 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.creator_baseline`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.format_buckets`, `data.held_back`, `data.hydration`, `data.labels`, `data.walk`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/post/comments` (`url` ← `data.items[].post.url`) - List TikTok post comments. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text.
 
@@ -812,27 +812,27 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/profile/videos" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/search - 1-62 credits (request-shaped)
+## GET /v1/tiktok/search - 1-52 credits (request-shaped)
 
 Searches TikTok for videos matching a keyword query. Returns a list of matching videos with view counts, like counts, captions, author info, and thumbnails. TikTok itself ends one query's results at about 200 to 400 videos; send `expand=true` to keep paging through TikTok's related searches for the query and its other rankings (1,244 distinct videos for `coffee` on 26/10/2026, against 292 for the query alone). Each page aims at 25 or more videos the walk has not returned: when `since`/`until` or the walk's de-duplication removes rows, the page reads further on before it is served, at no extra credits. A shorter page is normal near the end of TikTok's results.For one hashtag's own feed, use /v1/tiktok/search/hashtag. Every row carries post.ext.region, the ISO 3166-1 alpha-2 country TikTok registered the video to (normally the creator's account country when they posted). The region= request parameter only sets the proxy; it does not filter. Keep one country by filtering on post.ext.region. Every row also carries the creator on it: post.author.username, post.ext.author_id (the creator's numeric user id) and post.ext.author_followers, the creator's follower count as the search source reported it, so a page filtered on post.ext.region is already a creator list for that country. For the creator's current exact follower count, bio and links, pass the username or id to /v1/tiktok/profile (?handle= or ?user_id=) at 1 credit, or batch up to 50 usernames per call through POST /v1/prism/profiles at 1 credit per resolved profile. Deduplicate creators across the whole crawl first; the same creators recur across keywords. `post.ext.matched_song_id` is the catalogue song TikTok matched the row's sound to, present when it made a match: an official clip and the original sounds creators upload with it have different `post.ext.music_id` values and one `matched_song_id`, so group on it to count a song's uses (it is not a clipId for `/v1/tiktok/song/videos`).
 
 **Use when** you want it for a video keyword search you can page and sort. region= only sets the proxy; filter on post.ext.region for one country. limit=120 returns one page of up to 120. search/top is the Top tab.
 **Cost** price moves with `label`, `limit` · cache 120 s · multi-source (billed once)
-**Pricing** 1 credit for the page, including any limit of 30 or less. A limit above 30 holds ceil(N/4)+2 credits for the N rows the source fills (60 to 120, rounded up to a multiple of 30), 17 at 60 and 32 at 120, and unfilled slots are refunded. Repeated videos are removed after billing. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 5 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 5 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
+**Pricing** 1 credit for the page, including any limit of 30 or less. A limit above 30 holds ceil(N/4)+2 credits for the N rows the source fills (60 to 120, rounded up to a multiple of 30), 17 at 60 and 32 at 120, and unfilled slots are refunded. Repeated videos are removed after billing. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 5 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 5 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
 **Paging** cursor · 30/page by default; set with `limit` · depth unknown · price per N items not proven · typical 3.1-6.0 s
 
 **Query params**
 
 - `query` (required) - Search keyword or phrase to find TikTok videos · e.g. `cooking recipes`
-- `date_posted` (optional, enum: yesterday | this-week | this-month | last-3-months | last-6-months | all-time) - Time Frame
-- `sort_by` (optional, enum: relevance | most-liked | date-posted) - Sort by
+- `date_posted` (optional, enum: yesterday | this-week | this-month | last-3-months | last-6-months | all-time) - Only videos published in this time frame, the same filter as the TikTok app's 'Date posted'. TikTok returns a different set of videos for each window, so one keyword searched across several windows reaches videos the unfiltered search does not. The window is also applied to every page as `since`. With `expand=true` the window is applied as `since` only.
+- `sort_by` (optional, enum: relevance | most-liked | date-posted) - The order of the results, the same choice as the TikTok app's 'Sort by': `relevance` (default), `most-liked` (most likes first) or `date-posted` (newest first). Each order returns a different set of videos, so one keyword searched in all three reaches more videos. With `expand=true` the order is not applied.
 - `region` (optional, string) - Sets the proxy country (ISO 3166-1 alpha-2). It does not filter the page to that country. Each row already carries post.ext.region, the country the video is registered to; filter on that leaf when you need only one country. · e.g. `ES`
 - `cursor` (optional, integer) - Cursor to get more videos. Get 'cursor' from previous response. Ignored when `limit` is above 30: that call is a single page.
 - `trim` (optional, boolean) - Accepted for compatibility; the response is already the canonical shape, so this flag has no effect.
 - `limit` (optional, integer, 1-120) - A limit of 30 or less returns the first limit rows of the normal page for 1 credit; next_cursor still steps the whole page of about 30, so the rest of that page is skipped. A limit above 30 selects the bulk labeled page: up to 120 videos in one call, each with post.ext.region. The value rounds up to the next multiple of 30 (60, 90 or 120). 17 credits at 60, 32 at 120; slots the source does not fill are refunded. date_posted and sort_by apply on the bulk page too. The source can repeat a video; repeats are removed, so a 120 page is often a little under 120 unique videos. Does not filter by country; drop rows yourself on post.ext.region. · e.g. `120`
 - `expand` (optional, boolean) - Send `true` to keep paging past TikTok's own limit for one query, which ends a walk at about 200 to 400 videos. When your ranking runs out, the walk continues with TikTok's related searches for your query that contain every word of it (for `coffee`: `iced coffee at home`, `coffee cold brew recipe`) and then with the other two rankings, each to its end, keeping your `date_posted` and `region`. A video can come up again on a later step, so deduplicate on `post.id`. Rows after your own ranking are not in your `sort_by` order. Every page is 1 credit, as usual; page with `cursor`, or collect many pages in one call with `max_items`.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - `country` (optional, string) - Comma-separated two-letter ISO 3166-1 codes, for example `US,GB`. Keep only videos TikTok registers to one of these countries (`post.ext.region`); a row with no country is discarded. This filters rows; it does not change where the search runs (that is `region`). Filtering runs on our side after each page is fetched, so every page walked is billed as usual; `data.walk.discarded` counts what was removed and why. Each page is its own entry in `GET /v1/credits/transactions`, under the page's request id listed in `data.walk.request_ids`.
 - `exclude_country` (optional, string) - Comma-separated two-letter ISO 3166-1 codes, for example `IN`. Discard videos TikTok registers to any of these countries (`post.ext.region`); a row with no country is kept. Filtering runs on our side after each page is fetched, so every page walked is billed as usual; `data.walk.discarded` counts what was removed and why. Each page is its own entry in `GET /v1/credits/transactions`, under the page's request id listed in `data.walk.request_ids`.
@@ -868,13 +868,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/search" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/search/hashtag - 1-25 credits (request-shaped)
+## GET /v1/tiktok/search/hashtag - 1-15 credits (request-shaped)
 
 Searches TikTok for videos under a specific hashtag. Returns matching videos with engagement metrics and author info. `post.ext.region` is the ISO country TikTok registers each video to, when the source sends one. Pagination: send `pagination.next_cursor` back as `cursor` while `pagination.has_more` is true. Each page aims at 25 or more videos the walk has not returned: when `since`/`until` or the walk's de-duplication removes rows, the page reads further on before it is served, at no extra credits. A shorter page is normal near the end of the hashtag's videos.
 
 **Use when** you want to track one tag such as a campaign or challenge; use search when you want a free text keyword rather than a tag.
 **Cost** price moves with `label` · cache 120 s · multi-source (billed once)
-**Pricing** 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
+**Pricing** 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
 **Paging** cursor · ≈16/page (observed once) · depth unknown · price per N items not proven · typical 3.0-7.7 s
 
 **Query params**
@@ -884,7 +884,7 @@ Searches TikTok for videos under a specific hashtag. Returns matching videos wit
 - `cursor` (optional, integer) - The `cursor` from the previous response.
 - `trim` (optional, boolean) - Accepted; it has no effect.
 - `ai_written_threshold` (optional, string) - Optional, only with label=ai_written and exclude=ai_written. The p (0 to 1) at which exclude=ai_written drops a post. Default 0.95 (level likely). 0.71 also drops possible posts: more AI posts go, and more posts by people with them.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `label` (sponsored | mention | intent | niche | quality | ai_style | ai_written | injection; paid: mention, quality, ai_style, ai_written, injection) · `exclude` (engagement_bait | ai_style | ai_written) · `label_evidence` (1) · `brand` · `brand_description` · `offer` → [labels](api-overview.md#labels-relevance-and-quality); `max_pages` (1-50) · `seen` · `min_views` (min 0) · `max_age_days` (1-3650) · `sort_rows` (views | newest) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -919,11 +919,11 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/search/hashtag" \
 
 ## GET /v1/tiktok/search/mentions - 0-2 credits (request-shaped)
 
-Returns TikTok videos by other accounts that mention an account. TikTok has no mentions feed, so each call runs /v1/tiktok/search for `@handle` and for the bare handle and keeps a video only when TikTok links the mention to that account (TikTok often shows a linked mention as the account's display name, so the account id is checked, not just the text), the caption carries the @handle, or it links the profile. The account's own videos are left out unless `include_self=true`, and a video found by both searches appears once. Each row in `data.items` is exactly the row the named search endpoint returns, with its `post` and `computed` blocks, plus `match_kind` (`mention` or `link`). Each row's `post.ext.mentioned_user_ids` lists the accounts TikTok links in it. `since` and `until` keep only rows published inside the window. Send `data.next_cursor` back as `cursor` for the next page; it is null when every search has run out. `data.legs` reports each search: its endpoint, status, rows returned and kept, credits and `request_id`. `data.excluded` counts the rows left out (`unmatched`, `self`, `duplicate`, `outside_window`). Each call is one page of each search, 1 credit each, so at most 2.
+Returns TikTok videos by other accounts that mention an account. TikTok has no mentions feed, so each call runs /v1/tiktok/search for `@handle` and for the bare handle and keeps a video only when TikTok links the mention to that account (TikTok often shows a linked mention as the account's display name, so the account id is checked, not just the text), the caption carries the @handle, or it links the profile. The account's own videos are left out unless `include_self=true`, and a video found by both searches appears once. Each row in `data.items` is exactly the row the named search endpoint returns, with its `post` and `computed` blocks, plus `match_kind` (`mention` or `link`). Each row's `post.ext.mentioned_user_ids` lists the accounts TikTok links in it. `since` and `until` are not sent to TikTok: they keep only the rows published inside the window, out of what each search reads. Both searches are ranked by relevance, not by date, so a window in the past costs a page price per page (2 credits while both run) for as long as you follow the cursor, whether or not a page keeps a row, and the walk ends only when both searches run out. Send `data.next_cursor` back as `cursor` for the next page; it is null when every search has run out. `data.legs` reports each search: its endpoint, status, rows returned and kept, credits and `request_id`. `data.excluded` counts the rows left out (`unmatched`, `self`, `duplicate`, `outside_window`). Each call is one page of each search, 1 credit each, so at most 2.
 
 **Use when** you want to track mentions of a creator or brand on TikTok, which has no mentions feed; since/until keep rows inside a date window and the cursor pages on.
 **Cost** price depends on how many items the request sends or returns · cache 120 s
-**Pricing** Metered, 0-2 credits: each call reads one page of /v1/tiktok/search (1 credit) and /v1/tiktok/search (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the mention; data.legs shows each page's charge and data.excluded what was left out.
+**Pricing** Metered, 0-2 credits: each call reads one page of /v1/tiktok/search (1 credit) and /v1/tiktok/search (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the mention, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs.
 **Paging** cursor · page size not measured · depth unknown · typical 3.2-12 s
 
 **Query params**
@@ -988,7 +988,7 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/search/music" \
 Returns TikTok's search autocomplete suggestions for a partial query, the same terms the search box shows. Useful for keyword expansion before search or search/top.
 
 **Use when** you want it for keyword research, or to expand a seed term before running search or search/top.
-**Cost** cache 120 s
+**Cost** cache 120 s · multi-source (billed once)
 **Paging** single page - Fixed-window feed: upstream returns a single non-cursored suggestion list.
 
 **Query params**
@@ -1006,23 +1006,23 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/search/suggestions" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/search/top - 1-21 credits (request-shaped)
+## GET /v1/tiktok/search/top - 1-11 credits (request-shaped)
 
 Returns the top-ranked videos for a keyword query on TikTok. Rows are posts only: account search lives at `/v1/tiktok/search/users` and sound search at `/v1/tiktok/search/music`. Filter by `publish_time` (also accepted as `date_posted`, the spelling `/v1/tiktok/search` uses) and `sort_by`. Every row carries `post.ext.region`, the country the video is registered to. The `region` request parameter only sets the proxy; filter on `post.ext.region` when you need one country. `post.ext.matched_song_id` is the catalogue song TikTok matched the row's sound to, present when it made a match: an official clip and the original sounds creators upload with it have different `post.ext.music_id` values and one `matched_song_id`, so group on it to count a song's uses (it is not a clipId for `/v1/tiktok/song/videos`).
 
 **Use when** you want it for TikTok's own relevance ranking. region= only sets the proxy; filter on post.ext.region for one country. search/users returns accounts, which this endpoint does not include.
 **Cost** price depends on how many items the request sends or returns · cache 120 s · multi-source (billed once)
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted.
 **Paging** cursor · 30/page by default · depth unknown · price per N items not proven · typical 2.8-6.5 s
 
 **Query params**
 
 - `query` (required) - Search keyword or phrase · e.g. `dance challenge`
-- `publish_time` (optional, enum: yesterday | this-week | this-month | last-3-months | last-6-months | all-time) - Time Frame TikTok was posted
-- `sort_by` (optional, enum: relevance | most-liked | date-posted) - Sort by
+- `publish_time` (optional, enum: yesterday | this-week | this-month | last-3-months | last-6-months | all-time) - Time frame. TikTok's search does not reliably apply it, so it is also applied as `since`: videos published before the window are removed from every page, and a page can hold fewer videos. To collect many videos from a window, page /v1/tiktok/search with `expand=true` and `since`.
+- `sort_by` (optional, enum: relevance | most-liked | date-posted) - Sort by. TikTok's search does not reliably apply it, so a page can come back in relevance order; order rows by `post.published_at` yourself.
 - `region` (optional, string) - Sets the proxy country (ISO 3166-1 alpha-2). It does not filter the page to that country. Each row already carries post.ext.region, the country the video is registered to; filter on that leaf when you need only one country.
 - `cursor` (optional, integer) - Cursor to get more videos. Get 'cursor' from previous response.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - `country` (optional, string) - Comma-separated two-letter ISO 3166-1 codes, for example `US,GB`. Keep only videos TikTok registers to one of these countries (`post.ext.region`); a row with no country is discarded. This filters rows; it does not change where the search runs (that is `region`). Filtering runs on our side after each page is fetched, so every page walked is billed as usual; `data.walk.discarded` counts what was removed and why. Each page is its own entry in `GET /v1/credits/transactions`, under the page's request id listed in `data.walk.request_ids`.
 - `exclude_country` (optional, string) - Comma-separated two-letter ISO 3166-1 codes, for example `IN`. Discard videos TikTok registers to any of these countries (`post.ext.region`); a row with no country is kept. Filtering runs on our side after each page is fetched, so every page walked is billed as usual; `data.walk.discarded` counts what was removed and why. Each page is its own entry in `GET /v1/credits/transactions`, under the page's request id listed in `data.walk.request_ids`.
@@ -1039,7 +1039,7 @@ Returns the top-ranked videos for a keyword query on TikTok. Rows are posts only
 | `post.id` | Platform-specific post ID… |
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 
-+23 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_following, author_id} (+4 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
++26 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_followers, author_following, author_id} (+7 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Get TikTok post details. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/profile/videos` (`handle` ← `data.items[].post.author.username`) - List TikTok user videos. · `tiktok/song/videos` (`clipId` ← `data.items[].post.ext.music_id`) - List TikTok videos using a song.
 
@@ -1065,7 +1065,7 @@ Searches TikTok for user accounts matching a query, 30 per page. Each row carrie
 - `trim` (optional, boolean) - Accepted for compatibility; the response is already the canonical shape, so this flag has no effect.
 - `include` (optional, enum: profile) - Set to `profile` (one token only) to fill `author.bio`, `author.location` (the ISO region), `author.ext.bio_link` and `author.ext.business_category` on every row in this one call. Holds 1 credit per row (at most 30, or `limit`) and keeps only the rows filled from a fresh lookup; rows already in cache and rows that could not be filled are refunded, so the most a call can cost is 1 + rows. Adds 4 to 9 seconds on a fresh page (never more than 12) and nothing when the rows are already cached; read `data.hydration` for the rows, the credits held and kept, and the time.
 - `limit` (optional, integer, 1-30) - Take the top N rows of the page (1 to 30) after the search has run. With `include=profile` it also caps the extra credits at N: `limit=5&include=profile` costs at most 6. With `country=` it is the in-country page size (1 to 20, default 8) and the credit cap at 5 per row. On the global page it is not a page size: `next_cursor` still advances past the full page, so rows beyond N on this page are not returned by the next page.
-- `country` (optional, enum: US | GB | CA | AU | NZ | IE | DE | FR | ES | IT | PT | NL | BE | CH | AT | SE | NO | DK | FI | IS | PL | CZ | SK | HU | RO | BG | GR | HR | RS | SI | UA | RU | TR | IL | AE | SA | QA | KW | EG | MA | ZA | NG | KE | GH | TZ | ET | BR | MX | AR | CO | CL | PE | VE | EC | UY | PY | BO | CR | PA | DO | JM | JP | KR | CN | TW | HK | MO | SG | MY | ID | TH | VN | PH | IN | PK | BD | LK | NP | MM | KH) - ISO 3166-1 alpha-2 account region to filter by (KR, US, DE, …). Returns only creators whose public region is that country, 5 credits per row returned (8 by default, at most 20). A row is also dropped when neither its matched video, bio nor name is about your query, so a query that names only a market or a kind of account ("influencers") returns an empty page at 0 credits; put the topic in `query`. Omit it for the global 1-credit page. A code this endpoint does not accept is a free 400. · e.g. `KR`
+- `country` (optional, enum: US | GB | CA | AU | NZ | IE | DE | FR | ES | IT | PT | NL | BE | CH | AT | SE | NO | DK | FI | IS | PL | CZ | SK | HU | RO | BG | GR | HR | RS | SI | UA | RU | TR | IL | AE | SA | QA | KW | EG | MA | ZA | NG | KE | GH | TZ | ET | BR | MX | AR | CO | CL | PE | VE | EC | UY | PY | BO | CR | PA | DO | JM | JP | KR | CN | TW | HK | MO | SG | MY | ID | TH | VN | PH | IN | PK | BD | LK | NP | MM | KH) - ISO 3166-1 alpha-2 account region to filter by (KR, US, DE, …). Returns only creators whose public region is that country, 5 credits per row returned (8 by default, at most 20). A row is also dropped when neither its matched video, bio nor name is about your query, so a query that names only a market or a kind of account ("influencers") returns an empty page at 0 credits; put the topic in `query`. Omit it for the global 1-credit page. A code this endpoint does not accept is a free 400. The search takes 5 to 30 seconds; when it finds fewer creators than `limit` in that time you get the ones it found, and when it finds none in time the call returns 504 with your credits refunded, so retry a minute later. · e.g. `KR`
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages)
 
 **Response** `AuthorList` rows at `data.items[]`, each `{ author }` ([full schema](schemas/AuthorList.md))
@@ -1076,10 +1076,10 @@ Searches TikTok for user accounts matching a query, 30 per page. Each row carrie
 | `author.id` | Platform-specific user ID… |
 | `author.url` | Direct URL to the profile page |
 | `author.avatar_url` | URL to profile picture |
-| `author.bio` | Profile biography or description (with `include=profile`) |
 | `author.display_name` | Display name or full name |
+| `author.followers` | Follower or subscriber count as an integer. |
 
-+11 more (types in the full schema): `author` {followers, following, likes_count, location, posts_count, private, verified}; `author.ext` {bio_link, business_category, business_hours, products}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
++10 more (types in the full schema): `author` {following, likes_count, location, posts_count, private, verified}; `author.ext` {bio_link, business_category, business_hours, products}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `author.bio`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
 
 **Next** `tiktok/profile/videos` (`handle` ← `data.items[].author.username`) - The account's latest videos. · `tiktok/profile` (`handle` ← `data.items[].author.username`) - The creator's profile: followers, likes and bio. · `tiktok/user/followers` (`handle` ← `data.items[].author.username`) - List TikTok user followers. · `tiktok/profile/full` (`handle` ← `data.items[].author.username`) - TikTok profile, recent posts, and computed analytics in one call.
 
@@ -1156,13 +1156,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/song" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/song/videos - 1-21 credits (request-shaped)
+## GET /v1/tiktok/song/videos - 1-11 credits (request-shaped)
 
 Returns videos that use a specific TikTok sound/song. Each video includes engagement metrics, author info, and caption. `data.adoption` counts those videos by the day in `published_at`, says how many rows had no date, and sets `returning` when an old sound's first page is mostly from the last three days. The curve is global: it counts every row whatever its country. Each row carries `post.ext.region`, the country the video is registered to, when the source sends it, and `post.ext.matched_song_id`, the catalogue song TikTok matched the sound to, which an official clip and the original sounds creators upload with it share across different clipIds. `use=1` also files each caption into lip-sync, tutorial, before-and-after, greeting-card reveal, or none. No extra credits. To record how many videos use the sound every day, create a Monitor on /v1/tiktok/song that tracks `post.engagement.views`; see /docs/recipes/track-sound-growth.
 
 **Use when** you want to see how a sound is being used and page through those videos; song returns only the sound's own details.
 **Cost** price depends on how many items the request sends or returns · cache 600 s · multi-source (billed once)
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · ≈13/page (observed once) · depth unknown · price per N items not proven · typical 5.2-7.4 s
 
 **Query params**
@@ -1170,7 +1170,7 @@ Returns videos that use a specific TikTok sound/song. Each video includes engage
 - `clipId` (optional, string) - TikTok sound/song clip ID · e.g. `7439295283975702544`
 - `cursor` (optional, integer) - The cursor to get the next page of results.
 - `use` (optional, boolean) - Optional. 1 adds data.adoption.uses, a count of what the captions are doing with the sound. Omit it and the date histogram is still returned.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -1189,7 +1189,7 @@ Returns videos that use a specific TikTok sound/song. Each video includes engage
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, music_id, region}; `post.flags` {deleted} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.adoption`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
++20 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, music_id, region}; `post.flags` {deleted} (+1 more). Never filled: `post.ext.author_followers`, `post.ext.author_following`, `post.ext.author_likes_count`, `post.ext.author_posts_count`, `post.flags.nsfw`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.ext.author_sec_uid`. Page-level: `data.adoption`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/song/videos" \
@@ -1197,13 +1197,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/song/videos" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/trending - 5-25 credits (request-shaped)
+## GET /v1/tiktok/trending - 5-15 credits (request-shaped)
 
 Returns a page of popular TikTok videos for a country, with view, like, comment, share and save counts, caption, author and thumbnail. Two feeds, chosen with `feed`. The default (`feed=global`) is TikTok's web trending feed fetched through a connection in `region`: `region` sets where the request comes from, not where the videos come from, and for most countries the feed is one worldwide pool. Measured 13/09/2026 over 12 calls in six countries, 22% of its videos were registered in the requested country (US 65%, BR 43%, GB 9%, FR 8%, JP 6%, DE 0%). It returns about 13 videos in 3 to 12 seconds. `feed=local` is the For You feed TikTok's app serves to a phone set to `region`, so most, not all, of its videos are from that country: 57% of videos on 10 served pages the same day (DE 52%, US 66%, GB 41%, JP 81%), and 51% were captioned in the country's main language. It returns a median of 24 videos (13 to 33 on 9 pages in 10), and 9 calls in 10 answer within 22 seconds (364 served pages, 18-19/10/2026). On about 1 local call in 11 (26 of 281 measured 14-17/10/2026) the supplier is throttled or times out and no video comes back: that returns 503 with credits refunded, and a retry a minute later usually succeeds. A local request never falls back to the global feed. Both feeds cost the same, carry no cursor, and return each video once. Every row carries `ext.region`, the country the video is registered to, so filter on it when you need only that country; local rows also carry `ext.content_language`, TikTok's own caption-language tag. `post.ext.matched_song_id` is the catalogue song TikTok matched the row's sound to, present when it made a match: an official clip and the original sounds creators upload with it have different `post.ext.music_id` values and one `matched_song_id`, so group on it to count a song's uses (it is not a clipId for `/v1/tiktok/song/videos`).
 
 **Use when** Use it with feed=local for videos mostly from one country (57% measured). The default feed is largely worldwide whatever region you pass, so filter on post.ext.region.
 **Cost** price depends on how many items the request sends or returns · cache 120 s · multi-source (billed once)
-**Pricing** 5 credits per page; include=exact_counts: +2 a row made exact (max 20).
+**Pricing** 5 credits per page; include=exact_counts: +1 a row made exact (max 10).
 **Paging** single page - Fixed-window feed: upstream returns a single non-cursored result set.
 
 **Query params**
@@ -1211,7 +1211,7 @@ Returns a page of popular TikTok videos for a country, with view, like, comment,
 - `region` (required) - ISO 3166-1 alpha-2 country code (e.g., US, GB, DE). On the default feed it sets the country the request is routed through and does not filter videos; with `feed=local` it sets the country the For You feed is built for. Either way, check `ext.region` on each row for the country a video is actually from. · e.g. `US`
 - `trim` (optional, boolean) - Accepted for compatibility; it has no effect with `feed=local`.
 - `feed` (optional, enum: global | local) - `global` (default): the web trending feed routed through `region`, mostly worldwide content, about 13 videos in 3 to 12 seconds. `local`: the For You feed for a phone in `region`, most videos from that country, a median of 24 videos with 9 calls in 10 answering within 22 seconds, and a refunded 503 when none come back.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -1226,7 +1226,7 @@ Returns a page of popular TikTok videos for a country, with view, like, comment,
 | `post.id` | 100% | Platform-specific post ID… |
 | `post.published_at` | 100% | Post creation timestamp as an ISO 8601 UTC string. |
 
-+21 more (types in the full schema): `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, region, content_language}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate} (+2 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`.
++20 more (types in the full schema): `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.ext` {author_id, region, content_language}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate} (+1 more). Never filled: `post.flags.nsfw`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.flags.pinned`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.hydration`.
 
 **Next** `tiktok/post` (`url` ← `data.items[].post.url`) - Full details and stats for each video. · `tiktok/video/screen-text` (`url` ← `data.items[].post.url`) - Get TikTok video on-screen text. · `tiktok/song` (`clipId` ← `data.items[].post.ext.music_id`) - Get TikTok song details. · `tiktok/profile` (`handle` ← `data.items[].post.author.username`) - Get TikTok user profile.
 
@@ -1338,13 +1338,13 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/user/following" \
   -H "x-api-key: $SOCIALCRAWL_API_KEY"
 ```
 
-## GET /v1/tiktok/user/liked - 1-21 credits (request-shaped)
+## GET /v1/tiktok/user/liked - 1-11 credits (request-shaped)
 
 Returns the videos a given TikTok account has liked, newest first, thirty per page. This is the account's own likes feed and it reads in one direction only: it answers what this user liked, not who liked a given video. There is no endpoint for the other direction, on this API or any other, because TikTok keeps the identity of the people who like a post private. Each row is another creator's video and carries that creator's author block, engagement counts and caption. Most accounts keep their likes list private: when they do, the response is `404 RESOURCE_NOT_FOUND` and the request is refunded. Check `author.ext` on `/v1/tiktok/profile` first if you want to know before you call. Page with `cursor`, sending back the value from the previous response unchanged.
 
 **Use when** you want it for what an account likes, not for who liked a post: that direction does not exist on TikTok. Most accounts hide the list, and a hidden list is a refunded not found.
 **Cost** price depends on how many items the request sends or returns · cache 600 s
-**Pricing** 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
+**Pricing** 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total.
 **Paging** cursor · ≈30/page (observed) · depth unknown · price per N items not proven · typical 1.8-3.0 s
 
 **Query params**
@@ -1352,7 +1352,7 @@ Returns the videos a given TikTok account has liked, newest first, thirty per pa
 - `handle` (optional, string) - TikTok username without the @ symbol. · e.g. `chipotle`
 - `user_id` (optional, string) - TikTok numeric user ID. Use this for faster responses.
 - `cursor` (optional, string) - Cursor from the previous response to fetch the next page of liked videos.
-- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +2 a row made exact.
+- `include` (optional, string) - `exact_counts`: exact counts on the first 10 rows in one round, about 9 s however many, +1 a row made exact.
 - `since` (optional, string) - Rows published from this date: YYYY-MM-DD (midnight UTC) or ISO 8601. Rows older than it are left off each page. This list is not in date order, so the walk does not stop at the date: keep following `next_cursor`, and each page costs what a page costs even when every row on it is filtered out. Aliases: [date window](api-overview.md#date-window-since-until).
 - **Shared controls** `max_pages` (1-50) → [walks](api-overview.md#search-filters-and-multi-page-walks); `max_items` (1-5000) · `max_credits` (1-100000) → [one-call walks](api-overview.md#get-more-in-one-call-max_items-max_credits-max_pages); `until` → [date window](api-overview.md#date-window-since-until)
 
@@ -1386,7 +1386,7 @@ curl -G "https://www.socialcrawl.dev/v1/tiktok/user/liked" \
 Returns the current live-stream state for a TikTok user: `is_live`, and when the account is or has recently been live, the room (title, cover, start time, viewer stats). An account that exists but has never streamed returns `is_live: false` with an empty room and bills 1 credit; a handle that does not exist returns 404 at 0 credits. Answers are cached for at most 60 seconds.
 
 **Use when** you want to read a creator's live room state, but check status and start time yourself, since a room may still be returned after the broadcast has ended.
-**Cost** cache 60 s
+**Cost** cache 60 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -1437,7 +1437,7 @@ Fetches replies to a specific TikTok comment by its ID. Returns an array of comm
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 | `comment.post_id` | ID of the post this comment belongs to |
 
-+17 more (types in the full schema): `computed` {labels_evidence, language}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted, pinned}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.url`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.walk`.
++19 more (types in the full schema): `computed` {labels_evidence, language}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes}; `comment.ext` {author_sec_uid}; `comment.flags` {deleted}; `computed.labels` {complaint, injection, low_quality, purchase_intent, question, sentiment, spam, toxic}; `computed.country` {confidence, source, value}. Never filled: `comment.url`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `comment.engagement.replies`, `comment.flags.pinned`. Page-level: `data.comment_language`, `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.label_share`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/tiktok/video/comment/replies" \

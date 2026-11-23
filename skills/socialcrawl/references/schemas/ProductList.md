@@ -1,6 +1,6 @@
 # ProductList fields
 
-Every field the 34 field-mapped endpoints returning `ProductList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 43 field-mapped endpoints returning `ProductList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -15,6 +15,7 @@ Every field the 34 field-mapped endpoints returning `ProductList` can carry, wit
 | `product.ext.aliexpress.subcategory` | string | Sub-category. (seen in a sample response) |
 | `product.ext.availability_type` | unknown\|null |  |
 | `product.ext.available_quantity` | number\|null | Units the seller currently has listed. eBay only. (seen in a sample response) |
+| `product.ext.bing` | object\|null | On the bing/shopping endpoints: the price and review labels as Bing prints them (`price_label`, `reviews_label`; review counts are rounded, so `product.reviews_count` is the floor), and on GET /v1/bing/shopping/product the `offers` (seller, price, price_label, currency, url, free_shipping). |
 | `product.ext.bought_past_month` | number\|null | Lower bound of the purchase badge, for example 10000 for '10K+ bought in past month'. Null when there is no count. (only when the fallback source serves) |
 | `product.ext.bought_past_month_label` | string\|null | The purchase badge text exactly as Amazon prints it. |
 | `product.ext.buying_format` | string\|null | Sale type of the listing: auction, buy_it_now or accepts_offers. (seen in a sample response) |
@@ -24,6 +25,8 @@ Every field the 34 field-mapped endpoints returning `ProductList` can carry, wit
 | `product.ext.department` | unknown\|null |  |
 | `product.ext.etsy.is_handmade` | boolean | True when the seller marks the item handmade. (seen in a sample response) |
 | `product.ext.gid` | string\|null | Google Shopping product group id used to chain from search to detail, reviews and sellers. (seen in a sample response) |
+| `product.ext.google_id` | string\|null | On GET /v1/google/business/menu: Google's id for the dish; one dish can sit in two sections. |
+| `product.ext.google_play` | object\|null | On the google_play books and movies searches: `section` (the search group, such as Ebooks or TV shows, or the storefront shelf), `type` (ebook, audiobook, movie, tv_show or tv_episode; null on a shelf), `author`, `category`, `content_rating`, `trailer_url`, `series` (for example Book 4) and the prices as printed (`price_label`, `original_price_label`). |
 | `product.ext.gumtree.category` | string | The category's name. (seen in a sample response) |
 | `product.ext.gumtree.category_id` | string | The category's id. (seen in a sample response) |
 | `product.ext.gumtree.location` | string | Where the item is. (seen in a sample response) |
@@ -33,12 +36,18 @@ Every field the 34 field-mapped endpoints returning `ProductList` can carry, wit
 | `product.ext.hm.color` | string | The colour name. (seen in a sample response) |
 | `product.ext.hm.new_arrival` | boolean\|null | True when H&M marks the item a new arrival. (seen in a sample response) |
 | `product.ext.hm.sizes` | array | Sizes on offer. (seen in a sample response) |
+| `product.ext.idealo` | object\|null | idealo detail. |
+| `product.ext.ikea` | object\|null | IKEA detail. |
 | `product.ext.kohls.colors` | array | Colours on offer. (seen in a sample response) |
 | `product.ext.kohls.coupon_eligible` | boolean | True when store coupons apply. (seen in a sample response) |
 | `product.ext.kohls.display_color` | string | The colour shown for the item. (seen in a sample response) |
 | `product.ext.kohls.ship` | boolean | True when the item ships. (seen in a sample response) |
 | `product.ext.kohls.sku` | string | The SKU. (seen in a sample response) |
+| `product.ext.kroger` | object\|null | Kroger detail. |
+| `product.ext.menu_section` | string\|null | On GET /v1/google/business/menu: the dish's menu section, as `Section > Subsection`, or `Popular dishes` for Google's popular list. |
 | `product.ext.model_number` | unknown\|null |  |
+| `product.ext.popular` | boolean\|null | On GET /v1/google/business/menu: whether Google lists the dish as popular. |
+| `product.ext.price_label` | string\|null | On GET /v1/google/business/menu: the price as the menu prints it, for example $28.00. |
 | `product.ext.promotion.amount_off` | number\|null | Amount off the original price, in the price currency. (seen in a sample response) |
 | `product.ext.promotion.label` | string\|null | The retailer's own label, for example Clearance or Special Buys. (seen in a sample response) |
 | `product.ext.promotion.percent_off` | number\|null | Percentage off the original price. (seen in a sample response) |
@@ -54,6 +63,8 @@ Every field the 34 field-mapped endpoints returning `ProductList` can carry, wit
 | `product.ext.sephora.sku` | string | The SKU. (seen in a sample response) |
 | `product.ext.sku_id` | string\|null | Colour or size variant id. Shipping quotes need it beside the product id. |
 | `product.ext.sold_count` | number\|null | Units sold, as the listing reports it. |
+| `product.ext.sprouts` | object\|null | Sprouts detail. |
+| `product.ext.steam` | object\|null | Steam store detail. |
 | `product.ext.store_inventory` | array\|null | Stock at individual stores or fulfilment points. (seen in a sample response) |
 | `product.ext.tiktokshop` | object\|null | TikTok Shop detail. |
 | `product.features` | array\|null | Feature bullet points from the product page. Detail only. |

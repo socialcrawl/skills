@@ -68,12 +68,12 @@ Returns public profile information for a Twitch streamer including display name,
 |---|---|
 | `author.username` | User handle or username |
 | `author.id` | Platform-specific user ID… |
-| `author.url` | Direct URL to the profile page |
 | `author.avatar_url` | URL to profile picture |
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
+| `author.followers` | Follower or subscriber count as an integer. |
 
-+14 more (types in the full schema): `author` {followers, following, joined_at, likes_count, posts_count, private, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}.
++8 more (types in the full schema): `author` {verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `author.following`, `author.joined_at`, `author.likes_count`, `author.posts_count`, `author.private`, `author.url`.
 
 **Next** `twitch/user/videos` (`handle` ← `data.author.username`) - List a Twitch user's videos.
 

@@ -1,10 +1,10 @@
 # Product fields
 
-Every field the 15 field-mapped endpoints returning `Product` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 20 field-mapped endpoints returning `Product` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `product.availability` | string\|null | Stock/availability string when surfaced |
+| `product.availability` | string\|null | Stock/availability string when surfaced (on some endpoints only when the fallback source serves) |
 | `product.brand` | string\|null | Brand name (cleaned). Null when the platform exposes a seller instead. |
 | `product.description` | string\|null | Product description. |
 | `product.ext.aliexpress.category` | string | Top-level category. (seen in a sample response) |
@@ -13,6 +13,8 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.ext.aliexpress.shop_url` | string | Link to the seller's shop. (seen in a sample response) |
 | `product.ext.aliexpress.subcategory` | string | Sub-category. (seen in a sample response) |
 | `product.ext.available_quantity` | number\|null | Units the seller currently has listed. eBay only. (seen in a sample response) |
+| `product.ext.bestbuy` | object\|null | Best Buy detail. |
+| `product.ext.bing` | object\|null | On the bing/shopping endpoints: the price and review labels as Bing prints them (`price_label`, `reviews_label`; review counts are rounded, so `product.reviews_count` is the floor), and on GET /v1/bing/shopping/product the `offers` (seller, price, price_label, currency, url, free_shipping). |
 | `product.ext.bought_past_month` | number\|null | Lower bound of the purchase badge, for example 10000 for '10K+ bought in past month'. Null when there is no count. (only when the fallback source serves) |
 | `product.ext.catalog_id` | string\|null | Walmart's alphanumeric catalog id. product.id holds the numeric id from the URL. |
 | `product.ext.condition` | string\|null | Condition of a marketplace listing, for example Used or Open Box. (seen in a sample response) |
@@ -52,6 +54,7 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.ext.gumtree.public_user_id` | string | The seller's public id. (seen in a sample response) |
 | `product.ext.gumtree.seller_type` | string | Kind of seller, such as `trade`. (seen in a sample response) |
 | `product.ext.gumtree.user_id` | string | The seller's user id. (seen in a sample response) |
+| `product.ext.idealo` | object\|null | idealo detail. |
 | `product.ext.model_number` | unknown\|null |  |
 | `product.ext.rating_distribution.star_1` | number\|null | Reviews that gave 1 star. (seen in a sample response) |
 | `product.ext.rating_distribution.star_2` | number\|null | Reviews that gave 2 stars. (seen in a sample response) |
@@ -76,6 +79,8 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.ext.sephora.sku` | string | The SKU. (seen in a sample response) |
 | `product.ext.sku_id` | string\|null | Colour or size variant id. Shipping quotes need it beside the product id. |
 | `product.ext.sold_count` | number\|null | Units sold, as the listing reports it. |
+| `product.ext.sprouts` | object\|null | Sprouts detail. |
+| `product.ext.steam` | object\|null | Steam store detail. |
 | `product.ext.store_inventory` | array\|null | Stock at individual stores or fulfilment points. (seen in a sample response) |
 | `product.ext.tiktokshop` | object\|null | TikTok Shop detail. |
 | `product.ext.tiktokshop.delivery_days_max` | unknown\|null | Most days delivery takes. (with `include=details`) |
@@ -87,7 +92,7 @@ Every field the 15 field-mapped endpoints returning `Product` can carry, with pa
 | `product.ext.upc` | unknown\|null |  |
 | `product.features` | array\|null | Feature bullet points from the product page. Detail only. |
 | `product.id` | string | Platform product ID (Amazon ASIN / Google Shopping product id) |
-| `product.image_urls` | string\|array\|null | Primary image URL, or an array of image URLs for products with a gallery. |
+| `product.image_urls` | string\|array\|null | Primary image URL, or an array of image URLs for products with a gallery. (on some endpoints only when the fallback source serves) |
 | `product.price.currency` | string\|null | Currency code of the price. |
 | `product.price.current` | number\|null | Current price, in the price currency. |
 | `product.price.original` | number\|null | Price before any discount, in the price currency. |

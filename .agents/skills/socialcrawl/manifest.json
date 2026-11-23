@@ -1,0 +1,9 @@
+{
+  "name": "socialcrawl",
+  "registry_fingerprint": "270ffedde607a5bc95116cff6dc5db7f305609990af355fbb0787c9c6299a295",
+  "generated_at": "2026-11-23",
+  "platforms": 95,
+  "endpoints": 802,
+  "freshness_check": "GET https://www.socialcrawl.dev/v1/utility/endpoints?fingerprint=1 returns data.fingerprint; a different value means this copy is behind the live API.",
+  "generator": "packages/social-api/src/docs/generate-skills.ts"
+}

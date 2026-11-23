@@ -33,11 +33,11 @@ Returns data from a Komi page including display name, bio, avatar, and list of l
 | `author.id` | Platform-specific user ID… |
 | `author.username` | User handle or username |
 | `author.avatar_url` | URL to profile picture |
-| `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
-| `author.external_url` | Bio link / external website URL when surfaced by the… |
+| `computed.content_category` | Keyword-classified content category… |
+| `computed.engagement_rate` | Computed engagement rate (0..1). |
 
-+7 more (types in the full schema): `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`.
++5 more (types in the full schema): `computed` {estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Never filled: `author.followers`, `author.following`, `author.likes_count`, `author.posts_count`, `author.url`, `author.verified`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `author.bio`, `author.external_url`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/komi/page" \

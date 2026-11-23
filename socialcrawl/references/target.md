@@ -10,7 +10,7 @@
 |----------|------|---------|----------|
 | [GET /v1/target/categories](#get-v1targetcategories---1-credit-standard) | 1 credit (standard) | Returns Target's top-level browse taxonomy: each category's id, display name, parent id… | Use it first to find a category id, then pass that id to the category endpoint to list… |
 | [GET /v1/target/category](#get-v1targetcategory---5-credits-advanced) | 5 credits (advanced) | Returns products listed in a Target category, 24 per page, each with title, brand… | Use it to walk a whole Target category and discover TCINs, since Target has no keyword… |
-| [GET /v1/target/product](#get-v1targetproduct---5-credits-advanced) | 5 credits (advanced) | Returns one Target product by TCIN: title, brand, description, current and regular… | Use it when you have a TCIN and need full product detail. Prices are national catalogue… |
+| [GET /v1/target/product](#get-v1targetproduct---5-credits-advanced) | 5 credits (advanced) | Returns one Target product by TCIN: title, brand, highlight bullets, current and regular… | Use it when you have a TCIN and need full product detail. Prices are national catalogue… |
 | [GET /v1/target/reviews](#get-v1targetreviews---5-9-credits-request-shaped) | 5-9 credits (request-shaped) | Returns written customer reviews for a Target product, 10 per page, each with full text… | Use it when you want the review text itself. For just the star distribution, one call to… |
 | [GET /v1/target/stores](#get-v1targetstores---1-credit-standard) | 1 credit (standard) | Returns Target stores near a ZIP code, city, or state: store id, name, address, phone… | Use it to find stores near a place. It will not change product prices, which are… |
 
@@ -74,10 +74,10 @@ curl -G "https://www.socialcrawl.dev/v1/target/category" \
 
 ## GET /v1/target/product - 5 credits (advanced)
 
-Returns full product detail for a Target item: title, brand, description, highlight bullets, current and regular price, average rating with its 1-5 star distribution, written-review count, the full image gallery, colour and size variations, and stock status. Prices are national: Target's product endpoint reports the same price whatever store is asked for, so treat this as catalogue pricing rather than shelf pricing. For this product's written reviews call GET /v1/target/reviews with the same TCIN.
+Returns full product detail for a Target item: title, brand, highlight bullets, current and regular price, average rating with its 1-5 star distribution, written-review count, the full image gallery, and colour and size variations. Target's product feed currently omits the long description and the stock status, so product.description and product.availability are null. On a standalone item Target sends no regular price, so product.price.original is null there. Prices are national: Target's product endpoint reports the same price whatever store is asked for, so treat this as catalogue pricing rather than shelf pricing. For this product's written reviews call GET /v1/target/reviews with the same TCIN.
 
 **Use when** you have a TCIN and need full product detail. Prices are national catalogue prices, not the price at a particular store.
-**Cost** cache 600 s
+**Cost** cache 600 s · multi-source (billed once)
 **Paging** none
 
 **Query params**
@@ -91,11 +91,11 @@ Returns full product detail for a Target item: title, brand, description, highli
 | `product.id` | Platform product ID… |
 | `product.title` | Product title |
 | `product.url` | Direct URL to the product page |
+| `product.availability` | Stock/availability string when surfaced (only when the fallback source serves) |
 | `product.brand` | Brand name (cleaned). |
 | `product.description` | Product description. |
-| `product.reviews_count` | Number of written reviews. |
 
-+4 more (types in the full schema): `product.price` {current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, image_urls string[], availability string, features string[]}; `product.price` {currency string}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.rating_distribution` {star_1 number, star_2 number, star_3 number, star_4 number, star_5 number}.
++6 more (types in the full schema): `product` {image_urls, reviews_count}; `product.price` {current, original}; `product.rating` {average, count}. Also in the sample: `product` {seller null, features string[]}; `product.price` {currency string}; `product.variations[]` {id string, title string, url string, category string}; `product.ext.rating_distribution` {star_1 number, star_2 number, star_3 number, star_4 number, star_5 number}.
 
 **Next** `target/reviews` (`tcin` ← `data.product.id`) - Get Target product reviews.
 
@@ -138,7 +138,7 @@ Returns written customer reviews for a Target product, 10 per page, each with th
 | `review.author.name` | Reviewer name. |
 | `computed.labels_evidence` | When 1, every labelled row also carries… (with `label_evidence=1`) |
 
-+11 more (types in the full schema): `review` {entity_id, helpful_votes, images, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review` {url null, source null, language null, original_language null}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+2 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
++10 more (types in the full schema): `review` {entity_id, helpful_votes, verified}; `computed.labels` {incentivized, injection, issue, reports, sentiment}; `review.rating` {max, value}. Also in the sample: `review` {url null, source null, language null, original_language null, translated null}; `review.author` {avatar_url null, url null, location null, reviews_count null} (+1 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `review.images`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.estimate`, `data.held_back`, `data.labels`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/target/reviews" \
@@ -178,3 +178,9 @@ curl -G "https://www.socialcrawl.dev/v1/target/stores" \
 ```
 
 <!-- END:GENERATED:ENDPOINTS -->
+
+## Withdrawn endpoints (do not call)
+
+These stay registered but return `503 SERVICE_UNAVAILABLE` today and never bill. A permanent withdrawal is not coming back - use the alternative named in the platform's other endpoints rather than retrying.
+
+- `GET /v1/target/search` - temporarily withdrawn while its data source is re-established. Returns `503 SERVICE_UNAVAILABLE` and never bills; check the changelog before retrying.

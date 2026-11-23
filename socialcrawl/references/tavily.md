@@ -125,8 +125,8 @@ Runs a web search via Tavily and returns ranked results plus an optional LLM-gen
 - `include_image_descriptions` (optional, boolean) - Include AI-generated descriptions for the returned images.
 - `include_answer` (optional, boolean) - Include an LLM-generated answer string synthesised from the top sources.
 - `include_raw_content` (optional, boolean) - Include the raw HTML/text alongside the cleaned content.
-- `include_domains` (optional, string) - Comma-separated list of domains to restrict results to (e.g. `nytimes.com,reuters.com`).
-- `exclude_domains` (optional, string) - Comma-separated list of domains to exclude from results.
+- `include_domains` (optional, string) - Domains to restrict results to, comma-separated (`nytimes.com,reuters.com`) or as a JSON list (`["nytimes.com","reuters.com"]`).
+- `exclude_domains` (optional, string) - Domains to exclude from results, comma-separated or as a JSON list (`["habr.com"]`).
 - `country` (optional, string) - ISO 3166-1 alpha-2 country code to bias results toward.
 - `start_date` (optional, string) - Inclusive lower bound on result publish date (YYYY-MM-DD).
 - `end_date` (optional, string) - Inclusive upper bound on result publish date (YYYY-MM-DD).

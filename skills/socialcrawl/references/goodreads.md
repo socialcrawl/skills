@@ -295,7 +295,7 @@ Returns the comments readers left under one Goodreads review, with text, date an
 | `comment.author.avatar_url` | URL to comment author profile picture |
 | `comment.author.display_name` | Comment author display name |
 
-+4 more (types in the full schema): `comment.ext` {author_id, author_url}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.username`, `comment.author.verified`, `comment.engagement.likes`, `comment.engagement.replies`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++7 more (types in the full schema): `comment.ext` {author_id, author_url}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Never filled: `comment.author.username`, `comment.author.verified`, `comment.engagement.likes`, `comment.engagement.replies`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/goodreads/review/comments" \

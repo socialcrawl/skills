@@ -124,7 +124,7 @@ Returns Home Depot products matching a keyword, 24 per page, each with its item 
 | `product.image_urls` | Primary image URL, or an array of image URLs for products… |
 | `product.reviews_count` | Number of written reviews. |
 
-+9 more (types in the full schema): `product.ext` {sku_id, availability_type, department, model_number}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string} (+5 more). Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++6 more (types in the full schema): `product.ext` {sku_id}; `product.price` {currency, current, original}; `product.rating` {average, count}. Also in the sample: `product` {description null, seller null, availability string}; `product.ext.store_inventory[]` {store_id string, store_name string, state string, in_stock boolean, quantity number, fulfillment string, service string, location_type string, is_selected_store boolean}; `product.ext.promotion` {label string} (+2 more). Empty on every row the field-health check sampled (22/11/2026), so not returned today: `product.ext.availability_type`, `product.ext.department`, `product.ext.model_number`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `home_depot/product` (`item_id` ← `data.items[].product.id`) - Full details for each product. · `home_depot/reviews` (`item_id` ← `data.items[].product.id`) - Get Home Depot product reviews.
 
@@ -157,7 +157,7 @@ Returns Home Depot stores near a US ZIP code, each with its store id, name, full
 | `place.latitude` | Latitude in decimal degrees. |
 | `place.longitude` | Longitude in decimal degrees. |
 
-+5 more (types in the full schema): `place` {phone}; `place.ext` {distance_miles, pro_desk_phone, store_hours, tool_rental_phone}. Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, verified null, description null, image_urls null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++4 more (types in the full schema): `place` {phone}; `place.ext` {distance, pro_desk_phone, tool_rental_phone}. Also in the sample: `place.rating` {value null, max null}; `place` {reviews_count null, price_level null, address string, verified null, description null, image_urls null}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/home_depot/stores" \

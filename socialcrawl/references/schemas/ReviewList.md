@@ -1,6 +1,6 @@
 # ReviewList fields
 
-Every field the 26 field-mapped endpoints returning `ReviewList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 28 field-mapped endpoints returning `ReviewList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -34,15 +34,22 @@ Every field the 26 field-mapped endpoints returning `ReviewList` can carry, with
 | `review.ext.appdata.user_profile.profile_image_url` | string\|unknown\|null | Link to the reviewer's picture. (seen in a sample response) |
 | `review.ext.appdata.user_profile.profile_name` | string | The reviewer's name. (seen in a sample response) |
 | `review.ext.appdata.version` | string\|null | App version the review was written for. (seen in a sample response) |
+| `review.ext.google` | object\|null | Google detail on a Google Maps review. |
 | `review.ext.naver` | object\|null | What a Naver visitor review carries beyond the shared fields. |
+| `review.ext.place` | object\|null | The place a review is about, on GET /v1/google/business/contributor-reviews (one reviewer's reviews across many places). |
+| `review.ext.published_relative` | string\|null | (only when the fallback source serves) |
 | `review.ext.room_type` | string\|null |  |
 | `review.ext.stay_check_in` | string\|null |  |
 | `review.ext.stay_check_out` | string\|null |  |
 | `review.ext.stay_nights` | number\|null |  |
+| `review.ext.sub_ratings` | object\|null | A Tripadvisor restaurant review's aspect ratings, 1 to 5, present only when the reviewer rated all four; null otherwise. |
 | `review.ext.tiktokshop.is_incentivized_review` | unknown | True when the reviewer was given an incentive. |
 | `review.ext.tiktokshop.reviewer_id` | unknown | The reviewer's id. |
 | `review.ext.tiktokshop.sku_specification` | unknown | The variant the reviewer bought. |
 | `review.ext.traveler_type` | string\|null |  |
+| `review.ext.tripadvisor` | object\|null | Tripadvisor detail on a review: the written date, the reviewer's username, badge and hometown, the photo captions. Null where the review came from a source without them. |
+| `review.ext.visit_month` | string\|null | The month of the reviewer's visit, as YYYY-MM. Tripadvisor reviews only. |
+| `review.ext.yelp` | object\|null | Yelp detail on a Yelp review. |
 | `review.helpful_votes` | number\|null | Helpful-vote count (Amazon; null elsewhere) |
 | `review.id` | string | Review ID (parsed from the review URL when not first-class) |
 | `review.images` | array\|null | URLs of images attached to the review. |

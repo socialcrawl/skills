@@ -17,9 +17,9 @@ Every field the 3 field-mapped endpoints returning `WebPage` can carry, with pat
 | `page.extraction_check.found_in_text` | number | Values kept because they appear word for word on the page. |
 | `page.extraction_check.removed` | array | Fields set to null, with the value the extractor gave. |
 | `page.extraction_check.unverified` | array | Fields returned as extracted without a check. |
-| `page.fetch.cache_state` | string\|null | Upstream cache state when reported. |
-| `page.fetch.cached_at` | string\|null | Upstream cache timestamp when reported. |
-| `page.fetch.proxy_tier` | string\|null | Proxy tier used for the fetch. |
+| `page.fetch.cache_state` | string\|null | The page scraper's own cache: `hit` when it served a copy it fetched earlier (see `max_age`), `miss` when it fetched the page now. It is not SocialCrawl's response cache, which is the envelope's `cached` flag. A `hit` here is still a charged call when `cached` is false. |
+| `page.fetch.cached_at` | string\|null | When the page scraper fetched the copy it served, when `cache_state` is `hit`. |
+| `page.fetch.proxy_tier` | string\|null | The proxy the fetch used: `basic` (a plain request) or `enhanced` (the stronger proxy, used with `proxy=enhanced`, or by `proxy=auto` when the site blocked the plain request). Null when the page was read by a source that does not report a proxy. |
 | `page.fetched_at` | string\|null | Fetch timestamp when reported. |
 | `page.final_url` | string\|null | Final resolved URL after redirects. |
 | `page.highlights` | unknown | The passages the source picked out of the page, when you asked for the `highlights` format. Null otherwise. Its shape follows the format, so it has no single fixed shape. |
@@ -31,12 +31,12 @@ Every field the 3 field-mapped endpoints returning `WebPage` can carry, with pat
 | `page.native.endpoint` | string\|null | The endpoint that read the page, such as `/v1/linkedin/profile`. (on some endpoints only when the fallback source serves) |
 | `page.page_count` | number\|null | How many pages of a document were read, or null when the source does not report it. |
 | `page.page_state.confidence` | number | How sure the call is, from 0 to 1. (seen in a sample response) |
-| `page.page_state.skipped_judge` | boolean | True when the page was plainly real content and no judgement was needed. (seen in a sample response) |
+| `page.page_state.skipped_judge` | boolean | True when code decided the state and no judgement was needed: a long page with many headings (content), a known bot-check page (challenge), a blank page, a 'needs JavaScript' notice or a page of links only (empty_shell). (seen in a sample response) |
 | `page.page_state.value` | string | What the page is: `content`, `login_or_signup_wall`, `consent_wall`, `challenge` (a CAPTCHA or bot check), `error_or_not_found`, `rate_limited`, `paywall_teaser`, `empty_shell` or `other`. (seen in a sample response) |
 | `page.published_at` | string\|null | When the page was published: an ISO 8601 instant, or a YYYY-MM-DD date when only the day is printed. From the page's own article:published_time meta tag on a scrape, and from the news date or that tag on a search row. Null when the page states none. |
 | `page.scrape_id` | string\|null | Opaque scrape identifier for follow-up interactions. |
 | `page.source_type` | string\|null | Which kind of result a search row is: `web`, `news` or `image`. Null when the result is not a search row. (seen in a sample response) |
-| `page.status_code` | number\|null | HTTP status code observed while fetching the page. |
-| `page.title` | string\|null | The page title, or null when the page has none. Sent on search and map results and on a parsed document. (on some endpoints only when the fallback source serves) |
+| `page.status_code` | number\|null | The target site's own HTTP status for the page, such as 200, 404 or 430. It is not the status of your SocialCrawl call: a `web/scrape` that answers `success: true` can carry `status_code: 404`, which means the site answered with its error page. Such a page is returned with a `_warnings` line and is not charged. |
+| `page.title` | string\|null | The page title, or null when the page has none. Sent on scraped pages, on search and map results and on a parsed document. |
 | `page.total_page_count` | number\|null | How many pages the document has in all, or null when the source does not report it. |
 | `page.url` | string | Requested URL. |

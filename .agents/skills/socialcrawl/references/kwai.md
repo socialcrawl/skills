@@ -41,7 +41,7 @@ Returns public Kwai post details: caption, video and cover URLs, view/like/comme
 | `post.url` | Direct URL to the post on the source platform |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Also in the sample: `post.ext` {hashtags string[], mentions string[]}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`.
++15 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Also in the sample: `post.ext` {hashtags string[], mentions string[]}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.duration_seconds`.
 
 **Next** `kwai/user/posts` (`handle` ← `data.post.author.username`) - List a Kwai user's posts. · `kwai/profile` (`handle` ← `data.post.author.username`) - Get a Kwai user profile.
 
@@ -120,7 +120,7 @@ Returns a paginated list of public Kwai posts for a user: captions, media URLs, 
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+16 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {duration_seconds, media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++15 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {avatar_url, display_name, verified}; `post.content` {media_urls, thumbnail_url}; `post.engagement` {comments, likes, saves, shares, views}; `post.flags` {deleted}. Never filled: `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.duration_seconds`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/kwai/user/posts" \

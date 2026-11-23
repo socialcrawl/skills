@@ -1,6 +1,6 @@
 # PostList fields
 
-Every field the 113 field-mapped endpoints returning `PostList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 121 field-mapped endpoints returning `PostList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -15,25 +15,25 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `computed.labels.mention` | object\|null | mention (needs brand=): is the post about that brand rather than something that shares its name (about_brand, 0 to 1), how it feels about the brand on five levels (sentiment_level 0 to 4 and sentiment_score 0 to 1, null when the post is not about the brand), is it sarcastic, which aspect it talks about (taste_or_quality, price_or_value, availability_or_delivery, health_or_safety, advertising_or_campaign, customer_service, none), and did the author buy or use it (first_hand). (with `label=mention`) |
 | `computed.labels.niche` | object\|null | niche: which of the 33 niches of the published taxonomy sc-niche-v1 the caption belongs to, or personal_no_niche, or other (label, confidence, taxonomy), with label null when the caption is too thin to tell or the pick is unsure. |
 | `computed.labels.quality` | object\|null | quality: how much checkable detail the caption carries (fact_density 0 to 3), whether it mainly asks for likes, replies, shares, follows or tags (engagement_bait, 0 to 1), whether it is written to provoke anger as a way to get engagement (rage_bait, 0 to 1; about the writing, never the side taken), whether it only repeats someone else's news or view (secondhand, 0 to 1), and what the post is mainly doing (post_aim: inform, opinion, sell, entertain, provoke, other). (with `label=quality`) |
-| `computed.labels.sponsored` | object\|null | sponsored: is the post a paid or gifted promotion (p, 0 to 1), did it carry a disclosure marker such as #ad or 광고 (disclosed), is it likely paid with no marker (undisclosed), and which of the accounts it mentions does it promote (brand, or null). |
+| `computed.labels.sponsored` | object\|null | sponsored: is the post a paid or gifted promotion (p, 0 to 1), did it carry a disclosure marker such as #ad, 광고, 협찬, 체험단, 원고료, 제공받아 or 쿠팡 파트너스 (disclosed; a clear written disclosure such as #ad, 협찬 or 체험단 sets p to at least 0.95), is it likely paid with no marker (undisclosed), and which of the accounts it mentions does it promote (brand, or null). |
 | `computed.language` | string\|null | ISO 639-1 language code detected from the post text. Null when undetectable. |
 | `computed.relevance` | object\|null | Without this param every row already carries computed.relevance against your query, free ({ p, sense, depth, spam }: is this row about what your query means, or a different thing that shares its words?), and nothing is dropped or reordered. |
 | `computed.save_rate` | number\|null | Saves divided by views, rounded to six places. Present only when the post has both a save count and a view count above zero. |
 | `computed.vs_creator` | object\|null |  |
 | `post.author.avatar_url` | string\|null | URL to author profile picture (with `include=ad`, `include=channel`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `post.author.display_name` | string\|null | Author display name (with `include=engagement`, `include=creator`, `include=channel`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
-| `post.author.url` | unknown\|null |  |
+| `post.author.url` | string\|null | The author's own page (a blog, a cafe or a profile), on endpoints whose source sends it. Absent elsewhere. |
 | `post.author.username` | string\|null | Author username (with `include=channel` on some endpoints) |
-| `post.author.verified` | boolean\|null | Whether the account carries TikTok's verification badge. The source sends a badge label rather than a flag, and the API writes false when no label is present, so false can also mean the source sent no verification signal. (with `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
+| `post.author.verified` | boolean\|null | Whether the account carries TikTok's verification badge. The source sends a badge label rather than a flag, and the API writes false when no label is present, so false can also mean the source sent no verification signal. (on some endpoints only when the fallback source serves) |
 | `post.content.duration_seconds` | number\|null | Video/clip duration in seconds (null for non-video posts) (with `include=engagement`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `post.content.media_urls` | string\|array\|null | URL(s) of the primary media. Single string for video/photo posts; array of strings for carousels. (on some endpoints only when the fallback source serves) |
-| `post.content.text` | string\|null | Post caption, description, or text content (with `include=engagement` on some endpoints) |
+| `post.content.text` | string\|null | Post caption, description, or text content |
 | `post.content.thumbnail_url` | string\|null | URL to thumbnail image (with `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
-| `post.engagement.comments` | number\|null | Comment count. Note: on `GET /v1/instagram/post` this is Instagram's `edge_media_to_parent_comment.count` (top-level comments); the IG list endpoints report the mobile `comment_count` total (includes replies). Both land on this same field. (with `include=engagement`, `include=exact_counts`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
-| `post.engagement.likes` | number\|null | Like / reaction count (with `include=engagement`, `include=exact_counts`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
-| `post.engagement.saves` | number\|null | Save / bookmark count. `null` on Instagram: the save count is platform-private and Instagram exposes no numeric save metric on any surface (never fabricated). (with `include=engagement`, `include=exact_counts` on some endpoints) |
-| `post.engagement.shares` | number\|null | Share / repost / retweet count. On Instagram this is `reshare_count` (the paper-plane Share / Send count) and it exists only on Instagram's mobile surface, so it is returned by `/v1/instagram/post/stats`, `/v1/instagram/profile/reels/full`, and `/v1/instagram/profile/posts/full`. The web-sourced Instagram list and search endpoints return `null` (never fabricated). (with `include=engagement`, `include=exact_counts`, `include=details` on some endpoints) |
-| `post.engagement.views` | number\|null | View count (if available). For Instagram video/reels this is the play count: the headline 'Views' the IG app shows. Instagram removed per-post play counts from its public web pages in August 2026, so `GET /v1/instagram/post` now fills the count automatically from a second source within the same call: videos and reels keep a numeric `views` with no extra endpoint or workaround. Note: since mid-July 2026 Instagram's play count is Instagram-only. It no longer includes Facebook crosspost views (Meta-side change; the app UI changed identically). For combined reach, also fetch the Facebook crosspost via `/v1/facebook/post`. (with `include=engagement`, `include=exact_counts`, `include=details` on some endpoints) |
+| `post.engagement.comments` | number\|null | Comment count. Note: on `GET /v1/instagram/post` this is Instagram's `edge_media_to_parent_comment.count` (top-level comments); the IG list endpoints report the mobile `comment_count` total (includes replies). Both land on this same field. (with `include=engagement`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
+| `post.engagement.likes` | number\|null | Like / reaction count (with `include=engagement`, `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
+| `post.engagement.saves` | number\|null | Save / bookmark count. `null` on Instagram: the save count is platform-private and Instagram exposes no numeric save metric on any surface (never fabricated). (with `include=engagement` on some endpoints) |
+| `post.engagement.shares` | number\|null | Share / repost / retweet count. On Instagram this is `reshare_count` (the paper-plane Share / Send count) and it exists only on Instagram's mobile surface, so it is returned by `/v1/instagram/post/stats`, `/v1/instagram/profile/reels/full`, and `/v1/instagram/profile/posts/full`. The web-sourced Instagram list and search endpoints return `null` (never fabricated). (with `include=engagement`, `include=details` on some endpoints) |
+| `post.engagement.views` | number\|null | View count (if available). For Instagram video/reels this is the play count: the headline 'Views' the IG app shows. Instagram removed per-post play counts from its public web pages in August 2026, so `GET /v1/instagram/post` now fills the count automatically from a second source within the same call: videos and reels keep a numeric `views` with no extra endpoint or workaround. Note: since mid-July 2026 Instagram's play count is Instagram-only. It no longer includes Facebook crosspost views (Meta-side change; the app UI changed identically). For combined reach, also fetch the Facebook crosspost via `/v1/facebook/post`. (with `include=engagement`, `include=details` on some endpoints) |
 | `post.ext.ad.ad_format` | unknown\|null | The ad's format. |
 | `post.ext.ad.audit_status` | unknown | The library's review status code for the ad. |
 | `post.ext.ad.brand_name` | unknown\|null | The advertiser's name. (with `include=ad`) |
@@ -96,7 +96,7 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.ad.video_url_360p` | unknown | Link to the 360p video. |
 | `post.ext.ad.video_url_540p` | unknown | Link to the 540p video. |
 | `post.ext.all_media_urls` | array\|null | Every media URL on the post in source order. Present only when there is more than one. X only. (seen in a sample response) |
-| `post.ext.alt_text` | string\|null | Pinterest's machine caption of the image. Never the creator's own text. |
+| `post.ext.alt_text` | string\|null | A description of the image, never the post's own text: Pinterest's machine caption, or on X the alt text the author wrote for the post's first photo or video (null when they wrote none). |
 | `post.ext.apple_music.artist_id` | unknown | The artist's id. |
 | `post.ext.apple_music.artist_url` | unknown | Link to the artist's page. |
 | `post.ext.apple_music.content_advisory` | unknown\|null | Content advisory label, such as `explicit`. |
@@ -109,38 +109,50 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.article.url` | string | Link to the article. (seen in a sample response) |
 | `post.ext.aspect_ratio` | number\|null | A video's width divided by its height, so 0.5625 is 9:16. LinkedIn feeds and post search. |
 | `post.ext.audio_cluster_id` | string\|null | Instagram's audio cluster for a reel, as an exact digit string: the id Instagram uses to group different uploads of the same sound. Present on `/v1/instagram/audio/reels` rows and on `/v1/instagram/profile/reels` with `include=stats`; absent on a row when it is not available and on every other surface. (seen in a sample response) |
-| `post.ext.author_country` | string\|null | The creator's country. On Instagram it is the country the creator declares on the About this account panel, as a country name (for example `Spain`), and it is not where the post was filmed. It is present on `/v1/instagram/search/reels` when the request sends `include=creator`, `include=country` or `country`, and on `/v1/instagram/search/hashtag` and `/v1/instagram/location/posts` when it sends `include=country`, filled by looking the creator up. On YouTube rows joined with `include=channel` it is the channel's own country as an ISO 3166-1 alpha-2 code (for example `ZA`). Null when the platform publishes no country for the creator or the lookup did not resolve, and nothing is guessed; absent on a plain call. (with `include=channel`, `include=creator`, `include=country`) |
+| `post.ext.author_bio` | string\|null | The channel's description, as the page carries it. Telegram channel posts. |
+| `post.ext.author_bio_link` | string\|null | The website in the author's bio, as of when the source captured the row. X. |
+| `post.ext.author_country` | string\|null | The creator's country. On Instagram it is the country the creator declares on the About this account panel, as an ISO 3166-1 alpha-2 code (for example `ES`), and it is not where the post was filmed. It is present on `/v1/instagram/search/reels` when the request sends `include=creator`, `include=country` or `country`, and on `/v1/instagram/search/hashtag` and `/v1/instagram/location/posts` when it sends `include=country`, filled by looking the creator up. On YouTube rows joined with `include=channel` it is the channel's own country as an ISO 3166-1 alpha-2 code (for example `ZA`). Null when the platform publishes no country for the creator or the lookup did not resolve, and nothing is guessed; absent on a plain call. (with `include=channel`, `include=creator`, `include=country`) |
+| `post.ext.author_cover_url` | string\|null | A link to the author's profile banner. X; YouTube community posts with `include=channel`. (with `include=channel` on some endpoints) |
 | `post.ext.author_followers` | number\|null | The creator's follower count as embedded in the search payload itself, when the search source happens to carry one. On `instagram/search/reels` it is null on a plain call, because Instagram stopped sending follower counts in its search payload in August 2026; send `include=creator` (or `country`) and it is filled from the creator's profile, 2 credits per creator looked up. It stays null when that lookup does not resolve. (with `include=channel`, `include=creator` on some endpoints) (on some endpoints only when the fallback source serves) |
-| `post.ext.author_following` | number\|null | Accounts the author follows, as of when the list source captured the row. Not live. (with `include=creator` on some endpoints) |
+| `post.ext.author_following` | number\|null | Accounts the author follows, as of when the list source captured the row. Not live. (with `include=creator` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `post.ext.author_headline` | string\|null | The author's profile headline. LinkedIn only. |
 | `post.ext.author_id` | string\|null | The creator's platform-native numeric user id. On TikTok search and list items, pass to `/v1/tiktok/profile?user_id=` for the creator's current follower count (survives username changes). On Instagram `/v1/instagram/search/reels`, `/v1/instagram/search/hashtag` and `/v1/instagram/location/posts` items it is present on every row, accepted by `/v1/instagram/profile/country?user_id=` and `/v1/instagram/basic-profile?userId=`. On Facebook it appears when the upstream exposed a numeric actor id and no real handle. (with `include=details` on some endpoints) |
 | `post.ext.author_is_premium` | boolean\|null | True when LinkedIn marks the author as a Premium member. Null otherwise: LinkedIn sends the mark only when it is true, so null does not mean the author is not Premium. LinkedIn post search. |
+| `post.ext.author_keywords` | string\|null | The channel's keywords, one string as YouTube holds them. YouTube community posts with `include=channel`. (with `include=channel`) |
+| `post.ext.author_likes_count` | number\|null | Likes the author's posts have received in total, as of when the list source captured the row. Not live. TikTok. (on some endpoints only when the fallback source serves) |
 | `post.ext.author_location` | string\|null | The free text the author wrote in their profile's location field, exactly as written (for example `Johannesburg, South Africa`). It is not a country code and is not checked; discover reads a country from it into `geo.country` (`source: author_location`). Present on X tweet and reply rows; null or absent when the author left it blank. |
-| `post.ext.author_posts_count` | number\|null | Posts the author has made, as of when the list source captured the row. Not live. (with `include=creator` on some endpoints) |
+| `post.ext.author_media_count` | number\|null | How many photos and videos the author has posted, as of when the source captured the row. Not live. X. |
+| `post.ext.author_posts_count` | number\|null | Posts the author has made, as of when the list source captured the row. Not live. (with `include=creator` on some endpoints) (on some endpoints only when the fallback source serves) |
+| `post.ext.author_private` | boolean\|null | Whether the author's account is protected. X. |
 | `post.ext.author_public_email` | string\|null | The public contact email on the creator's profile. Present only on `/v1/instagram/search/reels` when the request sends `include=creator`, filled by looking the creator up. Null when the creator lists no public email or the lookup did not resolve; absent on a plain call. (with `include=creator`) |
 | `post.ext.author_public_phone` | string\|null | The public contact phone number on the creator's profile. Present only on `/v1/instagram/search/reels` when the request sends `include=creator`, filled by looking the creator up. Null when the creator lists no public phone or the lookup did not resolve; absent on a plain call. (with `include=creator`) |
+| `post.ext.author_sec_uid` | string\|null | TikTok's stable secUid for the author, the id TikTok's own user lookups take. TikTok. (on some endpoints only when the fallback source serves) |
 | `post.ext.author_type` | string\|null | Whether the author is a user or a company. LinkedIn only. |
 | `post.ext.author_url` | string\|null | The posting account's profile URL, so a matching post can be followed to its account. Present on `/v1/facebook/search/posts` rows: the vanity or `/people/<name>/<id>/` URL when Facebook sends one, otherwise `https://www.facebook.com/profile.php?id=<numeric id>` built from the account id. Pass it as `url` to `/v1/facebook/profile` (or to `/v1/prism/profiles` with `platform: facebook`). Null when the row names neither an account URL nor a numeric account id. Absent on other endpoints. |
 | `post.ext.author_urn` | string\|null | Opaque LinkedIn urn of the author. Joins to the /user endpoints without a lookup step. |
+| `post.ext.author_verified_type` | string\|null | The author's verification type, `Business` or `Government`; null for the blue check alone (`post.author.verified`) and for an unverified account. X. |
 | `post.ext.author_website` | string\|null | The link on the button in the author's profile header, such as their newsletter or website. LinkedIn feeds and post search. |
 | `post.ext.author_website_label` | string\|null | The text of that button, for example `View my newsletter`. LinkedIn feeds and post search. |
 | `post.ext.board_name` | string\|null | Name of the board the pin was saved to. Pinterest only. |
-| `post.ext.caption` | string\|null | Whether the video has captions, as the string true or false. YouTube only. (seen in a sample response) |
+| `post.ext.caption` | string\|null | Whether the video owner uploaded a caption track, as the string true or false. Captions YouTube makes automatically do not count, so `false` does not mean the video has no transcript. YouTube only. (seen in a sample response) |
 | `post.ext.carousel_count` | number\|null | Number of slides in an Instagram carousel. Present only when media_type is carousel. (seen in a sample response) |
 | `post.ext.categoryId` | string\|null | YouTube's category id, for example 10. (seen in a sample response) |
 | `post.ext.categoryTitle` | string\|null | Name of the YouTube category. |
 | `post.ext.celebration` | object\|null | The celebration card a post shows. |
 | `post.ext.channel_id` | string\|null | The 24 character YouTube channel id (starts with UC). Used because these rows carry no handle. (with `include=channel`, `include=engagement` on some endpoints) |
+| `post.ext.client` | string\|null | The app the post was sent from, for example `Twitter for iPhone`. Null when the answering source does not say. X. |
+| `post.ext.closed_at` | string\|null | When the issue or pull request was closed, as an ISO 8601 UTC time. Null while it is open. GitHub only. |
 | `post.ext.coauthors` | array\|null | Instagram collaborative posts (the native "Collab" feature). The full list of co-author accounts on the post, as `{ id, username, full_name, is_verified, profile_pic_url }`. A collab post has ONE producer and appears in every co-author's grid, so `post.author` is whichever account created it, which is not necessarily the profile you queried. The complete set of accounts on a post is `post.author.username` plus every `username` in this array. An empty array means Instagram reports the post as NOT a collab; the field is absent on surfaces that carry no co-author signal, including `/v1/instagram/post` (its web source ships the field permanently empty, so use `/v1/instagram/post/stats` for a single post). (seen in a sample response) |
-| `post.ext.comments_disabled` | boolean\|null | True when the author turned comments off on the post. LinkedIn feeds and post search. |
+| `post.ext.comments_disabled` | boolean\|null | True when the author turned comments off on the post. LinkedIn feeds and post search, and YouTube `video`, where it is null unless comments are turned off (the comment count is null then). |
 | `post.ext.content_language` | string\|null | The language the platform itself tags the post with, when it sends one: Reddit's own language tag on Reddit endpoints, and TikTok's caption-language tag (for example `de`) on `/v1/tiktok/trending?feed=local`. Null when the platform could not tell (Reddit `und`, TikTok `un`, common on short or emoji-only captions); absent where the source sends no tag. Never inferred from the text by us: that is `post.computed.language`. (on some endpoints only when the fallback source serves) |
 | `post.ext.content_type` | string\|null | YouTube format: video, short, live, channel or playlist. (seen in a sample response) |
 | `post.ext.conversation_id` | string\|null | Id of the post that opened the thread. Equals the row's own id on a top level post. X only. |
 | `post.ext.default_language` | string\|null | Default language of the video's metadata as a BCP 47 code. (seen in a sample response) |
 | `post.ext.defaultAudioLanguage` | string\|null | Language of the video's audio track as a BCP 47 code. (seen in a sample response) |
-| `post.ext.description` | string\|null | Description text from the source record. |
+| `post.ext.description` | string\|null | Description text from the source record. On a GitHub issue or pull request, its whole Markdown body, null when empty. |
 | `post.ext.document` | object\|null | The document a document post shares. Its PDF is also in `content.media_urls`. |
 | `post.ext.download_count` | number\|null | How many times the video has been saved to a device. TikTok only, and distinct from `engagement.saves`: a save keeps the video in a private collection on the platform, a download takes a copy off it, and TikTok counts the two separately. Present on TikTok post, search and post-list responses; absent everywhere else. |
+| `post.ext.draft` | boolean\|null | True on a draft pull request, false on one ready for review. Null on an issue. GitHub only. |
 | `post.ext.dsp_ids.amazon` | string\|null | (seen in a sample response) |
 | `post.ext.dsp_ids.apple_music` | string\|null | (seen in a sample response) |
 | `post.ext.dsp_ids.spotify` | string\|null | (seen in a sample response) |
@@ -157,16 +169,20 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.event.hosts` | unknown\|null | The people or pages hosting the event. (with `include=details`) |
 | `post.ext.event.interested_count` | unknown\|null | People who marked themselves interested. (with `include=details` on some endpoints) |
 | `post.ext.event.is_canceled` | unknown\|null | True when the event is cancelled. (with `include=details` on some endpoints) |
-| `post.ext.event.is_online` | unknown | True when the event is online. |
-| `post.ext.event.is_past` | unknown | True when the event has already happened. |
+| `post.ext.event.is_online` | unknown\|null | True when the event is online. (with `include=details` on some endpoints) |
+| `post.ext.event.is_past` | unknown\|null | True when the event has already happened. (with `include=details` on some endpoints) |
 | `post.ext.event.latitude` | unknown\|null | Latitude of the venue in degrees. (with `include=details`) |
-| `post.ext.event.location_name` | unknown | Name of the venue, or `Online event`. |
+| `post.ext.event.location_id` | unknown\|null | (with `include=details`) |
+| `post.ext.event.location_name` | unknown\|null | Name of the venue, or `Online event`. (with `include=details` on some endpoints) |
+| `post.ext.event.location_type` | unknown\|null | (with `include=details`) |
 | `post.ext.event.longitude` | unknown\|null | Longitude of the venue in degrees. (with `include=details`) |
 | `post.ext.event.privacy` | unknown\|null | Who can see the event, such as `public`. (with `include=details`) |
-| `post.ext.event.start_timestamp` | unknown | When the event starts, in Unix seconds. |
+| `post.ext.event.start_timestamp` | unknown\|null | When the event starts, in Unix seconds. (with `include=details` on some endpoints) |
 | `post.ext.event.time_text` | unknown | The event time as the platform words it, with time zone. |
 | `post.ext.feedback_id` | string\|null | Join key that /v1/facebook/post/comments takes to read the post's comments. (seen in a sample response) |
 | `post.ext.flair` | string\|null | The post's link flair. Reddit only. (on some endpoints only when the fallback source serves) |
+| `post.ext.forks` | number\|null | Forks of the repository. GitHub only. |
+| `post.ext.full_name` | string\|null | The repository as owner/name, for example vercel/next.js. GitHub only. |
 | `post.ext.hashtags` | array\|null | Hashtags parsed from the caption, lower cased without the #, each listed once in order. |
 | `post.ext.hasPaidProductPlacement` | boolean\|null | Whether the video discloses a paid product placement. YouTube only. (seen in a sample response) |
 | `post.ext.ig_play_count` | number\|null | Instagram-only play count (`ig_play_count`). Since mid-July 2026 Instagram's headline play count (`engagement.views`) no longer includes Facebook crosspost views and equals this value; it is surfaced explicitly so you can tell the Instagram-only figure apart and detect any future re-divergence. For combined Instagram + Facebook reach, also fetch the Facebook crosspost via `/v1/facebook/post`. Present on `/v1/instagram/post/stats` and, since the August 2026 views fix, on `/v1/instagram/post` for video posts. (with `include=engagement`) |
@@ -182,13 +198,17 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.media_type` | string\|null | Media kind: image, video or carousel. |
 | `post.ext.mentioned_accounts` | array\|null | The accounts LinkedIn links in the post's text, in order. Our parse of `@handles` in the caption stays in `mentions`. |
 | `post.ext.mentions` | array\|null | Handles mentioned in the caption, lower cased with the @, each listed once in order. (seen in a sample response) |
+| `post.ext.merged_at` | string\|null | When the pull request was merged, as an ISO 8601 UTC time. Null when it was not merged and on an issue. GitHub only. |
 | `post.ext.music` | object\|null | The sound or music the post uses. (with `include=audio`) |
 | `post.ext.music_id` | string\|null | TikTok music/clip id (exact string): pass to `/v1/tiktok/song/videos?clipId=` to find videos using the same sound (with `include=audio` on some endpoints) |
 | `post.ext.music.id` | unknown\|null | The id of the sound or audio track. |
 | `post.ext.music.track_title` | unknown\|null | Title of the sound or track. |
+| `post.ext.name` | string\|null | The repository name without the owner. GitHub only. |
 | `post.ext.newsletter` | object\|null | The newsletter this post is an edition of. |
+| `post.ext.npm` | object\|null | npm package detail. |
 | `post.ext.numeric_id` | number\|null | GitHub's numeric REST id, beside the GraphQL node id in post.id. |
 | `post.ext.on_screen_texts` | array\|null | Text the creator typed onto the video with TikTok's text tool. (seen in a sample response) |
+| `post.ext.open_issues` | number\|null | Open issues of the repository, open pull requests included, as GitHub counts them. GitHub only. |
 | `post.ext.outbound_links` | array\|null | The web links in the post's text, in order, each once. LinkedIn feeds and post search. |
 | `post.ext.outbound_url` | string\|null | The page a Pinterest pin saves. Absent when it saves none. |
 | `post.ext.playlist_item_id` | string\|null | Id of the playlist item itself, distinct from the video id in post.id. (seen in a sample response) |
@@ -198,10 +218,12 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.poll` | object\|null | The poll a poll post asks. |
 | `post.ext.position` | number\|null | Position of the item in the playlist, counting from 0. (seen in a sample response) |
 | `post.ext.post_type` | string\|null | The activity type of a LinkedIn post, such as ugc or activity. |
+| `post.ext.programming_language` | string\|null | The repository's main programming language as GitHub detects it, for example TypeScript. Null when GitHub detected none. GitHub only. |
 | `post.ext.published_at_epoch` | number\|null | Raw Unix epoch for `published_at` (seconds, or milliseconds when the upstream sent millis). Present only when the upstream sent a numeric epoch that was normalised to the ISO 8601 `published_at` string. Kept for one deprecation cycle for integrations pinned to the numeric form. (seen in a sample response) |
 | `post.ext.published_at_precision` | string\|null | How exactly published_at is known: hour or day on LinkedIn feeds, where the source only gives a relative age. Absent means the time is exact. |
 | `post.ext.published_label` | string\|null | The relative label the source showed instead of a date, for example 'Streamed 3 weeks ago'. (seen in a sample response) |
 | `post.ext.published_precision` | string\|null | How precise published_at is when the source gave only a relative label: minute, hour, day, week, month or year. (seen in a sample response) |
+| `post.ext.pushed_at` | string\|null | When code was last pushed to the repository, as an ISO 8601 UTC time. GitHub only. |
 | `post.ext.quote_count` | number\|null | How many times the post was quoted. X and Threads. |
 | `post.ext.quoted_post` | object\|null | Threads quote posts: the post this one quotes, as `{ id, url, author: { id, username }, text, media_urls, thumbnail_url }`. A quote post usually carries no caption or media of its own, and the text and video you see on the post's page belong to this attachment, by a different author. It is returned here rather than merged into `post.content`, so `content.*` always stays the outer post's own content and one account's media is never attributed to another. Absent on posts that are not quote posts. On LinkedIn feeds, `/v1/linkedin/search/posts` and `/v1/linkedin/search/hashtag`, the post a quote post quotes, in the same shape with the author's `display_name`, `engagement` and `published_at`; there the leaf is present on every post and null when the post quotes none. |
 | `post.ext.reacted_at` | string\|null | When the member reacted, as an ISO 8601 UTC timestamp; published_at stays the post's own time. Profile reactions endpoint only. |
@@ -209,7 +231,7 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.reaction_activity_id` | string\|null | The id of the member's reaction itself on LinkedIn, the activity post.url links. Profile reactions endpoint only. |
 | `post.ext.reaction_counts` | array\|null | Reaction counts by type. (with `include=details` on some endpoints) |
 | `post.ext.reaction_type` | string\|null | How the member reacted, as LinkedIn's own rendered sentence (for example 'Bill Gates likes this'), localised. Profile reactions endpoint only. |
-| `post.ext.region` | string\|null | TikTok only: the country TikTok registers the video to, as an ISO 3166-1 alpha-2 code (normally the creator's account country when they posted). It is not the viewer's country, not the `region` you requested, and not a language. On `/v1/tiktok/trending`, `/v1/tiktok/search`, `/v1/tiktok/search/top`, `/v1/tiktok/profile/videos`, `/v1/tiktok/search/hashtag` and `/v1/tiktok/song/videos` it is how you tell which rows are from a given country: filter on it when you need only that country. A row whose source omits the country stays null. The `region` request parameter still only sets the proxy. (on some endpoints only when the fallback source serves) |
+| `post.ext.region` | string\|null | TikTok only: the country TikTok registers the video to, as an ISO 3166-1 alpha-2 code (normally the creator's account country when they posted). It is not the viewer's country, not the `region` you requested, and not a language. On `/v1/tiktok/trending`, `/v1/tiktok/search`, `/v1/tiktok/search/top`, `/v1/tiktok/profile/videos`, `/v1/tiktok/search/hashtag` and `/v1/tiktok/song/videos` it is how you tell which rows are from a given country: filter on it when you need only that country. A row whose source omits the country stays null. The `region` request parameter still only sets the proxy. |
 | `post.ext.remix_count` | number\|null | How many reels were made from this reel. Instagram only. (seen in a sample response) |
 | `post.ext.removed` | boolean\|null |  |
 | `post.ext.removed_by` | string\|null |  |
@@ -232,11 +254,16 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.retweeted_post.quote_count` | number | How many times the original post was quoted. (seen in a sample response) |
 | `post.ext.retweeted_post.text` | string\|null | The text of the original post. (seen in a sample response) |
 | `post.ext.retweeted_post.url` | string | Link to the original post. (seen in a sample response) |
+| `post.ext.search_result_id` | string\|null | The id Facebook's video search gave this result, as sent. On a reel result it is often another id, such as the post that carries the reel; post.id is always the id in the video's URL. Facebook video search only. |
 | `post.ext.selftext` | string\|null | The Reddit post body without the title. Null on link posts. |
 | `post.ext.share_urn` | string\|null | LinkedIn's share urn for the post. |
 | `post.ext.sponsored_disclosed` | boolean\|null | The platform's own disclosure that the post is paid or promotional: on Instagram the paid-partnership label (`is_paid_partnership`) or a tagged brand partner, on TikTok the label TikTok shows viewers ("Paid partnership", "Commission paid", "Promotional content"), on LinkedIn the brand partnership label LinkedIn shows on the post. `false` when the post carries the flag unset, null when it carries none. Present on `/v1/instagram/post/stats`, `/v1/instagram/profile/posts`, `/v1/instagram/profile/reels`, `/v1/instagram/search/reels`, `/v1/tiktok/profile/videos` and `/v1/tiktok/search`, and on every post of the LinkedIn feeds (`/v1/linkedin/profile/posts`, `/v1/linkedin/company/posts`, `/v1/linkedin/profile/posts/archive`, `/v1/linkedin/profile/reactions`, `/v1/linkedin/post/reposts` and `/v1/linkedin/group/posts`), where it is null unless the source that answered reports the label; absent on every other endpoint. |
+| `post.ext.stackoverflow` | object\|null | Stack Overflow question detail. |
+| `post.ext.stars` | number\|null | Stars of the repository. GitHub only. |
+| `post.ext.state` | string\|null | open or closed, for a GitHub issue or pull request. A merged pull request reads closed with merged true. |
+| `post.ext.state_reason` | string\|null | Why a GitHub issue was closed or reopened: completed, not_planned, duplicate or reopened. Null on a pull request and on an issue that was never closed. |
 | `post.ext.subreddit` | string\|null | Reddit subreddit name (search/list items): pass to `/v1/reddit/subreddit/details?subreddit=` |
-| `post.ext.tags` | array\|null | Video tags set by the creator. YouTube only. |
+| `post.ext.tags` | array\|null | Video tags set by the creator on YouTube; on a GitHub issue or pull request, its label names, empty when it has none. |
 | `post.ext.text_entities` | array\|null | The linked ranges of the post's text. |
 | `post.ext.text_truncated` | boolean\|null | True when content.text is a shortened summary and not the full note. Xiaohongshu only. |
 | `post.ext.title` | string\|null | The post title on its own. Reddit only. |
@@ -270,6 +297,7 @@ Every field the 113 field-mapped endpoints returning `PostList` can carry, with 
 | `post.ext.video_count` | number\|null | Number of videos in the playlist. It is not a view count. |
 | `post.ext.videoOwnerChannelId` | string\|null | Channel id of the video's owner. YouTube playlist items only. (seen in a sample response) |
 | `post.ext.videoPublishedAt` | string\|null | When the video was published, as an ISO 8601 time. YouTube playlist items only. (seen in a sample response) |
+| `post.ext.wikipedia` | object\|null | Wikipedia page detail. |
 | `post.flags.deleted` | boolean | Whether the post is tombstoned (always present) |
 | `post.flags.likes_hidden` | boolean\|null | Present and `true` when the creator has hidden the like count. `engagement.likes` is `null` in that case (never the platform's decoy preview number). Absent on normal posts. (seen in a sample response) |
 | `post.flags.nsfw` | boolean\|null | NSFW flag (null when platform does not surface) |

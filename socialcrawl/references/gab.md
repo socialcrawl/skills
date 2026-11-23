@@ -78,7 +78,7 @@ Returns the comments on a Gab post, up to 25 a page, in the unified Comment shap
 | `comment.author.username` | Comment author username (null when tombstoned) |
 | `comment.parent_id` | Parent comment ID for nested replies, or null for… |
 
-+8 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.flags` {pinned null}. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++11 more (types in the full schema): `comment` {post_id}; `comment.author` {avatar_url, display_name, verified}; `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Also in the sample: `comment.flags` {pinned null}. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/gab/post/comments" \

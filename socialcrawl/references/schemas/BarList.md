@@ -9,6 +9,7 @@ Every field the 1 field-mapped endpoints returning `BarList` can carry, with pat
 | `bar.currency` | string\|null | Price currency |
 | `bar.date` | string\|number\|null | Session date, absolute UTC ISO-8601 |
 | `bar.dividend` | number\|null | Cash dividend per share going ex on this date; null on an ordinary day |
+| `bar.exchange` | string\|null | The listing exchange's code as Yahoo names it (e.g. "NMS"); null when the answering source does not say |
 | `bar.high` | number\|null | Session high |
 | `bar.id` | string | Stable row id ("<symbol>:<date>") |
 | `bar.interval` | string\|null | Bar width ("1d" \| "1wk" \| "1mo" \| "1m" \| "5m" \| ...) |
@@ -16,4 +17,5 @@ Every field the 1 field-mapped endpoints returning `BarList` can carry, with pat
 | `bar.open` | number\|null | Opening price |
 | `bar.split_ratio` | string\|null | Split effective on this date (e.g. "10:1"); null on an ordinary day |
 | `bar.symbol` | string\|null | Instrument symbol this bar belongs to |
+| `bar.timezone` | string\|null | The exchange's timezone (IANA, e.g. "America/New_York"); null when the answering source does not say |
 | `bar.volume` | number\|null | Shares traded |

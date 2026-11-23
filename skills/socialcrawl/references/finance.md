@@ -13,7 +13,7 @@
 | [GET /v1/finance/markets](#get-v1financemarkets---1-credit-standard) | 1 credit (standard) | Returns a snapshot of the major world indices grouped by region, plus the day's most… | Use it for a standing market overview; unlike quote and ticker-search it needs no symbol… |
 | [GET /v1/finance/news](#get-v1financenews---1-credit-standard) | 1 credit (standard) | Returns recent news for one instrument: headline, absolute UTC publish time, publisher… | Use it to find why a price moved. Pass a bare ticker ('AAPL') or quote's 'AAPL:NASDAQ'… |
 | [GET /v1/finance/options](#get-v1financeoptions---5-credits-advanced) | 5 credits (advanced) | Returns one expiry's chain as a flat list: calls and puts together, split by type, with… | Use it to scan a chain without walking two arrays. OPRA data is roughly 15 minutes… |
-| [GET /v1/finance/quote](#get-v1financequote---5-credits-advanced) | 5 credits (advanced) | Returns one instrument's full quote: live price and intraday graph, market cap, P/E… | Use it when you know the exact symbol, like GOOGL:NASDAQ or BTC-USD; ticker-search gives… |
+| [GET /v1/finance/quote](#get-v1financequote---5-credits-advanced) | 5 credits (advanced) | Returns one instrument's full quote: live price and intraday graph, market cap, P/E… | Use it when you know the symbol, like GOOGL:NASDAQ, BTC-USD or a bare ticker such as… |
 | [GET /v1/finance/statements](#get-v1financestatements---5-credits-advanced) | 5 credits (advanced) | Returns income, balance sheet and cash flow line items per period, each with its… | Use it for fundamentals screening. Rows are keyed by fiscal period end, NOT filing date… |
 | [GET /v1/finance/ticker-search](#get-v1financeticker-search---1-credit-standard) | 1 credit (standard) | Returns instruments matching a name, each with the exact id to pass to quote, plus its… | Use it to turn a company or asset name into the symbol that quote requires. |
 
@@ -50,7 +50,7 @@ curl -G "https://www.socialcrawl.dev/v1/finance/fundamentals" \
 Returns daily OHLCV bars for one instrument across an explicit date range, as a unified BarList. Each row carries `close` AND `adj_close` as separate leaves, and the distinction matters: `close` is split-adjusted only, `adj_close` is adjusted for splits AND dividends. Use `adj_close` for total-return maths and `close` for drawing prices; substituting one for the other produces a plausible wrong answer whose error grows the further back you look. Cash dividends and splits appear on the dated row they take effect, so a corporate-action history needs no second call. Delisted instruments return no data, and a recycled ticker resolves to whichever company currently holds the symbol.
 
 **Use when** you want it for charts, returns and backtests. Pick adj_close for total return, close for price. Delisted tickers return nothing; recycled ones return the new company.
-**Cost** cache 1800 s
+**Cost** cache 1800 s · multi-source (billed once)
 **Paging** single page - The full requested date range is returned in one response; widen or narrow the range rather than paging.
 
 **Query params**
@@ -71,7 +71,7 @@ Returns daily OHLCV bars for one instrument across an explicit date range, as a 
 | `bar.date` | Session date, absolute UTC ISO-8601 |
 | `bar.dividend` | Cash dividend per share going ex on this date; null on an… |
 
-+7 more (types in the full schema): `bar` {high, interval, low, open, split_ratio, symbol, volume}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++9 more (types in the full schema): `bar` {exchange, high, interval, low, open, split_ratio, symbol, timezone, volume}. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/finance/history" \
@@ -180,15 +180,15 @@ curl -G "https://www.socialcrawl.dev/v1/finance/options" \
 
 ## GET /v1/finance/quote - 5 credits (advanced)
 
-Returns ONE rich, unified Quote for a financial instrument keyed by its `keyword` (`TICKER:EXCHANGE` for stocks/ETFs/indices, e.g. 'GOOGL:NASDAQ' / 'VOO:NYSEARCA' / '.INX:INDEXSP', or a forex/crypto pair, e.g. 'EUR-USD' / 'BTC-USD'). A single call bundles the live price + intraday graph, fundamentals (market cap, P/E, dividend yield, 52-week range, volumes), the company profile (CEO, founded, HQ, employees), quarterly + annual financials (equities), and peer instruments: all on ONE canonical shape across stocks, ETFs, indices, crypto, and forex, distinguished by `quote.type`. Forex/crypto pairs populate `quote.pair` (base/quote symbols) and have a null `ticker`. Get the exact `keyword` from /v1/finance/ticker-search. Read live from the Google Finance SERP (~5-10s).
+Returns ONE rich, unified Quote for a financial instrument keyed by its `keyword` (`TICKER:EXCHANGE` for stocks/ETFs/indices, e.g. 'GOOGL:NASDAQ' / 'VOO:NYSEARCA' / '.INX:INDEXSP', or a forex/crypto pair, e.g. 'EUR-USD' / 'BTC-USD'). A single call bundles the live price + intraday graph, fundamentals (market cap, P/E, dividend yield, 52-week range, volumes), the company profile (CEO, founded, HQ, employees), quarterly + annual financials (equities), and peer instruments: all on ONE canonical shape across stocks, ETFs, indices, crypto, and forex, distinguished by `quote.type`. Forex/crypto pairs populate `quote.pair` (base/quote symbols) and have a null `ticker`. A bare ticker such as 'AAPL' also works: it is resolved to its primary listing (AAPL:NASDAQ), and when the ticker trades on more than one exchange the response names the other listings in data._warnings. Send TICKER:EXCHANGE to choose a listing yourself, or get the exact `keyword` from /v1/finance/ticker-search. Read live from the Google Finance SERP (~5-10s; a bare ticker adds one lookup, about 2-3s).
 
-**Use when** you know the exact symbol, like GOOGL:NASDAQ or BTC-USD; ticker-search gives you that symbol from a name.
+**Use when** you know the symbol, like GOOGL:NASDAQ, BTC-USD or a bare ticker such as AAPL; ticker-search gives you the symbol from a name.
 **Cost** cache 60 s
 **Paging** none
 
 **Query params**
 
-- `keyword` (required) - Instrument identifier: TICKER:EXCHANGE for stocks/ETFs/indices ('GOOGL:NASDAQ', '.INX:INDEXSP') or a forex/crypto pair ('EUR-USD', 'BTC-USD'). Use the `id` returned by ticker-search. · e.g. `GOOGL:NASDAQ`
+- `keyword` (required) - Instrument identifier: TICKER:EXCHANGE for stocks/ETFs/indices ('GOOGL:NASDAQ', '.INX:INDEXSP'), a forex/crypto pair ('EUR-USD', 'BTC-USD'), or a bare ticker ('AAPL'), which resolves to its primary listing. Use the `id` returned by ticker-search to pick a specific exchange. · e.g. `GOOGL:NASDAQ`
 - `language` (optional, string) - Language as a full name ('English') or 2-letter code ('en'). Defaults to English.
 - `location` (optional, string) - Location as a full name ('United States') or numeric code ('2840'). Defaults to the US.
 

@@ -25,4 +25,7 @@ Every field the 2 field-mapped endpoints returning `Comment` can carry, with pat
 | `comment.published_at` | string\|number\|null | Comment creation timestamp as an ISO 8601 UTC string. When the upstream sent a Unix epoch it is converted here and the raw epoch is preserved under `comment.ext.published_at_epoch` for one deprecation cycle. |
 | `comment.text` | string\|null | Comment body. Tombstone sentinels ([deleted] / [removed]) are collapsed to null upstream: customers never see them. |
 | `comment.url` | string\|null | Direct URL to the comment on the source platform |
+| `computed.country.confidence` | number |  |
+| `computed.country.source` | string |  |
+| `computed.country.value` | string |  |
 | `computed.language` | string\|null |  |

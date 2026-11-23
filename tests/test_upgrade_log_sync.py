@@ -15,16 +15,19 @@ registry but must not reach the published skill until its hold lifts.
 from __future__ import annotations
 
 import json
+import os
 import re
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = ROOT / ".agents" / "skills" / "socialcrawl"
+# SOCIALCRAWL_SKILL_ROOT points the checks at another tree (the in-codebase
+# generated copy) before it is synced here.
+CANONICAL = Path(os.environ.get("SOCIALCRAWL_SKILL_ROOT") or ROOT / ".agents" / "skills" / "socialcrawl")
 REFS = CANONICAL / "references"
 
-SYNC_CURSOR = "API-105"
+SYNC_CURSOR = "API-230"
 
 # Rows the skill has nothing to say about, with the reason.
 NOT_SKILL_SURFACE = {
@@ -126,7 +129,8 @@ class NewEndpoints(SkillCase):
                 self.assertTrue(section("GET", f"linkedin/profile/{name}"))
 
     def test_api_092_six_new_platforms(self) -> None:
-        expected = {"weibo": 8, "goodreads": 10, "airbnb": 4, "booking": 3, "duckduckgo": 7}
+        # booking 3 -> 4: API-194 added booking/hotel/rooms.
+        expected = {"weibo": 8, "goodreads": 10, "airbnb": 4, "booking": 4, "duckduckgo": 7}
         for platform, count in expected.items():
             with self.subTest(platform=platform):
                 text = ref(f"{platform}.md")
@@ -308,7 +312,8 @@ class PlatformParamsAndFields(SkillCase):
 
     def test_api_101_tiktok_profile_account(self) -> None:
         self.assertSection("GET", "tiktok/profile", "posting_region")
-        self.assertIn("1-3 credits", heading("GET", "tiktok/profile"))
+        # 1-3 -> 1-2: API-106 cut include=account from +2 to +1.
+        self.assertIn("1-2 credits", heading("GET", "tiktok/profile"))
 
     def test_api_102_youtube_video_availability(self) -> None:
         self.assertSection("GET", "youtube/video", "playback_availability")

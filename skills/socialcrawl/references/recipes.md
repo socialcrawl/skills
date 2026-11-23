@@ -109,11 +109,11 @@ const mentions = await sc("prism/brand-mentions", { keyword: "notion", date_from
 
 1. `GET /v1/search/multi?query=<brand>&platforms=reddit,twitter&since=<start_date>` - Each platform runs its own search and is billed as a direct call; data.sources reports each platform's rows, charge and next_cursor.
 
-**Cost** for one page from each of two platforms: 2 credits held up front (settles 0-2; the unused hold is refunded).
+**Cost** for one page from each of two platforms: 4 credits held up front (settles 0-4; the unused hold is refunded).
 
 | Step | Endpoint | Runs | Hold each | Hold total |
 |------|----------|------|-----------|------------|
-| posts | `search/multi` | 1 | 0 | 0 |
+| posts | `search/multi` | 1 | 2 | 2 |
 | posts (reddit leg) | `reddit/search` | 1 | 1 | 1 |
 | posts (twitter leg) | `twitter/search/tweets` | 1 | 1 | 1 |
 
@@ -126,7 +126,7 @@ const mentions = await sc("prism/brand-mentions", { keyword: "notion", date_from
 **Pitfalls**
 
 - Name the platforms: the default set is TikTok, Instagram, YouTube, Reddit and Threads, so X is missing unless you ask for twitter.
-- On X, since= and until= work as on every dated list, and search/multi also sends them to X as since_time:/until_time: operators, which X applies to the second. Calling twitter/search/tweets directly, since= sets sort=latest and ends the walk at that date; since_time: and until_time: inside query, in Unix seconds, narrow the search itself instead.
+- On X, since= and until= are sent to X as since_time:/until_time: operators, by search/multi and by twitter/search/tweets called directly, and every row is checked against the window again. On twitter/search/tweets since= also sets sort=latest, and the walk ends when X has no more posts in the window. An operator you put inside query yourself is sent as you wrote it.
 - search/multi does not page itself: continue one platform on its own endpoint with data.sources.<platform>.next_cursor as cursor.
 - prism/brand-mentions and search/everywhere are not this job: they cost far more and do not limit the results to the platforms you named.
 
@@ -214,11 +214,11 @@ const sov = await sc("prism/share-of-voice", { brands: "notion,coda,airtable", d
 
 1. `GET /v1/search/multi?query=<topic>&platforms=tiktok,instagram,youtube&relevance=filter` - relevance=filter drops posts that share the words but are about something else.
 
-**Cost** for one page from each of three platforms: 3 credits held up front (settles 0-3; the unused hold is refunded).
+**Cost** for one page from each of three platforms: 6 credits held up front (settles 0-6; the unused hold is refunded).
 
 | Step | Endpoint | Runs | Hold each | Hold total |
 |------|----------|------|-----------|------------|
-| search | `search/multi` | 1 | 0 | 0 |
+| search | `search/multi` | 1 | 3 | 3 |
 | search (tiktok leg) | `tiktok/search` | 1 | 1 | 1 |
 | search (instagram leg) | `instagram/search/reels` | 1 | 1 | 1 |
 | search (youtube leg) | `youtube/search` | 1 | 1 | 1 |
@@ -252,7 +252,7 @@ const search = await sc("search/multi", { query: "matcha latte", platforms: "tik
 
 1. `GET /v1/twitter/search/tweets?query=<keyword>&sort=latest&max_items=1000` - repeat with `cursor=<pagination.next_cursor>` until 10000 rows or `has_more=false`. max_items=1000 makes each call walk pages (up to 50) until it holds a thousand tweets and return them together; add max_credits to cap what one call spends. The cursor it returns continues from the last page read.
 
-**Cost** for ten thousand tweets: 1 credit per page (page size not yet measured; quote the whole job with GET /v1/utility/estimate or scripts/estimate.py).
+**Cost** for ten thousand tweets: 50 credits per page (page size not yet measured; quote the whole job with GET /v1/utility/estimate or scripts/estimate.py).
 
 **Measured** Measured on 25/10/2026: 17 credits in 1 call for ITEMS=25 (the quote held 1). The TypeScript and Python programs both ran.
 
@@ -260,7 +260,7 @@ const search = await sc("search/multi", { query: "matcha latte", platforms: "tik
 
 - Billing is per page of about twenty tweets, not per call: quote pages (N / 20) before you start, and expect short pages to raise the count.
 - One call walks up to 50 pages and can stop early on its time budget (data.walk.stopped is time_budget), so a large job is a few calls; walking does not change the price per page.
-- Bound the walk with since=YYYY-MM-DD: it keeps sort=latest and ends the walk at that date. until= only filters rows off each page (you still pay for the newer pages it skips), so for an upper bound put until_time: inside query, in Unix seconds, which narrows the search itself.
+- Bound the walk with since=YYYY-MM-DD and until=YYYY-MM-DD: both are sent to X as since_time:/until_time:, so the pages hold only posts inside the window and the walk ends when X has none left. since= keeps sort=latest.
 
 **Code**
 
@@ -379,8 +379,8 @@ const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "we
 
 **Inputs**
 
-- `brands`: The brand and its competitors, comma-separated (e.g. `aruba,curacao,bonaire`)
-- `exclude_terms`: Words that mark another meaning of a brand name, comma-separated (e.g. `networks`)
+- `brands`: The brand and its competitors, comma-separated (e.g. `patagonia,arcteryx,columbia`)
+- `exclude_terms`: Words that mark another meaning of a brand name, comma-separated (e.g. `argentina,chile`)
 
 **Chain**
 
@@ -388,7 +388,7 @@ const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "we
 
 **Cost** for a brand and its competitors, one month: at most 150 credits (max_credits caps the whole run; each search bills at its platform's price only when it returns rows, so it settles 0-150; nothing beyond the judging bound is held up front).
 
-**Measured** Measured on 25/10/2026: 35 credits in 5 calls (the quote held 150). The TypeScript and Python programs both ran.
+**Measured** Measured on 18/11/2026: 40 credits in 4 calls (the quote held 150). The TypeScript and Python programs both ran.
 
 **Cheaper** `search/multi` - Each platform's own search once per brand, with since= for the month, when you judge and de-duplicate the rows yourself.
 
@@ -397,7 +397,7 @@ const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "we
 **Pitfalls**
 
 - Name every brand in brands: each brand is its own group in one run, so the rows come back per brand.
-- A brand name that is also a word or another company (Aruba the island and Aruba the network vendor) needs exclude_terms, or rows about the other meaning are fetched and judged before they are dropped.
+- A brand name that is also a word or another company (Patagonia the brand and Patagonia the region) needs exclude_terms, or rows about the other meaning are fetched and judged before they are dropped.
 - period=last_month is the last full calendar month in UTC; add tz= (an IANA zone such as America/New_York) for the month in another time zone.
 - max_credits caps the whole run, and a request expected to cost more is refused free with the estimate: raise it only after the user approves.
 - A run that answers 202 keeps going in the background: never resubmit it, follow data.next.status_url.
@@ -406,7 +406,7 @@ const news = await sc("google_news/search", { keyword: "OpenAI", time_range: "we
 
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
-const reactions = await sc("prism/discover", { brands: "aruba,curacao,bonaire", period: "last_month", exclude_terms: "networks", max_credits: "150" });
+const reactions = await sc("prism/discover", { brands: "patagonia,arcteryx,columbia", period: "last_month", exclude_terms: "argentina,chile", max_credits: "150" });
 ```
 
 ## Find the accounts behind a topic: sellers, creators, pages and channels
@@ -415,8 +415,8 @@ const reactions = await sc("prism/discover", { brands: "aruba,curacao,bonaire", 
 
 **Inputs**
 
-- `keywords`: Two to six topic words or phrases, comma-separated (e.g. `replica rolex dubai,fake watches uae`)
-- `context`: Who the accounts are, in one sentence (e.g. `accounts selling counterfeit luxury watches in the UAE`)
+- `keywords`: Two to six topic words or phrases, comma-separated (e.g. `used film camera,leica m6 for sale`)
+- `context`: Who the accounts are, in one sentence (e.g. `accounts selling used film cameras`)
 
 **Chain**
 
@@ -434,7 +434,7 @@ const reactions = await sc("prism/discover", { brands: "aruba,curacao,bonaire", 
 
 - Put the topic words in keywords and the user's question in context: context is what each account is judged against, never a search phrase.
 - role=seller,reseller (or promoter, reviewer) keeps only accounts in those roles and adds the role judgment.
-- targets_country=AE keeps accounts that target that market; country=AE keeps rows whose post or author country is AE.
+- targets_country=AE keeps accounts based in the UAE or that name it (Dubai, AED, a +971 number, a UAE address, delivery in Dubai); shipping "worldwide" or to "all Gulf countries" does not count on its own. country=AE keeps rows whose post or author country is AE.
 - Followers is a number on each account row, not a follower list: no follower list is fetched.
 - A large run keeps going in the background: follow data.next.status_url, and read every account at data.next.results_url or as JSON lines at its results.jsonl.
 
@@ -442,7 +442,7 @@ const reactions = await sc("prism/discover", { brands: "aruba,curacao,bonaire", 
 
 ```ts
 // sc(path, params?, { method?, body?, idempotencyKey? }?) -> parsed JSON body; URL-encodes params and skips undefined; canonical client: references/codegen.md
-const accounts = await sc("prism/discover", { view: "accounts", keywords: "replica rolex dubai,fake watches uae", context: "accounts selling counterfeit luxury watches in the UAE", period: "90d", max_credits: "400" });
+const accounts = await sc("prism/discover", { view: "accounts", keywords: "used film camera,leica m6 for sale", context: "accounts selling used film cameras", period: "90d", max_credits: "400" });
 ```
 
 ## Find creators in a niche
@@ -458,7 +458,7 @@ const accounts = await sc("prism/discover", { view: "accounts", keywords: "repli
 
 1. `GET /v1/prism/creators?keywords=<niche>&platforms=tiktok,instagram&min_followers=<min_followers>&depth=quick&limit=10&max_credits=30` - One call finds the creators who post about the niche, measures each from its recent posts and ranks them best first in data.items. A larger request answers 202 and keeps running: follow data.next.status_url. An answer that stops on time carries data.next.resume_url: POST it to finish the rest in the background. Add dry_run=true first to read the estimate and how the request was understood.
 
-**Cost** for ten ranked creators: 30 credits held up front (settles 0-30; the unused hold is refunded).
+**Cost** for ten ranked creators: at most 30 credits (max_credits caps the whole run; each search and lookup bills at its own price, so it settles 0-30; only the run's own work is held up front).
 
 **Measured** Measured on 28/10/2026: 24 credits in 4 calls for ITEMS=10 (the quote held 30). Neither program ran.
 
@@ -491,7 +491,7 @@ const creators = await sc("prism/creators", { keywords: "skincare routine", plat
 
 1. `GET /v1/prism/creators?keywords=<topic>&platforms=instagram&country=<country>&depth=quick&limit=10&max_credits=30` - Keeps a creator only when its declared country or its posts' region matches, measures each from its recent posts and returns the follower count with every row, best first in data.items. A larger request answers 202: follow data.next.status_url. An answer that stops on time carries data.next.resume_url: POST it to finish the rest in the background. Add min_followers for a follower floor and dry_run=true to read the estimate first.
 
-**Cost** for ten ranked Instagram creators: 30 credits held up front (settles 0-30; the unused hold is refunded).
+**Cost** for ten ranked Instagram creators: at most 30 credits (max_credits caps the whole run; each search and lookup bills at its own price, so it settles 0-30; only the run's own work is held up front).
 
 **Measured** Measured on 28/10/2026: 30 credits in 7 calls for ITEMS=10 (the quote held 30). Neither program ran.
 
@@ -1141,12 +1141,12 @@ const reviews = await sc("app_store/app-reviews", { sort_by: "most_recent", app_
 1. `GET /v1/yelp/search?query=<business>&location=<location>` - place.id is the business encid the reviews call takes.
 2. `GET /v1/yelp/business/reviews?id=<search.items[].place.id>`
 
-**Cost** for one search page, one business's first review page: 6 credits held up front (exact; the unused hold is refunded).
+**Cost** for one search page, one business's first review page: 2 credits held up front (exact; the unused hold is refunded).
 
 | Step | Endpoint | Runs | Hold each | Hold total |
 |------|----------|------|-----------|------------|
 | search | `yelp/search` | 1 | 1 | 1 |
-| reviews | `yelp/business/reviews` | 1 | 5 | 5 |
+| reviews | `yelp/business/reviews` | 1 | 1 | 1 |
 
 **Measured** Measured on 25/10/2026: 6 credits in 2 calls (the quote held 6). The TypeScript and Python programs both ran.
 
@@ -1154,7 +1154,7 @@ const reviews = await sc("app_store/app-reviews", { sort_by: "most_recent", app_
 
 **Pitfalls**
 
-- Yelp alias slugs (prince-street-pizza-new-york-2) are not accepted; use the encid from yelp/search.
+- yelp/business/reviews takes the encid, the alias (prince-street-pizza-new-york-2) or the Yelp URL; yelp/business/info takes the same three. Add sort=newest for the latest reviews first.
 - For hotels and attractions use the tripadvisor endpoints.
 
 **Code**

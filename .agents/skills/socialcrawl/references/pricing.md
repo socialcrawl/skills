@@ -1,12 +1,12 @@
 # SocialCrawl Pricing Reference
 
-Complete per-endpoint credit pricing for all 733 active endpoints across 75 platforms. Auto-derived from the live endpoint registry - the same registry the router uses to charge your balance.
+Complete per-endpoint credit pricing for all 802 active endpoints across 95 platforms. Auto-derived from the live endpoint registry - the same registry the router uses to charge your balance.
 
 ## How billing works
 
 - Every billable API call deducts credits from your balance **before** the upstream call, atomically. The response reports the net charge in `credits_used` and `X-Credits-Used`.
 - On billed responses, `credits_remaining` and `X-Credits-Remaining` are authoritative. Free cache hits return `credits_remaining: null` and omit the header because they do not establish an authoritative post-request balance. Idempotent replays return the current balance when their lookup succeeds; otherwise they return `credits_remaining: null` and omit the header. Routes that explicitly model an unavailable balance, including endpoint-parameter validation and best-effort metadata, omit both fields when their balance read fails.
-- **Cache hits are free** - a response served from cache costs 0 credits (`X-Cache: HIT`, `cached: true`). Each endpoint's TTL is in the tables below; a repeat call inside the TTL window is free.
+- **Cache hits are free** - a response served from cache costs 0 credits (`X-Cache: HIT`, `cached: true`). Each endpoint's TTL is in the tables below; a repeat call inside the TTL window is free. On `web/*` pages, `page.fetch.cache_state` is the page scraper's own cache, not SocialCrawl's: `cache_state: "hit"` with `cached: false` is a live, charged call.
 - **Automatic refunds** - credits are refunded on upstream errors (502), circuit-breaker rejections (503), internal errors (500), request-deadline timeouts (504), and empty-upstream results (404 `RESOURCE_NOT_FOUND` / an empty `items` list). You only pay for calls that return real data.
 - **Free before billing** - invalid params, bad handle/URL formats, and rate-limit rejections (429) are rejected at the boundary and never deduct.
 - **Idempotent replays are free** - resending with the same `Idempotency-Key` returns the stored response at 0 credits.
@@ -22,12 +22,12 @@ Most endpoints sit on a simple 1 / 5 / 10 ladder. A set of bundle and fan-out en
 
 | Tier | Cost per call | Endpoints | Typical endpoints |
 |------|--------------|-----------|-------------------|
-| standard | 1 credit | 267 | Profiles, posts, comments, search, reference data |
+| standard | 1 credit | 325 | Profiles, posts, comments, search, reference data |
 | advanced | 5 credits | 182 | Ad libraries, trending, audience analytics, app/product/business/place reviews, retail catalogs, LinkedIn social graph + jobs |
 | premium | 10 credits | 25 | Video transcripts, LinkedIn people/job search + reactions, app-listings search |
-| **custom (flat/metered)** | **varies (0-126,375)** | 259 | Prism composites, `{platform}/profile/full`, `search/everywhere` (20), `search/forums` (10), `search/news` (2-62 metered), `naver/brief` (10), the free `/v1/utility/*` endpoints (`utility/ai-detection` is a standard 1 credit), web scrape/crawl/agent/sessions; `prism/discover` and `prism/creators` are capped by the caller's `max_credits` |
+| **custom (flat/metered)** | **varies (0-126,375)** | 270 | Prism composites, `{platform}/profile/full`, `search/everywhere` (20), `search/forums` (10), `search/news` (2-62 metered), `naver/brief` (10), the free `/v1/utility/*` endpoints (`utility/ai-detection` is a standard 1 credit), web scrape/crawl/agent/sessions; `prism/discover` and `prism/creators` are capped by the caller's `max_credits` |
 
-Two groupings, both totalling 733: the table above counts endpoints **by pricing rule** (a custom override is its own row); counted instead **by base tier** (custom endpoints folded back into the ladder tier they sit on) the split is **418 standard · 269 advanced · 46 premium = 733**. Exact per-endpoint costs are in the tables below.
+Two groupings, both totalling 802: the table above counts endpoints **by pricing rule** (a custom override is its own row); counted instead **by base tier** (custom endpoints folded back into the ladder tier they sit on) the split is **486 standard · 270 advanced · 46 premium = 802**. Exact per-endpoint costs are in the tables below.
 
 ## Credit packs
 
@@ -93,42 +93,46 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 
 ## Metered and custom-priced endpoints
 
-193 endpoints do not charge a flat ladder price. Each one holds an upfront ceiling and refunds the unused portion, so the response `credits_used` is always the real charge. Quote the RANGE to a user before calling, then report the actual charge afterwards.
+204 endpoints do not charge a flat ladder price. Each one holds an upfront ceiling and refunds the unused portion, so the response `credits_used` is always the real charge. Quote the RANGE to a user before calling, then report the actual charge afterwards.
 
 | Endpoint | Range | How it is charged |
 |----------|-------|-------------------|
 | `GET /v1/airbnb/listing/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/aliexpress/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/amazon/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
-| `GET /v1/app_store/app-reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/app_store/app-reviews` | 5-9 credits | 5 credits a call at any `depth` up to 500: one call returns every batch of 50 it asks for. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/booking/hotel/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/douyin/comment/replies` | 5-250 credits | 5 credits per reply RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the replies actually delivered. Only a comment with a non-zero `engagement.replies` has a thread, so check that on the parent row before spending a call here With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/douyin/comment/replies` | 5-250 credits | 5 credits per reply RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 50 maximum holds 250 - and settles down to the replies actually delivered. Only a comment with a non-zero `engagement.replies` has a thread, so check that on the parent row before spending a call here. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/douyin/post/comments` | 2-100 credits | 1 credit per comment RETURNED, with a floor of 2. The call holds `limit x 1` up front - the default limit of 20 holds 20 and the 100 maximum holds 100 - and settles down to the comments actually delivered, so a video with four comments does not cost a twenty-comment request |
 | `GET /v1/douyin/profile/posts` | 5-125 credits | 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the videos actually delivered, so a creator with 4 recent videos costs 20 credits however high `limit` was set. `recent_days` and `exclude_pinned` narrow the result set BEFORE billing settles, so they lower the charge as well as the noise |
 | `GET /v1/douyin/search` | 5-125 credits | 5 credits per row RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the rows actually delivered, so a narrow query that returns 3 videos costs 15 credits however high `limit` was set |
-| `GET /v1/douyin/search/users` | 5-125 credits | 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/douyin/search/users` | 5-125 credits | 5 credits per creator RETURNED. The call holds `limit x 5` up front - the default limit of 10 holds 50 and the 25 maximum holds 125 - and settles down to the creators actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/economy/imports` | 20 credits | 20 credits per call, whatever the limit. A company with no US import records returns 404 and costs 0 credits, and a cached repeat within 24 hours costs 0 credits. |
 | `GET /v1/facebook/adlibrary/company/ads` | 5-35 credits | 5 credits for the page. include=audience holds 1 credit per ad (30 a page) and keeps only the rows filled from a fresh lookup, so a page is at most 35 credits; rows served from cache are free, ads that never ran in the EU and other unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/events` | 1-13 credits | 1 credit for the page. include=details holds 1 credit per event (at most 12 a page) and keeps only the rows filled from a fresh lookup, so a page is at most 13 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/facebook/group/events` | 1-9 credits | 1 credit for the page. include=details holds 1 credit per event (at most 8 a page) and keeps only the rows filled from a fresh lookup, so a page is at most 9 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/post` | 1-2 credits | 1 credit for the post. include=group holds 1 more and keeps it only when the group's name comes back, so a call with include=group is at most 2 credits; it is refunded when the post is not in a group, when the lookup fails, and when the group was looked up recently and is served from cache. |
 | `GET /v1/facebook/post/comment/replies` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/post/comments` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/facebook/profile` | 1 credit | 1 credit per call. A call that fails, or a handle that does not exist, costs nothing. |
+| `GET /v1/facebook/profile` | 1 credit | 1 credit per call. `include=details` costs no extra credit, whether or not the verified flag and the following count come back. A call that fails, or a handle that does not exist, costs nothing. |
 | `GET /v1/facebook/profile/events` | 1-9 credits | 1 credit for the page. include=details holds 1 credit per event (8 a page) and keeps only the rows filled from a fresh lookup, so a page is at most 9 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/profile/photos` | 1-9 credits | 1 credit for the page. include=details holds 1 credit per photo (8 a page) and keeps only the rows filled from a fresh lookup, so a page is at most 9 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/profile/posts` | 1-4 credits | 1 credit for the page. include=engagement holds 1 credit per row (3 rows a page) and keeps only the rows filled from a fresh lookup, so a page is at most 4 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/profile/reels/full` | 5-25 credits | 5 credits per page of 10 reels - 1 for the list and 4 for the per-reel enrichment - which is roughly half what running the list-then-post-stats chain yourself costs. With no `limit` that is one page and a flat 5 credits. With `limit` set the endpoint walks `ceil(limit / 10)` pages, up to 5 for the 50 maximum (25 credits), holds that many up front and refunds every page it did not need. A page whose enrichment yields zero coverage refunds the 4-credit premium automatically, leaving the 1-credit list price |
 | `GET /v1/facebook/search/groups` | 1-15 credits | 1 credit for the page. include=details holds 1 credit per group (at most 10 a page) and keeps only the groups filled from a fresh lookup, so a page is at most 11 credits; groups served from cache are free, unfilled groups are refunded, and a repeat of the same call within the cache window costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/facebook/search/hashtag` | 0-9 credits | Metered, 0-9 credits: each call reads one page of /v1/facebook/search/videos (1 credit; with `since` or `until`, up to 8, since each video is looked up for its publish date at 1 credit, and a video still undated is left out) and /v1/facebook/search/posts (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the hashtag; data.legs shows each page's charge and data.excluded what was left out. |
-| `GET /v1/facebook/search/mentions` | 0-1 credits | Metered, 0-1 credits: each call reads one page of /v1/facebook/search/posts (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the mention; data.legs shows each page's charge and data.excluded what was left out. |
+| `GET /v1/facebook/search/hashtag` | 0-9 credits | Metered, 0-9 credits: each call reads one page of /v1/facebook/search/videos (1 credit; with `since` or `until`, up to 8, since each video is looked up for its publish date at 1 credit, and a video still undated is left out) and /v1/facebook/search/posts (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the hashtag, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs. |
+| `GET /v1/facebook/search/mentions` | 0-1 credits | Metered, 0-1 credits: each call reads one page of /v1/facebook/search/posts (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the mention, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs. |
 | `GET /v1/facebook/search/pages` | 1-11 credits | 1 credit for the page. include=details holds 1 credit per page (at most 10) and keeps only the rows filled from a fresh lookup, so a page is at most 11 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/facebook/search/posts` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/facebook/search/videos` | 1-8 credits | 1 credit for the page. include=details holds 1 credit per video (7 a page) and keeps only the rows filled from a fresh lookup, so a page is at most 8 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/g2/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/g2/reviews` | 5-54 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/goodreads/book/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/google_play/app-reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/google_play/app-reviews` | 5-9 credits | 5 credits a call at any `depth` up to 600: one call returns every batch of 150 it asks for, so 600 reviews cost 5, not 20. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/google_shopping/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/google/business/contributor-reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/google/business/extended-reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/google/business/reviews` | 5-54 credits | 5 credits per started 100 reviews returned (5 for up to 100, 50 for 1,000). The hold is set by `depth` and refunded down to the reviews that came back, so a place with 37 reviews costs 5 at any depth. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `POST /v1/google/business/reviews/history` | 5-500 credits | 5 credits per started 100 reviews collected, the same rate as GET /v1/google/business/reviews. Submitting holds the price of `depth` and refunds down to the reviews collected when the job settles; a job that collects none is refunded in full. |
 | `GET /v1/hackernews/search` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/home_depot/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/instagram/comment` | 5-15 credits | 5 credits for a standard lookup, 15 with `deep_scan=true`, which keeps paging the thread when the comment is not in the first pages. Reach for deep_scan only after a standard lookup comes back not-found |
@@ -146,8 +150,8 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/instagram/profile/posts/full` | 5-25 credits | 5 credits per upstream page of about 12 posts. With no `limit` that is one page and a flat 5 credits. With `limit` set the composite walks `ceil(limit / 12)` pages - 3 for limit=30, 5 for the 50 maximum, so 25 credits at the top - holds that many up front and refunds every page it did not need. One partial refund sits inside the per-page price: a shares leg that fails outright refunds 4 of the 5 credits for that page, leaving the 1-credit list price. A shares leg that succeeds with low coverage is still the full 5, because the second source was queried either way. A `user_id` call is priced exactly like a `handle` call |
 | `GET /v1/instagram/profile/reels` | 1-18 credits | 1 credit per page. include=stats adds 1 credit a page. include=audio holds 1 more per row, up to 12, and keeps it only for each video whose sound came back, refunding the rest; with include=stats every reel already carries its sound, so the audio join costs nothing more. A page costs at most 14 credits. exclude_pinned and recent_days do not change the price of a page. sort=most_viewed costs the same 1 credit a page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/instagram/profile/reels/full` | 5-25 credits | 5 credits per upstream page of about 12 reels. With no `limit` that is one page and a flat 5 credits. With `limit` set the composite walks `ceil(limit / 12)` pages - 3 for limit=30, 5 for the 50 maximum, so 25 credits at the top - holds that many up front and refunds every page it did not need. One partial refund sits inside the per-page price: a shares leg that fails outright refunds 4 of the 5 credits for that page, leaving the 1-credit list price. A shares leg that succeeds with low coverage is still the full 5, because the second source was queried either way. A `user_id` call is priced exactly like a `handle` call |
-| `GET /v1/instagram/search/hashtag` | 1-31 credits | 1 credit per page, on every `type`. `max_items` and `max_pages` walk more pages in one call at 1 credit each, and `max_credits` caps the total. A page Instagram returns empty is not charged. `include=country` holds 30 more credits a page and keeps 1 per creator whose declared country came back, refunding a creator who publishes none or cannot be found, so a page with it costs 1 to 31. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
-| `GET /v1/instagram/search/mentions` | 0-6 credits | Metered, 0-6 credits: each call reads one page of /v1/instagram/tagged (5 credits) and /v1/instagram/search/reels (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the mention; data.legs shows each page's charge and data.excluded what was left out. |
+| `GET /v1/instagram/search/hashtag` | 1-61 credits | 1 credit per page, on every `type`. `max_items` and `max_pages` walk more pages in one call at 1 credit each, and `max_credits` caps the total. A page Instagram returns empty is not charged. `include=country` holds 30 more credits a page and keeps 1 per creator whose declared country came back, refunding a creator who publishes none or cannot be found, so a page with it costs 1 to 31. `include=engagement` holds 30 more credits a page and keeps 1 per reel whose view count was filled from a fresh lookup, refunding photos, carousels, reels served from cache, reels that came back without a view count and reels that could not be filled, so a page with it also costs 1 to 31. With both tokens the two holds add up, and a page costs 1 to 61. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/instagram/search/mentions` | 0-6 credits | Metered, 0-6 credits: each call reads one page of /v1/instagram/tagged (5 credits) and /v1/instagram/search/reels (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the mention, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs. |
 | `GET /v1/instagram/search/popular` | 1-13 credits | 1 credit for the page. include=engagement holds 1 credit per row, at most 12 (or `limit`), and keeps only the rows filled from a fresh lookup, so a full page is at most 13 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. Search pages are cached for 2 minutes and the per-post lookups for 10 minutes. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/instagram/search/profiles` | 1-25 credits | 1 credit for the search page. With `include=about`, 1 plus 2 credits per row filled, held at the top 8 (17) unless you send `limit`, refunded down to the rows that actually received an About-panel leaf. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/instagram/search/reels` | 1-69 credits | 1 credit per page on a plain call or with `region`; `include=creator` or `country` makes it up to 61 (1 plus 2 per creator looked up). `region` costs nothing extra. `include=country` makes it up to 31: 1 extra credit per creator whose declared country came back, refunded for a creator who publishes none or cannot be found. `include=creator` adds 2 credits per creator looked up: it holds 60 extra credits for a full page of 30 and refunds every creator it did not look up or could not find. Two reels by one creator are one lookup, a creator looked up in the last 15 minutes is free, and on a `max_pages` walk each creator is looked up and billed once. `country` runs the same creator lookup, because it needs each creator's declared country, at the same price, charged for every creator looked up, kept or not; `data.hydration.implied_by` says so on the response. `include=creator,country` is priced as `include=creator` alone, because the creator card already carries the country. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
@@ -155,17 +159,18 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/klarna/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/klarna/reviews/pro` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/kohls/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/linkedin/company` | 5-8 credits | 5 credits for the company page. include=about holds 3 more and keeps them only when it fills the company type or tagline the plain call lacked, refunding them otherwise, so a call with include=about is at most 8 credits; when the plain answer already carries the company type, no lookup runs and it settles at 5. Company lookups are cached. |
+| `GET /v1/linkedin/company` | 5-8 credits | 5 credits for the company page. include=related is free. include=about holds 3 more and keeps them only when it fills the company type or tagline the plain call lacked, refunding them otherwise, so a call with include=about is at most 8 credits; when the plain answer already carries the company type, no lookup runs and it settles at 5. Company lookups are cached. |
 | `GET /v1/linkedin/company/bulk` | 5-125 credits | 5 credits for each company returned, the same rate as /v1/linkedin/company. The call holds 5 credits for each distinct company you send and refunds the ones that are not found; a call where every company has no page is a 404 at no charge, and one where none could be fetched just now is a 503 at no charge. |
 | `GET /v1/linkedin/company/people` | 10-50 credits | 10 credits for the list. include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup: at most 50 for the 10-row page, or 10 + 4 x limit when you pass `limit`. Rows served from cache are free, unfilled rows are refunded, and a repeat of a fully joined page within the list's cache window costs 0. The list is cached for 15 minutes and each profile lookup for 15 minutes. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/linkedin/post/reactions` | 10-50 credits | 10 credits for the list. include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup: at most 50 for the 10-row page, or 10 + 4 x limit when you pass `limit`. Rows served from cache are free, unfilled rows are refunded, and a repeat of a fully joined page within the list's cache window costs 0. The list is cached for 5 minutes and each profile lookup for 15 minutes. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/linkedin/profile/all` | 5-50 credits | 5 credits for one profile with `url`. With `urls`, 5 credits per profile returned, from 5 for one profile up to 50 for the 10-profile maximum. Duplicate URLs are collapsed before the call and profiles that do not resolve are not charged, so a list with repeats or dead handles costs less than its length. A list where nothing resolves is a free 404. |
 | `GET /v1/linkedin/profile/posts` | 5-200 credits | 5 credits for a call with no `limit`, or `limit` at 50 or below. Above 50 the call is metered at 2 credits per post RETURNED: it holds `limit x 2` up front (the 100 maximum holds 200) and refunds down to the posts that actually came back, never below 5, so a member with 60 posts settles at 120 credits however high `limit` was set |
-| `GET /v1/linkedin/profile/posts/archive` | 5-500 credits | 5 credits per post RETURNED. The call holds `limit x 5` up front - the default limit of 20 holds 100 and the 100 maximum holds 500 - and refunds down to the posts that actually came back, so a member with 12 posts settles at 60 credits however high `limit` was set. This is the most expensive read on the platform per row: check whether /v1/linkedin/profile/posts (5 credits up to 50 posts, 2 a post above that) already covers the window you need before walking the archive With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/linkedin/profile/posts/archive` | 5-500 credits | 5 credits per post RETURNED. The call holds `limit x 5` up front - the default limit of 20 holds 100 and the 100 maximum holds 500 - and refunds down to the posts that actually came back, so a member with 12 posts settles at 60 credits however high `limit` was set. This is the most expensive read on the platform per row: check whether /v1/linkedin/profile/posts (5 credits up to 50 posts, 2 a post above that) already covers the window you need before walking the archive. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/linkedin/search/people` | 10-50 credits | 10 credits for the list. include=profile holds 4 credits per row and keeps only the rows filled from a fresh lookup: at most 50 for the 10-row page, or 10 + 4 x limit when you pass `limit`. Rows served from cache are free, unfilled rows are refunded, and a repeat of a fully joined page within the list's cache window costs 0. The list is cached for 2 minutes and each profile lookup for 15 minutes. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/linkedin/search/posts` | 1-56 credits | 5 credits per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 8 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 8 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/naver/blog/search` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/naver/cafearticle/search` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/naver/kin/search` | 1-5 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/naver/news/search` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/naver/place/rank` | 4-42 credits | 4 credits per keyword, plus 2 credits when lat and lng are left out (the point is read from the place). The whole amount is refunded when the check fails. |
 | `GET /v1/naver/place/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
@@ -173,7 +178,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/pinterest/search` | 1-34 credits | 1 credit for the page. include=engagement holds 1 credit per row, at most 25 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 26 credits; rows served from cache are free, unfilled rows are refunded, and a repeat of the same call within the cache window costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/prism/adverse-screen` | 25-75 credits | 25 credits for one profile, plus 10 for each further profile (4 profiles cost 55). Profiles that could not be screened are refunded their share, and a call that screened nothing keeps 5 |
 | `GET /v1/prism/ai-visibility` | 2-1,605 credits | 2 credits per probe, where a probe is one prompt run once on one engine, so the charge is `2 x prompts x runs x engines`. On the defaults (both engines, 8 runs) a 5-prompt audit is 160 credits. `include=web_baseline` adds a flat 5. The 1,605 ceiling is the 20-prompt, 20-run, two-engine worst case with the baseline on - `preset=quick` holds far less, and the hold settles down to the probes that actually completed |
-| `GET /v1/prism/app-reviews` | 10-15 credits | 10 credits for one store, 15 for both. A bare `query` resolves both stores and costs 15; naming a single store in `stores`, or passing only one of `google_play_id` / `app_store_id`, costs 10 |
+| `GET /v1/prism/app-reviews` | 10-15 credits | 10 credits for one store, 15 for both. A bare `query` resolves both stores and costs 15; naming a single store in `stores`, or passing only one of `google_play_id` / `app_store_id`, costs 10. A store that returns no reviews gives back its 5, and a failed topic reading gives back 5 |
 | `GET /v1/prism/audience-language` | 2-26 credits | Floor 2 credits (one YouTube post: the channel list plus one comment page). Each further comment page is 1 credit, or 5 on Instagram, up to 5 posts. TikTok also opens the audience sample (5) and one follower page (1). Unopened pages are refunded. Five Instagram posts is 26 credits. |
 | `GET /v1/prism/brief-check` | 15 credits | 15 credits per post (provisional). Caption and transcript are pulled; each talking point is scored and quoted. A missing transcript is reported, never treated as a pass. |
 | `GET /v1/prism/comment-leads` | 0-243 credits | Pay for what is opened: 1 credit a search page, 1 credit a comment page fetched and 1 credit for every started 25 comments labelled. The default request holds 37 and refunds what did not run; judging which posts to open is free |
@@ -181,11 +186,11 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/prism/comments` | 2-200 credits | 1 credit per comment page scanned (5 on LinkedIn) plus 1 per replies call that returned replies. An Instagram post URL is a flat 5 credits whatever `max` you pass, plus 1 per replies call only when you send `replies=true` |
 | `GET /v1/prism/creator-card` | 5-8 credits | 5 credits covering any 4 platforms, plus 1 credit per platform beyond 4. The default selection is 4 platforms, so the 7-platform maximum is 8 credits |
 | `GET /v1/prism/creator-vet` | 50-75 credits | 50 credits for the standard vet. `include=cross_platform` raises it to 75 for the cross-platform identity check on top |
-| `GET /v1/prism/creators` | pay per search and lookup, capped by max_credits (default 200) | Each platform search is billed at that platform's own search price, only when it returns rows; a search that fails, finds nothing or is served from cache costs 0. A creator's profile lookup costs 1 credit (LinkedIn 5), a posts walk the post page's price, and judging 1 credit per started 5 creators per pass. Compiling a prompt, the metrics, the score, the filters and paging are free. max_credits (default 200 on this call) caps the whole run, and a request expected to cost more is refused free before anything is spent. |
-| `POST /v1/prism/creators` | pay per search and lookup, capped by the required max_credits | Nothing is held when the run starts. Each platform search is billed at that platform's own search price when it runs, only when it returns rows; a profile lookup costs 1 credit (LinkedIn 5), a posts walk the post page's price, and judging 1 credit per started 5 creators per pass. max_credits is required and caps the whole run: the run pauses at it and never overspends. Reading the run is free. |
+| `GET /v1/prism/creators` | each search and lookup at its own price; a run spends up to max_credits, 500 if you send none | Each platform search is billed at that platform's own search price, only when it returns rows; a search that fails, finds nothing or is served from cache costs 0. A creator's profile lookup costs 1 credit (LinkedIn 5), a posts walk the post page's price, and judging 1 credit per started 5 creators per pass. Compiling a prompt, the metrics, the score, the filters and paging are free. max_credits is the most the whole run may spend: 500 when you send none, or the lower or higher limit you send. The run is billed only for what it spends, a request expected to cost more is refused free before anything is spent, and dry_run=true shows the expected cost free. |
+| `POST /v1/prism/creators` | each search and lookup at its own price; a run spends up to the max_credits you send | Nothing is held when the run starts. Each platform search is billed at that platform's own search price when it runs, only when it returns rows; a profile lookup costs 1 credit (LinkedIn 5), a posts walk the post page's price, and judging 1 credit per started 5 creators per pass. max_credits is required and caps the whole run: the run pauses at it and never overspends. Reading the run is free. |
 | `GET /v1/prism/crisis-radar` | 15-45 credits | 15 credits for the baseline breach check. `confirm=true` escalates to the full 45-credit investigation. Run the baseline first and escalate only when it reports a breach: that is the whole point of the two-step shape |
-| `GET /v1/prism/discover` | pay per search, capped by max_credits (default 50) | Each platform search is billed at that platform's own search price, only when it returns rows; a search that fails, finds nothing or is served from cache costs 0. Judging against your keywords is free; judging against a different context costs 1 credit per started 15 rows, and each label costs 1 credit per started 25 rows. max_credits (default 50 on this call) caps the whole run, judging, joins and page bodies included, and a request expected to cost more is refused free before anything is spent. A search still running when the call answers bills when it finishes, after the answer: credits_used leaves it out and data.run.credits.pending shows the most it can add. |
-| `POST /v1/prism/discover` | pay per search, capped by the required max_credits | Nothing is held when the run starts. Each platform search is billed at that platform's own search price when it runs, only when it returns rows, and judging against a context costs 1 credit per started 15 rows and each label costs 1 credit per started 25 rows. max_credits is required and caps the whole run: the run pauses at it and never overspends. Reading the run is free. |
+| `GET /v1/prism/discover` | each platform search at its own price; a run spends up to max_credits, 500 if you send none | Each platform search is billed at that platform's own search price, only when it returns rows; a search that fails, finds nothing or is served from cache costs 0. Judging against your keywords is free; judging against a different context costs 1 credit per started 15 rows, and each label costs 1 credit per started 25 rows. max_credits is the most the whole run may spend, judging, joins and page bodies included: 500 when you send none, or the lower or higher limit you send. The run is billed only for what it spends, a request expected to cost more is refused free before anything is spent, and dry_run=true shows the expected cost free. A search still running when the call answers bills when it finishes, after the answer: credits_used leaves it out and data.run.credits.pending shows the most it can add. |
+| `POST /v1/prism/discover` | each platform search at its own price; a run spends up to the max_credits you send | Nothing is held when the run starts. Each platform search is billed at that platform's own search price when it runs, only when it returns rows, and judging against a context costs 1 credit per started 15 rows and each label costs 1 credit per started 25 rows. max_credits is required and caps the whole run: the run pauses at it and never overspends. Reading the run is free. |
 | `GET /v1/prism/earliness` | 25 credits | 25 credits (provisional). One date-sorted page per platform, Google Trends over five years, and one page of the TikTok and Meta ad libraries. An endpoint that does not answer is listed and is not a first-seen date. |
 | `GET /v1/prism/find-accounts` | 2-29 credits | The searches at their own prices (1 credit each for Instagram, TikTok and X, 10 for LinkedIn) plus 1 credit per platform judged: 6 credits for a person by default, 17 for a company (LinkedIn included). Threads or YouTube, when named, is 1 credit for its search plus 1 for its judging. With profile_check=true each profile lookup is added at its own price (1 credit on Instagram, TikTok and Threads, 5 for a company page on LinkedIn). For a company with `website`, a LinkedIn search that fails is answered by `linkedin/company/by-domain` at its 5 credits instead of the search's 10, and nothing when it fails too. A search that fails, a platform that could not be judged and a lookup that was not made or failed are refunded |
 | `GET /v1/prism/format-lift` | 4 credits | 4 credits (provisional). One page of the creator's recent posts is read, and each post is compared with that creator's own median. A bucket with fewer than eight posts lists the count and leaves the median empty. |
@@ -199,6 +204,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `POST /v1/prism/post-stats` | 1-500 credits | 1 credit per successful URL on most platforms, 2 on Instagram and 5 on LinkedIn, charged at each URL's own platform rate. Up to 100 URLs per call: the call holds the summed worst case up front (a 100-URL Instagram batch holds 200) and refunds every dead, errored and unsupported URL, so you pay for exactly the rows that returned counts |
 | `GET /v1/prism/profile/comments` | 2-2,428 credits | each page actually read, at that endpoint's own price: the post list page (1 credit) plus the comment pages of each post that returned a new comment (5 credits a page on Instagram, 1 on Facebook, YouTube, TikTok and X). A post whose comments are all older than `since` costs nothing, so a call that finds no new comment costs only the post list page. With `replies=true`, plus 1 credit per replies call that returned replies. The call holds the most that `posts` and `per_post` can take (251 credits for Instagram's defaults, plus up to 100 replies pages, 300 on Instagram, with `replies=true`) and refunds the rest |
 | `POST /v1/prism/profiles` | 1-126,375 credits | 1 credit per successful row on most platforms and 5 on LinkedIn, charged at each handle's own platform tier. Up to 50 items per call: the call holds the summed worst case up front and refunds every not_found, unsupported, errored and deferred row. With include: "posts" (up to 25 items) a row also costs its post list page, 1 credit (5 on LinkedIn), charged only when that page came back with posts. With posts_limit the call walks the list and charges each page that came back with posts; it holds the most pages the limit can take (10 at most per handle) and refunds the unused ones, and a dry run shows that hold. With include: "comments" each selected post's comments cost what that platform's comment endpoint charges per page (1 credit on most platforms, 5 on Instagram, LinkedIn and Reddit), charged only for pages that came back with comments; the call holds comments_top_posts times the pages comments_per_post can take and refunds the rest |
+| `POST /v1/prism/reviews/bulk` | 25 credits | 1 credit per started 4 pages over the whole job. A page is up to 49 reviews on Yelp, 20 on Tripadvisor, 25 on the App Store and 199 on Google Play. Credits are reserved 25 at a time (100 pages) before pages are read, so starting holds 25; the job settles to the pages it read and refunds the rest. A typical business costs about 0.75 credits. A business that cannot be read costs nothing. |
 | `GET /v1/prism/share-of-voice` | 20-200 credits | 40 credits per brand with the social leg, which is the default, or 20 per brand for the web-only read. Up to 5 brands per call, so the 200-credit ceiling is 5 brands with social and dropping `social` from `include` halves it. Price the call as `brands x per-brand` before you send it - this is the most expensive composite on the API |
 | `GET /v1/prism/trend-board` | 30 credits | 30 credits flat (provisional). One call reads TikTok's local feed, TikTok's hashtag board, Google Trending Now, up to 5 author pages and up to 3 sounds. A source that does not answer is listed under unavailable and its section is empty. Only a call where the feed, the hashtag board and Google Trending Now all fail is refunded. |
 | `GET /v1/prism/video-intel` | 5-15 credits | 5 credits for the video detail, stats and comments. `include=transcript` adds 10, which is exactly what the standalone transcript endpoint charges, so the bundle never costs more than running the two calls yourself |
@@ -206,9 +212,11 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/reddit/post/comments` | 5-9 credits | 5 credits per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/reddit/profile/comments` | 2-200 credits | 2 credits per comment returned. A limit of 25 holds 50 credits and settles down to the number of comments that actually came back; an account with no comments costs nothing. |
 | `GET /v1/reddit/search` | 1-48 credits | 1 credit for the search page. include_body=true reserves up to 25 extra credits and refunds every one it does not spend. Rows now arrive with their bodies, and a link post has no body to fetch, so a row is only charged for when a body actually comes back: on most pages nothing is spent and the page costs 1 credit. With limit above 25: 1 credit per 25 posts returned, never less than 1. The call holds limit / 25 credits (rounded up, at most 40) and refunds the rest once the posts are counted; posts left out by since or until are not counted. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/reddit/search/comments` | 1-5 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/reddit/subreddit` | 1-5 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/reddit/subreddit/search` | 1-26 credits | 1 credit for the search page. With include_body=true, 1 extra credit per post that comes back with a body, up to 25 per page, unused credits refunded. Link posts have no body and are not charged for. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/reddit/subreddits/search` | 1-26 credits | 1 credit for the page. include=details holds 1 credit per row, at most 25 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 26 credits; rows served from cache are free, unfilled rows are refunded, and a repeat within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/redfin/property` | 1-2 credits | 1 credit for the home. include=details holds 1 credit more and keeps it only when the details land; a lookup that fills nothing is refunded. |
 | `GET /v1/search/creators` | 10-24 credits | 10 credits flat, with a coverage-based partial refund. A search no source has a creator for answers 200 with an empty `creators` and `empty_reason: no_matches`, at 0 credits. Adding brief= adds 2 credits, refunded when the judging step could not answer for every judged creator. With country=, the searches and lookups it runs are billed on top, each at its own endpoint's price: 1 credit for the TikTok search page, 1 for the Google page and 1 per Instagram profile looked up (at most 10, and free for a profile looked up recently), so at most 12 more. data.legs lists each one with its credits, and the 10 are refunded when no creator is found. A cached page is free. |
 | `POST /v1/search/everywhere` | 20 credits | 20 credits per search, each keyword of a group being its own search. Nothing is held when the run starts; each search reserves and bills its own 20 when it runs, and an answer with no row anywhere is free. max_credits is required, except with dry_run or a schedule, whose max_credits_per_run takes its place, and caps the whole run with its quoted extras. A watch fire costs what the same request costs, with no surcharge and no refund for finding nothing new. |
 | `GET /v1/search/multi` | 0-30 credits | Metered, usually 1-14 credits: each platform is billed at its own endpoint's price, per platform, exactly as a direct call to that endpoint is billed (TikTok, Instagram, YouTube, Reddit, Threads, X and Facebook 1 credit a page, Telegram 2, LinkedIn 5). A platform whose page found nothing or failed costs nothing, and a platform page served from cache is free. A Threads phrase that Threads does not recognise is expanded into narrower searches, as on /v1/threads/search, and costs 1 credit per search that returned posts. With expand=context every platform runs your phrase plus expand_queries planned searches (3 by default, 3 at most), each billed as its own page, so the range above is multiplied by 1 plus expand_queries and the estimate quotes it that way. The searches inside a platform judge their rows for free; relevant_to= or label= is billed once on the request, for the rows of the merged page. data.sources.<platform>.credits shows each platform's charge and credits_used the total. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 8 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 8 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
@@ -217,45 +225,45 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/target/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/telegram/search` | 2-16 credits | 2 credits for the page. include=details holds 1 credit per channel (at most 10 a page, fewer with limit) and keeps only the channels filled from a fresh lookup, so a page is at most 12 credits; channels served from cache are free, unfilled channels are refunded, and a search that finds no public channel costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/threads/post/comments` | 1-10 credits | 1 credit for the bundled window of about 20 replies, which is what a call with no `limit`, or `limit` at 25 or below, costs. Above 25 the deeper endpoint is metered at 1 credit per 5 replies RETURNED: the call holds `ceil(limit / 5)` up front (the 50 maximum holds 10) and refunds down to what came back, so a post with 12 replies settles at 3 credits however high `limit` was set |
-| `GET /v1/threads/search` | 1-34 credits | 1 credit per result window. A call with no `limit` is one window and costs exactly 1. With `limit` set the walker consumes `ceil(limit / 15)` windows - 4 for limit=50, 7 for the 100 maximum - holds that many up front and refunds every window it did not need. Query relaxation can add up to 4 more windows on a page-1 request, billed only for the relaxed searches that returned posts and refunded for the ones that did not; send `expand=false` to hold none of them. When your balance, or the API key's limit, covers the call without them but not with them, it runs as `expand=false` instead of answering 402, and `data._warnings` says so. A request carrying a cursor never relaxes, so a pagination loop's last hop costs nothing extra. With `include=engagement` the call also holds 20 credits and keeps 1 for each of the first 20 posts whose view count or display name it filled from a fresh lookup; posts served from the post lookup's cache (10 minutes) are free, a post Threads has published no view count for is free (it still gets its pinned flag), and the rest is refunded Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/threads/search` | 1-178 credits | 1 credit per result window. A call with no `limit` is one window and costs exactly 1. With `limit` set the walker consumes `ceil(limit / 15)` windows - 4 for limit=50, 7 for the 100 maximum - holds that many up front and refunds every window it did not need. Query relaxation can add up to 4 more windows on a page-1 request, billed only for the relaxed searches that returned posts and refunded for the ones that did not; send `expand=false` to hold none of them. When your balance, or the API key's limit, covers the call without them but not with them, it runs as `expand=false` instead of answering 402, and `data._warnings` says so. A request carrying a cursor never relaxes, so a pagination loop's last hop costs nothing extra. With `include=engagement` the call also holds 20 credits and keeps 1 for each of the first 20 posts whose view count or display name it filled from a fresh lookup; posts served from the post lookup's cache (10 minutes) are free, a post Threads has published no view count for is free (it still gets its pinned flag), and the rest is refunded. With `coverage=full` the call is priced per post instead: it holds 3 credits for each post asked for (60 for the default 20, 150 for the 50 maximum) and keeps 3 for each post returned, with no window or relaxation charge; a page with no matching post is free. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/threads/search/users` | 1-13 credits | 1 credit for the identity window, which is what a call with no `include` costs. With `include=profile` the call holds 1 credit per row of the page (12, or `limit`) and keeps 1 for each account it filled from a fresh lookup; accounts served from the profile lookup's cache (15 minutes) are free and the rest is refunded, so a call costs 13 at most |
 | `GET /v1/threads/user/posts` | 1-165 credits | 1 credit for the bundled window of about 15 posts, which is what a call with no `limit`, or `limit` at 15 or below, costs. Above 15 the deeper endpoint is metered at 3 credits per post RETURNED: the call holds `limit x 3` up front (the 50 maximum holds 150) and refunds down to what came back. With `include=engagement` the call also holds 1 credit per post of the window (15) and keeps 1 for each post whose view count or display name it filled from a fresh lookup; posts served from the post lookup's cache (10 minutes) are free and the rest is refunded, so the default window costs 16 at most. Beside a `limit` above 15 the deeper rows already carry both fields, so the 15 are refunded in full |
 | `GET /v1/tiktok/adlibrary/search` | 5-17 credits | 5 credits for the page. include=ad holds 1 credit per ad, at most 12 (or `limit`), and keeps only the ads filled from a fresh lookup, so a page is at most 17 credits; ads served from cache are free, unfilled ads are refunded, and a repeat within the cache window costs 0. The page is cached for 2 minutes and the per-ad lookups for 30 minutes. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/tiktok/ads/top` | 10-100 credits | 1 credit per ad returned, minimum 10 credits. A limit of 20 holds 20 credits and settles down to the number of ads that actually came back; a filter combination with no board costs nothing. With include=retention, 2 credits per ad that carries a retention curve (minimum 20), and 1 per ad TikTok serves no curve for. |
-| `GET /v1/tiktok/collection/videos` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/ads/top` | 10-400 credits | 1 credit per ad returned, minimum 10 credits. A limit of 20 holds 20 credits and settles down to the number of ads that actually came back; a filter combination with no board costs nothing. With include=retention, 2 credits per ad that carries a retention curve (minimum 20), and 1 per ad TikTok serves no curve for. With include=total, 1 credit per ad counted on the board, minimum 10 and at most 400: the call holds 400 and settles to the count, and a board with no ads costs nothing. |
+| `GET /v1/tiktok/collection/videos` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/tiktok/comment` | 2-6 credits | 2 credits for a standard lookup, 6 with `deep_scan=true`, which keeps paging the thread when the comment is not in the first pages. Reach for deep_scan only after a standard lookup comes back not-found |
-| `GET /v1/tiktok/effect/videos` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/effect/videos` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/tiktok/hashtags/popular` | 6-96 credits | 2 credits per hashtag returned, minimum 6. One board is 6 credits. industry=all holds 96 credits (sixteen boards of three) and settles down to the hashtags actually returned, typically 88 to 92. An empty board costs nothing. |
-| `GET /v1/tiktok/location/posts` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/tiktok/playlist/videos` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/tiktok/post` | 1-3 credits | 1 credit per call; include=exact_counts: +2, kept only when the exact counts come back. |
+| `GET /v1/tiktok/location/posts` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/playlist/videos` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/post` | 1-2 credits | 1 credit per call; include=exact_counts: +1, kept only when the exact counts come back. |
 | `GET /v1/tiktok/post/comments` | 1-7 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/tiktok/profile` | 1-3 credits | 1 credit per call. `include=account` holds 2 more and keeps them only when the account's creation date or posting region comes back, so a call with it is at most 3 credits; a lookup that fails and an account looked up recently (served from cache) are refunded. A call that fails, or a handle that does not exist, costs nothing. |
-| `GET /v1/tiktok/profile/videos` | 1-25 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/tiktok/search` | 1-62 credits | 1 credit for the page, including any limit of 30 or less. A limit above 30 holds ceil(N/4)+2 credits for the N rows the source fills (60 to 120, rounded up to a multiple of 30), 17 at 60 and 32 at 120, and unfilled slots are refunded. Repeated videos are removed after billing. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 5 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 5 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
-| `GET /v1/tiktok/search/hashtag` | 1-25 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
-| `GET /v1/tiktok/search/mentions` | 0-2 credits | Metered, 0-2 credits: each call reads one page of /v1/tiktok/search (1 credit) and /v1/tiktok/search (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the mention; data.legs shows each page's charge and data.excluded what was left out. |
-| `GET /v1/tiktok/search/top` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/tiktok/profile` | 1-2 credits | 1 credit per call. `include=account` holds 1 more and keeps it only when the account's creation date or posting region comes back, so a call with it is at most 2 credits; a lookup that fails and an account looked up recently (served from cache) are refunded. A call that fails, or a handle that does not exist, costs nothing. |
+| `GET /v1/tiktok/profile/videos` | 1-15 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/search` | 1-52 credits | 1 credit for the page, including any limit of 30 or less. A limit above 30 holds ceil(N/4)+2 credits for the N rows the source fills (60 to 120, rounded up to a multiple of 30), 17 at 60 and 32 at 120, and unfilled slots are refunded. Repeated videos are removed after billing. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 5 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 5 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/tiktok/search/hashtag` | 1-15 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/tiktok/search/mentions` | 0-2 credits | Metered, 0-2 credits: each call reads one page of /v1/tiktok/search (1 credit) and /v1/tiktok/search (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the mention, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs. |
+| `GET /v1/tiktok/search/top` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/tiktok/search/users` | 1-100 credits | 1 credit for the page. include=profile holds 1 credit per row, at most 30 (or `limit`), and keeps only the rows filled from a fresh lookup, so a page is at most 31 credits; rows served from cache are free, unfilled rows are refunded, and a repeat within the cache window costs 0. country= holds 5 credits per requested in-country row (8 by default, at most 20) and keeps only the rows returned, so a miss is 0. The page is cached for 2 minutes and the per-account lookups for 15 minutes. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/tiktok/similar` | 5 credits | 5 credits a call. An empty list is refunded, an unknown handle is a free 404, and the list is cached for 15 minutes, so a repeat within that window costs 0. |
-| `GET /v1/tiktok/song/videos` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
-| `GET /v1/tiktok/trending` | 5-25 credits | 5 credits per page; include=exact_counts: +2 a row made exact (max 20). |
-| `GET /v1/tiktok/user/liked` | 1-21 credits | 1 credit per page; include=exact_counts: +2 a row made exact (max 20). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/song/videos` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/tiktok/trending` | 5-15 credits | 5 credits per page; include=exact_counts: +1 a row made exact (max 10). |
+| `GET /v1/tiktok/user/liked` | 1-11 credits | 1 credit per page; include=exact_counts: +1 a row made exact (max 10). With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/tiktok/video/comment/replies` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/tiktok/video/screen-text` | 5-10 credits | 5 credits a call, the same for a video's cover or a photo post page of 10 slides. 10 credits with `frames=all` on a video; when the post is a photo post, or the video cannot be read and the cover is read instead, the call costs 5 and the response says so in `warnings`. Refunded when the post cannot be found, when nothing on it could be read, or when a parameter does not fit the post (a `slide_offset` past the last slide or on a video, a video over 180 seconds with `frames=all`). |
 | `GET /v1/tiktok/videos/popular` | 26-45 credits | 25 credits per board plus 1 credit per video returned. The default limit of 20 holds 45 credits and settles to the videos actually returned; an empty board costs nothing. |
 | `GET /v1/tiktokshop/product` | 1-4 credits | 1 credit for the product. include=details holds 3 more and keeps them only when it fills a description the plain call lacked, refunding them otherwise, so a hydrated call is at most 4 credits; a SEA product, which carries its description already, settles at 1. Product lookups are cached. |
 | `GET /v1/tiktokshop/product/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/tiktokshop/sales` | 0-8 credits | Metered, 0-8 credits: each market is one /v1/tiktokshop/search page billed at that endpoint's own price (1 credit), exactly as a direct call is billed. A market whose page found nothing or failed costs nothing, and a page served from cache is free. data.regions[].credits shows each market's charge and credits_used the total. |
-| `GET /v1/tripadvisor/attraction/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/tripadvisor/attraction/reviews` | 1-11 credits | 1 credit for up to 40 reviews. Above 40 (up to 500), 1 credit per started 80 reviews returned: the hold is set by `depth` and refunded down to the reviews that came back, so a place with 50 reviews costs 1 at any depth. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/tripadvisor/cruise/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
-| `GET /v1/tripadvisor/restaurant/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
-| `GET /v1/tripadvisor/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/tripadvisor/restaurant/reviews` | 1-11 credits | 1 credit for up to 40 reviews. Above 40 (up to 500), 1 credit per started 80 reviews returned: the hold is set by `depth` and refunded down to the reviews that came back, so a place with 50 reviews costs 1 at any depth. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
+| `GET /v1/tripadvisor/reviews` | 1-11 credits | 1 credit for up to 40 reviews. Above 40 (up to 500), 1 credit per started 80 reviews returned: the hold is set by `depth` and refunded down to the reviews that came back, so a place with 50 reviews costs 1 at any depth. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `GET /v1/trustpilot/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. |
 | `POST /v1/trustpilot/reviews/history` | 6-10,005 credits | 1 credit per returned review, plus 5 credits to open. Submitting holds depth plus 5 credits and refunds the unused portion when the job settles. |
 | `GET /v1/twitter/profile` | 1 credit | 1 credit per call. A call that fails, or a handle that does not exist, costs nothing. |
-| `GET /v1/twitter/search/hashtag` | 0-1 credits | Metered, 0-1 credits: each call reads one page of /v1/twitter/search/tweets (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the hashtag; data.legs shows each page's charge and data.excluded what was left out. |
-| `GET /v1/twitter/search/mentions` | 0-1 credits | Metered, 0-1 credits: each call reads one page of /v1/twitter/search/tweets (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that found nothing or failed costs nothing, and a page served from cache is free. A page is billed when it returned rows, even if none of them carried the mention; data.legs shows each page's charge and data.excluded what was left out. |
+| `GET /v1/twitter/search/hashtag` | 0-1 credits | Metered, 0-1 credits: each call reads one page of /v1/twitter/search/tweets (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the hashtag, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs. |
+| `GET /v1/twitter/search/mentions` | 0-1 credits | Metered, 0-1 credits: each call reads one page of /v1/twitter/search/tweets (1 credit), each billed at that endpoint's own price exactly as a direct call is. A page that failed costs nothing, and a page served from cache is free. Any other page is billed at its price, even when none of its rows carried the mention, and even when it returned no rows while its search reports more pages; data.legs shows each page's charge and data.excluded what was left out. pagination.next_page_credits is the page price of the searches the next cursor still runs. |
 | `GET /v1/twitter/search/tweets` | 1-9 credits | 1 credit per page. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/twitter/tweet/replies` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/twitter/user/tweets` | 1-5 credits | 1 credit per page. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
@@ -272,19 +280,22 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `GET /v1/xiaohongshu/profile/posts` | 5-100 credits | 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/xiaohongshu/search` | 5-100 credits | 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/xiaohongshu/trending` | 5-100 credits | 5 credits per row RETURNED. The call holds `limit x 5` up front and settles down to the rows actually delivered. |
-| `GET /v1/yelp/business/reviews` | 5-9 credits | 5 credits per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/yelp/business/reviews` | 1-5 credits | 1 credit per page. The default labels (sentiment, issue) are free. label=reports, incentivized or injection holds 4 extra credits and refunds down to 1 credit per started 25 reviews that were newly judged (the first 100 reviews of a page are judged): reviews already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `POST /v1/yelp/business/reviews/history` | 1-154 credits | 1 credit per started 4 pages of up to 49 reviews, at least 1. Submitting holds the most the request can read, set by the request alone: 52 credits for each language asked for (`languages=all`, the default, is held as 3 languages, 154 credits), or less when `max_reviews` is set. The job settles to the pages it read and refunds the rest; a business that cannot be read is refunded in full. |
+| `GET /v1/youtube/channel/community-posts` | 1-2 credits | 1 credit for the page. include=channel adds 1 credit for the single channel lookup the page shares, refunded if the channel could not be read and free when it was looked up recently. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/channel/lives` | 1-7 credits | 1 credit for the page. include=engagement adds 1 credit per distinct stream filled, at most 5 per page; include=channel adds 1 credit for the single channel lookup the page shares. Anything that could not be filled is refunded, so a page with both is at most 7 credits, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
+| `GET /v1/youtube/channel/search` | 1-7 credits | 1 credit for the page. include=engagement adds 1 credit per distinct video filled, at most 5 per page; include=channel adds 1 credit. Anything that could not be filled is refunded. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/channel/shorts` | 1-2 credits | 1 credit for the page. include=channel adds 1 credit for the single channel lookup the page shares, refunded if the channel could not be read and free when it was looked up recently. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/channel/videos` | 1-2 credits | 1 credit for the page. include=channel adds 1 credit for the single channel lookup the page shares, refunded if the channel could not be read and free when it was looked up recently. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `POST /v1/youtube/channels` | 5-100 credits | 5 credits per 50-id chunk, so a 50-id batch is 5 credits and the 1,000-id maximum is 100. Batching is what makes this cheap: the same 1,000 channels fetched one at a time through GET /v1/youtube/channel cost 1,000 credits. A chunk is charged whether or not every id in it resolves, so there is no per-id refund; a call that resolves nothing at all is refunded in full |
 | `GET /v1/youtube/playlist` | 1-11 credits | 1 credit for the page. include=engagement and include=channel each add 1 credit per distinct video or channel filled, at most 5 per join on a page of up to 50 rows, so a page with both is at most 11 credits; ids that could not be filled are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/playlist/items` | 1-11 credits | 1 credit for the page. include=engagement and include=channel each add 1 credit per distinct video or channel filled, at most 5 per join on a page of up to 50 rows, so a page with both is at most 11 credits; ids that could not be filled are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/search` | 1-19 credits | 1 credit for the page. include=engagement and include=channel each add 1 credit per distinct video or channel filled, at most 5 per join on a page of up to 50 rows, so a page with both is at most 11 credits; ids that could not be filled are refunded, and a repeat of the same call within the cache window costs 0. Relevance against your query (by default, or with relevance=) is free. Adding relevant_to= holds 4 extra credits and refunds down to 1 credit per started 25 rows that were newly judged: rows already judged for the same topic are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. The default labels (sponsored, intent, niche) are free. label=mention, quality, ai_style, ai_written, injection, or label=intent with offer=, holds 4 extra credits and refunds down to 1 credit per started 25 posts that were newly judged: posts already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
-| `GET /v1/youtube/search/advanced` | 1-11 credits | 1 credit for the search page. `includeExtras=true` adds a flat 5 credits for the single hydration call that fills view, like and comment counts and `duration_seconds` on the whole page. The increment never repeats: the page caps at 50 results, which one hydration call covers, so a hydrated page of 50 costs 6 credits and so does a hydrated page of 5. include=channel adds 1 credit per distinct channel filled, at most 5 per page, with channels that could not be read refunded, so a page with both is at most 11 With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
+| `GET /v1/youtube/search/advanced` | 1-11 credits | 1 credit for the search page. `includeExtras=true` adds a flat 5 credits for the single hydration call that fills view, like and comment counts and `duration_seconds` on the whole page. The increment never repeats: the page caps at 50 results, which one hydration call covers, so a hydrated page of 50 costs 6 credits and so does a hydrated page of 5. include=channel adds 1 credit per distinct channel filled, at most 5 per page, with channels that could not be read refunded, so a page with both is at most 11. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/youtube/search/hashtag` | 1-11 credits | 1 credit for the page. include=engagement and include=channel each add 1 credit per distinct video or channel filled, at most 5 per join on a page of up to 50 rows, so a page with both is at most 11 credits; ids that could not be filled are refunded, and a repeat of the same call within the cache window costs 0. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. With `seen`, a page's price falls with its share of rows you already received under that id; credits for joined data (`include=`) are never discounted. |
 | `GET /v1/youtube/shorts/trending` | 5-15 credits | 5 credits for the feed. include=channel adds 1 credit per distinct channel filled, at most 5 per 50 channels (the feed carries about 70, so at most 10); channels that could not be read are refunded, and a repeat of the same call within the cache window costs 0. |
 | `POST /v1/youtube/transcripts` | 3-300 credits | 3 credits per successful transcript. Up to 100 ids per call: the call holds ids × 3 up front (a full batch holds 300) and refunds every not_found, errored and deferred row |
-| `GET /v1/youtube/video` | 1-3 credits | 1 credit for the video. include=availability holds 2 more and keeps them only when the availability block comes back, so a call with it is at most 3 credits; a lookup that fails and a video looked up recently (served from cache) are refunded. |
+| `GET /v1/youtube/video` | 1-2 credits | 1 credit for the video. include=availability holds 1 more and keeps it only when the availability block comes back, so a call with it is at most 2 credits; a lookup that fails and a video looked up recently (served from cache) are refunded. |
 | `GET /v1/youtube/video/comment/replies` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/video/comments` | 1-5 credits | 1 credit per page, with the default labels (sentiment, question, purchase_intent, complaint) included free. label=spam, toxic or low_quality holds 4 extra credits and refunds down to 1 credit per started 25 comments that were newly judged: comments already labelled are free, a page where nothing could be judged refunds the whole extra, and a cached page is free. With `max_pages`, `max_items` or `max_credits`, each page walked is billed at this price (a cached page is free), and `max_credits` caps the total. |
 | `GET /v1/youtube/video/related` | 1-11 credits | 1 credit for the page. include=engagement and include=channel each add 1 credit per distinct video or channel filled, at most 5 per join on a page of up to 50 rows, so a page with both is at most 11 credits; ids that could not be filled are refunded, and a repeat of the same call within the cache window costs 0. |
@@ -318,7 +329,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/aliexpress/search/hot` | GET | List hot AliExpress products | 5 | advanced | 120s |
 | `/v1/aliexpress/search/promo` | GET | List AliExpress products in a featured promotion | 5 | advanced | 120s |
 
-### Amazon (8)
+### Amazon (9)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
@@ -327,9 +338,17 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/amazon/product` | GET | Get an Amazon product by ASIN | 5 | advanced | 600s |
 | `/v1/amazon/product-search` | GET | Search Amazon products by keyword | 1 | standard | 120s |
 | `/v1/amazon/reviews` | GET | Get Amazon product reviews | 5-9 (metered) | advanced | 300s |
+| `/v1/amazon/search/suggestions` | GET | Get Amazon search suggestions | 1 | standard | 120s |
 | `/v1/amazon/seller` | GET | Get an Amazon seller profile | 1 | standard | 900s |
 | `/v1/amazon/sellers` | GET | Get Amazon sellers and offers for a product | 1 | standard | 600s |
 | `/v1/amazon/shop` | GET | Get Amazon shop page | 1 | standard | 600s |
+
+### Apartments.com (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/apartments/property` | GET | Get an Apartments.com building | 1 | standard | 900s |
+| `/v1/apartments/search` | GET | Search Apartments.com rentals | 1 | standard | 120s |
 
 ### Apple App Store (9)
 
@@ -345,6 +364,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/app_store/locations` | GET | List supported Apple App Store storefront locations | 1 | standard | 1800s |
 | `/v1/app_store/search-suggestions` | GET | Get Apple App Store search suggestions | 1 | standard | 120s |
 
+### Apple Maps (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/apple_maps/places` | GET | Get up to 50 Apple Maps places by id | 1 | standard | 900s |
+| `/v1/apple_maps/search` | GET | Search Apple Maps places in a map box or around a point | 1 | standard | 120s |
+
 ### Apple Music (5)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
@@ -355,30 +381,47 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/apple_music/search` | GET | Search Apple Music | 1 | standard | 120s |
 | `/v1/apple_music/track` | GET | Get an Apple Music track | 1 | standard | 600s |
 
-### Bing (4)
+### Baidu (1)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
+| `/v1/baidu/search` | GET | Search the web with Baidu | 1 | standard | 120s |
+
+### Best Buy (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/bestbuy/product` | GET | Get a Best Buy product by link | 1 | standard | 600s |
+
+### Bing (7)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/bing/images` | GET | Search Bing Images | 1 | standard | 120s |
 | `/v1/bing/rank` | GET | Check where a domain ranks on Bing, up to 200 deep | 5 | advanced | 1800s |
 | `/v1/bing/search` | GET | Get Bing's first results page for a search | 1 | standard | 120s |
+| `/v1/bing/shopping/product` | GET | Get a Bing Shopping product and its offers | 1 | standard | 900s |
+| `/v1/bing/shopping/search` | GET | Search Bing Shopping products | 1 | standard | 120s |
 | `/v1/bing/suggestions` | GET | Get Bing's search suggestions for a partial query | 1 | standard | 120s |
 | `/v1/bing/videos` | GET | Search Bing Videos | 5 | advanced | 120s |
 
-### Bluesky (4)
+### Bluesky (5)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/bluesky/post` | GET | Get a Bluesky post | 1 | standard | 600s |
 | `/v1/bluesky/profile` | GET | Get a Bluesky profile | 1 | standard | 900s |
 | `/v1/bluesky/search` | GET | Search Bluesky posts | 1 | standard | 120s |
+| `/v1/bluesky/user/followers` | GET | List a Bluesky user's followers | 1 | standard | 300s |
 | `/v1/bluesky/user/posts` | GET | List a Bluesky user's posts | 1 | standard | 600s |
 
-### Booking.com (3)
+### Booking.com (4)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/booking/hotel` | GET | Get a Booking.com property | 1 | standard | 900s |
 | `/v1/booking/hotel/reviews` | GET | List the guest reviews of a Booking.com property | 5-9 (metered) | advanced | 300s |
+| `/v1/booking/hotel/rooms` | GET | List a Booking.com property's rooms and rates for a stay | 1 | standard | 300s |
 | `/v1/booking/search` | GET | Search Booking.com properties for a destination and stay | 1 | standard | 120s |
 
 ### Content Analysis (10)
@@ -447,7 +490,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/etsy/search/suggestions` | GET | Get Etsy search suggestions | 5 | advanced | 120s |
 | `/v1/etsy/shop/products` | GET | List products in an Etsy shop | 5 | advanced | 120s |
 
-### Facebook (32)
+### Facebook (33)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
@@ -461,6 +504,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/facebook/events` | GET | List Facebook events for a city | 1-13 (metered) | standard | 600s |
 | `/v1/facebook/events/search` | GET | Search Facebook events by keyword | 1 | standard | 120s |
 | `/v1/facebook/group` | GET | Get a Facebook group | 1 | standard | 900s |
+| `/v1/facebook/group/events` | GET | List a Facebook group's upcoming events | 1-9 (metered) | standard | 600s |
 | `/v1/facebook/group/posts` | GET | List Facebook group posts | 1 | standard | 600s |
 | `/v1/facebook/marketplace/item` | GET | Get a Facebook Marketplace item | 1 | standard | 600s |
 | `/v1/facebook/marketplace/location/search` | GET | Search Facebook Marketplace locations | 1 | standard | 120s |
@@ -505,7 +549,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/g2/category` | GET | List products in a G2 category | 5 | advanced | 120s |
 | `/v1/g2/product` | GET | Get a G2 product by slug or URL | 5 | advanced | 600s |
 | `/v1/g2/product-index` | GET | List G2 product URLs | 5 | advanced | 1800s |
-| `/v1/g2/reviews` | GET | Get G2 reviews for a product | 5-9 (metered) | advanced | 300s |
+| `/v1/g2/reviews` | GET | Get G2 reviews for a product | 5-54 (metered) | advanced | 300s |
 | `/v1/g2/seller` | GET | Get a G2 seller (vendor) profile | 5 | advanced | 900s |
 | `/v1/g2/seller/products` | GET | List products for a G2 seller | 5 | advanced | 120s |
 
@@ -519,7 +563,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/gab/search/posts` | GET | Search Gab posts | 1 | standard | 120s |
 | `/v1/gab/user/posts` | GET | List a Gab user's posts | 1 | standard | 600s |
 
-### GitHub (12)
+### GitHub (13)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
@@ -534,6 +578,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/github/repo/releases` | GET | List a repository's releases | 1 | standard | 600s |
 | `/v1/github/repo/top-issues` | GET | Top feature request and top complaint for a repository | 5 | advanced | 1800s |
 | `/v1/github/search` | GET | Search GitHub issues and pull requests | 1 | standard | 120s |
+| `/v1/github/search/repos` | GET | Search GitHub repositories | 1 | standard | 120s |
 | `/v1/github/user/profile-velocity` | GET | User contribution velocity dossier | 10 | premium | 1800s |
 
 ### Goodreads (10)
@@ -551,22 +596,32 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/goodreads/search` | GET | Search Goodreads books | 1 | standard | 1800s |
 | `/v1/goodreads/series` | GET | Get a Goodreads series in reading order | 1 | standard | 1800s |
 
-### Google (13)
+### Google (23)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/google/ad` | GET | Get Google ad details | 5 | advanced | 1800s |
 | `/v1/google/adlibrary/advertiser` | GET | Get a Google advertiser's verified identity | 5 | advanced | 900s |
 | `/v1/google/adlibrary/advertisers/search` | GET | Search Google Ad Library advertisers | 5 | advanced | 120s |
+| `/v1/google/ai-overview` | GET | Get Google's AI Overview for a query | 1 | standard | 120s |
+| `/v1/google/autocomplete` | GET | Get Google's search suggestions for a partial query | 1 | standard | 120s |
+| `/v1/google/business/contributor-reviews` | GET | Get every Google Maps review one reviewer has written | 1-5 (metered) | standard | 600s |
 | `/v1/google/business/extended-reviews` | GET | Get Google extended (multi-source) reviews | 5-9 (metered) | advanced | 600s |
 | `/v1/google/business/info` | GET | Get a Google Business Profile | 1 | standard | 900s |
+| `/v1/google/business/menu` | GET | Get a Google Maps place's menu, one row per dish | 1 | standard | 900s |
+| `/v1/google/business/photos` | GET | List a Google Maps place's photos and videos | 1 | standard | 600s |
+| `/v1/google/business/popular-times` | GET | Get how busy a Google Maps place is, now and by hour | 1 | standard | 300s |
 | `/v1/google/business/questions` | GET | Get Google Business Profile questions & answers | 5 | advanced | 300s |
+| `/v1/google/business/reviews` | GET | Get Google Maps reviews for a place | 5-54 (metered) | advanced | 600s |
+| `/v1/google/business/reviews/history` | POST | Start a Google Maps review history job | 5-500 (metered) | custom | none |
 | `/v1/google/business/search` | GET | Search Google Maps businesses | 5 | advanced | 120s |
 | `/v1/google/business/updates` | GET | Get Google Business Profile posts (updates) | 1 | standard | 600s |
 | `/v1/google/company/ads` | GET | List Google ads by company | 5 | advanced | 1800s |
 | `/v1/google/hotels/info` | GET | Get Google hotel detail | 5 | advanced | 900s |
 | `/v1/google/hotels/search` | GET | Search Google hotels | 1 | standard | 120s |
+| `/v1/google/images` | GET | Search Google Images | 1 | standard | 120s |
 | `/v1/google/keyword-volume` | GET | Get Google keyword search volume by country | 16 | custom | 86400s |
+| `/v1/google/patents` | GET | Search Google Patents | 1 | standard | 120s |
 | `/v1/google/search` | GET | Google web search | 1 | standard | 120s |
 
 ### Google News (1)
@@ -575,7 +630,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/google_news/search` | GET | Search Google News | 1 | standard | 300s |
 
-### Google Play (9)
+### Google Play (11)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
@@ -584,9 +639,11 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/google_play/app-listings-search` | GET | Search the Google Play listings database (paginated) | 10 | premium | 120s |
 | `/v1/google_play/app-reviews` | GET | Get Google Play reviews for an app | 5-9 (metered) | advanced | 300s |
 | `/v1/google_play/app-search` | GET | Search Google Play apps by keyword | 5 | advanced | 120s |
+| `/v1/google_play/books/search` | GET | Search Google Play books and audiobooks | 1 | standard | 120s |
 | `/v1/google_play/categories` | GET | List Google Play app categories | 1 | standard | 1800s |
 | `/v1/google_play/languages` | GET | List supported Google Play languages | 1 | standard | 1800s |
 | `/v1/google_play/locations` | GET | List supported Google Play storefront locations | 1 | standard | 1800s |
+| `/v1/google_play/movies/search` | GET | Search Google Play films, shows and episodes | 1 | standard | 120s |
 | `/v1/google_play/search-suggestions` | GET | Get Google Play search suggestions | 1 | standard | 120s |
 
 ### Google Shopping (5)
@@ -634,12 +691,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/hm/search/suggestions` | GET | Get H&M search suggestions | 5 | advanced | 120s |
 | `/v1/hm/stores` | GET | List H&M stores in a country | 5 | advanced | 1800s |
 
-### Hacker News (4)
+### Hacker News (5)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/hackernews/profile` | GET | Get a Hacker News user profile | 1 | standard | 900s |
 | `/v1/hackernews/search` | GET | Search Hacker News | 1-9 (metered) | standard | 120s |
+| `/v1/hackernews/stories` | GET | Get a Hacker News front-page feed | 1 | standard | 120s |
 | `/v1/hackernews/story` | GET | Get a Hacker News story | 1 | standard | 600s |
 | `/v1/hackernews/story/comments` | GET | Get comments on a Hacker News story | 1 | standard | 300s |
 
@@ -651,6 +709,25 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/home_depot/reviews` | GET | Get Home Depot product reviews | 5-9 (metered) | advanced | 300s |
 | `/v1/home_depot/search` | GET | Search Home Depot products by keyword | 5 | advanced | 120s |
 | `/v1/home_depot/stores` | GET | Find Home Depot stores near a ZIP code | 1 | standard | 1800s |
+
+### Homes.com (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/homes/property` | GET | Get a Homes.com home | 1 | standard | 900s |
+
+### idealo Italy (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/idealo/product` | GET | Get an idealo Italy product with its shop offers | 1 | standard | 600s |
+| `/v1/idealo/search` | GET | Search idealo Italy price comparisons | 1 | standard | 120s |
+
+### IKEA (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/ikea/search` | GET | Search IKEA products | 1 | standard | 120s |
 
 ### Instagram (44)
 
@@ -686,7 +763,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/instagram/profile/reels/full` | GET | Instagram reels with views, likes, comments, and per-reel share counts where available, in one call. | 5-25 (metered) | advanced | 600s |
 | `/v1/instagram/reels/trending` | GET | Get trending Instagram reels | 5 | advanced | 120s |
 | `/v1/instagram/search` | GET | Search Instagram accounts, hashtags, and places | 1 | standard | 120s |
-| `/v1/instagram/search/hashtag` | GET | Feed of a known hashtag, 1 credit a page, every ranking paginates (for keyword or topic discovery use instagram/search/reels) | 1-31 (metered) | standard | 120s |
+| `/v1/instagram/search/hashtag` | GET | Feed of a known hashtag, 1 credit a page, every ranking paginates (for keyword or topic discovery use instagram/search/reels) | 1-61 (metered) | standard | 120s |
 | `/v1/instagram/search/location` | GET | Search Instagram locations | 5 | advanced | 120s |
 | `/v1/instagram/search/mentions` | GET | Search Instagram posts that tag or mention an account | 0-6 (metered) | standard | 120s |
 | `/v1/instagram/search/music` | GET | Search Instagram music | 5 | advanced | 21600s |
@@ -701,19 +778,26 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/instagram/user/embed` | GET | Get Instagram user embed HTML | 1 | standard | 900s |
 | `/v1/instagram/username-suggestions` | GET | Get Instagram username suggestions | 5 | advanced | 120s |
 
-### Jobs (11)
+### Jobs (18)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
+| `/v1/jobs/ashby/search` | GET | List a company's open jobs on Ashby | 1 | standard | 120s |
 | `/v1/jobs/bing` | GET | Get a Bing job listing by id | 5 | advanced | 600s |
 | `/v1/jobs/bing/search` | GET | Search Bing job listings | 10 | premium | 120s |
+| `/v1/jobs/google/search` | GET | Search Google Jobs listings | 1 | standard | 120s |
+| `/v1/jobs/greenhouse` | GET | Get one Greenhouse job with its description | 1 | standard | 600s |
+| `/v1/jobs/greenhouse/search` | GET | List a company's open jobs on Greenhouse | 1 | standard | 120s |
 | `/v1/jobs/indeed` | GET | Get an Indeed job listing by id | 5 | advanced | 600s |
 | `/v1/jobs/indeed/search` | GET | Search Indeed job listings | 10 | premium | 120s |
+| `/v1/jobs/levels/search` | GET | Search Levels.fyi jobs with pay | 1 | standard | 120s |
+| `/v1/jobs/lever/search` | GET | List a company's open jobs on Lever | 1 | standard | 120s |
 | `/v1/jobs/linkedin` | GET | Get a LinkedIn job listing by id | 5 | advanced | 600s |
 | `/v1/jobs/linkedin/organizations` | GET | Resolve LinkedIn organization ids | 1 | standard | 120s |
 | `/v1/jobs/linkedin/search` | GET | Search LinkedIn job listings | 10 | premium | 120s |
 | `/v1/jobs/salary` | GET | Get salary ranges for a job title and country | 1 | standard | 1800s |
 | `/v1/jobs/salary/titles` | GET | Suggest job titles for a salary lookup | 1 | standard | 1800s |
+| `/v1/jobs/workday/search` | GET | Search a company's Workday careers site | 1 | standard | 120s |
 | `/v1/jobs/xing` | GET | Get a Xing job listing by id | 5 | advanced | 600s |
 | `/v1/jobs/xing/search` | GET | Search Xing job listings | 10 | premium | 120s |
 
@@ -761,6 +845,12 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/komi/page` | GET | Get Komi page | 1 | standard | 900s |
+
+### Kroger (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/kroger/search` | GET | Search Kroger products | 1 | standard | 120s |
 
 ### Kwai (3)
 
@@ -870,11 +960,12 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/linktree/page` | GET | Get Linktree page | 1 | standard | 900s |
 
-### Naver (20)
+### Naver (21)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/naver/adult` | GET | Check whether a Korean search term is adult-only (성인 검색어 판별) | 1 | standard | 1800s |
+| `/v1/naver/ai-overview` | GET | Get Naver's AI Briefing for a query | 1 | standard | 120s |
 | `/v1/naver/blog` | GET | Get a Naver blog's card and visitor counter (블로그 정보) | 1 | standard | 900s |
 | `/v1/naver/blog/posts` | GET | List every post of a Naver blog, newest first (블로그 글 목록) | 1 | standard | 600s |
 | `/v1/naver/blog/search` | GET | Search Naver Blog | 1-9 (metered) | standard | 120s |
@@ -883,7 +974,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/naver/encyc/search` | GET | Search Naver Encyclopedia | 1 | standard | 120s |
 | `/v1/naver/errata` | GET | Correct a mistyped Korean search query (오타변환) | 1 | standard | 1800s |
 | `/v1/naver/image/search` | GET | Search Naver Image | 1 | standard | 120s |
-| `/v1/naver/kin/search` | GET | Search Naver KnowledgeiN (지식iN) | 1 | standard | 120s |
+| `/v1/naver/kin/search` | GET | Search Naver KnowledgeiN (지식iN) | 1-5 (metered) | standard | 120s |
 | `/v1/naver/local/search` | GET | Search Naver Local (장소 검색) | 1 | standard | 120s |
 | `/v1/naver/news/search` | GET | Search Naver News | 1-9 (metered) | standard | 120s |
 | `/v1/naver/place` | GET | Get a Naver Place card (플레이스 정보) | 3 | custom | 900s |
@@ -894,6 +985,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/naver/shopping-insight/category` | GET | Get Naver Shopping click trend for a category (쇼핑인사이트) | 5 | advanced | 1800s |
 | `/v1/naver/shopping-insight/keyword` | GET | Get Naver Shopping click trend for keywords inside a category (쇼핑인사이트) | 5 | advanced | 1800s |
 | `/v1/naver/webkr/search` | GET | Search Naver Web (웹문서) | 1 | standard | 120s |
+
+### npm Registry (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/npm/package` | GET | Get an npm package version | 1 | standard | 600s |
+| `/v1/npm/search` | GET | Search npm packages | 1 | standard | 120s |
 
 ### On-Page (1)
 
@@ -913,12 +1011,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/pillar/page` | GET | Get Pillar page | 1 | standard | 900s |
 
-### Pinterest (6)
+### Pinterest (7)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/pinterest/board` | GET | Get Pinterest board | 1-16 (metered) | standard | 600s |
 | `/v1/pinterest/pin` | GET | Get Pinterest pin details | 1 | standard | 600s |
+| `/v1/pinterest/profile` | GET | Get a Pinterest profile | 1 | standard | 900s |
 | `/v1/pinterest/search` | GET | Search Pinterest pins | 1-34 (metered) | standard | 120s |
 | `/v1/pinterest/trends` | GET | Get Pinterest Trends for a country | 10 | premium | 21600s |
 | `/v1/pinterest/url-stats` | GET | Get Pinterest save counts for external URLs | 1 | standard | 1800s |
@@ -931,7 +1030,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/polymarket/research` | GET | Polymarket prediction markets: multi-query research | 5 | advanced | 120s |
 | `/v1/polymarket/search` | GET | Search Polymarket prediction markets | 1 | standard | 120s |
 
-### Prism (53)
+### Prism (54)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
@@ -951,14 +1050,14 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/prism/comments` | GET | Every comment on a post, replies nested, server-paginated to completion. | 2-200 (metered) | standard | 300s |
 | `/v1/prism/creator-card` | GET | One handle, unified author cards across TikTok, Instagram, YouTube, X (and more). | 5-8 (metered) | custom | 900s |
 | `/v1/prism/creator-vet` | GET | Vet a creator before partnering: engagement quality, commenter authenticity, posting cadence, and controversy signals, optionally across platforms. | 50-75 (metered) | custom | 1800s |
-| `/v1/prism/creators` | GET | Find creators (influencers) who post about a niche on TikTok, Instagram, YouTube, X and LinkedIn, or measure and rank creators you already have, in one call or as a background run. | pay per search and lookup, capped by max_credits (default 200) (request-shaped) | standard | none |
-| `/v1/prism/creators` | POST | Start a creator search from a JSON body, for handle lists and exclusions too long for a URL; it runs in the background and answers 202 with the run. | pay per search and lookup, capped by the required max_credits (request-shaped) | standard | none |
+| `/v1/prism/creators` | GET | Find creators (influencers) who post about a niche on TikTok, Instagram, YouTube, X and LinkedIn, or measure and rank creators you already have, in one call or as a background run. | each search and lookup at its own price; a run spends up to max_credits, 500 if you send none (request-shaped) | standard | none |
+| `/v1/prism/creators` | POST | Start a creator search from a JSON body, for handle lists and exclusions too long for a URL; it runs in the background and answers 202 with the run. | each search and lookup at its own price; a run spends up to the max_credits you send (request-shaped) | standard | none |
 | `/v1/prism/crisis-postmortem` | GET | Crisis post-mortem: a who-said-what-first timeline across web, Reddit, Hacker News, and social, with an origin, peak, propagation sequence, and a grounded narrative. | 35 | custom | 1800s |
 | `/v1/prism/crisis-radar` | GET | Stateless crisis breach check: a z-score on daily mention volume and negative share, with on-breach confirmation and a severity grade. | 15-45 (metered) | custom | 1800s |
 | `/v1/prism/demand-signals` | GET | Consumer-demand nowcast: app-review velocity, web mention slope, Reddit velocity, and commerce review levels, fused into a published demand index. | 30 | custom | 300s |
 | `/v1/prism/devtool-pulse` | GET | Developer-brand health: a devtool's repo dossier + Hacker News reaction + Reddit chatter + dev-blog echo, in one call. | 20 | custom | 1800s |
-| `/v1/prism/discover` | GET | Search many platforms for keywords or a description, keep a date window, judge every row and return the posts, in one call or as a background run. | pay per search, capped by max_credits (default 50) (request-shaped) | standard | none |
-| `/v1/prism/discover` | POST | Start a discover run from a JSON body, for groups and lists too long for a URL; it runs in the background and answers 202 with the run. | pay per search, capped by the required max_credits (request-shaped) | standard | none |
+| `/v1/prism/discover` | GET | Search many platforms for keywords or a description, keep a date window, judge every row and return the posts, in one call or as a background run. | each platform search at its own price; a run spends up to max_credits, 500 if you send none (request-shaped) | standard | none |
+| `/v1/prism/discover` | POST | Start a discover run from a JSON body, for groups and lists too long for a URL; it runs in the background and answers 202 with the run. | each platform search at its own price; a run spends up to the max_credits you send (request-shaped) | standard | none |
 | `/v1/prism/discover/inputs` | POST | Store a long author list or exclude list once and reuse it by id. | 0 | custom | none |
 | `/v1/prism/earliness` | GET | How early a term appeared on each platform, before Trends and before ads. | 25 | custom | 1800s |
 | `/v1/prism/earned-media` | GET | A brand's earned-media footprint: news + tech-press + fresh-web clips, deduped and ranked, with an outlet-coverage rollup. | 25 | custom | 1800s |
@@ -983,6 +1082,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/prism/profiles` | POST | Up to 50 (platform, handle) pairs → one canonical Author per row, failed handles refunded. | 1-126,375 (metered) | custom | none |
 | `/v1/prism/reputation` | GET | A brand's cross-source reputation. Trustpilot + app stores + Google Business + web sentiment, blended into one weighted score with themed pros/cons. | 30 | custom | 1800s |
 | `/v1/prism/review-integrity` | GET | Cross-source review integrity verdict (statistical, deterministic). | 30 | custom | 1800s |
+| `/v1/prism/reviews/bulk` | POST | Start a bulk review history job across many businesses | 25 | custom | none |
 | `/v1/prism/share-of-voice` | GET | Engagement-weighted Share of Voice across 2-5 brands, with web+social split, emotion overlay, and ESOV. | 20-200 (metered) | custom | 1800s |
 | `/v1/prism/trend-board` | GET | What is rising in one country today, with no keyword in: breakout TikTok posts, sounds, hashtags, and Google searches. | 30 | custom | 900s |
 | `/v1/prism/truthsocial-pulse` | GET | A Truth Social handle's pulse: profile, recent posts, per-post detail drill, and the news echo, in one call. | 20 | custom | 1800s |
@@ -999,6 +1099,12 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/producthunt/product/comments` | GET | List the comments on a Product Hunt launch | 1 | standard | 300s |
 | `/v1/producthunt/topic` | GET | List the products in a Product Hunt topic | 1 | standard | 1800s |
 
+### PyPI (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/pypi/project` | GET | Get a PyPI project release | 1 | standard | 600s |
+
 ### Quora (7)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
@@ -1010,6 +1116,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/quora/search` | GET | Search Quora questions | 5 | advanced | 120s |
 | `/v1/quora/spaces` | GET | Search Quora Spaces | 5 | advanced | 120s |
 | `/v1/quora/topics` | GET | Search Quora topics | 5 | advanced | 120s |
+
+### Realtor.com (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/realtor/property` | GET | Get a Realtor.com home | 1 | standard | 900s |
+| `/v1/realtor/search` | GET | Search Realtor.com listings | 1 | standard | 120s |
 
 ### Reddit (14)
 
@@ -1023,12 +1136,19 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/reddit/profile/comments` | GET | Read a Reddit account's own comment history, newest first, deeper than any search index reaches. Metered: 2 credits per comment returned, so try /v1/reddit/search/comments?query=author:name first | 2-200 (metered) | standard | 600s |
 | `/v1/reddit/profile/posts` | GET | List a Reddit user's posts | 1 | standard | 600s |
 | `/v1/reddit/search` | GET | Search Reddit posts | 1-48 (metered) | standard | 120s |
-| `/v1/reddit/search/comments` | GET | Search Reddit comments | 1 | standard | 120s |
+| `/v1/reddit/search/comments` | GET | Search Reddit comments | 1-5 (metered) | standard | 120s |
 | `/v1/reddit/search/media` | GET | Search Reddit image and video posts | 1 | standard | 120s |
 | `/v1/reddit/subreddit` | GET | List Reddit subreddit posts | 1-5 (metered) | standard | 600s |
 | `/v1/reddit/subreddit/details` | GET | Get Reddit subreddit details | 1 | standard | 900s |
 | `/v1/reddit/subreddit/search` | GET | Search within a subreddit | 1-26 (metered) | standard | 120s |
 | `/v1/reddit/subreddits/search` | GET | Find subreddits by topic | 1-26 (metered) | standard | 120s |
+
+### Redfin (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/redfin/property` | GET | Get a Redfin home with its price and tax history | 1-2 (metered) | standard | 900s |
+| `/v1/redfin/search` | GET | Search Redfin listings | 1 | standard | 120s |
 
 ### Rumble (5)
 
@@ -1063,16 +1183,46 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/snapchat/profile` | GET | Get Snapchat user profile | 1 | standard | 900s |
 | `/v1/snapchat/spotlight/comments` | GET | List comments on a Snapchat Spotlight | 1 | standard | 300s |
 
-### Spotify (6)
+### SoundCloud (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/soundcloud/track` | GET | Get a SoundCloud track | 1 | standard | 600s |
+
+### Spotify (7)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/spotify/album` | GET | Get a Spotify album | 1 | standard | 600s |
 | `/v1/spotify/artist` | GET | Get a Spotify artist | 1 | standard | 900s |
+| `/v1/spotify/playlist` | GET | Get a Spotify playlist and its tracks | 1 | standard | 600s |
 | `/v1/spotify/podcast` | GET | Get a Spotify podcast | 1 | standard | 900s |
 | `/v1/spotify/podcast/episodes` | GET | List a Spotify podcast's episodes | 1 | standard | 600s |
 | `/v1/spotify/search` | GET | Search Spotify | 1 | standard | 120s |
 | `/v1/spotify/track` | GET | Get a Spotify track | 1 | standard | 600s |
+
+### Sprouts (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/sprouts/product` | GET | Get a Sprouts product by link | 1 | standard | 600s |
+| `/v1/sprouts/search` | GET | Search Sprouts products | 1 | standard | 120s |
+
+### Stack Overflow (4)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/stackoverflow/question` | GET | Get a Stack Overflow question | 1 | standard | 600s |
+| `/v1/stackoverflow/question/answers` | GET | Get the answers to a Stack Overflow question | 1 | standard | 300s |
+| `/v1/stackoverflow/question/comments` | GET | Get the comments on a Stack Overflow question | 1 | standard | 300s |
+| `/v1/stackoverflow/search` | GET | Search Stack Overflow questions | 1 | standard | 120s |
+
+### Steam (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/steam/app` | GET | Get a Steam app by id | 1 | standard | 600s |
+| `/v1/steam/search` | GET | Search the Steam store | 1 | standard | 120s |
 
 ### Target (5)
 
@@ -1093,11 +1243,12 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/tavily/map` | GET | Map a website's sitegraph | 1 | standard | 1800s |
 | `/v1/tavily/search` | GET | Tavily web search with optional LLM-generated answer | 1 | standard | 120s |
 
-### Telegram (4)
+### Telegram (5)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/telegram/post` | GET | Get Telegram post | 1 | standard | 600s |
+| `/v1/telegram/post/comments` | GET | List the comments on a Telegram post | 1 | standard | 300s |
 | `/v1/telegram/profile` | GET | Get Telegram channel profile | 1 | standard | 900s |
 | `/v1/telegram/profile/posts` | GET | List Telegram channel posts | 1 | standard | 600s |
 | `/v1/telegram/search` | GET | Search Telegram channels by keyword | 2-16 (metered) | custom | 120s |
@@ -1109,7 +1260,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/threads/post` | GET | Get Threads post details | 1 | standard | 600s |
 | `/v1/threads/post/comments` | GET | Get comments on a Threads post | 1-10 (metered) | standard | 300s |
 | `/v1/threads/profile` | GET | Get Threads user profile | 1 | standard | 900s |
-| `/v1/threads/search` | GET | Search Threads posts | 1-34 (metered) | standard | 120s |
+| `/v1/threads/search` | GET | Search Threads posts | 1-178 (metered) | standard | 120s |
 | `/v1/threads/search/users` | GET | Search Threads users | 1-13 (metered) | standard | 120s |
 | `/v1/threads/user/posts` | GET | List Threads user posts | 1-165 (metered) | standard | 600s |
 
@@ -1119,38 +1270,38 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/tiktok/adlibrary/ad` | GET | Get a TikTok Ad Library ad | 5 | advanced | 1800s |
 | `/v1/tiktok/adlibrary/search` | GET | Search the TikTok Ad Library | 5-17 (metered) | advanced | 120s |
-| `/v1/tiktok/ads/top` | GET | Read TikTok's Creative Center Top Ads board: the best-performing ads in a market, ranked by CTR, impressions or engagement. Metered: 1 credit per ad returned, minimum 10 | 10-100 (metered) | standard | 1800s |
-| `/v1/tiktok/collection/videos` | GET | List videos in a TikTok collection | 1-21 (metered) | standard | 600s |
+| `/v1/tiktok/ads/top` | GET | Read TikTok's Creative Center Top Ads board: the best-performing ads in a market, ranked by CTR, impressions or engagement. Metered: 1 credit per ad returned, minimum 10 | 10-400 (metered) | standard | 1800s |
+| `/v1/tiktok/collection/videos` | GET | List videos in a TikTok collection | 1-11 (metered) | standard | 600s |
 | `/v1/tiktok/comment` | GET | Look up one TikTok comment by URL or id | 2-6 (metered) | custom | 300s |
-| `/v1/tiktok/effect/videos` | GET | List TikTok videos made with an effect | 1-21 (metered) | standard | 600s |
+| `/v1/tiktok/effect/videos` | GET | List TikTok videos made with an effect | 1-11 (metered) | standard | 600s |
 | `/v1/tiktok/effects` | GET | Get TikTok effects by id | 1 | standard | 600s |
 | `/v1/tiktok/hashtag` | GET | Get TikTok hashtag details | 1 | standard | 600s |
 | `/v1/tiktok/hashtags/popular` | GET | Read TikTok's own trending-hashtag board for a market and time window: the overall board plus 15 industry boards. Metered: 2 credits per hashtag returned, minimum 6 | 6-96 (metered) | standard | 1800s |
-| `/v1/tiktok/location/posts` | GET | List TikTok videos tagged at a place | 1-21 (metered) | standard | 600s |
-| `/v1/tiktok/playlist/videos` | GET | List videos in a TikTok playlist | 1-21 (metered) | standard | 600s |
-| `/v1/tiktok/post` | GET | Get TikTok post details | 1-3 (metered) | standard | 600s |
+| `/v1/tiktok/location/posts` | GET | List TikTok videos tagged at a place | 1-11 (metered) | standard | 600s |
+| `/v1/tiktok/playlist/videos` | GET | List videos in a TikTok playlist | 1-11 (metered) | standard | 600s |
+| `/v1/tiktok/post` | GET | Get TikTok post details | 1-2 (metered) | standard | 600s |
 | `/v1/tiktok/post/comments` | GET | List TikTok post comments | 1-7 (metered) | standard | 300s |
 | `/v1/tiktok/post/transcript` | GET | Get TikTok video transcript | 10 | premium | 2592000s |
-| `/v1/tiktok/profile` | GET | Get TikTok user profile | 1-3 (metered) | standard | 900s |
+| `/v1/tiktok/profile` | GET | Get TikTok user profile | 1-2 (metered) | standard | 900s |
 | `/v1/tiktok/profile/full` | GET | TikTok profile, recent posts, and computed analytics in one call. | 5 | custom | 900s |
 | `/v1/tiktok/profile/playlists` | GET | List a TikTok account's playlists | 1 | standard | 900s |
 | `/v1/tiktok/profile/region` | GET | Get TikTok profile region | 1 | standard | 900s |
-| `/v1/tiktok/profile/videos` | GET | List TikTok user videos | 1-25 (metered) | standard | 600s |
-| `/v1/tiktok/search` | GET | Search TikTok videos by keyword | 1-62 (metered) | standard | 120s |
-| `/v1/tiktok/search/hashtag` | GET | Search TikTok by hashtag | 1-25 (metered) | standard | 120s |
+| `/v1/tiktok/profile/videos` | GET | List TikTok user videos | 1-15 (metered) | standard | 600s |
+| `/v1/tiktok/search` | GET | Search TikTok videos by keyword | 1-52 (metered) | standard | 120s |
+| `/v1/tiktok/search/hashtag` | GET | Search TikTok by hashtag | 1-15 (metered) | standard | 120s |
 | `/v1/tiktok/search/mentions` | GET | Search TikTok videos that mention an account | 0-2 (metered) | standard | 120s |
 | `/v1/tiktok/search/music` | GET | Search TikTok sounds | 1 | standard | 120s |
 | `/v1/tiktok/search/suggestions` | GET | Get TikTok search suggestions | 1 | standard | 120s |
-| `/v1/tiktok/search/top` | GET | TikTok top search results | 1-21 (metered) | standard | 120s |
+| `/v1/tiktok/search/top` | GET | TikTok top search results | 1-11 (metered) | standard | 120s |
 | `/v1/tiktok/search/users` | GET | Search TikTok users | 1-100 (metered) | standard | 120s |
 | `/v1/tiktok/similar` | GET | List similar TikTok accounts | 5 | advanced | 900s |
 | `/v1/tiktok/song` | GET | Get TikTok song details | 1 | standard | 600s |
-| `/v1/tiktok/song/videos` | GET | List TikTok videos using a song | 1-21 (metered) | standard | 600s |
-| `/v1/tiktok/trending` | GET | Get TikTok trending feed | 5-25 (metered) | advanced | 120s |
+| `/v1/tiktok/song/videos` | GET | List TikTok videos using a song | 1-11 (metered) | standard | 600s |
+| `/v1/tiktok/trending` | GET | Get TikTok trending feed | 5-15 (metered) | advanced | 120s |
 | `/v1/tiktok/user/audience` | GET | Get TikTok user audience demographics | 5 | advanced | 1800s |
 | `/v1/tiktok/user/followers` | GET | List TikTok user followers | 1 | standard | 900s |
 | `/v1/tiktok/user/following` | GET | List TikTok user following | 1 | standard | 900s |
-| `/v1/tiktok/user/liked` | GET | List the videos a TikTok account has liked | 1-21 (metered) | standard | 600s |
+| `/v1/tiktok/user/liked` | GET | List the videos a TikTok account has liked | 1-11 (metered) | standard | 600s |
 | `/v1/tiktok/user/live` | GET | Get TikTok user live stream | 1 | standard | 60s |
 | `/v1/tiktok/video/comment/replies` | GET | List TikTok comment replies | 1-5 (metered) | standard | 300s |
 | `/v1/tiktok/video/screen-text` | GET | Get TikTok video on-screen text | 5-10 (metered) | advanced | 600s |
@@ -1167,25 +1318,24 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/tiktokshop/search` | GET | Search TikTok Shop products | 1 | standard | 120s |
 | `/v1/tiktokshop/user/showcase` | GET | List TikTok user showcase products | 1 | standard | 600s |
 
-### Tripadvisor (16)
+### Tripadvisor (15)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/tripadvisor/attraction` | GET | Get a TripAdvisor attraction | 1 | standard | 900s |
-| `/v1/tripadvisor/attraction/reviews` | GET | Get TripAdvisor reviews for an attraction | 1-5 (metered) | standard | 300s |
+| `/v1/tripadvisor/attraction/reviews` | GET | Get TripAdvisor reviews for an attraction | 1-11 (metered) | standard | 300s |
 | `/v1/tripadvisor/attractions` | GET | Search TripAdvisor attractions and things to do | 1 | standard | 120s |
 | `/v1/tripadvisor/autocomplete` | GET | Autocomplete TripAdvisor places | 1 | standard | 120s |
 | `/v1/tripadvisor/cruise` | GET | Get a TripAdvisor cruise ship | 1 | standard | 900s |
 | `/v1/tripadvisor/cruise/reviews` | GET | Get TripAdvisor reviews for a cruise ship | 1-5 (metered) | standard | 300s |
-| `/v1/tripadvisor/cruises` | GET | Search TripAdvisor cruises | 1 | standard | 120s |
 | `/v1/tripadvisor/experience-types` | GET | List TripAdvisor experience types for a destination | 1 | standard | 1800s |
 | `/v1/tripadvisor/hotel` | GET | Get a TripAdvisor hotel | 1 | standard | 900s |
 | `/v1/tripadvisor/hotels` | GET | Search TripAdvisor hotels | 1 | standard | 120s |
 | `/v1/tripadvisor/place` | GET | Get a TripAdvisor place by URL | 1 | standard | 900s |
 | `/v1/tripadvisor/restaurant` | GET | Get a TripAdvisor restaurant | 1 | standard | 900s |
-| `/v1/tripadvisor/restaurant/reviews` | GET | Get TripAdvisor reviews for a restaurant | 1-5 (metered) | standard | 300s |
+| `/v1/tripadvisor/restaurant/reviews` | GET | Get TripAdvisor reviews for a restaurant | 1-11 (metered) | standard | 300s |
 | `/v1/tripadvisor/restaurants` | GET | Search TripAdvisor restaurants | 1 | standard | 120s |
-| `/v1/tripadvisor/reviews` | GET | Get TripAdvisor reviews for a place | 1-5 (metered) | standard | 300s |
+| `/v1/tripadvisor/reviews` | GET | Get TripAdvisor reviews for a place | 1-11 (metered) | standard | 300s |
 | `/v1/tripadvisor/search` | GET | Search TripAdvisor businesses & places | 1 | standard | 120s |
 
 ### Trustpilot (3)
@@ -1347,6 +1497,13 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/weibo/search/users` | GET | Search Weibo accounts | 5 | advanced | 120s |
 | `/v1/weibo/trending` | GET | Get the Weibo hot-search list | 5 | advanced | 120s |
 
+### Wikipedia (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/wikipedia/article` | GET | Get a Wikipedia article as plain text | 1 | standard | 600s |
+| `/v1/wikipedia/search` | GET | Search Wikipedia articles | 1 | standard | 120s |
+
 ### Xiaohongshu (6)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
@@ -1358,25 +1515,40 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/xiaohongshu/search` | GET | Search Xiaohongshu notes | 5-100 (metered) | advanced | 120s |
 | `/v1/xiaohongshu/trending` | GET | Get the Xiaohongshu hot search board | 5-100 (metered) | advanced | 120s |
 
+### Yahoo Search (1)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/yahoo/search` | GET | Search the web with Yahoo | 1 | standard | 120s |
+
+### Yandex (2)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/yandex/images` | GET | Search Yandex Images | 1 | standard | 120s |
+| `/v1/yandex/search` | GET | Search the web with Yandex | 1 | standard | 120s |
+
 ### Yelp (5)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
-| `/v1/yelp/business/info` | GET | Get a Yelp business by encid | 1 | standard | 900s |
-| `/v1/yelp/business/reviews` | GET | Get Yelp reviews for a business | 5-9 (metered) | advanced | 300s |
+| `/v1/yelp/business/info` | GET | Get a Yelp business by id, alias or URL | 1 | standard | 900s |
+| `/v1/yelp/business/reviews` | GET | Get Yelp reviews for a business | 1-5 (metered) | standard | 300s |
+| `/v1/yelp/business/reviews/history` | POST | Start a Yelp review history job | 1-154 (metered) | custom | none |
 | `/v1/yelp/search` | GET | Search Yelp businesses | 1 | standard | 120s |
 | `/v1/yelp/search/full` | GET | Search Yelp businesses with full cards | 1 | standard | 120s |
-| `/v1/yelp/search/suggestions` | GET | Get Yelp search suggestions | 1 | standard | 120s |
 
-### YouTube (30)
+### YouTube (32)
 
 | Endpoint | Method | What it returns | Credits | Tier | Cache |
 |----------|--------|-----------------|---------|------|-------|
 | `/v1/youtube/channel` | GET | Get YouTube channel info | 1 | standard | 900s |
 | `/v1/youtube/channel/about` | GET | Get a YouTube channel's contact email and country. Try the 1-credit youtube/channel first: it already carries the email for some channels, and you are charged here only when an address is returned. A first read of an address behind the View email address button can take up to 5 minutes, so set your HTTP timeout to at least 300s; on a 503, retry after the Retry-After seconds | 25 | custom | 900s |
-| `/v1/youtube/channel/community-posts` | GET | List a YouTube channel's community posts | 1 | standard | 600s |
+| `/v1/youtube/channel/community-posts` | GET | List a YouTube channel's community posts | 1-2 (metered) | standard | 600s |
 | `/v1/youtube/channel/lives` | GET | List a YouTube channel's live streams | 1-7 (metered) | standard | 600s |
 | `/v1/youtube/channel/playlists` | GET | List a YouTube channel's playlists | 1 | standard | 600s |
+| `/v1/youtube/channel/podcasts` | GET | List a YouTube channel's podcasts | 1 | standard | 600s |
+| `/v1/youtube/channel/search` | GET | Search inside one YouTube channel | 1-7 (metered) | standard | 120s |
 | `/v1/youtube/channel/shorts` | GET | List YouTube channel shorts | 1-2 (metered) | standard | 600s |
 | `/v1/youtube/channel/videos` | GET | List YouTube channel videos | 1-2 (metered) | standard | 600s |
 | `/v1/youtube/channels` | POST | Batch get YouTube channel details (up to 1000) | 5-100 (metered) | advanced | none |
@@ -1390,7 +1562,7 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/youtube/search/suggestions` | GET | Get YouTube search suggestions | 1 | standard | 120s |
 | `/v1/youtube/shorts/trending` | GET | Get trending YouTube shorts | 5-15 (metered) | advanced | 120s |
 | `/v1/youtube/transcripts` | POST | Up to 100 YouTube video ids → one transcript per row, failed ids refunded. | 3-300 (metered) | custom | none |
-| `/v1/youtube/video` | GET | Get YouTube video details | 1-3 (metered) | standard | 600s |
+| `/v1/youtube/video` | GET | Get YouTube video details | 1-2 (metered) | standard | 600s |
 | `/v1/youtube/video/audio` | GET | Get a YouTube video's audio file streams | 5 | advanced | none |
 | `/v1/youtube/video/comment/replies` | GET | List YouTube comment replies | 1-5 (metered) | standard | 300s |
 | `/v1/youtube/video/comments` | GET | List YouTube video comments | 1-5 (metered) | standard | 300s |
@@ -1402,3 +1574,11 @@ When a pull would cost more than a user's likely balance, say so and offer the c
 | `/v1/youtube/video/transcript` | GET | Get YouTube video transcript | 3 | custom | 2592000s |
 | `/v1/youtube/videos` | POST | Batch get YouTube video details (up to 1000) | 5-100 (metered) | advanced | none |
 | `/v1/youtube/videos/trending` | GET | Get trending YouTube videos | 1-6 (metered) | standard | 120s |
+
+### Zillow (3)
+
+| Endpoint | Method | What it returns | Credits | Tier | Cache |
+|----------|--------|-----------------|---------|------|-------|
+| `/v1/zillow/locations` | GET | Look up Zillow regions and addresses | 1 | standard | 120s |
+| `/v1/zillow/property` | GET | Get a Zillow home with its price and tax history | 1 | standard | 900s |
+| `/v1/zillow/search` | GET | Search Zillow listings | 1 | standard | 120s |

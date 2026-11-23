@@ -34,13 +34,13 @@ Returns public profile information for a Snapchat user including display name, B
 | Field | Meaning |
 |---|---|
 | `author.id` | Platform-specific user ID… |
-| `author.url` | Direct URL to the profile page |
 | `author.username` | User handle or username |
 | `author.avatar_url` | URL to profile picture |
 | `author.bio` | Profile biography or description |
 | `author.display_name` | Display name or full name |
+| `author.followers` | Follower or subscriber count as an integer. |
 
-+12 more (types in the full schema): `author` {followers, following, joined_at, posts_count, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Also in the sample: `author` {private boolean}. Never filled: `author.likes_count`.
++9 more (types in the full schema): `author` {joined_at, verified}; `computed` {content_category, engagement_rate, estimated_reach, language, save_rate}; `author.ext` {business_hours, products}. Also in the sample: `author` {private boolean}. Never filled: `author.likes_count`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `author.following`, `author.posts_count`, `author.url`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/profile" \
@@ -74,7 +74,7 @@ Returns comments on a Snapchat Spotlight snap. Each comment includes text, displ
 | `comment.author.display_name` | Comment author display name |
 | `comment.engagement.likes` | Like / upvote count |
 
-+3 more (types in the full schema): `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.avatar_url`, `comment.author.username`, `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++6 more (types in the full schema): `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Also in the sample: `comment.ext` {published_at_epoch number}. Never filled: `comment.author.avatar_url`, `comment.author.username`, `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/snapchat/spotlight/comments" \

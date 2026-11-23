@@ -1,6 +1,6 @@
 # Author fields
 
-Every field the 46 field-mapped endpoints returning `Author` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 47 field-mapped endpoints returning `Author` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -14,8 +14,9 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.activity_summary` | string\|null |  |
 | `author.ext.ad_library_page_id` | string\|null | The page's id in the Facebook Ad Library, which differs from the profile id. Pass it as the company id to the Ad Library ads endpoint. |
 | `author.ext.ad_library_status` | string\|null | Whether the page is running ads, as the Ad Library reports it. |
-| `author.ext.address` | string\|null | Street address the business page lists. Facebook only. |
+| `author.ext.address` | string\|null | Street address the business page lists. Facebook only. (with `include=details`) |
 | `author.ext.affiliate_username` | string\|null |  |
+| `author.ext.affiliated_pages` | array\|null | The company's showcase and affiliated pages on LinkedIn, with `include=related` on `linkedin/company`. Null without it, and when the page lists none. (with `include=related` on some endpoints) |
 | `author.ext.average_rating` | number\|null | Spotify podcasts only: mean listener rating from 0 to 5. Fractional (e.g. 4.66) despite the integer type this schema emits for every numeric leaf |
 | `author.ext.awardee_karma` | number\|null | Karma earned from awards received. Reddit accounts only. |
 | `author.ext.banner_url` | string\|null | URL of the profile banner image. Reddit only. |
@@ -25,6 +26,7 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.birthday` | string\|null |  |
 | `author.ext.blog_name` | string\|null | The blog's own name. The display name is the owner's nickname. Naver only. |
 | `author.ext.blog_no` | string\|null | Naver's blog number for the blog. |
+| `author.ext.board_count` | number\|null |  |
 | `author.ext.business_category` | string\|null | Professional or page category label, for example 'Live Music Venue'. Instagram and Facebook. (on some endpoints only when the fallback source serves) |
 | `author.ext.business_hours` | array\|null | The page's opening hours as the source reports them. The source's format is not normalised and the field is null on every sampled page. |
 | `author.ext.call_to_action_url` | string\|null | Where the page's main button leads. |
@@ -52,13 +54,15 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.entity_type` | string\|null |  |
 | `author.ext.first_name` | string\|null | The member's first name. LinkedIn members only. |
 | `author.ext.followers_approximate` | boolean\|null | True when `author.followers` is a published or rounded figure rather than an unrounded census: LinkedIn people-list display buckets, TikTok `stats.followerCount` when the exact sibling is absent, and YouTube subscriber counts at or above 1,000. Null or absent on exact counts. |
+| `author.ext.forks` | number\|null | Forks of the repository. GitHub only. |
 | `author.ext.founded_on` | object\|null | The founding date the company page sets. Month and day are null when the page gives the year only, and the whole field is null when it sets no date. |
 | `author.ext.founded_year` | number\|null | Year the company was founded. |
+| `author.ext.full_name` | string\|null | The repository as owner/name, for example vercel/next.js. GitHub only. |
 | `author.ext.funding` | object\|null | The company's funding. Its inner fields are empty objects when the source sends no figures. |
 | `author.ext.gender` | string\|null |  |
 | `author.ext.geo_id` | string\|null | LinkedIn's id for the member's location, the id /v1/linkedin/search/location returns. |
 | `author.ext.group.about_info` | unknown | The entries of the group's About section. |
-| `author.ext.group.activity` | unknown | Recent posting and joining activity. |
+| `author.ext.group.activity` | unknown\|null | Recent posting and joining activity. |
 | `author.ext.group.administrator_count` | unknown | How many administrators the group has. |
 | `author.ext.group.administrators` | unknown | The group's administrators. |
 | `author.ext.group.categories` | unknown\|null | Categories the group lists. |
@@ -113,9 +117,14 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.madeForKids` | boolean\|null | Whether the channel is marked as made for kids. YouTube only. (seen in a sample response) |
 | `author.ext.media_count` | number\|null |  |
 | `author.ext.member_id` | string\|null | Numeric LinkedIn member id. author.id is the vanity slug, and post endpoints publish this id as post.ext.author_id. |
+| `author.ext.member_preview` | array\|null | The members X shows on the community's page, a preview, not the member list. X communities only; null when X shows none. |
 | `author.ext.monthly_listeners` | number\|null | Monthly listeners, a reach figure and not a post count. Spotify artists only. |
+| `author.ext.name` | string\|null | The repository name without the owner. GitHub only. |
 | `author.ext.official_blog` | boolean\|null | Whether the blog carries Naver's official blog flag. |
+| `author.ext.open_issues` | number\|null | Open issues of the repository, open pull requests included, as GitHub counts them. GitHub only. |
 | `author.ext.open_job_count` | number\|null | How many jobs the company has open on LinkedIn. |
+| `author.ext.owner_confirmed` | boolean\|null | Whether Facebook has confirmed the page's owner. Facebook only, with `include=details`; null on other calls and on pages that name none. (with `include=details`) (only when the fallback source serves) |
+| `author.ext.owner_name` | string\|null | The organisation Facebook's Page transparency names as the page's owner. Facebook only, with `include=details`; null on other calls and on pages that name none. (with `include=details`) (only when the fallback source serves) |
 | `author.ext.page_active` | boolean\|null | Whether the page is active, as the page reports it. |
 | `author.ext.page_category` | string\|null |  |
 | `author.ext.page_is_restricted` | boolean\|null |  |
@@ -129,10 +138,12 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.products` | array\|null | The products the company page lists, as the source sends them. Null when it lists none. |
 | `author.ext.profile_actions` | array\|null | The buttons in the member's profile header, such as 'Visit my website'. Not the contact links, which are author.ext.bio_links. Null when the answer gives none. |
 | `author.ext.profile_title` | string\|null | Profile title the account set, independent of its username. Reddit only. |
+| `author.ext.programming_language` | string\|null | The repository's main programming language as GitHub detects it, for example TypeScript. Null when GitHub detected none. GitHub only. |
 | `author.ext.pronoun` | string\|null | The pronouns the member shows, for example she/her. Null when none. |
 | `author.ext.public_email` | string\|null | The public contact address the account publishes, or null. On instagram/profile/about it is the address on the account's contact panel, and the first address in the bio only when the panel has none. On instagram/profile it is the first address in the bio. |
 | `author.ext.public_phone` | string\|null | Business phone number the account publishes, when it exposes one. |
 | `author.ext.public_phone_extension` | string\|null | The extension of the page's phone number, or null. |
+| `author.ext.pushed_at` | string\|null | When code was last pushed to the repository, as an ISO 8601 UTC time. GitHub only. |
 | `author.ext.rating` | string\|null | Recommendation text the page shows, for example '80% recommend (794 Reviews)'. A display string, not a number. |
 | `author.ext.rating_count` | number\|null | Number of reviews behind the rating text. Facebook only. |
 | `author.ext.related_playlists.likes` | string | Id of the liked-videos playlist. Empty when it is private. (seen in a sample response) |
@@ -141,8 +152,10 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.rules_text` | string\|null | The community rules as one newline separated text block. Reddit only. |
 | `author.ext.section_totals` | object\|null | The source's own count for each profile section. It can exceed the length of a section list, so trust this for a count. |
 | `author.ext.signup_source` | string\|null |  |
+| `author.ext.similar_pages` | array\|null | The company pages LinkedIn shows as similar to this one, with `include=related` on `linkedin/company`. Null without it, and when the page lists none. (with `include=related` on some endpoints) |
 | `author.ext.social_links` | array\|null | Social profiles linked from the account. |
 | `author.ext.specialities` | array\|null | Specialities the company lists. |
+| `author.ext.stars` | number\|null | Stars of the repository. GitHub only. |
 | `author.ext.supported_locales` | array\|null | Every language the member's profile is written in, as locale tags. |
 | `author.ext.tagline` | string\|null | The page tagline. (with `include=about` on some endpoints) |
 | `author.ext.talking_about_count` | number\|null | Number of people Facebook counts as talking about the page. |
@@ -174,7 +187,7 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.ext.weekly_contributions` | number\|null | Posts and comments made in the community in a week, as Reddit shows it. |
 | `author.external_url` | string\|null | Bio link / external website URL when surfaced by the platform |
 | `author.followers` | number\|null | Follower or subscriber count as an integer. Exact on Instagram and on TikTok when the source exposes an unrounded figure. YouTube above 1,000 subscribers is YouTube's published three-significant-figure figure. When the integer is a published/rounded value, `author.ext.followers_approximate` is true. (on some endpoints only when the fallback source serves) |
-| `author.following` | number\|null | Number of accounts followed (on some endpoints only when the fallback source serves) |
+| `author.following` | number\|null | Number of accounts followed (with `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `author.id` | string | Platform-specific user ID (always a string; platform-specific prefixes like `did:`, `spotify:artist:`, `t2_` are stripped) |
 | `author.joined_at` | string\|null | When the account was created, as an ISO 8601 date (YYYY-MM-DD). (with `include=account` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `author.last_post_at` | string\|null | Publish time of the newest post returned with the profile, as an ISO 8601 instant. Null when the source returned no posts. (seen in a sample response) |
@@ -183,8 +196,8 @@ Every field the 46 field-mapped endpoints returning `Author` can carry, with pat
 | `author.posts_count` | number\|null | Total number of posts / videos / tracks / episodes (on some endpoints only when the fallback source serves) |
 | `author.private` | boolean\|null | Whether the account is private. (on some endpoints only when the fallback source serves) |
 | `author.url` | string\|null | Direct URL to the profile page |
-| `author.username` | string\|null | User handle or username |
-| `author.verified` | boolean\|null | Whether the account carries TikTok's verification badge. The source sends a badge label rather than a flag, and the API writes false when no label is present, so false can also mean the source sent no verification signal. (on some endpoints only when the fallback source serves) |
+| `author.username` | string\|null | User handle or username (on some endpoints only when the fallback source serves) |
+| `author.verified` | boolean\|null | Whether the account carries TikTok's verification badge. The source sends a badge label rather than a flag, and the API writes false when no label is present, so false can also mean the source sent no verification signal. (with `include=details` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `computed.content_category` | string\|null | Keyword-classified content category (e.g. tech, food, gaming). Null when undetectable. |
 | `computed.engagement_rate` | number\|null | Computed engagement rate (0..1). Null when the upstream lacks enough signal. |
 | `computed.estimated_reach` | number\|null | Estimated reach based on views or follower count. Null when uncomputable. |

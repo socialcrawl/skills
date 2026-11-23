@@ -25,7 +25,12 @@ Every error carries `error.retryable`, and many carry `error.details.reason`; ac
 - **400 `unsupported_date_filter`**: `since` / `until` (or a copied spelling such as `published_after`) on a list whose rows carry no date. Drop the date.
 - **404 `account_gone` / `account_private` / `handle_unresolved`**: follow `error.details.suggestion` once (for a YouTube handle, retry with the stored `channelId` to tell a rename from a removal), then report. `site_not_supported` on `web/scrape` is final; its `suggestion` names the SocialCrawl endpoint for a social link.
 - **404 `ENDPOINT_NOT_FOUND`** may carry `details.did_you_mean` (paths), `did_you_mean_platform` and `retry_with` (the whole corrected URL, for example for a bare `/search`); check the live registry (`GET /v1/utility/endpoints?search=`, free) before saying something is unsupported. On `/v1/web/jobs|monitors|sessions/{id}` it means the id is unknown for this key.
-- **5xx** carry `error.status_url` and, during an open incident, `error.incident` (`id`, `title`, `status`, `impact`, `url`).
+- **404 `url_unreachable`** on `web/scrape` and `web/extract`: the address is dead or does not resolve. Free and final; check the URL with the user. `site_not_supported` answers the same way on `web/extract` as on `web/scrape`.
+- **503 `breaker_open`**: that source is paused. The request was refused without being sent and was not billed. Until the time the message states, the same request fails the same way; the same request **without the option the message names** works now. With no stated time, wait for `Retry-After`.
+- **503 "retry the same cursor"** on a later search page (`facebook/search/posts`, and `not_found_unconfirmed` on `tiktok/search`): refunded. Resend the **same** cursor once later. When that cursor answers empty again on a later request (`facebook/search/posts`: at least 10 minutes after its first empty answer), the answer is a free `200` with `items: []` and `has_more: false`: the walk has ended.
+- **502 `profile_lookup_timeout`** on `tiktok/user/live`: TikTok did not return the account in time. Refunded; retry later.
+- **5xx** carry `error.status_url` and, during an open incident, `error.incident` (`id`, `title`, `status`, `impact`, `url`). A refunded **504** carries `Retry-After: 30`: wait that long before the one automatic retry.
+- **429** bodies carry `error.details` as well as the headers (`reason`, for example `concurrency`, `limit`, `current`, `remaining`, `retry_after_s`), for clients that drop headers.
 
 ## Not errors: `data._warnings` and `meta.hint`
 

@@ -49,7 +49,7 @@ Returns channel metadata, videos, shorts, and a numeric cursor for the next page
 | `post.author.username` | Author username |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.duration_seconds`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `rumble/video/comments` (`url` ← `data.items[].post.url`) - List top-level comments on a Rumble video. · `rumble/video` (`url` ← `data.items[].post.url`) - Get a Rumble video. · `rumble/video/transcript` (`url` ← `data.items[].post.url`) - Get a Rumble video transcript.
 
@@ -85,7 +85,7 @@ Searches Rumble videos by keyword. Returns matching videos and shorts with title
 | `post.published_at` | Post creation timestamp as an ISO 8601 UTC string. |
 | `computed.content_category` | Keyword-classified content category… |
 
-+9 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {duration_seconds, thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
++8 more (types in the full schema): `computed` {engagement_rate, estimated_reach, language, save_rate}; `post.author` {display_name}; `post.content` {thumbnail_url}; `post.engagement` {views}; `post.flags` {deleted}. Never filled: `post.author.avatar_url`, `post.author.verified`, `post.content.media_urls`, `post.engagement.comments`, `post.engagement.likes`, `post.engagement.saves`, `post.engagement.shares`, `post.flags.nsfw`, `post.flags.pinned`, `post.flags.spoiler`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `post.content.duration_seconds`. Page-level: `data.dropped`, `data.empty_reason`, `data.empty_reason_note`, `data.walk`.
 
 **Next** `rumble/video/comments` (`url` ← `data.items[].post.url`) - List top-level comments on a Rumble video. · `rumble/video` (`url` ← `data.items[].post.url`) - Get a Rumble video. · `rumble/video/transcript` (`url` ← `data.items[].post.url`) - Get a Rumble video transcript. · `rumble/channel/videos` (`handle` ← `data.items[].post.author.username`) - List videos for a Rumble channel.
 
@@ -150,10 +150,10 @@ Returns all top-level comments for a Rumble video: comment text, author, `create
 | `comment.id` | Platform-specific comment ID (always a string) |
 | `comment.published_at` | Comment creation timestamp as an ISO 8601 UTC string. |
 | `comment.author.username` | Comment author username (null when tombstoned) |
-| `comment.author.avatar_url` | URL to comment author profile picture |
 | `comment.author.display_name` | Comment author display name |
+| `comment.engagement.likes` | Like / upvote count |
 
-+4 more (types in the full schema): `comment.engagement` {likes, replies}; `comment.flags` {deleted}; `computed` {language}. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
++6 more (types in the full schema): `comment.engagement` {replies}; `comment.flags` {deleted}; `computed` {language}; `computed.country` {confidence, source, value}. Never filled: `comment.author.verified`, `comment.flags.pinned`, `comment.parent_id`, `comment.post_id`, `comment.url`. Empty on every row the field-health check sampled (22/11/2026), so not returned today: `comment.author.avatar_url`. Page-level: `data.comment_recency`, `data.dropped`, `data.empty_reason`, `data.empty_reason_note`.
 
 ```bash
 curl -G "https://www.socialcrawl.dev/v1/rumble/video/comments" \

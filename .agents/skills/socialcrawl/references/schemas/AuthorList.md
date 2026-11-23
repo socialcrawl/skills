@@ -1,19 +1,19 @@
 # AuthorList fields
 
-Every field the 39 field-mapped endpoints returning `AuthorList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
+Every field the 40 field-mapped endpoints returning `AuthorList` can carry, with paths exactly as returned (relative to the row; each endpoint's **Response** line says where its rows sit). One endpoint fills only some of them: its own section lists its top fields, fill rates, never-filled fields and opt-in fields.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `author.avatar_url` | string\|null | URL to profile picture (with `include=details` on some endpoints) |
 | `author.bio` | string\|null | Profile biography or description (with `include=details`, `include=profile` on some endpoints) |
-| `author.display_name` | string\|null | Display name or full name (with `include=details` on some endpoints) |
+| `author.display_name` | string\|null | Display name or full name |
 | `author.ext.account_created` | string\|null | When the account was created, as a readable label such as 'August 2013'. (with `include=about`) |
 | `author.ext.account_type` | string\|null | Whether the reactor is a member (user) or a page (company). LinkedIn reactor lists only. |
+| `author.ext.affiliated_pages` | array\|null | The company's showcase and affiliated pages on LinkedIn, with `include=related` on `linkedin/company`. Null without it, and when the page lists none. |
 | `author.ext.bannerExternalUrl` | string\|null | URL of the channel banner image. YouTube only. (seen in a sample response) |
 | `author.ext.bio_link` | string\|null | The website set in the Threads bio. (with `include=profile` on some endpoints) (on some endpoints only when the fallback source serves) |
 | `author.ext.business_category` | string\|null | Professional or page category label, for example 'Live Music Venue'. Instagram and Facebook. (with `include=profile`) |
 | `author.ext.business_hours` | array | The page's opening hours as the source reports them. The source's format is not normalised and the field is null on every sampled page. |
-| `author.ext.call_to_action_url` | string\|null | Where the page's main button leads. |
 | `author.ext.company_id` | string\|null | Numeric company id, which is what the LinkedIn company endpoints take. author.id on these rows is the vanity slug. |
 | `author.ext.company_type` | string\|null | Company type from the About tab, for example 'Public Company' or 'Privately Held'. |
 | `author.ext.company_type_code` | string\|null | LinkedIn's stable code for the company type, for example PUBLIC_COMPANY. Match on this rather than on the label. |
@@ -37,8 +37,6 @@ Every field the 39 field-mapped endpoints returning `AuthorList` can carry, with
 | `author.ext.headquarters` | object\|null | The company's headquarters address. |
 | `author.ext.hiddenSubscriberCount` | boolean\|null | Whether the channel hides its subscriber count. YouTube only. (seen in a sample response) |
 | `author.ext.industries` | array\|null | Industries the company lists. |
-| `author.ext.industry_hierarchy` | string\|null | The company's industry with its parent categories, for example 'Manufacturing > Paper and Forest Product Manufacturing'. |
-| `author.ext.industry_id` | string\|null | LinkedIn's numeric industry id, as a string. The stable key for the member's or company's industry. |
 | `author.ext.is_archived` | boolean\|null | Whether LinkedIn has archived the company page. |
 | `author.ext.is_auto_generated` | boolean\|null | Whether LinkedIn created the page itself rather than the company. |
 | `author.ext.is_claimable` | boolean\|null | Whether the company page is unclaimed and can still be claimed by the company. |
@@ -59,11 +57,10 @@ Every field the 39 field-mapped endpoints returning `AuthorList` can carry, with
 | `author.ext.open_job_count` | number\|null | How many jobs the company has open on LinkedIn. |
 | `author.ext.page_active` | boolean\|null | Whether the page is active, as the page reports it. |
 | `author.ext.page_type` | string\|null | Which kind of LinkedIn page this is: company, school or showcase. |
-| `author.ext.products` | array | The products the company page lists, as the source sends them. Null when it lists none. |
+| `author.ext.products` | array\|null | The products the company page lists, as the source sends them. Null when it lists none. |
 | `author.ext.public_email` | string\|null | The public contact address the account publishes, or null. On instagram/profile/about it is the address on the account's contact panel, and the first address in the bio only when the panel has none. On instagram/profile it is the first address in the bio. (with `include=about` on some endpoints) |
 | `author.ext.public_identifier` | string\|null |  |
 | `author.ext.public_phone` | string\|null | Business phone number the account publishes, when it exposes one. (with `include=about` on some endpoints) |
-| `author.ext.public_phone_extension` | string\|null | The extension of the page's phone number, or null. |
 | `author.ext.reaction_type` | string\|null | How this member reacted to the post, on the reactions endpoint: LIKE, PRAISE, EMPATHY, APPRECIATION, INTEREST or ENTERTAINMENT. |
 | `author.ext.related_playlists.likes` | string | Id of the liked-videos playlist. Empty when it is private. (seen in a sample response) |
 | `author.ext.related_playlists.uploads` | string | Id of the playlist holding every upload. (seen in a sample response) |
@@ -73,6 +70,7 @@ Every field the 39 field-mapped endpoints returning `AuthorList` can carry, with
 | `author.ext.search_hit.matched_urls` | array | Every distinct URL the search matched for this channel, in order. Telegram only. |
 | `author.ext.search_hit.snippet` | string\|null | The hit text as the search index showed it. It is not the account's own description. |
 | `author.ext.search_hit.title` | string\|null | The hit title as the search index showed it. It is not the account's own name. |
+| `author.ext.similar_pages` | array\|null | The company pages LinkedIn shows as similar to this one, with `include=related` on `linkedin/company`. Null without it, and when the page lists none. |
 | `author.ext.specialities` | array\|null | Specialities the company lists. |
 | `author.ext.tagline` | string\|null | The page tagline. |
 | `author.ext.topic_ids` | array\|null | Freebase topic ids for the channel. YouTube only. (seen in a sample response) |
